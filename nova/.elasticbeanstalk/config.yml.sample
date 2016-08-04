@@ -1,0 +1,10 @@
+branch-defaults:
+  default:
+    environment: null
+global:
+  application_name: dv
+  default_ec2_keyname: dv
+  default_platform: Python 2.7
+  default_region: null
+  profile: null
+  sc: null

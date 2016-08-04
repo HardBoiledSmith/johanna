@@ -1,0 +1,26 @@
+container_commands:
+  00-command:
+    command: ./provisioning.sh
+
+files:
+  "/etc/httpd/conf.d/wsgi_nova.conf":
+    mode: "000644"
+    owner: root
+    group: root
+    content: |
+      WSGIPassAuthorization On
+
+option_settings:
+  "aws:elasticbeanstalk:application:environment":
+    PYTHONPATH: "/opt/python/current/app/nova:$PYTHONPATH"
+  "aws:elasticbeanstalk:container:python":
+    WSGIPath: "nova/nova/wsgi.py"
+  "aws:elasticbeanstalk:application":
+    Application Healthcheck URL: "/echo/"
+  "aws:autoscaling:asg":
+    Availability Zones: "Any 2"
+    Cooldown: "360"
+    MinSize: "AWS_ASG_MIN_VALUE_NOVA"
+    MaxSize: "AWS_ASG_MAX_VALUE_NOVA"
+  "aws:elasticbeanstalk:hostmanager":
+    LogPublicationControl: "true"

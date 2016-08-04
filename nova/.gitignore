@@ -1,0 +1,5 @@
+/.ebextensions/nova.config
+/.elasticbeanstalk/config.yml
+/configuration/etc/nova/settings_local.py
+/configuration/phase
+/nova/*
