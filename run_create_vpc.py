@@ -181,14 +181,8 @@ eb_route_table_id = dict()
 cmd = ['ec2', 'create-route-table']
 cmd += ['--vpc-id', eb_vpc_id]
 result = aws_cli.run(cmd)
-eb_route_table_id['private_1'] = result['RouteTable']['RouteTableId']
-aws_cli.set_name_tag(eb_route_table_id['private_1'], 'eb_private_1')
-
-cmd = ['ec2', 'create-route-table']
-cmd += ['--vpc-id', eb_vpc_id]
-result = aws_cli.run(cmd)
-eb_route_table_id['private_2'] = result['RouteTable']['RouteTableId']
-aws_cli.set_name_tag(eb_route_table_id['private_2'], 'eb_private_2')
+eb_route_table_id['private'] = result['RouteTable']['RouteTableId']
+aws_cli.set_name_tag(eb_route_table_id['private'], 'eb_private')
 
 cmd = ['ec2', 'create-route-table']
 cmd += ['--vpc-id', eb_vpc_id]
@@ -201,12 +195,12 @@ print_message('associate route table')
 
 cmd = ['ec2', 'associate-route-table']
 cmd += ['--subnet-id', eb_subnet_id['private_1']]
-cmd += ['--route-table-id', eb_route_table_id['private_1']]
+cmd += ['--route-table-id', eb_route_table_id['private']]
 aws_cli.run(cmd)
 
 cmd = ['ec2', 'associate-route-table']
 cmd += ['--subnet-id', eb_subnet_id['private_2']]
-cmd += ['--route-table-id', eb_route_table_id['private_2']]
+cmd += ['--route-table-id', eb_route_table_id['private']]
 aws_cli.run(cmd)
 
 cmd = ['ec2', 'associate-route-table']
@@ -229,13 +223,7 @@ cmd += ['--gateway-id', internet_gateway_id]
 aws_cli.run(cmd)
 
 cmd = ['ec2', 'create-route']
-cmd += ['--route-table-id', eb_route_table_id['private_1']]
-cmd += ['--destination-cidr-block', '0.0.0.0/0']
-cmd += ['--nat-gateway-id', eb_nat_gateway_id]
-aws_cli.run(cmd)
-
-cmd = ['ec2', 'create-route']
-cmd += ['--route-table-id', eb_route_table_id['private_2']]
+cmd += ['--route-table-id', eb_route_table_id['private']]
 cmd += ['--destination-cidr-block', '0.0.0.0/0']
 cmd += ['--nat-gateway-id', eb_nat_gateway_id]
 aws_cli.run(cmd)
