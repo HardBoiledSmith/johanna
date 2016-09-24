@@ -34,7 +34,7 @@
 
 * If you use AWS IAM user credential instead of master account, it must have IAMFullAccess, AWSElasticBeanstalkFullAccess and PowerUserAccess permissions.
 
-![alt text](https://github.com/addnull/johanna/docs/images/iam_user_permissions.png "IAM user permissions")
+![alt text](https://github.com/addnull/johanna/raw/master/docs/images/iam_user_permissions.png "IAM user permissions")
 
 # Links
 
