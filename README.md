@@ -8,4 +8,5 @@ How To Play
 	env['aws']['AWS_SECRET_ACCESS_KEY'] = 'MY_SECRET_ACCESS_KEY'
 	env['common']['HOST_NOVA'] = 'this-is-my-dv-nova.ap-northeast-2.elasticbeanstalk.com'
 	env['common']['URL_NOVA'] = 'http://this-is-my-dv-nova.ap-northeast-2.elasticbeanstalk.com'
+    env['nova']['CNAME'] = 'this-is-my-dv-nova'
 3. ./run.py
