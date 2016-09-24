@@ -1,4 +1,6 @@
 *.pyc
 *.swp
 /.idea
+/.vagrant
 /env*.py
+/id_rsa
