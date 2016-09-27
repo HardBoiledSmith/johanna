@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 from env import env
 from run_common import AWSCli
 from run_common import print_message
@@ -67,7 +69,7 @@ for r in result['SecurityGroups']:
         continue
     if r['GroupName'] == 'default':
         continue
-    print 'delete security group (id: %s)' % r['GroupId']
+    print('delete security group (id: %s)' % r['GroupId'])
     cmd = ['ec2', 'delete-security-group']
     cmd += ['--group-id', r['GroupId']]
     aws_cli.run(cmd, ignore_error=True)
@@ -82,7 +84,7 @@ for r in result['RouteTables']:
         continue
     for route in r['Routes']:
         if route['DestinationCidrBlock'] == '0.0.0.0/0':
-            print 'delete route (route table id: %s)' % r['RouteTableId']
+            print('delete route (route table id: %s)' % r['RouteTableId'])
             cmd = ['ec2', 'delete-route']
             cmd += ['--route-table-id', r['RouteTableId']]
             cmd += ['--destination-cidr-block', '0.0.0.0/0']
@@ -99,8 +101,8 @@ for r in result['RouteTables']:
     for association in r['Associations']:
         if association['Main']:
             continue
-        print 'disassociate route table (route table id: %s, route table association id: %s)' % \
-              (r['RouteTableId'], association['RouteTableAssociationId'])
+        print('disassociate route table (route table id: %s, route table association id: %s)' %
+              (r['RouteTableId'], association['RouteTableAssociationId']))
         cmd = ['ec2', 'disassociate-route-table']
         cmd += ['--association-id', association['RouteTableAssociationId']]
         aws_cli.run(cmd, ignore_error=True)
@@ -115,7 +117,7 @@ for r in result['RouteTables']:
         continue
     if len(r['Associations']) != 0:
         continue
-    print 'delete route table (route table id: %s)' % r['RouteTableId']
+    print('delete route table (route table id: %s)' % r['RouteTableId'])
     cmd = ['ec2', 'delete-route-table']
     cmd += ['--route-table-id', r['RouteTableId']]
     aws_cli.run(cmd, ignore_error=True)
@@ -128,7 +130,7 @@ result = aws_cli.run(cmd, ignore_error=True)
 for r in result['NatGateways']:
     if r['VpcId'] != eb_vpc_id:
         continue
-    print 'delete nat gateway (nat gateway id: %s)' % r['NatGatewayId']
+    print('delete nat gateway (nat gateway id: %s)' % r['NatGatewayId'])
     cmd = ['ec2', 'delete-nat-gateway']
     cmd += ['--nat-gateway-id', r['NatGatewayId']]
     aws_cli.run(cmd, ignore_error=True)
@@ -144,7 +146,7 @@ print_message('release eip')
 cmd = ['ec2', 'describe-addresses']
 result = aws_cli.run(cmd, ignore_error=True)
 for r in result['Addresses']:
-    print 'release address (address id: %s)' % r['AllocationId']
+    print('release address (address id: %s)' % r['AllocationId'])
     cmd = ['ec2', 'release-address']
     cmd += ['--allocation-id', r['AllocationId']]
     aws_cli.run(cmd, ignore_error=True)
@@ -159,7 +161,7 @@ for r in result['InternetGateways']:
         continue
     if r['Attachments'][0]['VpcId'] != eb_vpc_id:
         continue
-    print 'detach internet gateway (internet gateway id: %s)' % r['InternetGatewayId']
+    print('detach internet gateway (internet gateway id: %s)' % r['InternetGatewayId'])
     cmd = ['ec2', 'detach-internet-gateway']
     cmd += ['--internet-gateway-id', r['InternetGatewayId']]
     cmd += ['--vpc-id', r['Attachments'][0]['VpcId']]
@@ -173,7 +175,7 @@ result = aws_cli.run(cmd, ignore_error=True)
 for r in result['InternetGateways']:
     if len(r['Attachments']) != 0:
         continue
-    print 'delete internet gateway (internet gateway id: %s)' % r['InternetGatewayId']
+    print('delete internet gateway (internet gateway id: %s)' % r['InternetGatewayId'])
     cmd = ['ec2', 'delete-internet-gateway']
     cmd += ['--internet-gateway-id', r['InternetGatewayId']]
     aws_cli.run(cmd, ignore_error=True)
@@ -186,7 +188,7 @@ result = aws_cli.run(cmd, ignore_error=True)
 for r in result['Subnets']:
     if r['VpcId'] != eb_vpc_id:
         continue
-    print 'delete subnet (subnet id: %s)' % r['SubnetId']
+    print('delete subnet (subnet id: %s)' % r['SubnetId'])
     cmd = ['ec2', 'delete-subnet']
     cmd += ['--subnet-id', r['SubnetId']]
     aws_cli.run(cmd, ignore_error=True)
@@ -195,7 +197,7 @@ for r in result['Subnets']:
 print_message('delete vpc')
 
 if eb_vpc_id:
-    print 'delete vpc (vpc id: %s)' % eb_vpc_id
+    print('delete vpc (vpc id: %s)' % eb_vpc_id)
     cmd = ['ec2', 'delete-vpc']
     cmd += ['--vpc-id', eb_vpc_id]
     aws_cli.run(cmd, ignore_error=True)

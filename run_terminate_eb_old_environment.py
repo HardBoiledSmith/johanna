@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 import time
 
 from env import env
@@ -32,16 +34,16 @@ def _is_old_environment(cname):
 
     # 'old_timestamp' MUST NOT be greater than current timestamp
     if old_timestamp > timestamp:
-        print 'wrong old timestamp (too big)'
+        print('wrong old timestamp (too big)')
         return False
 
     # 'old_timestamp' MUST NOT be less than timestamp of '2016-01-01 00:00:00'.
     if old_timestamp < 1451606400:
-        print 'wrong old timestamp (too small)'
+        print('wrong old timestamp (too small)')
         return False
 
     if old_timestamp + max_age_seconds > timestamp:
-        print 'skip this time'
+        print('skip this time')
         return False
 
     return True
@@ -66,11 +68,11 @@ for r in result['Environments']:
     if 'CNAME' not in r:
         continue
 
-    print ''
-    print 'EnvironmentName:', r['EnvironmentName']
-    print 'CNAME:', r['CNAME']
-    print 'Status:', r['Status']
-    print ''
+    print('')
+    print('EnvironmentName:', r['EnvironmentName'])
+    print('CNAME:', r['CNAME'])
+    print('Status:', r['Status'])
+    print('')
 
     if r['Status'] != 'Ready':
         continue

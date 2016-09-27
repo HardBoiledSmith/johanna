@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 import json
 import os
 import subprocess
@@ -53,7 +55,7 @@ print_message('get vpc id')
 eb_vpc_id = aws_cli.get_vpc_id()
 
 if not eb_vpc_id:
-    print 'ERROR!!! No VPC found'
+    print('ERROR!!! No VPC found')
     raise Exception()
 
 ################################################################################
@@ -143,7 +145,7 @@ for r in result['Environments']:
         if r['Status'] == 'Terminated':
             continue
         elif r['Status'] != 'Ready':
-            print 'previous version is not ready.'
+            print('previous version is not ready.')
             raise Exception()
 
         eb_environment_name_old = r['EnvironmentName']
@@ -154,8 +156,8 @@ for r in result['Environments']:
 print_message('create nova')
 
 tags = list()
-tags.append('git_hash_johanna=%s' % git_hash_johanna)
-tags.append('git_hash_nova=%s' % git_hash_nova)
+tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8'))
+tags.append('git_hash_nova=%s' % git_hash_nova.decode('utf-8'))
 
 cmd = ['create', eb_environment_name]
 cmd += ['--cname', cname]
@@ -179,13 +181,13 @@ while True:
     result = aws_cli.run(cmd)
 
     ee = result['Environments'][0]
-    print json.dumps(ee, sort_keys=True, indent=4)
+    print(json.dumps(ee, sort_keys=True, indent=4))
     if ee.get('Health', '') == 'Green' \
             and ee.get('HealthStatus', '') == 'Ok' \
             and ee.get('Status', '') == 'Ready':
         break
 
-    print 'creating... (elapsed time: \'%d\' seconds)' % elapsed_time
+    print('creating... (elapsed time: \'%d\' seconds)' % elapsed_time)
     time.sleep(5)
     elapsed_time += 5
 
