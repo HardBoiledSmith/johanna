@@ -8,24 +8,14 @@ The backend includes below:
 - EC2 key pair (SSH key)
 - An Elastic Beanstalk application and an environment for Python Django API server
 
-You can do provisioning/deprovisioning/reprovisioning of the whole system or partial at once. Especially, the reprovisioning of Django API server means a '[continous deployement](https://en.wikipedia.org/wiki/Continuous_delivery#Relationship_to_continuous_deployment)'.
-
-# Environments
-
-	Max OS X                        : 10.12
-	VirtualBox                      : 5.1.6
-	Vagrant                         : 1.8.5
-	Ubuntu 14.04 Trusty Vagrant Box : 20160913.0.0
+You can do provisioning/deprovisioning/reprovisioning of the whole system or partial at once. Especially, the reprovisioning of Django API server means a '[continuous deployement](https://en.wikipedia.org/wiki/Continuous_delivery#Relationship_to_continuous_deployment)'.
 
 # How To Play
 
-1. on your host machine(Mac OS X)
-	1. install [VirtualBox](https://www.virtualbox.org/) and [Vagrant](https://www.vagrantup.com/).
-	1. copy your GitHub 'id_rsa'
-	1. `vagrant up`
-	1. after finishing Vagrant VM deployment, `vagrant ssh`
+Using [Lili](https://github.com/addnull/lili)(Vagrant provisioning script) is the simplest way to get a playground.
 
-1. on Vagrant VM(Ubuntu 14.04)
+1. follow Lili [README manual](https://github.com/addnull/lili/blob/master/README.md)
+1. on Vagrant VM(Ubuntu 16.04)
 	1. `sudo su`
 	1. `cd /opt/johanna`
 	1. edit 'env.py' with your own configuration.
