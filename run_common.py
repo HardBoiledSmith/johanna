@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 import json
 import os
 import re
@@ -9,19 +11,23 @@ from optparse import OptionParser
 
 from env import env
 
+try:
+    input = raw_input
+except NameError:
+    pass
+
 
 def _confirm_phase():
     phase = env['common']['PHASE']
-    print 'Your current environment values are below'
-    print '-' * 80
-    print '\tPHASE            : \'%s\'' % phase
-    print '\tCNAME of Nova    : \'%s\'' % env['nova']['CNAME']
-    print '-' * 80
-    sys.stdout.write('Please type in the name of phase \'%s\' to confirm: ' % phase)
+    print('Your current environment values are below')
+    print('-' * 80)
+    print('\tPHASE            : \'%s\'' % phase)
+    print('\tCNAME of Nova    : \'%s\'' % env['nova']['CNAME'])
+    print('-' * 80)
 
-    answer = raw_input()
+    answer = input('Please type in the name of phase \'%s\' to confirm: ' % phase)
     if answer != phase:
-        print 'The execution is canceled.'
+        print('The execution is canceled.')
         sys.exit(0)
 
 
@@ -49,15 +55,16 @@ class AWSCli:
 
     def _run(self, args, cwd=None, ignore_error=None):
         if ignore_error:
-            print '\n>> command(ignore error):',
+            print('\n>> command(ignore error):', end=" ")
         else:
-            print '\n>> command:',
-        print ' '.join(args)
+            print('\n>> command:', end=" ")
+        print(' '.join(args))
         result, error = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                          cwd=cwd, env=self.env).communicate()
+        result = result.decode('utf-8')
 
         if error:
-            print error
+            print(error)
             if not ignore_error:
                 raise Exception()
 
@@ -111,7 +118,7 @@ class AWSCli:
             if count == 0:
                 break
 
-            print 'terminating the eb... (elapsed time: \'%d\' seconds)' % elapsed_time
+            print('terminating the eb... (elapsed time: \'%d\' seconds)' % elapsed_time)
             time.sleep(5)
             elapsed_time += 5
 
@@ -129,7 +136,7 @@ class AWSCli:
             if count == 0:
                 break
 
-            print 'deleting the nat gateway... (elapsed time: \'%d\' seconds)' % elapsed_time
+            print('deleting the nat gateway... (elapsed time: \'%d\' seconds)' % elapsed_time)
             time.sleep(5)
             elapsed_time += 5
 
@@ -151,13 +158,13 @@ def parse_args(require_arg=False):
 
 
 def print_message(message):
-    print '*' * 80
-    print message + '\n'
+    print('*' * 80)
+    print(message + '\n')
 
 
 def print_session(message):
-    print '#' * 80 + '\n' + '#' * 80
-    print '\n\t[ ' + message + ' ]\n\n'
+    print('#' * 80 + '\n' + '#' * 80)
+    print('\n\t[ ' + message + ' ]\n\n')
 
 
 def read_file(file_path):

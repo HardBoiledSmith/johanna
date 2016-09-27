@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 import time
 
 from env import env
@@ -48,6 +50,6 @@ while True:
     if count == 0:
         break
 
-    print 'deleting the environment... (elapsed time: \'%d\' seconds)' % elapsed_time
+    print('deleting the environment... (elapsed time: \'%d\' seconds)' % elapsed_time)
     time.sleep(5)
     elapsed_time += 5

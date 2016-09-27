@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 import json
 import sys
 
@@ -15,19 +17,19 @@ command_list.append('terminate_vpc')
 
 
 def print_usage():
-    print '#' * 80
-    print 'How to Play'
-    print
-    print '-' * 80
+    print('#' * 80)
+    print('How to Play')
+    print()
+    print('-' * 80)
     for cc in command_list:
-        print '    ./run.py ' + cc
-    print '-' * 80
-    print '    ./run.py [AWS CLI COMMAND]                 ' + \
-          '(ex: \'./run.py -- aws ec2 describe-instances\')'
-    print '    cd [EB DIR]; ../run.py [EB CLI COMMAND]    ' + \
-          '(ex: \'cd nova; ../run.py -- eb list --region ap-northeast-2\')'
-    print
-    print '#' * 80
+        print('    ./run.py ' + cc)
+    print('-' * 80)
+    print('    ./run.py [AWS CLI COMMAND]                 ' +
+          '(ex: \'./run.py -- aws ec2 describe-instances\')')
+    print('    cd [EB DIR]; ../run.py [EB CLI COMMAND]    ' +
+          '(ex: \'cd nova; ../run.py -- eb list --region ap-northeast-2\')')
+    print()
+    print('#' * 80)
 
 
 if __name__ == "__main__":
@@ -45,14 +47,14 @@ if __name__ == "__main__":
         aws_cli = AWSCli()
         result = aws_cli.run(args[2:], ignore_error=True)
         if type(result) == dict:
-            print json.dumps(result, sort_keys=True, indent=4)
+            print(json.dumps(result, sort_keys=True, indent=4))
         else:
-            print result
+            print(result)
         sys.exit(0)
     elif command == 'eb':
         aws_cli = AWSCli()
         result = aws_cli.run_eb(args[2:], ignore_error=True)
-        print result
+        print(result)
         sys.exit(0)
 
     if len(args) != 2:

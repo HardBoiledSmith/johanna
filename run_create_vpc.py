@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 import sys
 
 from env import env
@@ -28,7 +30,7 @@ print_message('get vpc id')
 eb_vpc_id = aws_cli.get_vpc_id()
 if eb_vpc_id:
     print_message('VPC already exists')
-    print 'EB: %s \n' % eb_vpc_id
+    print('EB: %s \n' % eb_vpc_id)
     print_session('finish python code')
     sys.exit(0)
 
