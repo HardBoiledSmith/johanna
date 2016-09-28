@@ -14,8 +14,6 @@ if __name__ == "__main__":
     parse_args()
 
 aws_cli = AWSCli()
-#db_instance_name = env['rds']['DB_NAME']
-#db_subnet_group_name = env['rds']['DB_SUBNET']
 
 ################################################################################
 #
@@ -39,7 +37,7 @@ print_message('delete database subnet group')
 elapsed_time = 0
 while True:
      cmd = ['rds', 'describe-db-instances']
-     #cmd += ['--db-instance-identifier', 'db-test']
+     
      result = aws_cli.run(cmd)
 
      if result['DBInstances'] == []:

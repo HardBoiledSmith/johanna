@@ -70,11 +70,11 @@ if __name__ == "__main__":
     command = 'run_' + command
     if command == 'run_create':
         __import__('run_create_vpc')
-        __import__('run_create_nova')
         __import__('run_create_database')
+        __import__('run_create_nova')
     elif command == 'run_terminate':
-        __import__('run_terminate_database')
         __import__('run_terminate_nova')
+        __import__('run_terminate_database')
         __import__('run_terminate_vpc')
     else:
         __import__(command)

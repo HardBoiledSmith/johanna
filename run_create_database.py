@@ -13,13 +13,6 @@ if __name__ == "__main__":
 
 aws_cli = AWSCli()
 
-#db_instance_name = env['rds']['DB_NAME']
-#db_instance_class = env['rds']['DB_CLASS']
-#master_user_name = env['rds']['USER_NAME']
-#master_user_password = env['rds']['USER_PASSWORD']
-#engine = env['rds']['RDBS']
-#allocated-storage = env['rds']['DB_SIZE']
-
 cidr_subnet = aws_cli.cidr_subnet
 
 ################################################################################
