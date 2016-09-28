@@ -49,9 +49,9 @@ result = aws_cli.run(cmd)
 for r in result['Subnets']:
     if r['VpcId'] != eb_vpc_id:
         continue
-    if r['CidrBlock'] == cidr_subnet['eb']['public_1']:
+    if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
         subnet_id_1 = r['SubnetId']
-    if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
+    if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
         subnet_id_2 = r['SubnetId']
 
 ################################################################################
