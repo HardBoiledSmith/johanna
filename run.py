@@ -10,6 +10,7 @@ command_list = list()
 command_list.append('create')
 command_list.append('create_nova')
 command_list.append('create_vpc')
+command_list.append('create_sqs')
 command_list.append('terminate')
 command_list.append('terminate_eb_old_environment')
 command_list.append('terminate_nova')
@@ -69,6 +70,7 @@ if __name__ == "__main__":
     if command == 'run_create':
         __import__('run_create_vpc')
         __import__('run_create_nova')
+        __import__('run_create_sqs')
     elif command == 'run_terminate':
         __import__('run_terminate_nova')
         __import__('run_terminate_vpc')
