@@ -24,12 +24,17 @@ def print_usage():
     print()
     print('-' * 80)
     for cc in command_list:
-        print('    ./run.py ' + cc)
+        print('    ./run.py [OPTIONS] ' + cc)
     print('-' * 80)
-    print('    ./run.py [AWS CLI COMMAND]                 ' +
+    print('    ./run.py [OPTIONS] -- [AWS CLI COMMAND]\t\t' +
           '(ex: \'./run.py -- aws ec2 describe-instances\')')
-    print('    cd [EB DIR]; ../run.py [EB CLI COMMAND]    ' +
+    print('    cd nova; ../run.py [OPTIONS] -- [EB CLI COMMAND]\t' +
           '(ex: \'cd nova; ../run.py -- eb list --region ap-northeast-2\')')
+    print('-' * 80)
+    print('OPTIONS')
+    print()
+    print('`--force` or `-f`')
+    print('\tAttempt to execute the commend without prompting for phase confirmation.')
     print()
     print('#' * 80)
 
