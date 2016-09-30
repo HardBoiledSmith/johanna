@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import print_function
 
+import json
+
 from env import env
 from run_common import AWSCli
 from run_common import print_message
@@ -22,8 +24,6 @@ print_session('create sqs')
 
 ################################################################################
 print_message('create queue')
-
-import json
 
 attr = dict()
 attr['VisibilityTimeout'] = "30"
