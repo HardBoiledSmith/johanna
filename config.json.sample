@@ -27,5 +27,14 @@
         "AWS_ASG_MAX_VALUE": "1",
         "AWS_ASG_MIN_VALUE": "1",
         "CNAME": "dv-nova"
+    },
+    "rds": {
+        "DB_NAME": "db-test",
+        "DB_CLASS": "db.t2.micro",
+        "DB_SUBNET_NAME": "db-subnet",
+        "USER_NAME": "...",
+        "USER_PASSWORD": "...",
+        "ENGINE": "mysql",
+        "DB_SIZE": "20"
     }
 }
