@@ -1,6 +1,6 @@
 # Introduction
 
-Johanna is a collections of boilerplate Python scripts that can do provisioning/deprovisioning of a simple backend system using AWS.
+Johanna is a collection of boilerplate Python scripts that can do provisioning/deprovisioning of a simple backend system using AWS.
 
 The backend includes below:
 - VPC with two public subnets, two private subnets, routing tables, an internet gateway, a nat gateway and an EIP.
