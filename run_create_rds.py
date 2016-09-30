@@ -28,7 +28,7 @@ cidr_subnet = aws_cli.cidr_subnet
 # start
 #
 ################################################################################
-print_session('create database')
+print_session('create rds')
 
 ################################################################################
 print_message('get vpc id')
@@ -69,7 +69,7 @@ for r in result['SecurityGroups']:
         break
 
 ###############################################################################
-print_message('create database subnet group')
+print_message('create rds subnet group')
 
 cmd = ['rds', 'create-db-subnet-group']
 cmd += ['--db-subnet-group-name', db_subnet_group_name]
@@ -78,7 +78,7 @@ cmd += ['--subnet-ids', subnet_id_1, subnet_id_2]
 aws_cli.run(cmd)
 
 ################################################################################
-print_message('create database')
+print_message('create rds')
 
 cmd = ['rds', 'create-db-instance']
 cmd += ['--db-instance-identifier', db_instance_name]

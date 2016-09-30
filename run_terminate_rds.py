@@ -23,10 +23,10 @@ db_subnet_group_name = env['rds']['DB_SUBNET_NAME']
 # Start
 #
 ################################################################################
-print_session('terminate database')
+print_session('terminate rds')
 
 ################################################################################
-print_message('delete database')
+print_message('delete rds')
 
 cmd = ['rds', 'delete-db-instance']
 cmd += ['--db-instance-identifier', db_instance_name]
@@ -35,12 +35,12 @@ cmd += ['--skip-final-snapshot', '']
 aws_cli.run(cmd, ignore_error=True)
 
 ###############################################################################
-print_message('delete database subnet group')
+print_message('delete rds subnet group')
 
 elapsed_time = 0
 while True:
      cmd = ['rds', 'describe-db-instances']
-     
+
      result = aws_cli.run(cmd)
 
      if result['DBInstances'] == []:
