@@ -29,12 +29,12 @@
         "CNAME": "dv-nova"
     },
     "rds": {
-        "DB_NAME": "db-test",
         "DB_CLASS": "db.t2.micro",
+        "DB_NAME": "db-test",
+        "DB_SIZE": "20",
         "DB_SUBNET_NAME": "db-subnet",
-        "USER_NAME": "...",
-        "USER_PASSWORD": "...",
         "ENGINE": "mysql",
-        "DB_SIZE": "20"
+        "USER_NAME": "...",
+        "USER_PASSWORD": "..."
     }
 }
