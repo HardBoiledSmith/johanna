@@ -13,6 +13,14 @@ if __name__ == "__main__":
 
 aws_cli = AWSCli()
 
+db_instance_name = env['rds']['DB_NAME']
+db_instance_class = env['rds']['DB_CLASS']
+db_subnet_group_name = env['rds']['DB_SUBNET_NAME']
+master_user_name = env['rds']['USER_NAME']
+master_user_password = env['rds']['USER_PASSWORD']
+engine = env['rds']['ENGINE']
+allocated_storage = env['rds']['DB_SIZE']
+
 cidr_subnet = aws_cli.cidr_subnet
 
 ################################################################################
@@ -64,8 +72,8 @@ for r in result['SecurityGroups']:
 print_message('create database subnet group')
 
 cmd = ['rds', 'create-db-subnet-group']
-cmd += ['--db-subnet-group-name', 'db-subnet']
-cmd += ['--db-subnet-group-description', 'subnet']
+cmd += ['--db-subnet-group-name', db_subnet_group_name]
+cmd += ['--db-subnet-group-description', db_subnet_group_name]
 cmd += ['--subnet-ids', subnet_id_1, subnet_id_2]
 aws_cli.run(cmd)
 
@@ -73,12 +81,12 @@ aws_cli.run(cmd)
 print_message('create database')
 
 cmd = ['rds', 'create-db-instance']
-cmd += ['--db-instance-identifier', 'db-test']
-cmd += ['--db-instance-class', 'db.t2.micro']
-cmd += ['--engine', 'mysql']
-cmd += ['--master-username', 'testuser']
-cmd += ['--master-user-password', 'testuser']
-cmd += ['--allocated-storage', '20']
+cmd += ['--db-instance-identifier', db_instance_name]
+cmd += ['--db-instance-class', db_instance_class]
+cmd += ['--engine', engine]
+cmd += ['--master-username', master_user_name]
+cmd += ['--master-user-password', master_user_password]
+cmd += ['--allocated-storage', allocated_storage]
 cmd += ['--vpc-security-group-ids', security_group_id]
-cmd += ['--db-subnet-group-name', 'db-subnet']
+cmd += ['--db-subnet-group-name', db_subnet_group_name]
 aws_cli.run(cmd)
