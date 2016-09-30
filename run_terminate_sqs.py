@@ -21,7 +21,7 @@ aws_cli = AWSCli()
 print_session('terminate sqs')
 
 ################################################################################
-print_message('laod queue lists')
+print_message('load queue lists')
 
 cmd = ['sqs', 'list-queues']
 command_result = aws_cli.run(cmd)
