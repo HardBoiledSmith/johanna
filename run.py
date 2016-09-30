@@ -10,12 +10,12 @@ command_list = list()
 command_list.append('create')
 command_list.append('create_nova')
 command_list.append('create_vpc')
-command_list.append('create_database')
+command_list.append('create_rds')
 command_list.append('terminate')
 command_list.append('terminate_eb_old_environment')
 command_list.append('terminate_nova')
 command_list.append('terminate_vpc')
-command_list.append('terminate_database')
+command_list.append('terminate_rds')
 
 
 def print_usage():
@@ -75,11 +75,11 @@ if __name__ == "__main__":
     command = 'run_' + command
     if command == 'run_create':
         __import__('run_create_vpc')
-        __import__('run_create_database')
+        __import__('run_create_rds')
         __import__('run_create_nova')
     elif command == 'run_terminate':
         __import__('run_terminate_nova')
-        __import__('run_terminate_database')
+        __import__('run_terminate_rds')
         __import__('run_terminate_vpc')
     else:
         __import__(command)
