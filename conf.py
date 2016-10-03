@@ -10,12 +10,15 @@ parser.add_argument('--region', help='Choose AWS Region')
 parser.add_argument('--az1', help='AWS Availability Zone 1')
 parser.add_argument('--az2', help='AWS Availablitiy Zone 2')
 parser.add_argument('--cname', help='Your Application CNAME')
+parser.add_argument('--db', help='AWS RDS Engine')
+parser.add_argument('--user', help='RDS User Name')
+parser.add_argument('--pw', help='RDS User Password')
 
 
 if __name__ == '__main__':
     args = parser.parse_args()
     
-    if not (args.accesskey and args.secretkey and args.region and args.az1 and args.az2 and args.cname):
+    if not (args.accesskey and args.secretkey and args.region and args.az1 and args.az2 and args.cname and args.db and args.user and args.pw):
         parser.print_help()
         sys.exit(0)
     
@@ -50,6 +53,17 @@ if __name__ == '__main__':
     config['nova']['CNAME'] = args.cname
     config['common']['HOST_NOVA'] = args.cname + '.' + args.region + '.elasticbeanstalk.com'
     config['common']['URL_NOVA'] = 'http://' + args.cname + '.' + args.region + '.elasticbeanstalk.com'
+
+    # RDS Engine
+    AWS_RDS_ENGINES = ['mysql', 'mariadb', 'oracle-se1', 'oracle-se2', 'oracle-se', 'oracle-ee', 'sqlserver-ee', 'sqlserver-se', 'sqlserver-ex', 'sqlserver-web', 'postgres', 'aurora']
+    if args.db not in AWS_RDS_ENGINES:
+        print('Invalid AWS RDS ENGINE')
+        sys.exit(0)
+    config['rds']['ENGINE'] = args.db
+
+    # RDS User Configuration
+    config['rds']['USER_NAME'] = args.user
+    config['rds']['USER_PASSWORD'] = args.pw
     
     config_file = open('config.json', 'w+')
     config_file.write(json.dumps(config, sort_keys=True, indent=4))

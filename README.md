@@ -30,6 +30,12 @@ Using [Lili](https://github.com/addnull/lili)(Vagrant provisioning script) is th
 
 	1. `./run.py`
 
+-
+
+You can use this on web GUI
+
+* [raynor](https://github.com/addnull/raynor) is web based GUI for johanna
+
 # Notes
 
 * If you use AWS IAM user credential instead of master account, it must have IAMFullAccess, AWSElasticBeanstalkFullAccess and PowerUserAccess permissions.
