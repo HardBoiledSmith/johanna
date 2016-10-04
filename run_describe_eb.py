@@ -8,6 +8,7 @@ from run_common import print_session
 
 aws_cli = AWSCli()
 
+
 def describe_key_pairs():
     cmd = ['ec2', 'describe-key-pairs']
     result = aws_cli.run(cmd)
@@ -17,6 +18,7 @@ def describe_key_pairs():
             return True
             
     return False
+
 
 def describe_list_roles():
     cmd = ['iam', 'list-roles']
@@ -36,6 +38,7 @@ def describe_list_roles():
     else:
         return False
 
+
 def describe_role_policy():
     cmd = ['iam', 'list-role-policies']
     cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-worker-role']
@@ -50,6 +53,7 @@ def describe_role_policy():
 
     return True
 
+
 def describe_application():
     cmd = ['elasticbeanstalk', 'describe-applications']
     cmd += ['--application-name', env['elasticbeanstalk']['APPLICATION_NAME']]
@@ -59,6 +63,7 @@ def describe_application():
        return False
     else:
        return True
+
 
 if __name__ == "__main__":
     from run_common import parse_args

@@ -8,6 +8,7 @@ from run_common import print_session
 
 aws_cli = AWSCli()
 
+
 def describe_db_subnet_groups():
     cmd = ['rds', 'describe-db-subnet-groups']
     cmd += ['--db-subnet-group-name', env['rds']['DB_SUBNET_NAME']]
@@ -17,6 +18,7 @@ def describe_db_subnet_groups():
         return False
 
     return True
+
 
 def describe_db_instances():
     cmd = ['rds', 'describe-db-instances']
@@ -28,6 +30,7 @@ def describe_db_instances():
         return False
 
     return True
+
 
 if __name__ == "__main__":
     from run_common import parse_args

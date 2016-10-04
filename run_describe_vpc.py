@@ -8,6 +8,7 @@ from run_common import print_session
 
 aws_cli = AWSCli()
 
+
 def describe_vpcs():
     cmd = ['ec2', 'describe-vpcs']
     vpc_id  = aws_cli.get_vpc_id()
@@ -15,6 +16,7 @@ def describe_vpcs():
        return False
     else:
        return vpc_id
+
 
 def describe_subnets(vpc_id=None):
     cmd = ['ec2', 'describe-subnets']
@@ -26,6 +28,7 @@ def describe_subnets(vpc_id=None):
     else:
        return True
 
+
 def describe_internet_gateways(vpc_id=None):
     cmd = ['ec2', 'describe-internet-gateways']
     cmd += ['--filters=Name=attachment.vpc-id,Values=%s' % vpc_id]
@@ -36,6 +39,7 @@ def describe_internet_gateways(vpc_id=None):
     else:
        return True
 
+
 def describe_addressed():
     cmd = ['ec2', 'describe-addresses']
     result = aws_cli.run(cmd, ignore_error=True)
@@ -44,6 +48,7 @@ def describe_addressed():
        return False
     else:
        return True
+
 
 def describe_nat_gateways(vpc_id=None):
     cmd = ['ec2', 'describe-nat-gateways']
@@ -56,6 +61,7 @@ def describe_nat_gateways(vpc_id=None):
 
     return True
 
+
 def describe_route_tables(vpc_id=None):
     cmd = ['ec2', 'describe-route-tables']
     cmd += ['--filters=Name=vpc-id,Values=%s' % vpc_id]
@@ -66,6 +72,7 @@ def describe_route_tables(vpc_id=None):
     else:
        return True
 
+
 def describe_security_groups(vpc_id=None):
     cmd = ['ec2', 'describe-security-groups']
     cmd += ['--filters=Name=vpc-id,Values=%s' % vpc_id]
@@ -75,6 +82,7 @@ def describe_security_groups(vpc_id=None):
        return False
     else:
        return True
+
 
 if __name__ == "__main__":
     from run_common import parse_args
