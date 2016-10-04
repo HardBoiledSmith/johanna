@@ -18,14 +18,10 @@ Using [Lili](https://github.com/addnull/lili)(Vagrant provisioning script) is th
 1. on Vagrant VM(Ubuntu 16.04)
 	1. `sudo su`
 	1. `cd /opt/johanna`
-	1. edit 'env.py' with your own configuration.
+	1. execute 'conf.py' to configure your aws environment.
 
-		```python
-		env['aws']['AWS_ACCESS_KEY_ID'] = 'MY_ACCESS_KEY'
-		env['aws']['AWS_SECRET_ACCESS_KEY'] = 'MY_SECRET_ACCESS_KEY'
-		env['common']['HOST_NOVA'] = 'this-is-my-dv-nova.ap-northeast-2.elasticbeanstalk.com'
-		env['common']['URL_NOVA'] = 'http://this-is-my-dv-nova.ap-northeast-2.elasticbeanstalk.com'
-		env['nova']['CNAME'] = 'this-is-my-dv-nova'
+		```
+		./conf.py --accesskey YOUR_AWS_ACCESSKEY --secretkey YOUR_AWS_SECRETKEY --region ap-northeast-2 --az1 ap-northeast-2a --az2 ap-northeast-2c --cname dv-nova --db mysql --user DB_USER --pw DB_PASSWORD
 		```
 
 	1. `./run.py`
