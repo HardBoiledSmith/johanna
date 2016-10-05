@@ -21,7 +21,12 @@ Using [Lili](https://github.com/addnull/lili)(Vagrant provisioning script) is th
 	1. execute 'conf.py' to configure your aws environment.
 
 		```
-		./conf.py --accesskey YOUR_AWS_ACCESSKEY --secretkey YOUR_AWS_SECRETKEY --region ap-northeast-2 --az1 ap-northeast-2a --az2 ap-northeast-2c --cname dv-nova --db mysql --user DB_USER --pw DB_PASSWORD
+		./conf.py --accesskey YOUR_AWS_ACCESSKEY --secretkey YOUR_AWS_SECRETKEY --region AWS_REGION_NAME --az1 AVAILABILITY_ZONE_1 --az2 AVAILABILITY_ZONE_2 --cname CNAME --db DB_ENGINE --user DB_USER --pw DB_PASSWORD
+		```
+		
+		*[Example]*
+		```
+		./conf.py --accesskey ... --secretkey ... --region ap-northeast-2 --az1 ap-northeast-2a --az2 ap-northeast-2c --cname dv-nova --db mysql --user db-user --pw db-password
 		```
 
 	1. `./run.py`
