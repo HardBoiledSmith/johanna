@@ -20,6 +20,11 @@ command_list.append('terminate_vpc')
 command_list.append('terminate_rds')
 command_list.append('terminate_sqs')
 
+command_list.append('describe')
+command_list.append('describe_eb')
+command_list.append('describe_vpc')
+command_list.append('describe_rds')
+command_list.append('describe_nova')
 
 def print_usage():
     print('#' * 80)
@@ -86,5 +91,10 @@ if __name__ == "__main__":
         __import__('run_terminate_rds')
         __import__('run_terminate_vpc')
         __import__('run_terminate_sqs')
+    elif command == 'run_describe':
+        __import__('run_describe_eb')
+        __import__('run_describe_vpc')
+        __import__('run_describe_rds')
+        __import__('run_describe_nova')
     else:
         __import__(command)
