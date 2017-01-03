@@ -26,6 +26,7 @@ command_list.append('describe_vpc')
 command_list.append('describe_rds')
 command_list.append('describe_nova')
 
+
 def print_usage():
     print('#' * 80)
     print('How to Play')

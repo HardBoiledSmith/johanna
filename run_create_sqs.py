@@ -3,7 +3,6 @@ from __future__ import print_function
 
 import json
 
-from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session

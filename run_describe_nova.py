@@ -3,8 +3,6 @@ from __future__ import print_function
 
 from env import env
 from run_common import AWSCli
-from run_common import print_message
-from run_common import print_session
 
 aws_cli = AWSCli()
 
@@ -13,6 +11,7 @@ def describe_environments():
     cmd = ['elasticbeanstalk', 'describe-environments']
     cmd += ['--application-name', env['elasticbeanstalk']['APPLICATION_NAME']]
 
+    # noinspection PyBroadException
     try:
         result = aws_cli.run(cmd)
     except:
@@ -28,14 +27,14 @@ if __name__ == "__main__":
 
 results = list()
 
-if describe_environments() == False:
-   results.append('Nova -------------- X')
+if not describe_environments():
+    results.append('Nova -------------- X')
 else:
-   results.append('Nova -------------- O')
+    results.append('Nova -------------- O')
 
 print('#' * 80)
 
 for r in results:
-   print(r)
+    print(r)
 
 print('#' * 80)

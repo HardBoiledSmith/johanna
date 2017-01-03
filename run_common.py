@@ -12,6 +12,7 @@ from optparse import OptionParser
 from env import env
 
 try:
+    # noinspection PyShadowingBuiltins, PyUnresolvedReferences
     input = raw_input
 except NameError:
     pass

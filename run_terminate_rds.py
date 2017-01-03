@@ -39,17 +39,18 @@ print_message('delete rds subnet group')
 
 elapsed_time = 0
 while True:
-     cmd = ['rds', 'describe-db-instances']
-     cmd += ['--db-instance-identifier', db_instance_name]
+    cmd = ['rds', 'describe-db-instances']
+    cmd += ['--db-instance-identifier', db_instance_name]
 
-     try:
-         aws_cli.run(cmd)
-     except:
-         break
+    # noinspection PyBroadException
+    try:
+        aws_cli.run(cmd)
+    except:
+        break
 
-     print('deleting the environment... (elapsed time: \'%d\' seconds)' % elapsed_time)
-     time.sleep(5)
-     elapsed_time += 5
+    print('deleting the environment... (elapsed time: \'%d\' seconds)' % elapsed_time)
+    time.sleep(5)
+    elapsed_time += 5
 
 cmd = ['rds', 'delete-db-subnet-group']
 cmd += ['--db-subnet-group-name', db_subnet_group_name]
