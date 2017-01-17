@@ -1,0 +1,23 @@
+dist: trusty
+language: python
+python:
+  - "3.5"
+notifications:
+  slack:
+    rooms:
+      - hbsmith:Rum1JFNeVLW6nERPYtXpYkd6#travis_ci
+    template:
+      - "Message: [johanna] %{commit_message}"
+      - "Repository: %{repository}@%{branch} (%{commit})"
+      - "Build: %{build_number}"
+      - "Result: %{result}"
+      - "Duration: %{duration}"
+      - "Author: %{author}"
+      - "Changes: %{compare_url}"
+      - "Detail: %{build_url}"
+  email:
+    - billing@hbsmith.io
+install:
+  - python -m pip install flake8
+script:
+  - flake8 --config=flake8 .
