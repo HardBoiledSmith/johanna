@@ -64,6 +64,7 @@ class AWSCli:
         print(' '.join(args))
         result, error = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                          cwd=cwd, env=self.env).communicate()
+        # noinspection PyUnresolvedReferences
         result = result.decode('utf-8')
 
         if error:

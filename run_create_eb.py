@@ -69,11 +69,12 @@ def run_create_eb_environment(name, settings):
     eb_environment_name = name + '-' + str_timestamp
     eb_environment_name_old = None
 
-    environment_path = 'template/%s/%s' % (template_name, name)
+    template_path = 'template/%s' % template_name
+    environment_path = '%s/elasticbeanstalk/%s' % (template_path, name)
 
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
-    git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd='template').communicate()[0]
+    git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
 
     ################################################################################
     print_session('create ' + name)

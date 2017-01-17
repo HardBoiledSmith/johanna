@@ -29,7 +29,7 @@ command_list.append('describe_rds')
 def print_usage():
     print('#' * 80)
     print('How to Play')
-    print()
+    print('')
     print('-' * 80)
     for cc in command_list:
         print('    ./run.py [OPTIONS] ' + cc)
@@ -40,10 +40,10 @@ def print_usage():
           '(ex: \'cd nova; ../run.py -- eb list --region ap-northeast-2\')')
     print('-' * 80)
     print('OPTIONS')
-    print()
+    print('')
     print('`--force` or `-f`')
     print('\tAttempt to execute the commend without prompting for phase confirmation.')
-    print()
+    print('')
     print('#' * 80)
 
 
