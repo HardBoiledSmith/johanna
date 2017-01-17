@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/HardBoiledSmith/johanna.svg?branch=master)](https://travis-ci.org/HardBoiledSmith/johanna)
 # Introduction
 
 Johanna is a collection of boilerplate Python scripts that can do provisioning/deprovisioning of a simple backend system using AWS.
