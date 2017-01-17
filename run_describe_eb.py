@@ -64,6 +64,19 @@ def describe_application():
         return True
 
 
+def describe_environments():
+    cmd = ['elasticbeanstalk', 'describe-environments']
+    cmd += ['--application-name', env['elasticbeanstalk']['APPLICATION_NAME']]
+
+    # noinspection PyBroadException
+    try:
+        result = aws_cli.run(cmd)
+    except:
+        return False
+
+    return result['Environments']
+
+
 if __name__ == "__main__":
     from run_common import parse_args
 
@@ -90,6 +103,11 @@ if not describe_application():
     results.append('EB Application -------------- X')
 else:
     results.append('EB Application -------------- O')
+
+if not describe_environments():
+    results.append('EB Environments -------------- X')
+else:
+    results.append('EB Environments -------------- O')
 
 print('#' * 80)
 

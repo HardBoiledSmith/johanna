@@ -16,17 +16,23 @@
         "AWS_VPC_EB": "10.210.0.0/16",
         "AWS_VPC_RDS": "10.200.0.0/16",
         "DEBUG": "True",
-        "HOST_NOVA": "dv-nova.ap-northeast-2.elasticbeanstalk.com",
-        "PHASE": "dv",
-        "URL_NOVA": "http://dv-nova.ap-northeast-2.elasticbeanstalk.com"
+        "PHASE": "dv"
     },
     "elasticbeanstalk": {
-        "APPLICATION_NAME": "dv"
-    },
-    "nova": {
-        "AWS_ASG_MAX_VALUE": "1",
-        "AWS_ASG_MIN_VALUE": "1",
-        "CNAME": "dv-nova"
+        "APPLICATION_NAME": "dv",
+        "ENVIRONMENTS": [
+            {
+                "AWS_ASG_MAX_VALUE": "1",
+                "AWS_ASG_MIN_VALUE": "1",
+                "CNAME": "dv-nova",
+                "GIT_URL": "git@github.com:HardBoiledSmith/nova.git",
+                "HOST": "dv-nova.hbsmith.io",
+                "NAME": "nova",
+                "SUBNET_TYPE": "public",
+                "URL": "http://dv-nova.hbsmith.io",
+                "PRIVATE_IP": "10.210.128.100"
+            }
+        ]
     },
     "rds": {
         "DB_CLASS": "db.t2.micro",
@@ -36,5 +42,9 @@
         "ENGINE": "mysql",
         "USER_NAME": "...",
         "USER_PASSWORD": "..."
+    },
+    "template": {
+        "GIT_URL": "git@github.com:HardBoiledSmith/kerrigan.git",
+        "NAME": "kerrigan"
     }
 }

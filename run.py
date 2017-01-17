@@ -8,14 +8,14 @@ from run_common import AWSCli
 
 command_list = list()
 command_list.append('create')
-command_list.append('create_nova')
+command_list.append('create_eb')
 command_list.append('create_vpc')
 command_list.append('create_rds')
 command_list.append('create_sqs')
 
 command_list.append('terminate')
 command_list.append('terminate_eb_old_environment')
-command_list.append('terminate_nova')
+command_list.append('terminate_eb')
 command_list.append('terminate_vpc')
 command_list.append('terminate_rds')
 command_list.append('terminate_sqs')
@@ -24,7 +24,6 @@ command_list.append('describe')
 command_list.append('describe_eb')
 command_list.append('describe_vpc')
 command_list.append('describe_rds')
-command_list.append('describe_nova')
 
 
 def print_usage():
@@ -85,10 +84,10 @@ if __name__ == "__main__":
     if command == 'run_create':
         __import__('run_create_vpc')
         __import__('run_create_rds')
-        __import__('run_create_nova')
+        __import__('run_create_eb')
         __import__('run_create_sqs')
     elif command == 'run_terminate':
-        __import__('run_terminate_nova')
+        __import__('run_terminate_eb')
         __import__('run_terminate_rds')
         __import__('run_terminate_vpc')
         __import__('run_terminate_sqs')
@@ -96,6 +95,6 @@ if __name__ == "__main__":
         __import__('run_describe_eb')
         __import__('run_describe_vpc')
         __import__('run_describe_rds')
-        __import__('run_describe_nova')
+        __import__('run_describe_eb')
     else:
         __import__(command)

@@ -8,8 +8,8 @@ parser.add_argument('--accesskey', help='AWS Access Key ID')
 parser.add_argument('--secretkey', help='AWS Secret Access Key')
 parser.add_argument('--region', help='Choose AWS Region')
 parser.add_argument('--az1', help='AWS Availability Zone 1')
-parser.add_argument('--az2', help='AWS Availablitiy Zone 2')
-parser.add_argument('--cname', help='Your Application CNAME')
+parser.add_argument('--az2', help='AWS Availability Zone 2')
+parser.add_argument('--template', help='git URL of provisioning template repository')
 parser.add_argument('--db', help='AWS RDS Engine')
 parser.add_argument('--user', help='RDS User Name')
 parser.add_argument('--pw', help='RDS User Password')
@@ -23,7 +23,6 @@ if __name__ == '__main__':
         args.region,
         args.az1,
         args.az2,
-        args.cname,
         args.db,
         args.user,
         args.pw
@@ -62,10 +61,15 @@ if __name__ == '__main__':
         sys.exit(0)
     config['aws']['AWS_AVAILABILITY_ZONE_2'] = args.az2
 
-    # CNAME
-    config['nova']['CNAME'] = args.cname
-    config['common']['HOST_NOVA'] = args.cname + '.' + args.region + '.elasticbeanstalk.com'
-    config['common']['URL_NOVA'] = 'http://' + args.cname + '.' + args.region + '.elasticbeanstalk.com'
+    # AWS TEMPLATE
+    if args.template:
+        config['template']['GIT_URL'] = args.template
+        config['elasticbeanstalk']['ENVIRONMENTS'] = []
+    else:
+        nova = config['elasticbeanstalk']['ENVIRONMENTS'][0]
+        nova_cname = nova['CNAME']
+        nova['HOST'] = nova_cname + '.' + args.region + '.elasticbeanstalk.com'
+        nova['URL'] = 'http://' + nova_cname + '.' + args.region + '.elasticbeanstalk.com'
 
     # RDS Engine
     AWS_RDS_ENGINES = ['mysql', 'mariadb', 'oracle-se1', 'oracle-se2', 'oracle-se', 'oracle-ee', 'sqlserver-ee',
