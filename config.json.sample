@@ -46,5 +46,14 @@
     "template": {
         "GIT_URL": "git@github.com:HardBoiledSmith/kerrigan.git",
         "NAME": "kerrigan"
-    }
+    },
+    "sqs": [
+        {
+            "DELAY_SECONDS": "0",
+            "NAME": "sqs-test",
+            "RECEIVE_COUNT": "3",
+            "RETENTION": "345600",
+            "TIMEOUT": "180"
+        }
+    ]
 }

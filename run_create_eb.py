@@ -51,12 +51,10 @@ def run_create_eb_environment(name, settings):
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
-    host_eb_env = settings['HOST']
     key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
     subnet_type = settings['SUBNET_TYPE']
     template_name = env['template']['NAME']
-    url_eb_env = settings['URL']
     if hasattr(settings, 'PRIVATE_IP'):
         private_ip = settings['PRIVATE_IP']
     else:
@@ -153,9 +151,10 @@ def run_create_eb_environment(name, settings):
     lines = read_file(environment_path + '/configuration/etc/' + name + '/settings_local.py.sample')
     lines = re_sub_lines(lines, '^(DEBUG).*', '\\1 = %s' % debug)
     option_list = list()
-    option_list.append(['HOST', host_eb_env])
     option_list.append(['PHASE', phase])
-    option_list.append(['URL', url_eb_env])
+    for key in settings:
+        value = settings[key]
+        option_list.append([key, value])
     for oo in option_list:
         lines = re_sub_lines(lines, '^(' + oo[0] + ') .*', '\\1 = \'%s\'' % oo[1])
     write_file(environment_path + '/configuration/etc/' + name + '/settings_local.py', lines)
@@ -326,6 +325,7 @@ print_session('create template')
 
 run_create_template()
 
+################################################################################
 print_session('create eb')
 
 eb = env['elasticbeanstalk']
