@@ -28,9 +28,9 @@
                 "GIT_URL": "git@github.com:HardBoiledSmith/nova.git",
                 "HOST": "dv-nova.hbsmith.io",
                 "NAME": "nova",
+                "PRIVATE_IP": "10.210.128.100",
                 "SUBNET_TYPE": "public",
-                "URL": "http://dv-nova.hbsmith.io",
-                "PRIVATE_IP": "10.210.128.100"
+                "URL": "http://dv-nova.hbsmith.io"
             }
         ]
     },
@@ -43,10 +43,6 @@
         "USER_NAME": "...",
         "USER_PASSWORD": "..."
     },
-    "template": {
-        "GIT_URL": "git@github.com:HardBoiledSmith/kerrigan.git",
-        "NAME": "kerrigan"
-    },
     "sqs": [
         {
             "DELAY_SECONDS": "0",
@@ -55,5 +51,9 @@
             "RETENTION": "345600",
             "TIMEOUT": "180"
         }
-    ]
+    ],
+    "template": {
+        "GIT_URL": "git@github.com:HardBoiledSmith/kerrigan.git",
+        "NAME": "kerrigan"
+    }
 }
