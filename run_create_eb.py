@@ -144,8 +144,8 @@ def run_create_eb_environment(name, settings):
     write_file(environment_path + '/.elasticbeanstalk/config.yml', lines)
 
     lines = read_file(environment_path + '/.ebextensions/' + name + '.config.sample')
-    lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE_NOVA', aws_asg_min_value)
-    lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE_NOVA', aws_asg_max_value)
+    lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
+    lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
     write_file(environment_path + '/.ebextensions/' + name + '.config', lines)
 
     lines = read_file(environment_path + '/configuration/etc/' + name + '/settings_local.py.sample')
