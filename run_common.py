@@ -12,6 +12,7 @@ from optparse import OptionParser
 from env import env
 
 try:
+    # noinspection PyShadowingBuiltins, PyUnresolvedReferences
     input = raw_input
 except NameError:
     pass
@@ -19,10 +20,12 @@ except NameError:
 
 def _confirm_phase():
     phase = env['common']['PHASE']
+    eb = env['elasticbeanstalk']
     print('Your current environment values are below')
     print('-' * 80)
     print('\tPHASE            : \'%s\'' % phase)
-    print('\tCNAME of Nova    : \'%s\'' % env['nova']['CNAME'])
+    for eb_env in eb['ENVIRONMENTS']:
+        print('\tCNAME of %s    : \'%s\'' % (eb_env['NAME'], eb_env['CNAME']))
     print('-' * 80)
 
     answer = input('Please type in the name of phase \'%s\' to confirm: ' % phase)
@@ -61,6 +64,7 @@ class AWSCli:
         print(' '.join(args))
         result, error = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                          cwd=cwd, env=self.env).communicate()
+        # noinspection PyUnresolvedReferences
         result = result.decode('utf-8')
 
         if error:
