@@ -221,7 +221,7 @@ def run_create_eb_environment(name, settings):
         if 'CNAME' not in r:
             continue
 
-        if r['CNAME'] == cname + '.ap-northeast-2.elasticbeanstalk.com':
+        if r['CNAME'] == '%s.%s.elasticbeanstalk.com' % (cname, aws_default_region):
             if r['Status'] == 'Terminated':
                 continue
             elif r['Status'] != 'Ready':
