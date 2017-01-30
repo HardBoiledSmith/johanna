@@ -24,14 +24,14 @@ print_message('load queue lists')
 
 cmd = ['sqs', 'list-queues']
 command_result = aws_cli.run(cmd)
-queues = command_result['QueueUrls']
+if 'QueueUrls' in command_result:
+    queues = command_result['QueueUrls']
 
-################################################################################
-print_message('delete queues')
+    print_message('delete queues')
 
-for queue in queues:
-    cmd = ['sqs', 'delete-queue']
-    cmd += ['--queue-url', queue]
-    aws_cli.run(cmd)
+    for queue in queues:
+        cmd = ['sqs', 'delete-queue']
+        cmd += ['--queue-url', queue]
+        aws_cli.run(cmd)
 
-    print('delete : ' + queue)
+        print('delete : ' + queue)
