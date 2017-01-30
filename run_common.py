@@ -254,3 +254,22 @@ def re_sub_lines(lines, pattern, repl):
         new_lines.append(ll)
 
     return new_lines
+
+
+def download_template():
+    git_url = env['template']['GIT_URL']
+    name = env['template']['NAME']
+    phase = env['common']['PHASE']
+
+    print_session('download ' + name)
+
+    subprocess.Popen(['mkdir', '-p', './template']).communicate()
+    subprocess.Popen(['rm', '-rf', './' + name], cwd='template').communicate()
+    if phase == 'dv':
+        template_git_command = ['git', 'clone', '--depth=1', git_url]
+    else:
+        template_git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+    subprocess.Popen(template_git_command, cwd='template').communicate()
+
+    if not os.path.exists('template/' + name):
+        raise Exception()

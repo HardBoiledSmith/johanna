@@ -8,6 +8,7 @@ import time
 
 from env import env
 from run_common import AWSCli
+from run_common import download_template
 from run_common import print_message
 from run_common import print_session
 from run_common import re_sub_lines
@@ -22,25 +23,6 @@ if __name__ == "__main__":
     args = parse_args()
 
 aws_cli = AWSCli()
-
-
-def run_download_template():
-    git_url = env['template']['GIT_URL']
-    name = env['template']['NAME']
-    phase = env['common']['PHASE']
-
-    print_session('download ' + name)
-
-    subprocess.Popen(['mkdir', '-p', './template']).communicate()
-    subprocess.Popen(['rm', '-rf', './' + name], cwd='template').communicate()
-    if phase == 'dv':
-        template_git_command = ['git', 'clone', '--depth=1', git_url]
-    else:
-        template_git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
-    subprocess.Popen(template_git_command, cwd='template').communicate()
-
-    if not os.path.exists('template/' + name):
-        raise Exception()
 
 
 def run_create_eb_environment(name, settings):
@@ -355,7 +337,7 @@ def run_create_eb_environment(name, settings):
 ################################################################################
 print_session('prepare template')
 
-run_download_template()
+download_template()
 
 ################################################################################
 print_session('create eb')
