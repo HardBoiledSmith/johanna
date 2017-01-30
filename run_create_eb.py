@@ -196,9 +196,9 @@ def run_create_eb_environment(name, settings):
 
     subprocess.Popen(['rm', '-rf', './' + name], cwd=environment_path).communicate()
     if phase == 'dv':
-        git_command = ['git', 'clone', git_url]
+        git_command = ['git', 'clone', '--depth=1', git_url]
     else:
-        git_command = ['git', 'clone', '-b', phase, git_url]
+        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
     subprocess.Popen(git_command, cwd=environment_path).communicate()
     if not os.path.exists(environment_path + '/' + name):
         raise Exception()
