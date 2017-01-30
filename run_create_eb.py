@@ -24,19 +24,19 @@ if __name__ == "__main__":
 aws_cli = AWSCli()
 
 
-def run_create_template():
+def run_download_template():
     git_url = env['template']['GIT_URL']
     name = env['template']['NAME']
     phase = env['common']['PHASE']
 
-    print_session('create ' + name)
+    print_session('download ' + name)
 
     subprocess.Popen(['mkdir', '-p', './template']).communicate()
     subprocess.Popen(['rm', '-rf', './' + name], cwd='template').communicate()
     if phase == 'dv':
-        template_git_command = ['git', 'clone', git_url]
+        template_git_command = ['git', 'clone', '--depth=1', git_url]
     else:
-        template_git_command = ['git', 'clone', '-b', phase, git_url]
+        template_git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
     subprocess.Popen(template_git_command, cwd='template').communicate()
 
     if not os.path.exists('template/' + name):
@@ -69,6 +69,9 @@ def run_create_eb_environment(name, settings):
 
     template_path = 'template/%s' % template_name
     environment_path = '%s/elasticbeanstalk/%s' % (template_path, name)
+    opt_config_path = environment_path + '/configuration/opt'
+    etc_config_path = environment_path + '/configuration/etc'
+    app_config_path = etc_config_path + '/' + name
 
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
@@ -132,6 +135,13 @@ def run_create_eb_environment(name, settings):
             raise Exception()
 
     ################################################################################
+
+    db_address = None
+    if os.path.exists(app_config_path + '/my.cnf.sample'):
+        print_message('get database address')
+        db_address = aws_cli.get_database_address()
+
+    ################################################################################
     print_message('configuration ' + name)
 
     with open('%s/configuration/phase' % environment_path, 'w') as f:
@@ -148,7 +158,29 @@ def run_create_eb_environment(name, settings):
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
     write_file(environment_path + '/.ebextensions/' + name + '.config', lines)
 
-    lines = read_file(environment_path + '/configuration/etc/' + name + '/settings_local.py.sample')
+    if os.path.exists(app_config_path + '/my.cnf.sample'):
+        lines = read_file(app_config_path + '/my.cnf.sample')
+        lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address)
+        lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
+        lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
+        write_file(app_config_path + '/my.cnf', lines)
+
+    if os.path.exists(etc_config_path + '/collectd.conf.sample'):
+        lines = read_file(etc_config_path + '/collectd.conf.sample')
+        lines = re_sub_lines(lines, 'HOST_MAYA', env['common']['HOST_MAYA'])
+        write_file(etc_config_path + '/collectd.conf', lines)
+
+    if os.path.exists(opt_config_path + '/ntpdate.sh.sample'):
+        lines = read_file(opt_config_path + '/ntpdate.sh.sample')
+        lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % env['common']['HOST_MAYA'])
+        write_file(opt_config_path + '/ntpdate.sh', lines)
+
+    if os.path.exists(opt_config_path + '/nc.sh.sample'):
+        lines = read_file(opt_config_path + '/nc.sh.sample')
+        lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % env['common']['HOST_MAYA'])
+        write_file(opt_config_path + '/nc.sh', lines)
+
+    lines = read_file(app_config_path + '/settings_local.py.sample')
     lines = re_sub_lines(lines, '^(DEBUG).*', '\\1 = %s' % debug)
     option_list = list()
     option_list.append(['PHASE', phase])
@@ -157,7 +189,7 @@ def run_create_eb_environment(name, settings):
         option_list.append([key, value])
     for oo in option_list:
         lines = re_sub_lines(lines, '^(' + oo[0] + ') .*', '\\1 = \'%s\'' % oo[1])
-    write_file(environment_path + '/configuration/etc/' + name + '/settings_local.py', lines)
+    write_file(app_config_path + '/settings_local.py', lines)
 
     ################################################################################
     print_message('git clone')
@@ -321,9 +353,9 @@ def run_create_eb_environment(name, settings):
 # start
 #
 ################################################################################
-print_session('create template')
+print_session('prepare template')
 
-run_create_template()
+run_download_template()
 
 ################################################################################
 print_session('create eb')

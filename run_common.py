@@ -101,6 +101,65 @@ class AWSCli:
 
         return eb_vpc_id
 
+    def get_cache_address(self):
+        cmd = ['elasticache', 'describe-cache-clusters', '--show-cache-node-info']
+
+        elapsed_time = 0
+        cache_address = None
+        while not cache_address:
+            result = self.run(cmd)
+
+            # noinspection PyBroadException
+            try:
+                cache_clusters = result['CacheClusters'][0]
+                cache_nodes = dict(cache_clusters)['CacheNodes'][0]
+                cache_endpoint = dict(cache_nodes)['Endpoint']
+                cache_address = dict(cache_endpoint)['Address']
+                if cache_address:
+                    return cache_address
+            except:
+                pass
+
+            print('waiting for a new cache... (elapsed time: \'%d\' seconds)' % elapsed_time)
+            time.sleep(5)
+            elapsed_time += 5
+
+            if elapsed_time > 60 * 30:
+                raise Exception()
+
+    def get_database_address(self, read_replica=None):
+        cmd = ['rds', 'describe-db-instances']
+
+        elapsed_time = 0
+        db_address = None
+        while not db_address:
+            result = self.run(cmd)
+
+            # noinspection PyBroadException
+            try:
+                for db_instance in result['DBInstances']:
+                    db_instance = dict(db_instance)
+
+                    if not read_replica and 'ReadReplicaSourceDBInstanceIdentifier' in db_instance:
+                        continue
+                    elif read_replica and 'ReadReplicaSourceDBInstanceIdentifier' not in db_instance:
+                        continue
+
+                    db_endpoint = db_instance['Endpoint']
+                    db_address = dict(db_endpoint)['Address']
+
+                    if db_address:
+                        return db_address
+            except:
+                pass
+
+            print('waiting for a new database... (elapsed time: \'%d\' seconds)' % elapsed_time)
+            time.sleep(5)
+            elapsed_time += 5
+
+            if elapsed_time > 60 * 30:
+                raise Exception()
+
     def set_name_tag(self, resource_id, name):
         cmd = ['ec2', 'create-tags']
         cmd += ['--resources', resource_id]
