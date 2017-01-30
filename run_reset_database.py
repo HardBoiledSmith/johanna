@@ -13,6 +13,11 @@ aws_cli = AWSCli()
 
 print_session('reset database')
 
+engine = env['rds']['ENGINE']
+if 'mysql' is not engine:
+    print('not supported:', engine)
+    raise Exception()
+
 print_message('get database address')
 
 db_host = aws_cli.get_database_address()
