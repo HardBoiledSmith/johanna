@@ -18,6 +18,7 @@ command_list.append('terminate')
 command_list.append('terminate_eb')
 command_list.append('terminate_eb_old_environment')
 command_list.append('terminate_rds')
+command_list.append('terminate_s3')
 command_list.append('terminate_sqs')
 command_list.append('terminate_vpc')
 
@@ -94,6 +95,7 @@ if __name__ == "__main__":
         __import__('run_create_sqs')
         __import__('run_create_s3')
     elif command == 'run_terminate':
+        __import__('run_terminate_s3')
         __import__('run_terminate_eb')
         __import__('run_terminate_rds')
         __import__('run_terminate_vpc')
