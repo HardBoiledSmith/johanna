@@ -494,7 +494,7 @@ print_session('network interface')
 environment_list = env['elasticbeanstalk']['ENVIRONMENTS']
 for environment in environment_list:
     cname = environment['CNAME']
-    private_ip = environment['PRIVATE_IP']
+    private_ip = environment.get('PRIVATE_IP')
 
     if cname and private_ip:
         print_message('create network interface for %s' % cname)
