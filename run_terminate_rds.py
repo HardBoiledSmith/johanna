@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import print_function
 
-import time
-
 from env import env
 from run_common import AWSCli
 from run_common import print_message
@@ -15,8 +13,7 @@ if __name__ == "__main__":
 
 aws_cli = AWSCli()
 
-db_instance_name = env['rds']['DB_NAME']
-db_subnet_group_name = env['rds']['DB_SUBNET_NAME']
+db_instance_id = env['rds']['DB_ID']
 
 ################################################################################
 #
@@ -29,29 +26,6 @@ print_session('terminate rds')
 print_message('delete rds')
 
 cmd = ['rds', 'delete-db-instance']
-cmd += ['--db-instance-identifier', db_instance_name]
-cmd += ['--skip-final-snapshot', '']
-
-aws_cli.run(cmd, ignore_error=True)
-
-###############################################################################
-print_message('delete rds subnet group')
-
-elapsed_time = 0
-while True:
-    cmd = ['rds', 'describe-db-instances']
-    cmd += ['--db-instance-identifier', db_instance_name]
-
-    # noinspection PyBroadException
-    try:
-        aws_cli.run(cmd)
-    except:
-        break
-
-    print('deleting the environment... (elapsed time: \'%d\' seconds)' % elapsed_time)
-    time.sleep(5)
-    elapsed_time += 5
-
-cmd = ['rds', 'delete-db-subnet-group']
-cmd += ['--db-subnet-group-name', db_subnet_group_name]
+cmd += ['--db-instance-identifier', db_instance_id]
+cmd += ['--skip-final-snapshot']
 aws_cli.run(cmd, ignore_error=True)

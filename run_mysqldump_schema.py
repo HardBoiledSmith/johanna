@@ -35,6 +35,7 @@ cmd += ['--databases', database]
 cmd += ['--ignore-table=%s.django_migrations' % database]
 cmd += ['--no-data']
 
+# noinspection PyUnresolvedReferences
 data = subprocess.Popen(cmd, stdout=PIPE).communicate()[0].decode()
 line = data.split('\n')
 for l in line:

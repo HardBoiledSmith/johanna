@@ -13,6 +13,8 @@
         "AWS_SUBNET_EB_PRIVATE_2": "10.210.16.0/20",
         "AWS_SUBNET_EB_PUBLIC_1": "10.210.128.0/20",
         "AWS_SUBNET_EB_PUBLIC_2": "10.210.144.0/20",
+        "AWS_SUBNET_RDS_PRIVATE_1": "10.200.0.0/20",
+        "AWS_SUBNET_RDS_PRIVATE_2": "10.200.16.0/20",
         "AWS_VPC_EB": "10.210.0.0/16",
         "AWS_VPC_RDS": "10.200.0.0/16",
         "DEBUG": "True",
@@ -35,11 +37,18 @@
         ]
     },
     "rds": {
+        "BACKUP_RETENTION_PERIOD": "0",
+        "DATABASE": "...",
         "DB_CLASS": "db.t2.micro",
-        "DB_NAME": "db-test",
+        "DB_ID": "db-test",
         "DB_SIZE": "20",
         "DB_SUBNET_NAME": "db-subnet",
         "ENGINE": "mysql",
+        "ENGINE_VERSION": "5.7.11",
+        "IOPS": "0",
+        "LICENSE_MODEL": "general-public-license",
+        "MULTI_AZ": "--no-multi-az",
+        "STORAGE_TYPE": "gp2",
         "USER_NAME": "...",
         "USER_PASSWORD": "..."
     },

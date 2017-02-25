@@ -13,13 +13,19 @@ if __name__ == "__main__":
 
 aws_cli = AWSCli()
 
-db_instance_name = env['rds']['DB_NAME']
+db_allocated_storage = env['rds']['DB_SIZE']
+db_backup_retention_period = env['rds']['BACKUP_RETENTION_PERIOD']
 db_instance_class = env['rds']['DB_CLASS']
+db_instance_id = env['rds']['DB_ID']
+db_iops = env['rds']['IOPS']
+db_multi_az = env['rds']['MULTI_AZ']
 db_subnet_group_name = env['rds']['DB_SUBNET_NAME']
+engine = env['rds']['ENGINE']
+engine_version = env['rds']['ENGINE_VERSION']
+license_model = env['rds']['LICENSE_MODEL']
 master_user_name = env['rds']['USER_NAME']
 master_user_password = env['rds']['USER_PASSWORD']
-engine = env['rds']['ENGINE']
-allocated_storage = env['rds']['DB_SIZE']
+storage_type = env['rds']['STORAGE_TYPE']
 
 cidr_subnet = aws_cli.cidr_subnet
 
@@ -33,27 +39,11 @@ print_session('create rds')
 ################################################################################
 print_message('get vpc id')
 
-eb_vpc_id = aws_cli.get_vpc_id()
+rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
 
-if not eb_vpc_id:
+if not rds_vpc_id or not eb_vpc_id:
     print('ERROR!!! No VPC found')
     raise Exception()
-
-################################################################################
-print_message('get subnet id')
-
-subnet_id_1 = None
-subnet_id_2 = None
-
-cmd = ['ec2', 'describe-subnets']
-result = aws_cli.run(cmd)
-for r in result['Subnets']:
-    if r['VpcId'] != eb_vpc_id:
-        continue
-    if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
-        subnet_id_1 = r['SubnetId']
-    if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
-        subnet_id_2 = r['SubnetId']
 
 ################################################################################
 print_message('get security group id')
@@ -62,31 +52,31 @@ security_group_id = None
 cmd = ['ec2', 'describe-security-groups']
 result = aws_cli.run(cmd)
 for r in result['SecurityGroups']:
-    if r['VpcId'] != eb_vpc_id:
+    if r['VpcId'] != rds_vpc_id:
         continue
-    if r['GroupName'] == 'eb_public':
+    if r['GroupName'] == 'default':
+        continue
+    if not security_group_id:
         security_group_id = r['GroupId']
-        break
-
-###############################################################################
-print_message('create rds subnet group')
-
-cmd = ['rds', 'create-db-subnet-group']
-cmd += ['--db-subnet-group-name', db_subnet_group_name]
-cmd += ['--db-subnet-group-description', db_subnet_group_name]
-cmd += ['--subnet-ids', subnet_id_1, subnet_id_2]
-aws_cli.run(cmd)
+    else:
+        raise Exception()
 
 ################################################################################
 print_message('create rds')
 
 cmd = ['rds', 'create-db-instance']
-cmd += ['--db-instance-identifier', db_instance_name]
+cmd += ['--db-instance-identifier', db_instance_id]
+cmd += ['--allocated-storage', db_allocated_storage]
 cmd += ['--db-instance-class', db_instance_class]
 cmd += ['--engine', engine]
 cmd += ['--master-username', master_user_name]
 cmd += ['--master-user-password', master_user_password]
-cmd += ['--allocated-storage', allocated_storage]
 cmd += ['--vpc-security-group-ids', security_group_id]
 cmd += ['--db-subnet-group-name', db_subnet_group_name]
+cmd += ['--backup-retention-period', db_backup_retention_period]
+cmd += [db_multi_az]
+cmd += ['--engine-version', engine_version]
+cmd += ['--license-model', license_model]
+cmd += ['--iops', db_iops]
+cmd += ['--storage-type', storage_type]
 aws_cli.run(cmd)

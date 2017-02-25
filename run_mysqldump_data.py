@@ -40,6 +40,7 @@ cmd += ['--no-create-info']
 cmd += ['--single-transaction']
 cmd += ['--skip-extended-insert']
 
+# noinspection PyUnresolvedReferences
 data = subprocess.Popen(cmd, stdout=PIPE).communicate()[0].decode()
 line = data.split('\n')
 for l in line:
