@@ -68,8 +68,8 @@ if __name__ == '__main__':
     else:
         nova = config['elasticbeanstalk']['ENVIRONMENTS'][0]
         nova_cname = nova['CNAME']
-        nova['HOST'] = nova_cname + '.' + args.region + '.elasticbeanstalk.com'
-        nova['URL'] = 'http://' + nova_cname + '.' + args.region + '.elasticbeanstalk.com'
+        nova['HOST'] = '%s.%s.elasticbeanstalk.com' % (nova_cname, args.region)
+        nova['URL'] = 'http://%s.%s.elasticbeanstalk.com' % (nova_cname, args.region)
 
     # RDS Engine
     AWS_RDS_ENGINES = ['mysql', 'mariadb', 'oracle-se1', 'oracle-se2', 'oracle-se', 'oracle-ee', 'sqlserver-ee',

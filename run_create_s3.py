@@ -39,12 +39,12 @@ def run_create_s3_webapp(name, settings):
     git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
 
     ################################################################################
-    print_session('create ' + name)
+    print_session('create %s' % name)
 
     ################################################################################
     print_message('git clone')
 
-    subprocess.Popen(['rm', '-rf', './' + name], cwd=environment_path).communicate()
+    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
     if phase == 'dv':
         git_command = ['git', 'clone', '--depth=1', git_url]
     else:
@@ -75,7 +75,7 @@ def run_create_s3_webapp(name, settings):
         raise Exception()
 
     ################################################################################
-    print_message('configure ' + name)
+    print_message('configure %s' % name)
 
     lines = read_file('%s/configuration/app/scripts/settings-local.js.sample' % environment_path)
     option_list = list()
@@ -84,7 +84,7 @@ def run_create_s3_webapp(name, settings):
         value = settings[key]
         option_list.append([key, value])
     for oo in option_list:
-        lines = re_sub_lines(lines, '^(var ' + oo[0] + ') .*', '\\1 = \'%s\';' % oo[1])
+        lines = re_sub_lines(lines, '^(var %s) .*' % oo[0], '\\1 = \'%s\';' % oo[1])
     write_file('%s/app/scripts/settings-local.js' % app_root_path, lines)
 
     ################################################################################
@@ -120,7 +120,7 @@ def run_create_s3_webapp(name, settings):
 
     deploy_bucket_name = settings['BUCKET_NAME']
 
-    cmd = ['s3', 'sync', temp_folder, 's3://' + deploy_bucket_name, '--delete']
+    cmd = ['s3', 'sync', temp_folder, 's3://%s' % deploy_bucket_name, '--delete']
     sync_result = aws_cli.run(cmd)
     for ll in sync_result.split('\n'):
         print(ll)
@@ -180,13 +180,19 @@ print_session('create s3')
 s3 = env['s3']
 if len(args) == 2:
     target_s3_name = args[1]
+    target_s3_name_exists = False
     for s3_env in s3:
         if s3_env['NAME'] == target_s3_name:
-            if s3_env['TYPE'] == 'webapp':
+            target_s3_name_exists = True
+            if s3_env['TYPE'] == 'angular-app':
                 run_create_s3_webapp(s3_env['NAME'], s3_env)
                 break
-    print('"%s" is not exists in config.json' % target_s3_name)
+    if not target_s3_name_exists:
+        print('"%s" is not exists in config.json' % target_s3_name)
 else:
     for s3_env in s3:
-        if s3_env['TYPE'] == 'webapp':
+        if s3_env['TYPE'] == 'angular-app':
             run_create_s3_webapp(s3_env['NAME'], s3_env)
+            continue
+        print('"%s" is not supported' % s3_env['TYPE'])
+        raise Exception()

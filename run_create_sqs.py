@@ -27,7 +27,7 @@ def run_create_queue(name, settings):
     cmd += ['--attributes', json.dumps(attr)]
     aws_cli.run(cmd)
 
-    print('create : ' + queue)
+    print('create : %s' % queue)
 
 
 ################################################################################

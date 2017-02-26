@@ -20,7 +20,7 @@ aws_cli = AWSCli()
 
 
 def run_terminate_s3_webapp(name, settings):
-    print_message('terminate ' + name)
+    print_message('terminate %s' % name)
     deploy_bucket_name = settings['BUCKET_NAME']
 
     ################################################################################
