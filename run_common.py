@@ -20,10 +20,12 @@ except NameError:
 
 def _confirm_phase():
     phase = env['common']['PHASE']
+    template_name = env['template']['NAME']
     eb = env['elasticbeanstalk']
     print('Your current environment values are below')
     print('-' * 80)
     print('\tPHASE               : \'%s\'' % phase)
+    print('\tTEMPLATE            : \'%s\'' % template_name)
     for eb_env in eb['ENVIRONMENTS']:
         print('\tCNAME of %-10s : \'%s\'' % (eb_env['NAME'], eb_env['CNAME']))
     print('-' * 80)
@@ -347,7 +349,7 @@ def download_template():
     name = env['template']['NAME']
     phase = env['common']['PHASE']
 
-    print_session('download template: %s' % name)
+    print_message('download template: %s' % name)
 
     subprocess.Popen(['mkdir', '-p', './template']).communicate()
     subprocess.Popen(['rm', '-rf', './' + name], cwd='template').communicate()

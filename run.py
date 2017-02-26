@@ -5,7 +5,6 @@ import json
 import sys
 
 from run_common import AWSCli
-from run_common import download_template
 
 command_list = list()
 command_list.append('create')
@@ -32,6 +31,7 @@ command_list.append('alter_database')
 command_list.append('mysqldump_data')
 command_list.append('mysqldump_schema')
 command_list.append('reset_database')
+command_list.append('reset_template')
 
 
 def print_usage():
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
     command = 'run_%s' % command
     if command == 'run_create':
-        download_template()
+        __import__('run_reset_template')
         __import__('run_create_vpc')
         __import__('run_create_rds')
         __import__('run_create_eb')
