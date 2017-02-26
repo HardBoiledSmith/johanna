@@ -93,7 +93,7 @@ def run_create_eb_app(name, settings):
             if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
                 subnet_id_2 = r['SubnetId']
         else:
-            print('ERROR!!! Unknown subnet type: %s' % subnet_type)
+            print('ERROR!!! Unknown subnet type:', subnet_type)
             raise Exception()
 
     ################################################################################
@@ -114,7 +114,7 @@ def run_create_eb_app(name, settings):
                 security_group_id = r['GroupId']
                 break
         else:
-            print('ERROR!!! Unknown subnet type: %s' % subnet_type)
+            print('ERROR!!! Unknown subnet type:', subnet_type)
             raise Exception()
 
     ################################################################################

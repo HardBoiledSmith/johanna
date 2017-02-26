@@ -34,4 +34,4 @@ if 'QueueUrls' in command_result:
         cmd += ['--queue-url', queue]
         aws_cli.run(cmd)
 
-        print('delete : %s' % queue)
+        print('delete :', queue)
