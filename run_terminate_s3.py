@@ -64,13 +64,19 @@ print_session('terminate eb')
 s3 = env['s3']
 if len(args) == 2:
     target_s3_name = args[1]
+    target_s3_name_exists = False
     for s3_env in s3:
         if s3_env['NAME'] == target_s3_name:
-            if s3_env['TYPE'] == 'webapp':
+            target_s3_name_exists = True
+            if s3_env['TYPE'] == 'angular-app':
                 run_terminate_s3_webapp(s3_env['NAME'], s3_env)
                 break
-    print('"%s" is not exists in config.json' % target_s3_name)
+    if not target_s3_name_exists:
+        print('"%s" is not exists in config.json' % target_s3_name)
 else:
     for s3_env in s3:
-        if s3_env['TYPE'] == 'webapp':
+        if s3_env['TYPE'] == 'angular-app':
             run_terminate_s3_webapp(s3_env['NAME'], s3_env)
+            continue
+        print('"%s" is not supported' % s3_env['TYPE'])
+        raise Exception()
