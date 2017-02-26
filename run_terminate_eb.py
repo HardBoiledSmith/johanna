@@ -21,7 +21,7 @@ eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
 
 
 def run_terminate_environment(name):
-    print_message('terminate ' + name)
+    print_message('terminate %s' % name)
 
     elapsed_time = 0
     while True:
@@ -61,11 +61,13 @@ print_session('terminate eb')
 eb = env['elasticbeanstalk']
 if len(args) == 2:
     target_eb_name = args[1]
+    target_eb_name_exists = False
     for eb_env in eb['ENVIRONMENTS']:
         if eb_env['NAME'] == target_eb_name:
             run_terminate_environment(eb_env['NAME'])
             break
-    print('"%s" is not exists in config.json' % target_eb_name)
+    if not target_eb_name_exists:
+        print('"%s" is not exists in config.json' % target_eb_name)
 else:
     for eb_env in eb['ENVIRONMENTS']:
         run_terminate_environment(eb_env['NAME'])

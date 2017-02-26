@@ -23,9 +23,9 @@ def _confirm_phase():
     eb = env['elasticbeanstalk']
     print('Your current environment values are below')
     print('-' * 80)
-    print('\tPHASE            : \'%s\'' % phase)
+    print('\tPHASE               : \'%s\'' % phase)
     for eb_env in eb['ENVIRONMENTS']:
-        print('\tCNAME of %s    : \'%s\'' % (eb_env['NAME'], eb_env['CNAME']))
+        print('\tCNAME of %-10s : \'%s\'' % (eb_env['NAME'], eb_env['CNAME']))
     print('-' * 80)
 
     answer = input('Please type in the name of phase \'%s\' to confirm: ' % phase)
@@ -36,9 +36,13 @@ def _confirm_phase():
 
 class AWSCli:
     cidr_vpc = dict()
+    cidr_vpc['rds'] = env['common']['AWS_VPC_RDS']
     cidr_vpc['eb'] = env['common']['AWS_VPC_EB']
 
     cidr_subnet = dict()
+    cidr_subnet['rds'] = dict()
+    cidr_subnet['rds']['private_1'] = env['common']['AWS_SUBNET_RDS_PRIVATE_1']
+    cidr_subnet['rds']['private_2'] = env['common']['AWS_SUBNET_RDS_PRIVATE_2']
     cidr_subnet['eb'] = dict()
     cidr_subnet['eb']['private_1'] = env['common']['AWS_SUBNET_EB_PRIVATE_1']
     cidr_subnet['eb']['private_2'] = env['common']['AWS_SUBNET_EB_PRIVATE_2']
@@ -92,6 +96,13 @@ class AWSCli:
         return self._run(args, cwd, ignore_error)
 
     def get_vpc_id(self):
+        rds_vpc_id = None
+        cmd = ['ec2', 'describe-vpcs']
+        cmd += ['--filters=Name=cidr,Values=%s' % self.cidr_vpc['rds']]
+        result = self.run(cmd)
+        if len(result['Vpcs']) == 1:
+            rds_vpc_id = dict(result['Vpcs'][0])['VpcId']
+
         eb_vpc_id = None
         cmd = ['ec2', 'describe-vpcs']
         cmd += ['--filters=Name=cidr,Values=%s' % self.cidr_vpc['eb']]
@@ -99,9 +110,9 @@ class AWSCli:
         if len(result['Vpcs']) == 1:
             eb_vpc_id = dict(result['Vpcs'][0])['VpcId']
 
-        return eb_vpc_id
+        return rds_vpc_id, eb_vpc_id
 
-    def get_cache_address(self):
+    def get_elasticache_address(self):
         cmd = ['elasticache', 'describe-cache-clusters', '--show-cache-node-info']
 
         elapsed_time = 0
@@ -127,7 +138,7 @@ class AWSCli:
             if elapsed_time > 60 * 30:
                 raise Exception()
 
-    def get_database_address(self, read_replica=None):
+    def get_rds_address(self, read_replica=None):
         cmd = ['rds', 'describe-db-instances']
 
         elapsed_time = 0
@@ -165,6 +176,45 @@ class AWSCli:
         cmd += ['--resources', resource_id]
         cmd += ['--tags', 'Key=Name,Value=%s' % name]
         self.run(cmd)
+
+    def wait_terminate_lambda(self):
+        cmd = ['lambda', 'list-functions']
+
+        elapsed_time = 0
+        while True:
+            result = self.run(cmd)
+            if len(result['Functions']) == 0:
+                break
+
+            print('terminating the lambda... (elapsed time: \'%d\' seconds)' % elapsed_time)
+            time.sleep(5)
+            elapsed_time += 5
+
+    def wait_terminate_rds(self):
+        cmd = ['rds', 'describe-db-instances']
+
+        elapsed_time = 0
+        while True:
+            result = self.run(cmd)
+            if len(result['DBInstances']) == 0:
+                break
+
+            print('terminating the rds... (elapsed time: \'%d\' seconds)' % elapsed_time)
+            time.sleep(5)
+            elapsed_time += 5
+
+    def wait_terminate_elasticache(self):
+        cmd = ['elasticache', 'describe-cache-clusters']
+
+        elapsed_time = 0
+        while True:
+            result = self.run(cmd)
+            if len(result['CacheClusters']) == 0:
+                break
+
+            print('terminating the elasticache... (elapsed time: \'%d\' seconds)' % elapsed_time)
+            time.sleep(5)
+            elapsed_time += 5
 
     def wait_terminate_eb(self):
         cmd = ['ec2', 'describe-instances']

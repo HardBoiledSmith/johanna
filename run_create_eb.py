@@ -25,7 +25,7 @@ if __name__ == "__main__":
 aws_cli = AWSCli()
 
 
-def run_create_eb_environment(name, settings):
+def run_create_eb_app(name, settings):
     aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
     aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
     aws_default_region = env['aws']['AWS_DEFAULT_REGION']
@@ -33,6 +33,7 @@ def run_create_eb_environment(name, settings):
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
+    host_maya = env['common']['HOST_MAYA']
     key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
     subnet_type = settings['SUBNET_TYPE']
@@ -46,26 +47,26 @@ def run_create_eb_environment(name, settings):
 
     str_timestamp = str(int(time.time()))
 
-    eb_environment_name = name + '-' + str_timestamp
+    eb_environment_name = '%s-%s' % (name, str_timestamp)
     eb_environment_name_old = None
 
     template_path = 'template/%s' % template_name
     environment_path = '%s/elasticbeanstalk/%s' % (template_path, name)
-    opt_config_path = environment_path + '/configuration/opt'
-    etc_config_path = environment_path + '/configuration/etc'
-    app_config_path = etc_config_path + '/' + name
+    opt_config_path = '%s/configuration/opt' % environment_path
+    etc_config_path = '%s/configuration/etc' % environment_path
+    app_config_path = '%s/%s' % (etc_config_path, name)
 
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
     git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
 
     ################################################################################
-    print_session('create ' + name)
+    print_session('create %s' % name)
 
     ################################################################################
     print_message('get vpc id')
 
-    eb_vpc_id = aws_cli.get_vpc_id()
+    rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
 
     if not eb_vpc_id:
         print('ERROR!!! No VPC found')
@@ -118,51 +119,45 @@ def run_create_eb_environment(name, settings):
 
     ################################################################################
 
-    db_address = None
-    if os.path.exists(app_config_path + '/my.cnf.sample'):
-        print_message('get database address')
-        db_address = aws_cli.get_database_address()
+    print_message('get database address')
+    db_address = aws_cli.get_rds_address()
 
     ################################################################################
-    print_message('configuration ' + name)
+    print_message('configuration %s' % name)
 
     with open('%s/configuration/phase' % environment_path, 'w') as f:
         f.write(phase)
         f.close()
 
-    lines = read_file(environment_path + '/.elasticbeanstalk/config.yml.sample')
+    lines = read_file('%s/.elasticbeanstalk/config.yml.sample' % environment_path)
     lines = re_sub_lines(lines, '^(  application_name).*', '\\1: %s' % eb_application_name)
     lines = re_sub_lines(lines, '^(  default_ec2_keyname).*', '\\1: %s' % key_pair_name)
-    write_file(environment_path + '/.elasticbeanstalk/config.yml', lines)
+    write_file('%s/.elasticbeanstalk/config.yml' % environment_path, lines)
 
-    lines = read_file(environment_path + '/.ebextensions/' + name + '.config.sample')
+    lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
     lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
-    write_file(environment_path + '/.ebextensions/' + name + '.config', lines)
+    write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
 
-    if os.path.exists(app_config_path + '/my.cnf.sample'):
-        lines = read_file(app_config_path + '/my.cnf.sample')
-        lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address)
-        lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
-        lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
-        write_file(app_config_path + '/my.cnf', lines)
+    lines = read_file('%s/my.cnf.sample' % app_config_path)
+    lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address)
+    lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
+    lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
+    write_file('%s/my.cnf' % app_config_path, lines)
 
-    if os.path.exists(etc_config_path + '/collectd.conf.sample'):
-        lines = read_file(etc_config_path + '/collectd.conf.sample')
-        lines = re_sub_lines(lines, 'HOST_MAYA', env['common']['HOST_MAYA'])
-        write_file(etc_config_path + '/collectd.conf', lines)
+    lines = read_file('%s/collectd.conf.sample' % etc_config_path)
+    lines = re_sub_lines(lines, 'HOST_MAYA', host_maya)
+    write_file('%s/collectd.conf' % etc_config_path, lines)
 
-    if os.path.exists(opt_config_path + '/ntpdate.sh.sample'):
-        lines = read_file(opt_config_path + '/ntpdate.sh.sample')
-        lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % env['common']['HOST_MAYA'])
-        write_file(opt_config_path + '/ntpdate.sh', lines)
+    lines = read_file('%s/ntpdate.sh.sample' % opt_config_path)
+    lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % host_maya)
+    write_file('%s/ntpdate.sh' % opt_config_path, lines)
 
-    if os.path.exists(opt_config_path + '/nc.sh.sample'):
-        lines = read_file(opt_config_path + '/nc.sh.sample')
-        lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % env['common']['HOST_MAYA'])
-        write_file(opt_config_path + '/nc.sh', lines)
+    lines = read_file('%s/nc.sh.sample' % opt_config_path)
+    lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % host_maya)
+    write_file('%s/nc.sh' % opt_config_path, lines)
 
-    lines = read_file(app_config_path + '/settings_local.py.sample')
+    lines = read_file('%s/settings_local.py.sample' % app_config_path)
     lines = re_sub_lines(lines, '^(DEBUG).*', '\\1 = %s' % debug)
     option_list = list()
     option_list.append(['PHASE', phase])
@@ -170,27 +165,27 @@ def run_create_eb_environment(name, settings):
         value = settings[key]
         option_list.append([key, value])
     for oo in option_list:
-        lines = re_sub_lines(lines, '^(' + oo[0] + ') .*', '\\1 = \'%s\'' % oo[1])
-    write_file(app_config_path + '/settings_local.py', lines)
+        lines = re_sub_lines(lines, '^(%s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
+    write_file('%s/settings_local.py' % app_config_path, lines)
 
     ################################################################################
     print_message('git clone')
 
-    subprocess.Popen(['rm', '-rf', './' + name], cwd=environment_path).communicate()
+    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
     if phase == 'dv':
         git_command = ['git', 'clone', '--depth=1', git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
     subprocess.Popen(git_command, cwd=environment_path).communicate()
-    if not os.path.exists(environment_path + '/' + name):
+    if not os.path.exists('%s/%s' % (environment_path, name)):
         raise Exception()
 
     git_hash_app = subprocess.Popen(git_rev,
                                     stdout=subprocess.PIPE,
-                                    cwd=environment_path + '/' + name).communicate()[0]
+                                    cwd='%s/%s' % (environment_path, name)).communicate()[0]
 
-    subprocess.Popen(['rm', '-rf', './' + name + '/.git'], cwd=environment_path).communicate()
-    subprocess.Popen(['rm', '-rf', './' + name + '/.gitignore'], cwd=environment_path).communicate()
+    subprocess.Popen(['rm', '-rf', './%s/.git' % name], cwd=environment_path).communicate()
+    subprocess.Popen(['rm', '-rf', './%s/.gitignore' % name], cwd=environment_path).communicate()
 
     ################################################################################
     print_message('check previous version')
@@ -211,11 +206,11 @@ def run_create_eb_environment(name, settings):
                 raise Exception()
 
             eb_environment_name_old = r['EnvironmentName']
-            cname += '-' + str_timestamp
+            cname += '-%s' % str_timestamp
             break
 
     ################################################################################
-    print_message('create ' + name)
+    print_message('create %s' % name)
 
     tags = list()
     # noinspection PyUnresolvedReferences
@@ -223,7 +218,7 @@ def run_create_eb_environment(name, settings):
     # noinspection PyUnresolvedReferences
     tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8')))
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_' + name + '=%s' % git_hash_app.decode('utf-8'))
+    tags.append('git_hash_%s=%s' % (name, git_hash_app.decode('utf-8')))
 
     cmd = ['create', eb_environment_name]
     cmd += ['--cname', cname]
@@ -234,8 +229,8 @@ def run_create_eb_environment(name, settings):
     cmd += ['--vpc.securitygroups', security_group_id]
     cmd += ['--quiet']
     if 'public' == subnet_type:
-        cmd += ['--vpc.ec2subnets', subnet_id_1 + ',' + subnet_id_2]
-        cmd += ['--vpc.elbsubnets', subnet_id_1 + ',' + subnet_id_2]
+        cmd += ['--vpc.ec2subnets', ','.join([subnet_id_1, subnet_id_2])]
+        cmd += ['--vpc.elbsubnets', ','.join([subnet_id_1, subnet_id_2])]
         cmd += ['--vpc.elbpublic']
         cmd += ['--vpc.publicip']
     elif 'private' == subnet_type:
@@ -266,7 +261,7 @@ def run_create_eb_environment(name, settings):
         if elapsed_time > 60 * 30:
             raise Exception()
 
-    subprocess.Popen(['rm', '-rf', './' + name], cwd=environment_path).communicate()
+    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
 
     ################################################################################
     print_message('revoke security group ingress')
@@ -330,6 +325,244 @@ def run_create_eb_environment(name, settings):
         aws_cli.run(cmd)
 
 
+def run_create_eb_vpn(name, settings):
+    aws_default_region = env['aws']['AWS_DEFAULT_REGION']
+    cname = settings['CNAME']
+    eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
+    host_maya = env['common']['HOST_MAYA']
+    key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
+    openvpn_ca_crt = settings['CA_CRT']
+    openvpn_dh2048_pem = settings['DH2048_PEM']
+    openvpn_server_crt = settings['SERVER_CRT']
+    openvpn_server_key = settings['SERVER_KEY']
+    openvpn_subnet_ip = settings['SUBNET_IP']
+    phase = env['common']['PHASE']
+    template_name = env['template']['NAME']
+
+    cidr_vpc = aws_cli.cidr_vpc
+    cidr_subnet = aws_cli.cidr_subnet
+
+    str_timestamp = str(int(time.time()))
+
+    eb_environment_name = '%s-%s' % (name, str_timestamp)
+    eb_environment_name_old = None
+
+    template_path = 'template/%s' % template_name
+    environment_path = '%s/elasticbeanstalk/%s' % (template_path, name)
+    opt_config_path = '%s/configuration/opt' % environment_path
+    etc_config_path = '%s/configuration/etc' % environment_path
+
+    git_rev = ['git', 'rev-parse', 'HEAD']
+    git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
+    git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
+
+    ################################################################################
+    #
+    # start
+    #
+    ################################################################################
+    print_session('create %s' % name)
+
+    ################################################################################
+    print_message('get vpc id')
+
+    rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
+
+    if not rds_vpc_id or not eb_vpc_id:
+        print('ERROR!!! No VPC found')
+        raise Exception()
+
+    ################################################################################
+    print_message('get subnet id')
+
+    subnet_id_1 = None
+    subnet_id_2 = None
+    cmd = ['ec2', 'describe-subnets']
+    result = aws_cli.run(cmd)
+    for r in result['Subnets']:
+        if r['VpcId'] != eb_vpc_id:
+            continue
+        if r['CidrBlock'] == cidr_subnet['eb']['public_1']:
+            subnet_id_1 = r['SubnetId']
+        if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
+            subnet_id_2 = r['SubnetId']
+
+    ################################################################################
+    print_message('get security group id')
+
+    security_group_id = None
+    cmd = ['ec2', 'describe-security-groups']
+    result = aws_cli.run(cmd)
+    for r in result['SecurityGroups']:
+        if r['VpcId'] != eb_vpc_id:
+            continue
+        if r['GroupName'] == 'eb_public':
+            security_group_id = r['GroupId']
+            break
+
+    ################################################################################
+    print_message('configuration openvpn')
+
+    path = '%s/configuration/etc/openvpn' % environment_path
+
+    with open('%s/ca.crt' % path, 'w') as f:
+        f.write(openvpn_ca_crt)
+        f.close()
+
+    with open('%s/dh2048.pem' % path, 'w') as f:
+        f.write(openvpn_dh2048_pem)
+        f.close()
+
+    with open('%s/server.crt' % path, 'w') as f:
+        f.write(openvpn_server_crt)
+        f.close()
+
+    with open('%s/server.key' % path, 'w') as f:
+        f.write(openvpn_server_key)
+        f.close()
+
+    ################################################################################
+    print_message('configuration %s' % name)
+
+    with open('%s/configuration/phase' % environment_path, 'w') as f:
+        f.write(phase)
+        f.close()
+
+    lines = read_file('%s/.elasticbeanstalk/config.yml.sample' % environment_path)
+    lines = re_sub_lines(lines, '^(  application_name).*', '\\1: %s' % eb_application_name)
+    lines = re_sub_lines(lines, '^(  default_ec2_keyname).*', '\\1: %s' % key_pair_name)
+    write_file('%s/.elasticbeanstalk/config.yml' % environment_path, lines)
+
+    lines = read_file('%s/collectd.conf.sample' % etc_config_path)
+    lines = re_sub_lines(lines, 'HOST_MAYA', host_maya)
+    write_file('%s/collectd.conf' % etc_config_path, lines)
+
+    lines = read_file('%s/ntpdate.sh.sample' % opt_config_path)
+    lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % host_maya)
+    write_file('%s/ntpdate.sh' % opt_config_path, lines)
+
+    lines = read_file('%s/openvpn/server.conf.sample' % etc_config_path)
+    lines = re_sub_lines(lines, 'OPENVPN_SUBNET_IP', openvpn_subnet_ip)
+    write_file('%s/openvpn/server.conf' % etc_config_path, lines)
+
+    lines = read_file('%s/sysconfig/iptables.sample' % etc_config_path)
+    lines = re_sub_lines(lines, 'AWS_VPC_EB', cidr_vpc['eb'])
+    lines = re_sub_lines(lines, 'OPENVPN_SUBNET_IP', openvpn_subnet_ip)
+    write_file('%s/sysconfig/iptables' % etc_config_path, lines)
+
+    ################################################################################
+    print_message('check previous version')
+
+    cmd = ['elasticbeanstalk', 'describe-environments']
+    cmd += ['--application-name', eb_application_name]
+    result = aws_cli.run(cmd)
+
+    for r in result['Environments']:
+        if 'CNAME' not in r:
+            continue
+
+        if r['CNAME'] == '%s.ap-northeast-2.elasticbeanstalk.com' % cname:
+            if r['Status'] == 'Terminated':
+                continue
+            elif r['Status'] != 'Ready':
+                print('previous version is not ready.')
+                raise Exception()
+
+            eb_environment_name_old = r['EnvironmentName']
+            cname += '-%s' % str_timestamp
+            break
+
+    ################################################################################
+    print_message('create %s' % name)
+
+    tags = list()
+    # noinspection PyUnresolvedReferences
+    tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8'))
+    # noinspection PyUnresolvedReferences
+    tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8')))
+
+    cmd = ['create', eb_environment_name]
+    cmd += ['--cname', cname]
+    cmd += ['--instance_type', 't2.nano']
+    cmd += ['--region', aws_default_region]
+    cmd += ['--single']
+    cmd += ['--tags', ','.join(tags)]
+    cmd += ['--vpc.ec2subnets', ','.join([subnet_id_1, subnet_id_2])]
+    cmd += ['--vpc.elbpublic']
+    cmd += ['--vpc.elbsubnets', ','.join([subnet_id_1, subnet_id_2])]
+    cmd += ['--vpc.id', eb_vpc_id]
+    cmd += ['--vpc.publicip']
+    cmd += ['--vpc.securitygroups', security_group_id]
+    cmd += ['--quiet']
+    aws_cli.run_eb(cmd, cwd=environment_path)
+
+    elapsed_time = 0
+    while True:
+        cmd = ['elasticbeanstalk', 'describe-environments']
+        cmd += ['--application-name', eb_application_name]
+        cmd += ['--environment-name', eb_environment_name]
+        result = aws_cli.run(cmd)
+
+        ee = result['Environments'][0]
+        print(json.dumps(ee, sort_keys=True, indent=4))
+        if ee.get('Health', '') == 'Green' \
+                and ee.get('HealthStatus', '') == 'Ok' \
+                and ee.get('Status', '') == 'Ready':
+            break
+
+        print('creating... (elapsed time: \'%d\' seconds)' % elapsed_time)
+        time.sleep(5)
+        elapsed_time += 5
+
+        if elapsed_time > 60 * 30:
+            raise Exception()
+
+    ################################################################################
+    print_message('revoke security group ingress')
+
+    cmd = ['ec2', 'describe-security-groups']
+    cmd += ['--filters', 'Name=tag-key,Values=Name,Name=tag-value,Values=%s' % eb_environment_name]
+    result = aws_cli.run(cmd)
+
+    for ss in result['SecurityGroups']:
+        cmd = ['ec2', 'revoke-security-group-ingress']
+        cmd += ['--group-id', ss['GroupId']]
+        cmd += ['--protocol', 'tcp']
+        cmd += ['--port', '22']
+        cmd += ['--cidr', '0.0.0.0/0']
+        aws_cli.run(cmd, ignore_error=True)
+
+    ################################################################################
+    print_message('disable source/destination checking')
+
+    cmd = ['elasticbeanstalk', 'describe-environments']
+    cmd += ['--application-name', eb_application_name]
+    cmd += ['--environment-name', eb_environment_name]
+    result = aws_cli.run(cmd)
+
+    ip_address = result['Environments'][0]['EndpointURL']
+
+    cmd = ['ec2', 'describe-instances']
+    cmd += ['--filter=Name=ip-address,Values=%s' % ip_address]
+    result = aws_cli.run(cmd)
+
+    instance_id = result['Reservations'][0]['Instances'][0]['InstanceId']
+
+    cmd = ['ec2', 'modify-instance-attribute']
+    cmd += ['--instance-id', instance_id]
+    cmd += ['--no-source-dest-check']
+    aws_cli.run(cmd)
+
+    ################################################################################
+    print_message('swap CNAME if the previous version exists')
+
+    if eb_environment_name_old:
+        cmd = ['elasticbeanstalk', 'swap-environment-cnames']
+        cmd += ['--source-environment-name', eb_environment_name_old]
+        cmd += ['--destination-environment-name', eb_environment_name]
+        aws_cli.run(cmd)
+
+
 ################################################################################
 #
 # start
@@ -345,11 +578,27 @@ print_session('create eb')
 eb = env['elasticbeanstalk']
 if len(args) == 2:
     target_eb_name = args[1]
+    target_eb_name_exists = False
     for eb_env in eb['ENVIRONMENTS']:
         if eb_env['NAME'] == target_eb_name:
-            run_create_eb_environment(eb_env['NAME'], eb_env)
-            break
-    print('"%s" is not exists in config.json' % target_eb_name)
+            target_eb_name_exists = True
+            if eb_env['TYPE'] == 'app':
+                run_create_eb_app(eb_env['NAME'], eb_env)
+                break
+            if eb_env['TYPE'] == 'vpn':
+                run_create_eb_vpn(eb_env['NAME'], eb_env)
+                break
+            print('"%s" is not supported' % eb_env['TYPE'])
+            raise Exception()
+    if not target_eb_name_exists:
+        print('"%s" is not exists in config.json' % target_eb_name)
 else:
     for eb_env in eb['ENVIRONMENTS']:
-        run_create_eb_environment(eb_env['NAME'], eb_env)
+        if eb_env['TYPE'] == 'app':
+            run_create_eb_app(eb_env['NAME'], eb_env)
+            continue
+        if eb_env['TYPE'] == 'vpn':
+            run_create_eb_vpn(eb_env['NAME'], eb_env)
+            continue
+        print('"%s" is not supported' % eb_env['TYPE'])
+        raise Exception()

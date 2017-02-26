@@ -12,6 +12,7 @@ if __name__ == "__main__":
     parse_args()
 
 aws_cli = AWSCli()
+rds_subnet_name = env['rds']['DB_SUBNET_NAME']
 
 cidr_vpc = aws_cli.cidr_vpc
 
@@ -23,14 +24,57 @@ cidr_vpc = aws_cli.cidr_vpc
 print_session('terminate vpc')
 
 ################################################################################
+print_message('wait terminate rds')
+
+aws_cli.wait_terminate_rds()
+
+################################################################################
+print_message('wait terminate elasticache')
+
+aws_cli.wait_terminate_elasticache()
+
+################################################################################
 print_message('wait terminate eb')
 
 aws_cli.wait_terminate_eb()
 
 ################################################################################
+print_message('delete network interface')
+
+cmd = ['ec2', 'describe-network-interfaces']
+result = aws_cli.run(cmd, ignore_error=True)
+
+for r in result['NetworkInterfaces']:
+    network_interface_id = r['NetworkInterfaceId']
+
+    if 'Attachment' in r:
+        attachment_id = r['Attachment']['AttachmentId']
+
+        cmd = ['ec2', 'detach-network-interface']
+        cmd += ['--attachment-id', attachment_id]
+        aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['ec2', 'delete-network-interface']
+    cmd += ['--network-interface-id', network_interface_id]
+    aws_cli.run(cmd, ignore_error=True)
+
+################################################################################
 print_message('get vpc id')
 
-eb_vpc_id = aws_cli.get_vpc_id()
+rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
+
+################################################################################
+print_message('delete vpc peering connection')
+
+cmd = ['ec2', 'describe-vpc-peering-connections']
+result = aws_cli.run(cmd, ignore_error=True)
+for vpc_peer in result['VpcPeeringConnections']:
+    if vpc_peer['RequesterVpcInfo']['VpcId'] == rds_vpc_id and vpc_peer['AccepterVpcInfo']['VpcId'] == eb_vpc_id:
+        peering_connection_id = vpc_peer['VpcPeeringConnectionId']
+        print('delete vpc peering connnection (id: %s)' % peering_connection_id)
+        cmd = ['ec2', 'delete-vpc-peering-connection']
+        cmd += ['--vpc-peering-connection-id', peering_connection_id]
+        aws_cli.run(cmd, ignore_error=True)
 
 ################################################################################
 print_message('revoke security group ingress')
@@ -40,7 +84,7 @@ security_group_id_2 = None
 cmd = ['ec2', 'describe-security-groups']
 result = aws_cli.run(cmd, ignore_error=True)
 for r in result['SecurityGroups']:
-    if r['VpcId'] != eb_vpc_id:
+    if r['VpcId'] != rds_vpc_id and r['VpcId'] != eb_vpc_id:
         continue
     if r['GroupName'] == 'eb_private':
         security_group_id_1 = r['GroupId']
@@ -65,7 +109,7 @@ print_message('delete security group')
 cmd = ['ec2', 'describe-security-groups']
 result = aws_cli.run(cmd, ignore_error=True)
 for r in result['SecurityGroups']:
-    if r['VpcId'] != eb_vpc_id:
+    if r['VpcId'] != rds_vpc_id and r['VpcId'] != eb_vpc_id:
         continue
     if r['GroupName'] == 'default':
         continue
@@ -80,7 +124,7 @@ print_message('delete route')
 cmd = ['ec2', 'describe-route-tables']
 result = aws_cli.run(cmd, ignore_error=True)
 for r in result['RouteTables']:
-    if r['VpcId'] != eb_vpc_id:
+    if r['VpcId'] != rds_vpc_id and r['VpcId'] != eb_vpc_id:
         continue
     for route in r['Routes']:
         if route['DestinationCidrBlock'] == '0.0.0.0/0':
@@ -96,7 +140,7 @@ print_message('disassociate route table')
 cmd = ['ec2', 'describe-route-tables']
 result = aws_cli.run(cmd, ignore_error=True)
 for r in result['RouteTables']:
-    if r['VpcId'] != eb_vpc_id:
+    if r['VpcId'] != rds_vpc_id and r['VpcId'] != eb_vpc_id:
         continue
     for association in r['Associations']:
         if association['Main']:
@@ -113,7 +157,7 @@ print_message('delete route table')
 cmd = ['ec2', 'describe-route-tables']
 result = aws_cli.run(cmd, ignore_error=True)
 for r in result['RouteTables']:
-    if r['VpcId'] != eb_vpc_id:
+    if r['VpcId'] != rds_vpc_id and r['VpcId'] != eb_vpc_id:
         continue
     if len(r['Associations']) != 0:
         continue
@@ -128,7 +172,7 @@ print_message('delete nat gateway')
 cmd = ['ec2', 'describe-nat-gateways']
 result = aws_cli.run(cmd, ignore_error=True)
 for r in result['NatGateways']:
-    if r['VpcId'] != eb_vpc_id:
+    if r['VpcId'] != rds_vpc_id and r['VpcId'] != eb_vpc_id:
         continue
     print('delete nat gateway (nat gateway id: %s)' % r['NatGatewayId'])
     cmd = ['ec2', 'delete-nat-gateway']
@@ -150,6 +194,23 @@ for r in result['Addresses']:
     cmd = ['ec2', 'release-address']
     cmd += ['--allocation-id', r['AllocationId']]
     aws_cli.run(cmd, ignore_error=True)
+
+################################################################################
+if env.get('elasticache'):
+    elasticache_subnet_name = env['elasticache']['CACHE_SUBNET_NAME']
+
+    print_message('delete cache subnet group')
+
+    cmd = ['elasticache', 'delete-cache-subnet-group']
+    cmd += ['--cache-subnet-group-name', elasticache_subnet_name]
+    aws_cli.run(cmd, ignore_error=True)
+
+################################################################################
+print_message('delete db subnet group')
+
+cmd = ['rds', 'delete-db-subnet-group']
+cmd += ['--db-subnet-group-name', rds_subnet_name]
+aws_cli.run(cmd, ignore_error=True)
 
 ################################################################################
 print_message('detach internet gateway')
@@ -186,7 +247,7 @@ print_message('delete subnet')
 cmd = ['ec2', 'describe-subnets']
 result = aws_cli.run(cmd, ignore_error=True)
 for r in result['Subnets']:
-    if r['VpcId'] != eb_vpc_id:
+    if r['VpcId'] != rds_vpc_id and r['VpcId'] != eb_vpc_id:
         continue
     print('delete subnet (subnet id: %s)' % r['SubnetId'])
     cmd = ['ec2', 'delete-subnet']
@@ -195,6 +256,12 @@ for r in result['Subnets']:
 
 ################################################################################
 print_message('delete vpc')
+
+if rds_vpc_id:
+    print('delete vpc (vpc id: %s)' % rds_vpc_id)
+    cmd = ['ec2', 'delete-vpc']
+    cmd += ['--vpc-id', rds_vpc_id]
+    aws_cli.run(cmd, ignore_error=True)
 
 if eb_vpc_id:
     print('delete vpc (vpc id: %s)' % eb_vpc_id)

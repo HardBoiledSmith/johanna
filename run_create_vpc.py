@@ -16,6 +16,7 @@ if __name__ == "__main__":
 aws_cli = AWSCli()
 aws_availability_zone_1 = env['aws']['AWS_AVAILABILITY_ZONE_1']
 aws_availability_zone_2 = env['aws']['AWS_AVAILABILITY_ZONE_2']
+rds_subnet_name = env['rds']['DB_SUBNET_NAME']
 
 cidr_vpc = aws_cli.cidr_vpc
 cidr_subnet = aws_cli.cidr_subnet
@@ -27,16 +28,17 @@ cidr_subnet = aws_cli.cidr_subnet
 ################################################################################
 print_message('get vpc id')
 
-eb_vpc_id = aws_cli.get_vpc_id()
-if eb_vpc_id:
+rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
+if rds_vpc_id or eb_vpc_id:
     print_message('VPC already exists')
+    print('RDS: %s \n' % rds_vpc_id)
     print('EB: %s \n' % eb_vpc_id)
     print_session('finish python code')
     sys.exit(0)
 
 ################################################################################
 #
-# EB
+# EB Application
 #
 ################################################################################
 print_session('create eb application')
@@ -91,10 +93,108 @@ aws_cli.run(cmd)
 
 ################################################################################
 #
-# VPC
+# RDS
 #
 ################################################################################
-print_session('create vpc')
+print_session('rds')
+
+################################################################################
+print_message('create vpc')
+
+cmd = ['ec2', 'create-vpc']
+cmd += ['--cidr-block', cidr_vpc['rds']]
+result = aws_cli.run(cmd)
+rds_vpc_id = result['Vpc']['VpcId']
+aws_cli.set_name_tag(rds_vpc_id, 'rds')
+
+################################################################################
+print_message('create subnet')
+
+rds_subnet_id = dict()
+
+cmd = ['ec2', 'create-subnet']
+cmd += ['--vpc-id', rds_vpc_id]
+cmd += ['--cidr-block', cidr_subnet['rds']['private_1']]
+cmd += ['--availability-zone', aws_availability_zone_1]
+result = aws_cli.run(cmd)
+rds_subnet_id['private_1'] = result['Subnet']['SubnetId']
+aws_cli.set_name_tag(rds_subnet_id['private_1'], 'rds_private_1')
+
+cmd = ['ec2', 'create-subnet']
+cmd += ['--vpc-id', rds_vpc_id]
+cmd += ['--cidr-block', cidr_subnet['rds']['private_2']]
+cmd += ['--availability-zone', aws_availability_zone_2]
+result = aws_cli.run(cmd)
+rds_subnet_id['private_2'] = result['Subnet']['SubnetId']
+aws_cli.set_name_tag(rds_subnet_id['private_2'], 'rds_private_2')
+
+################################################################################
+print_message('create db subnet group')
+
+cmd = ['rds', 'create-db-subnet-group']
+cmd += ['--db-subnet-group-name', rds_subnet_name]
+cmd += ['--db-subnet-group-description', rds_subnet_name]
+cmd += ['--subnet-ids', rds_subnet_id['private_1'], rds_subnet_id['private_2']]
+aws_cli.run(cmd)
+
+################################################################################
+print_message('create ' + 'route table')  # [FYI] PyCharm inspects 'create route table' as SQL query.
+
+rds_route_table_id = dict()
+
+cmd = ['ec2', 'create-route-table']
+cmd += ['--vpc-id', rds_vpc_id]
+result = aws_cli.run(cmd)
+rds_route_table_id['private'] = result['RouteTable']['RouteTableId']
+aws_cli.set_name_tag(rds_route_table_id['private'], 'rds_private')
+
+################################################################################
+print_message('associate route table')
+
+cmd = ['ec2', 'associate-route-table']
+cmd += ['--subnet-id', rds_subnet_id['private_1']]
+cmd += ['--route-table-id', rds_route_table_id['private']]
+aws_cli.run(cmd)
+
+cmd = ['ec2', 'associate-route-table']
+cmd += ['--subnet-id', rds_subnet_id['private_2']]
+cmd += ['--route-table-id', rds_route_table_id['private']]
+aws_cli.run(cmd)
+
+################################################################################
+print_message('create security group')
+
+rds_security_group_id = dict()
+
+cmd = ['ec2', 'create-security-group']
+cmd += ['--group-name', 'rds']
+cmd += ['--description', 'rds']
+cmd += ['--vpc-id', rds_vpc_id]
+result = aws_cli.run(cmd)
+rds_security_group_id['private'] = result['GroupId']
+
+################################################################################
+print_message('authorize security group ingress')
+
+cmd = ['ec2', 'authorize-security-group-ingress']
+cmd += ['--group-id', rds_security_group_id['private']]
+cmd += ['--protocol', 'all']
+cmd += ['--source-group', rds_security_group_id['private']]
+aws_cli.run(cmd)
+
+cmd = ['ec2', 'authorize-security-group-ingress']
+cmd += ['--group-id', rds_security_group_id['private']]
+cmd += ['--protocol', 'tcp']
+cmd += ['--port', '3306']
+cmd += ['--cidr', cidr_vpc['eb']]
+aws_cli.run(cmd)
+
+################################################################################
+#
+# EB
+#
+################################################################################
+print_session('eb')
 
 ################################################################################
 print_message('create vpc')
@@ -289,3 +389,119 @@ cmd += ['--protocol', 'tcp']
 cmd += ['--port', '80']
 cmd += ['--cidr', '0.0.0.0/0']
 aws_cli.run(cmd)
+
+################################################################################
+#
+# ElastiCache
+#
+################################################################################
+print_session('elasticache')
+
+################################################################################
+if env.get('elasticache'):
+    elasticache_subnet_name = env['elasticache']['CACHE_SUBNET_NAME']
+
+    print_message('create cache subnet group')
+
+    cmd = ['elasticache', 'create-cache-subnet-group']
+    cmd += ['--cache-subnet-group-name', elasticache_subnet_name]
+    cmd += ['--cache-subnet-group-description', elasticache_subnet_name]
+    cmd += ['--subnet-ids', eb_subnet_id['private_1'], eb_subnet_id['private_2']]
+    aws_cli.run(cmd)
+
+################################################################################
+#
+# vpc peering connection
+#
+################################################################################
+print_session('vpc peering connection')
+
+################################################################################
+print_message('create vpc peering connection')
+
+cmd = ['ec2', 'create-vpc-peering-connection']
+cmd += ['--vpc-id', rds_vpc_id]
+cmd += ['--peer-vpc-id', eb_vpc_id]
+result = aws_cli.run(cmd)
+peering_connection_id = result['VpcPeeringConnection']['VpcPeeringConnectionId']
+
+cmd = ['ec2', 'accept-vpc-peering-connection']
+cmd += ['--vpc-peering-connection-id', peering_connection_id]
+aws_cli.run(cmd)
+
+################################################################################
+print_message('create route: rds -> eb')
+
+cmd = ['ec2', 'create-route']
+cmd += ['--route-table-id', rds_route_table_id['private']]
+cmd += ['--destination-cidr-block', cidr_subnet['eb']['private_1']]
+cmd += ['--vpc-peering-connection-id', peering_connection_id]
+aws_cli.run(cmd)
+
+cmd = ['ec2', 'create-route']
+cmd += ['--route-table-id', rds_route_table_id['private']]
+cmd += ['--destination-cidr-block', cidr_subnet['eb']['private_2']]
+cmd += ['--vpc-peering-connection-id', peering_connection_id]
+aws_cli.run(cmd)
+
+cmd = ['ec2', 'create-route']
+cmd += ['--route-table-id', rds_route_table_id['private']]
+cmd += ['--destination-cidr-block', cidr_subnet['eb']['public_1']]
+cmd += ['--vpc-peering-connection-id', peering_connection_id]
+aws_cli.run(cmd)
+
+cmd = ['ec2', 'create-route']
+cmd += ['--route-table-id', rds_route_table_id['private']]
+cmd += ['--destination-cidr-block', cidr_subnet['eb']['public_2']]
+cmd += ['--vpc-peering-connection-id', peering_connection_id]
+aws_cli.run(cmd)
+
+################################################################################
+print_message('create route: eb -> rds')
+
+cmd = ['ec2', 'create-route']
+cmd += ['--route-table-id', eb_route_table_id['private']]
+cmd += ['--destination-cidr-block', cidr_subnet['rds']['private_1']]
+cmd += ['--vpc-peering-connection-id', peering_connection_id]
+aws_cli.run(cmd)
+
+cmd = ['ec2', 'create-route']
+cmd += ['--route-table-id', eb_route_table_id['private']]
+cmd += ['--destination-cidr-block', cidr_subnet['rds']['private_2']]
+cmd += ['--vpc-peering-connection-id', peering_connection_id]
+aws_cli.run(cmd)
+
+cmd = ['ec2', 'create-route']
+cmd += ['--route-table-id', eb_route_table_id['public']]
+cmd += ['--destination-cidr-block', cidr_subnet['rds']['private_1']]
+cmd += ['--vpc-peering-connection-id', peering_connection_id]
+aws_cli.run(cmd)
+
+cmd = ['ec2', 'create-route']
+cmd += ['--route-table-id', eb_route_table_id['public']]
+cmd += ['--destination-cidr-block', cidr_subnet['rds']['private_2']]
+cmd += ['--vpc-peering-connection-id', peering_connection_id]
+aws_cli.run(cmd)
+
+################################################################################
+#
+# Network Interface
+#
+################################################################################
+print_session('network interface')
+
+################################################################################
+environment_list = env['elasticbeanstalk']['ENVIRONMENTS']
+for environment in environment_list:
+    cname = environment['CNAME']
+    private_ip = environment.get('PRIVATE_IP')
+
+    if cname and private_ip:
+        print_message('create network interface for %s' % cname)
+
+        cmd = ['ec2', 'create-network-interface']
+        cmd += ['--subnet-id', eb_subnet_id['private_1']]
+        cmd += ['--description', cname]
+        cmd += ['--private-ip-address', private_ip]
+        cmd += ['--groups', eb_security_group_id['private']]
+        aws_cli.run(cmd)
