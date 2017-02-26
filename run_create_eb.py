@@ -66,7 +66,7 @@ def run_create_eb_app(name, settings):
     ################################################################################
     print_message('get vpc id')
 
-    eb_vpc_id = aws_cli.get_vpc_id()
+    rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
 
     if not eb_vpc_id:
         print('ERROR!!! No VPC found')
@@ -120,7 +120,7 @@ def run_create_eb_app(name, settings):
     ################################################################################
 
     print_message('get database address')
-    db_address = aws_cli.get_database_address()
+    db_address = aws_cli.get_rds_address()
 
     ################################################################################
     print_message('configuration %s' % name)
@@ -403,7 +403,7 @@ def run_create_eb_vpn(name, settings):
     ################################################################################
     print_message('configuration openvpn')
 
-    path = './%s/configuration/etc/openvpn' % name
+    path = '%s/configuration/etc/openvpn' % environment_path
 
     with open('%s/ca.crt' % path, 'w') as f:
         f.write(openvpn_ca_crt)
@@ -480,8 +480,6 @@ def run_create_eb_vpn(name, settings):
     tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8'))
     # noinspection PyUnresolvedReferences
     tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8')))
-    # noinspection PyUnresolvedReferences
-    tags.append('git_hash_%s=%s' % (name, git_hash_app.decode('utf-8')))
 
     cmd = ['create', eb_environment_name]
     cmd += ['--cname', cname]
@@ -583,7 +581,7 @@ if len(args) == 2:
     target_eb_name_exists = False
     for eb_env in eb['ENVIRONMENTS']:
         if eb_env['NAME'] == target_eb_name:
-            is_target_eb_name_exists = True
+            target_eb_name_exists = True
             if eb_env['TYPE'] == 'app':
                 run_create_eb_app(eb_env['NAME'], eb_env)
                 break

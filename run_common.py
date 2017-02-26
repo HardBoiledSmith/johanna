@@ -112,7 +112,7 @@ class AWSCli:
 
         return rds_vpc_id, eb_vpc_id
 
-    def get_cache_address(self):
+    def get_elasticache_address(self):
         cmd = ['elasticache', 'describe-cache-clusters', '--show-cache-node-info']
 
         elapsed_time = 0
@@ -138,7 +138,7 @@ class AWSCli:
             if elapsed_time > 60 * 30:
                 raise Exception()
 
-    def get_database_address(self, read_replica=None):
+    def get_rds_address(self, read_replica=None):
         cmd = ['rds', 'describe-db-instances']
 
         elapsed_time = 0

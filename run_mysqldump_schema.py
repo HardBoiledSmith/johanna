@@ -19,7 +19,7 @@ if 'mysql' is not engine:
 
 print_message('get database address')
 
-db_host = aws_cli.get_database_address(read_replica=True)
+db_host = aws_cli.get_rds_address(read_replica=True)
 db_user = env['rds']['USER_NAME']
 db_password = env['rds']['USER_PASSWORD']
 database = env['rds']['DATABASE']
