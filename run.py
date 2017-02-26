@@ -5,6 +5,7 @@ import json
 import sys
 
 from run_common import AWSCli
+from run_common import download_template
 
 command_list = list()
 command_list.append('create')
@@ -89,6 +90,7 @@ if __name__ == "__main__":
 
     command = 'run_%s' % command
     if command == 'run_create':
+        download_template()
         __import__('run_create_vpc')
         __import__('run_create_rds')
         __import__('run_create_eb')

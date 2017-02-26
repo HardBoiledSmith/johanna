@@ -347,7 +347,7 @@ def download_template():
     name = env['template']['NAME']
     phase = env['common']['PHASE']
 
-    print_session('download ' + name)
+    print_session('download template: %s' % name)
 
     subprocess.Popen(['mkdir', '-p', './template']).communicate()
     subprocess.Popen(['rm', '-rf', './' + name], cwd='template').communicate()

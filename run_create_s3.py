@@ -170,9 +170,9 @@ def run_create_s3_webapp(name, settings):
 # start
 #
 ################################################################################
-print_session('prepare template')
-
-download_template()
+template_name = env['template']['NAME']
+if not os.path.exists('template/%s' % template_name):
+    download_template()
 
 ################################################################################
 print_session('create s3')
