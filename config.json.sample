@@ -41,7 +41,7 @@
         "DATABASE": "...",
         "DB_CLASS": "db.t2.micro",
         "DB_ID": "db-test",
-        "DB_SIZE": "20",
+        "DB_SIZE": "5",
         "DB_SUBNET_NAME": "db-subnet",
         "ENGINE": "mysql",
         "ENGINE_VERSION": "5.7.11",
