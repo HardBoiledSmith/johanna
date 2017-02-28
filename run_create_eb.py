@@ -568,8 +568,7 @@ def run_create_eb_vpn(name, settings):
 # start
 #
 ################################################################################
-template_name = env['template']['NAME']
-if not os.path.exists('template/%s' % template_name):
+if not os.path.exists('template/%s' % env['template']['NAME']):
     download_template()
 
 ################################################################################
