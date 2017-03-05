@@ -333,7 +333,7 @@ def print_message(message):
 
 
 def print_session(message):
-    print('#' * 80 + '\n' + '#' * 80)
+    print('\n' + '#' * 80 + '\n' + '#' * 80)
     print('\n\t[ ' + message + ' ]\n\n')
 
 
