@@ -98,7 +98,9 @@ if __name__ == "__main__":
         __import__('run_create_eb')
         __import__('run_create_sqs')
         __import__('run_create_s3')
+        __import__('run_create_lambda')
     elif command == 'run_terminate':
+        __import__('run_terminate_lambda')
         __import__('run_terminate_s3')
         __import__('run_terminate_eb')
         __import__('run_terminate_rds')

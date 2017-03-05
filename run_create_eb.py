@@ -855,6 +855,6 @@ else:
             continue
         if eb_env['TYPE'] == 'graphite/grafana':
             run_create_eb_graphite_grafana(eb_env['NAME'], eb_env)
-            break
+            continue
         print('"%s" is not supported' % eb_env['TYPE'])
         raise Exception()
