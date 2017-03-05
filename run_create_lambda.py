@@ -25,6 +25,8 @@ aws_cli = AWSCli()
 
 
 def create_iam_for_lambda():
+    sleep_required = False
+
     role_name = 'aws-lambda-default-role'
     if not aws_cli.get_iam_role(role_name):
         print_message('create iam role')
@@ -33,6 +35,7 @@ def create_iam_for_lambda():
         cmd += ['--role-name', role_name]
         cmd += ['--assume-role-policy-document', 'file://aws_iam/aws-lambda-default-role.json']
         aws_cli.run(cmd)
+        sleep_required = True
 
     policy_name = 'aws-lambda-default-policy'
     if not aws_cli.get_iam_role_policy(role_name, policy_name):
@@ -43,6 +46,11 @@ def create_iam_for_lambda():
         cmd += ['--policy-name', policy_name]
         cmd += ['--policy-document', 'file://aws_iam/aws-lambda-default-policy.json']
         aws_cli.run(cmd)
+        sleep_required = True
+
+    if sleep_required:
+        print_message('wait few minutes to iam role and policy propagated...')
+        time.sleep(60)
 
 
 def run_create_default_lambda(name, settings):
@@ -90,8 +98,6 @@ def run_create_default_lambda(name, settings):
 
     cmd = ['zip', '-r', 'deploy.zip', '.']
     subprocess.Popen(cmd, cwd=deploy_folder).communicate()
-
-    time.sleep(30)
 
     print_message('create lambda function')
 
@@ -151,8 +157,6 @@ def run_create_cron_lambda(name, settings):
 
     cmd = ['zip', '-r', 'deploy.zip', '.']
     subprocess.Popen(cmd, cwd=deploy_folder).communicate()
-
-    time.sleep(30)
 
     print_message('create lambda function')
 
