@@ -173,6 +173,14 @@ class AWSCli:
             if elapsed_time > 60 * 30:
                 raise Exception()
 
+    def get_role_arn(self, role_name):
+        cmd = ['iam', 'get-role']
+        cmd += ['--role-name', role_name]
+        result = self.run(cmd)
+
+        # noinspection PyTypeChecker
+        return result['Role']['Arn']
+
     def set_name_tag(self, resource_id, name):
         cmd = ['ec2', 'create-tags']
         cmd += ['--resources', resource_id]
@@ -291,6 +299,17 @@ class AWSCli:
 
         return bucket_name
 
+    def get_iam_role(self, role_name):
+        cmd = ['iam', 'get-role']
+        cmd += ['--role-name', role_name]
+        return self.run(cmd, ignore_error=True)
+
+    def get_iam_role_policy(self, role_name, policy_name):
+        cmd = ['iam', 'get-role-policy']
+        cmd += ['--role-name', role_name]
+        cmd += ['--policy-name', policy_name]
+        return self.run(cmd, ignore_error=True)
+
 
 def parse_args(require_arg=False):
     if require_arg:
@@ -314,7 +333,7 @@ def print_message(message):
 
 
 def print_session(message):
-    print('#' * 80 + '\n' + '#' * 80)
+    print('\n' + '#' * 80 + '\n' + '#' * 80)
     print('\n\t[ ' + message + ' ]\n\n')
 
 

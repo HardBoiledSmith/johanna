@@ -32,6 +32,7 @@
                 "NAME": "nova",
                 "PRIVATE_IP": "10.210.128.100",
                 "SUBNET_TYPE": "public",
+                "TYPE": "django",
                 "URL": "http://dv-nova.hbsmith.io"
             }
         ]

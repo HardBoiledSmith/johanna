@@ -15,7 +15,7 @@ aws_cli = AWSCli()
 print_session('alter database')
 
 engine = env['rds']['ENGINE']
-if 'mysql' is not engine:
+if engine != 'mysql':
     print('not supported:', engine)
     raise Exception()
 
