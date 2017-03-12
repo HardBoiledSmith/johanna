@@ -63,13 +63,13 @@ def run_create_default_lambda(name, settings):
     deploy_folder = '%s/lambda/%s' % (template_path, name)
 
     ################################################################################
+    print_session('create lambda: %s' % function_name)
+
     gitignore_path = '%s/.gitignore' % deploy_folder
     if os.path.exists(gitignore_path):
         ll = read_file(gitignore_path)
         print_message('cleanup generated files')
         subprocess.Popen(' '.join(['rm', '-rf'] + ll), shell=True, cwd=deploy_folder).communicate()
-
-    print_session('create lambda: %s' % function_name)
 
     print_message('install dependencies')
 
@@ -124,13 +124,13 @@ def run_create_cron_lambda(name, settings):
     deploy_folder = '%s/lambda/%s' % (template_path, name)
 
     ################################################################################
+    print_session('create lambda: %s' % function_name)
+
     gitignore_path = '%s/.gitignore' % deploy_folder
     if os.path.exists(gitignore_path):
         ll = read_file(gitignore_path)
         print_message('cleanup generated files')
         subprocess.Popen(' '.join(['rm', '-rf'] + ll), shell=True, cwd=deploy_folder).communicate()
-
-    print_session('create lambda: %s' % function_name)
 
     requirements_path = '%s/requirements.txt' % deploy_folder
     if os.path.exists(requirements_path):
