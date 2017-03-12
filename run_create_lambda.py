@@ -49,7 +49,7 @@ def create_iam_for_lambda():
         sleep_required = True
 
     if sleep_required:
-        print_message('wait few minutes to iam role and policy propagated...')
+        print_message('wait a minute to let iam role and policy propagated to all regions...')
         time.sleep(60)
 
 
