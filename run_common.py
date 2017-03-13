@@ -363,20 +363,15 @@ def re_sub_lines(lines, pattern, repl):
     return new_lines
 
 
-def download_template():
-    git_url = env['template']['GIT_URL']
-    name = env['template']['NAME']
-    phase = env['common']['PHASE']
+def check_template_availability():
+    if 'template' not in env:
+        print('template is not defined in config.json')
+        raise Exception()
 
-    print_message('download template: %s' % name)
+    if 'NAME' not in env['template']:
+        print('template.NAME is not defined in config.json')
+        raise Exception()
 
-    subprocess.Popen(['mkdir', '-p', './template']).communicate()
-    subprocess.Popen(['rm', '-rf', './' + name], cwd='template').communicate()
-    if phase == 'dv':
-        template_git_command = ['git', 'clone', '--depth=1', git_url]
-    else:
-        template_git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
-    subprocess.Popen(template_git_command, cwd='template').communicate()
-
-    if not os.path.exists('template/' + name):
+    if not os.path.exists('template/%s' % env['template']['NAME']):
+        print('template: %s is not downloaded. please run: ./run.py reset_template.' % env['template']['NAME'])
         raise Exception()

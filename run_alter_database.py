@@ -6,13 +6,15 @@ import sys
 
 from env import env
 from run_common import AWSCli
-from run_common import download_template
+from run_common import check_template_availability
 from run_common import print_message
 from run_common import print_session
 
 aws_cli = AWSCli()
 
 print_session('alter database')
+
+check_template_availability()
 
 engine = env['rds']['ENGINE']
 if engine != 'mysql':
@@ -22,8 +24,9 @@ if engine != 'mysql':
 print_message('get database address')
 
 db_host = aws_cli.get_rds_address()
-db_user = env['rds']['USER_NAME']
 db_password = env['rds']['USER_PASSWORD']
+db_user = env['rds']['USER_NAME']
+template_name = env['template']['NAME']
 
 print_message('dump data')
 
@@ -40,10 +43,6 @@ if yyyymmdd < yyyymmdd_today:
     sys.exit(0)
 
 cmd = cmd_common + ['--comments']
-
-template_name = env['template']['NAME']
-if not os.path.exists('template/%s' % template_name):
-    download_template()
 
 filename = 'template/%s/rds/history/%s/mysql_schema_alter.sql' % (template_name, yyyymmdd)
 if not os.path.exists(filename):

@@ -7,7 +7,7 @@ import time
 
 from env import env
 from run_common import AWSCli
-from run_common import download_template
+from run_common import check_template_availability
 from run_common import print_message
 from run_common import print_session
 from run_common import re_sub_lines
@@ -206,11 +206,10 @@ def run_create_cron_lambda(name, settings):
 # start
 #
 ################################################################################
-if not os.path.exists('template/%s' % env['template']['NAME']):
-    download_template()
+print_session('create lambda')
 
 ################################################################################
-print_session('create lambda')
+check_template_availability()
 
 create_iam_for_lambda()
 
