@@ -6,6 +6,7 @@ import time
 
 from env import env
 from run_common import AWSCli
+from run_common import check_template_availability
 from run_common import print_message
 from run_common import print_session
 
@@ -92,7 +93,6 @@ def run_create_queue(name, settings):
 ################################################################################
 print_session('create sqs')
 
-################################################################################
 sqs = env['sqs']
 for sqs_env in sqs:
     run_create_queue(sqs_env['NAME'], sqs_env)

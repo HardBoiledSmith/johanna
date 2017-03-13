@@ -8,7 +8,7 @@ import time
 
 from env import env
 from run_common import AWSCli
-from run_common import download_template
+from run_common import check_template_availability
 from run_common import print_message
 from run_common import print_session
 from run_common import re_sub_lines
@@ -170,12 +170,10 @@ def run_create_s3_webapp(name, settings):
 # start
 #
 ################################################################################
-template_name = env['template']['NAME']
-if not os.path.exists('template/%s' % template_name):
-    download_template()
+print_session('create s3')
 
 ################################################################################
-print_session('create s3')
+check_template_availability()
 
 s3 = env['s3']
 if len(args) == 2:
