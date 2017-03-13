@@ -23,10 +23,12 @@ git_url = env['template']['GIT_URL']
 name = env['template']['NAME']
 phase = env['common']['PHASE']
 
-print_message('download template: %s' % name)
+print_message('cleanup existing template')
 
 subprocess.Popen(['mkdir', '-p', './template']).communicate()
 subprocess.Popen(['rm', '-rf', './%s' % name], cwd='template').communicate()
+
+print_message('download template from git repository')
 if phase == 'dv':
     template_git_command = ['git', 'clone', '--depth=1', git_url]
 else:
