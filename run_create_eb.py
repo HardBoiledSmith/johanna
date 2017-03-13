@@ -8,7 +8,7 @@ import time
 
 from env import env
 from run_common import AWSCli
-from run_common import download_template
+from run_common import check_template_availability
 from run_common import print_message
 from run_common import print_session
 from run_common import re_sub_lines
@@ -29,6 +29,7 @@ def run_create_eb_django(name, settings):
     aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
     aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
     aws_default_region = env['aws']['AWS_DEFAULT_REGION']
+    aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
     cname = settings['CNAME']
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
@@ -137,6 +138,7 @@ def run_create_eb_django(name, settings):
     lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
     lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
+    lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
     write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
 
     lines = read_file('%s/my.cnf.sample' % app_config_path)
@@ -327,6 +329,7 @@ def run_create_eb_django(name, settings):
 
 def run_create_eb_openvpn(name, settings):
     aws_default_region = env['aws']['AWS_DEFAULT_REGION']
+    aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
     cname = settings['CNAME']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     host_maya = settings['HOST_MAYA']
@@ -432,6 +435,10 @@ def run_create_eb_openvpn(name, settings):
     lines = re_sub_lines(lines, '^(  application_name).*', '\\1: %s' % eb_application_name)
     lines = re_sub_lines(lines, '^(  default_ec2_keyname).*', '\\1: %s' % key_pair_name)
     write_file('%s/.elasticbeanstalk/config.yml' % environment_path, lines)
+
+    lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
+    lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
+    write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
 
     lines = read_file('%s/collectd.conf.sample' % etc_config_path)
     lines = re_sub_lines(lines, 'HOST_MAYA', host_maya)
@@ -565,6 +572,7 @@ def run_create_eb_openvpn(name, settings):
 
 def run_create_eb_graphite_grafana(name, settings):
     aws_default_region = settings['AWS_DEFAULT_REGION']
+    aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
     cname = settings['CNAME']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
@@ -643,6 +651,7 @@ def run_create_eb_graphite_grafana(name, settings):
 
     lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
     lines = re_sub_lines(lines, 'AWS_VPC_EB', cidr_vpc['eb'])
+    lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
     write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
 
     lines = read_file('%s/collectd.conf.sample' % etc_config_path)
@@ -819,11 +828,10 @@ def run_create_eb_graphite_grafana(name, settings):
 # start
 #
 ################################################################################
-if not os.path.exists('template/%s' % env['template']['NAME']):
-    download_template()
+print_session('create eb')
 
 ################################################################################
-print_session('create eb')
+check_template_availability()
 
 eb = env['elasticbeanstalk']
 if len(args) == 2:

@@ -21,7 +21,7 @@ def describe_db_subnet_groups():
 
 def describe_db_instances():
     cmd = ['rds', 'describe-db-instances']
-    cmd += ['--db-instance-identifier', env['rds']['DB_NAME']]
+    cmd += ['--db-instance-identifier', env['rds']['DB_ID']]
 
     # noinspection PyBroadException
     try:

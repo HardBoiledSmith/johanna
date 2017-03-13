@@ -5,6 +5,7 @@ import json
 import sys
 
 from run_common import AWSCli
+from run_common import check_template_availability
 
 command_list = list()
 command_list.append('create')
@@ -92,7 +93,7 @@ if __name__ == "__main__":
 
     command = 'run_%s' % command
     if command == 'run_create':
-        __import__('run_reset_template')
+        check_template_availability()
         __import__('run_create_vpc')
         __import__('run_create_rds')
         __import__('run_create_sqs')
@@ -100,6 +101,7 @@ if __name__ == "__main__":
         __import__('run_create_eb')
         __import__('run_create_s3')
     elif command == 'run_terminate':
+        check_template_availability()
         __import__('run_terminate_s3')
         __import__('run_terminate_eb')
         __import__('run_terminate_lambda')

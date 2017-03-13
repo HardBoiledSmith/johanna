@@ -52,7 +52,9 @@ def describe_nat_gateways(vpc_id=None):
 
     # noinspection PyBroadException
     try:
-        aws_cli.run(cmd)
+        result = aws_cli.run(cmd)
+        if not result['NatGateways']:
+            return False
     except:
         return False
 
