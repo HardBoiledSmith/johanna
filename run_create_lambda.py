@@ -49,8 +49,8 @@ def create_iam_for_lambda():
         sleep_required = True
 
     if sleep_required:
-        print_message('wait a minute to let iam role and policy propagated to all regions...')
-        time.sleep(60)
+        print_message('wait two minutes to let iam role and policy propagated to all regions...')
+        time.sleep(120)
 
 
 def run_create_default_lambda(name, settings):
@@ -109,7 +109,8 @@ def run_create_default_lambda(name, settings):
            '--zip-file', 'fileb://deploy.zip',
            '--role', role_arn,
            '--handler', 'lambda.handler',
-           '--runtime', 'python2.7']
+           '--runtime', 'python3.6',
+           '--timeout', '120']
     aws_cli.run(cmd, cwd=deploy_folder)
 
 
@@ -168,7 +169,8 @@ def run_create_cron_lambda(name, settings):
            '--zip-file', 'fileb://deploy.zip',
            '--role', role_arn,
            '--handler', 'lambda.handler',
-           '--runtime', 'python2.7']
+           '--runtime', 'python3.6',
+           '--timeout', '120']
     result = aws_cli.run(cmd, cwd=deploy_folder)
 
     function_arn = result['FunctionArn']
