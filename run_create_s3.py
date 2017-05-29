@@ -77,7 +77,7 @@ def run_create_s3_webapp(name, settings):
     ################################################################################
     print_message('configure %s' % name)
 
-    lines = read_file('%s/configuration/app/scripts/settings-local.js.sample' % environment_path)
+    lines = read_file('%s/configuration/app/scripts/settings-local-sample.js' % environment_path)
     option_list = list()
     option_list.append(['PHASE', phase])
     for key in settings:

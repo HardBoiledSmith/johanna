@@ -130,36 +130,36 @@ def run_create_eb_django(name, settings):
         f.write(phase)
         f.close()
 
-    lines = read_file('%s/.elasticbeanstalk/config.yml.sample' % environment_path)
+    lines = read_file('%s/.elasticbeanstalk/config_sample.yml' % environment_path)
     lines = re_sub_lines(lines, '^(  application_name).*', '\\1: %s' % eb_application_name)
     lines = re_sub_lines(lines, '^(  default_ec2_keyname).*', '\\1: %s' % key_pair_name)
     write_file('%s/.elasticbeanstalk/config.yml' % environment_path, lines)
 
-    lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
+    lines = read_file('%s/.ebextensions/%s_sample.config' % (environment_path, name))
     lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
     write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
 
-    lines = read_file('%s/my.cnf.sample' % app_config_path)
+    lines = read_file('%s/my_sample.cnf' % app_config_path)
     lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address)
     lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
     lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
     write_file('%s/my.cnf' % app_config_path, lines)
 
-    lines = read_file('%s/collectd.conf.sample' % etc_config_path)
+    lines = read_file('%s/collectd_sample.conf' % etc_config_path)
     lines = re_sub_lines(lines, 'HOST_MAYA', host_maya)
     write_file('%s/collectd.conf' % etc_config_path, lines)
 
-    lines = read_file('%s/ntpdate.sh.sample' % opt_config_path)
+    lines = read_file('%s/ntpdate_sample.sh' % opt_config_path)
     lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % host_maya)
     write_file('%s/ntpdate.sh' % opt_config_path, lines)
 
-    lines = read_file('%s/nc.sh.sample' % opt_config_path)
+    lines = read_file('%s/nc_sample.sh' % opt_config_path)
     lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % host_maya)
     write_file('%s/nc.sh' % opt_config_path, lines)
 
-    lines = read_file('%s/settings_local.py.sample' % app_config_path)
+    lines = read_file('%s/settings_local_sample.py' % app_config_path)
     lines = re_sub_lines(lines, '^(DEBUG).*', '\\1 = %s' % debug)
     option_list = list()
     option_list.append(['PHASE', phase])
@@ -431,28 +431,28 @@ def run_create_eb_openvpn(name, settings):
         f.write(phase)
         f.close()
 
-    lines = read_file('%s/.elasticbeanstalk/config.yml.sample' % environment_path)
+    lines = read_file('%s/.elasticbeanstalk/config_sample.yml' % environment_path)
     lines = re_sub_lines(lines, '^(  application_name).*', '\\1: %s' % eb_application_name)
     lines = re_sub_lines(lines, '^(  default_ec2_keyname).*', '\\1: %s' % key_pair_name)
     write_file('%s/.elasticbeanstalk/config.yml' % environment_path, lines)
 
-    lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
+    lines = read_file('%s/.ebextensions/%s_sample.config' % (environment_path, name))
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
     write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
 
-    lines = read_file('%s/collectd.conf.sample' % etc_config_path)
+    lines = read_file('%s/collectd_sample.conf' % etc_config_path)
     lines = re_sub_lines(lines, 'HOST_MAYA', host_maya)
     write_file('%s/collectd.conf' % etc_config_path, lines)
 
-    lines = read_file('%s/ntpdate.sh.sample' % opt_config_path)
+    lines = read_file('%s/ntpdate_sample.sh' % opt_config_path)
     lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % host_maya)
     write_file('%s/ntpdate.sh' % opt_config_path, lines)
 
-    lines = read_file('%s/openvpn/server.conf.sample' % etc_config_path)
+    lines = read_file('%s/openvpn/server_sample.conf' % etc_config_path)
     lines = re_sub_lines(lines, 'OPENVPN_SUBNET_IP', openvpn_subnet_ip)
     write_file('%s/openvpn/server.conf' % etc_config_path, lines)
 
-    lines = read_file('%s/sysconfig/iptables.sample' % etc_config_path)
+    lines = read_file('%s/sysconfig/iptables_sample' % etc_config_path)
     lines = re_sub_lines(lines, 'AWS_VPC_EB', cidr_vpc['eb'])
     lines = re_sub_lines(lines, 'OPENVPN_SUBNET_IP', openvpn_subnet_ip)
     write_file('%s/sysconfig/iptables' % etc_config_path, lines)
@@ -644,25 +644,25 @@ def run_create_eb_graphite_grafana(name, settings):
         f.write(phase)
         f.close()
 
-    lines = read_file('%s/.elasticbeanstalk/config.yml.sample' % environment_path)
+    lines = read_file('%s/.elasticbeanstalk/config_sample.yml' % environment_path)
     lines = re_sub_lines(lines, '^(  application_name).*', '\\1: %s' % eb_application_name)
     lines = re_sub_lines(lines, '^(  default_ec2_keyname).*', '\\1: %s' % key_pair_name)
     write_file('%s/.elasticbeanstalk/config.yml' % environment_path, lines)
 
-    lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
+    lines = read_file('%s/.ebextensions/%s_sample.config' % (environment_path, name))
     lines = re_sub_lines(lines, 'AWS_VPC_EB', cidr_vpc['eb'])
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
     write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
 
-    lines = read_file('%s/collectd.conf.sample' % etc_config_path)
+    lines = read_file('%s/collectd_sample.conf' % etc_config_path)
     lines = re_sub_lines(lines, 'HOST_MAYA', host_maya)
     write_file('%s/collectd.conf' % etc_config_path, lines)
 
-    lines = read_file('%s/ntpdate.sh.sample' % opt_config_path)
+    lines = read_file('%s/ntpdate_sample.sh' % opt_config_path)
     lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % host_maya)
     write_file('%s/ntpdate.sh' % opt_config_path, lines)
 
-    lines = read_file('%s/settings_local.py.sample' % app_config_path)
+    lines = read_file('%s/settings_local_sample.py' % app_config_path)
     option_list = list()
     option_list.append(['PHASE', phase])
     for key in settings:
