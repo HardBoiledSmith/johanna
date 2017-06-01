@@ -64,6 +64,7 @@ if len(args) == 2:
     target_eb_name_exists = False
     for eb_env in eb['ENVIRONMENTS']:
         if eb_env['NAME'] == target_eb_name:
+            target_eb_name_exists = True
             run_terminate_environment(eb_env['NAME'])
             break
     if not target_eb_name_exists:

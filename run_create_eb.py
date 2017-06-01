@@ -135,7 +135,7 @@ def run_create_eb_django(name, settings):
     lines = re_sub_lines(lines, '^(  default_ec2_keyname).*', '\\1: %s' % key_pair_name)
     write_file('%s/.elasticbeanstalk/config.yml' % environment_path, lines)
 
-    lines = read_file('%s/.ebextensions/%s_sample.config' % (environment_path, name))
+    lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
     lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
@@ -436,7 +436,7 @@ def run_create_eb_openvpn(name, settings):
     lines = re_sub_lines(lines, '^(  default_ec2_keyname).*', '\\1: %s' % key_pair_name)
     write_file('%s/.elasticbeanstalk/config.yml' % environment_path, lines)
 
-    lines = read_file('%s/.ebextensions/%s_sample.config' % (environment_path, name))
+    lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
     write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
 
@@ -649,7 +649,7 @@ def run_create_eb_graphite_grafana(name, settings):
     lines = re_sub_lines(lines, '^(  default_ec2_keyname).*', '\\1: %s' % key_pair_name)
     write_file('%s/.elasticbeanstalk/config.yml' % environment_path, lines)
 
-    lines = read_file('%s/.ebextensions/%s_sample.config' % (environment_path, name))
+    lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
     lines = re_sub_lines(lines, 'AWS_VPC_EB', cidr_vpc['eb'])
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
     write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
