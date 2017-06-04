@@ -638,6 +638,15 @@ def run_create_eb_graphite_grafana(name, settings):
             break
 
     ################################################################################
+
+    print_message('get database address')
+    db_address = aws_cli.get_rds_address()
+
+    settings['DB_HOST'] = db_address
+    settings['DB_PASSWORD'] = env['rds']['USER_PASSWORD']
+    settings['DB_USER'] = env['rds']['USER_NAME']
+
+    ################################################################################
     print_message('configuration %s' % name)
 
     with open('%s/configuration/phase' % environment_path, 'w') as f:
