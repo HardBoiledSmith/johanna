@@ -80,7 +80,7 @@ def run_create_default_lambda(name, settings):
         cmd = ['pip', 'install', '-r', requirements_path, '-t', deploy_folder]
         subprocess.Popen(cmd).communicate()
 
-    settings_path = '%s/settings_local.py.sample' % deploy_folder
+    settings_path = '%s/settings_local_sample.py' % deploy_folder
     if os.path.exists(settings_path):
         print_message('create environment values')
 
@@ -140,7 +140,7 @@ def run_create_cron_lambda(name, settings):
         cmd = ['pip', 'install', '-r', requirements_path, '-t', deploy_folder]
         subprocess.Popen(cmd).communicate()
 
-    settings_path = '%s/settings_local.py.sample' % deploy_folder
+    settings_path = '%s/settings_local_sample.py' % deploy_folder
     if os.path.exists(settings_path):
         print_message('create environment values')
 
