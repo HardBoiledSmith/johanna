@@ -33,7 +33,7 @@ if __name__ == '__main__':
             parser.print_help()
             sys.exit(0)
 
-    config = json.loads(open('config.json.sample').read())
+    config = json.loads(open('config_sample.json').read())
 
     # AWS ACCESS KEY ID
     config['aws']['AWS_ACCESS_KEY_ID'] = args.accesskey
