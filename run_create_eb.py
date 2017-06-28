@@ -701,8 +701,6 @@ def run_create_eb_graphite_grafana(name, settings):
     except Exception as e:
         print(e)
 
-    return
-
     ################################################################################
     print_message('configuration %s' % name)
 
