@@ -87,8 +87,19 @@ aws_cli.run(cmd)
 ################################################################################
 print_message('create application')
 
+eb_service_role_arn = aws_cli.get_iam_role('aws-elasticbeanstalk-service-role')['Role']['Arn']
+
+config_format = '%s=%s'
+eb_max_count_rule = list()
+eb_max_count_rule.append(config_format % ('DeleteSourceFromS3', 'true'))
+eb_max_count_rule.append(config_format % ('Enabled', 'true'))
+eb_max_count_rule.append(config_format % ('MaxCount', 100))
+
 cmd = ['elasticbeanstalk', 'create-application']
 cmd += ['--application-name', env['elasticbeanstalk']['APPLICATION_NAME']]
+cmd += ['--resource-lifecycle-config',
+        'ServiceRole=%s,VersionLifecycleConfig={MaxCountRule={%s}}' % (
+            eb_service_role_arn, ','.join(eb_max_count_rule))]
 aws_cli.run(cmd)
 
 ################################################################################
