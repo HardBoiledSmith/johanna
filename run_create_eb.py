@@ -681,7 +681,10 @@ def run_create_eb_graphite_grafana(name, settings):
         bucket_name = _get_s3_bucket_name(settings)
         s3_folder = '/'.join([bucket_name, 'influxdb_backup'])
         result = aws_cli.run(['s3', 'ls', s3_folder, '--recursive', '--page-size', '1'])
-        rr = result.strip().split('\n')
+        rr = result.strip()
+        if not rr:
+            raise Exception('backup is not found')
+        rr = rr.split('\n')
         if len(rr) < 1:
             raise Exception('backup is not found')
         rr = sorted(rr, reverse=True)[0]
@@ -697,6 +700,8 @@ def run_create_eb_graphite_grafana(name, settings):
         subprocess.Popen(['rm', file_name], cwd=target_folder).communicate()
     except Exception as e:
         print(e)
+
+    return
 
     ################################################################################
     print_message('configuration %s' % name)
