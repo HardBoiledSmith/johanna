@@ -75,7 +75,7 @@ class AWSCli:
         result = result.decode('utf-8')
 
         if error:
-            print(error)
+            print(error.decode('utf-8'))
             if not ignore_error:
                 raise Exception()
 
@@ -95,7 +95,7 @@ class AWSCli:
         return self._run(args, cwd, ignore_error)
 
     def run_eb(self, args, cwd=None, ignore_error=None):
-        args = ['eb'] + args
+        args = ['eb'] + args + ['--region', self.env['AWS_DEFAULT_REGION']]
         return self._run(args, cwd, ignore_error)
 
     def get_vpc_id(self):
