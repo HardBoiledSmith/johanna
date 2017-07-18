@@ -790,7 +790,7 @@ def run_create_eb_graphite_grafana(name, settings):
 
     cmd = ['create', eb_environment_name]
     cmd += ['--cname', cname]
-    cmd += ['--instance_type', 't2.nano']
+    cmd += ['--instance_type', 't2.micro']
     cmd += ['--region', aws_default_region]
     cmd += ['--single']
     cmd += ['--tags', ','.join(tags)]
