@@ -736,6 +736,25 @@ def run_create_eb_graphite_grafana(name, settings):
         lines = re_sub_lines(lines, '^(%s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
     write_file('%s/settings_local.py' % app_config_path, lines)
 
+    lines = read_file('%s/configuration/grafana-alert-notifications_sample.json' % environment_path)
+    lines = re_sub_lines(lines, 'SLACK_WEBHOOK_URL', settings['SLACK_WEBHOOK_URL'])
+    write_file('%s/configuration/grafana-alert-notifications.json' % environment_path, lines)
+
+    file_list = list()
+    file_list.append('grafana-dashboards-database.json')
+    file_list.append('grafana-dashboards-global.json')
+    file_list.append('grafana-dashboards-maya.json')
+    file_list.append('grafana-dashboards-penpen.json')
+    file_list.append('grafana-dashboards-sachiel.json')
+    for ff in file_list:
+        lines = read_file('%s/configuration/%s' % (environment_path, ff))
+        lines = re_sub_lines(lines, 'CNAME', cname)
+        write_file('%s/configuration/%s' % (environment_path, ff), lines)
+
+    lines = read_file('%s/grafana/grafana.ini' % etc_config_path)
+    lines = re_sub_lines(lines, 'HOST_MAYA', host_maya)
+    write_file('%s/grafana/grafana.ini' % etc_config_path, lines)
+
     ################################################################################
     print_message('git clone')
 
