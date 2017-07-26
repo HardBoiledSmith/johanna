@@ -748,7 +748,7 @@ def run_create_eb_graphite_grafana(name, settings):
     file_list.append('grafana-dashboards-sachiel.json')
     for ff in file_list:
         lines = read_file('%s/configuration/%s' % (environment_path, ff))
-        lines = re_sub_lines(lines, 'CNAME', cname)
+        lines = re_sub_lines(lines, 'ALERT_TITLE_PREFIX', settings['ALERT_TITLE_PREFIX'])
         write_file('%s/configuration/%s' % (environment_path, ff), lines)
 
     lines = read_file('%s/grafana/grafana.ini' % etc_config_path)
