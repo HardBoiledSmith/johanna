@@ -321,6 +321,36 @@ cmd += ['--policy-name', 'oneClick_aws-elasticbeanstalk-service-role']
 aws_cli.run(cmd, ignore_error=True)
 
 ################################################################################
+print_message('detach policies from iam role')
+
+policy_list = list()
+policy_list.append('arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth')
+policy_list.append('arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkService')
+
+for pp in policy_list:
+    cmd = ['iam', 'detach-role-policy']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
+    cmd += ['--policy-arn', pp]
+    aws_cli.run(cmd, ignore_error=True)
+
+policy_list = list()
+policy_list.append('arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier')
+policy_list.append('arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker')
+policy_list.append('arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier')
+
+for pp in policy_list:
+    cmd = ['iam', 'detach-role-policy']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-worker-role']
+    cmd += ['--policy-arn', pp]
+    aws_cli.run(cmd, ignore_error=True)
+
+for pp in policy_list:
+    cmd = ['iam', 'detach-role-policy']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
+    cmd += ['--policy-arn', pp]
+    aws_cli.run(cmd, ignore_error=True)
+
+################################################################################
 print_message('delete iam role')
 
 cmd = ['iam', 'delete-role']
