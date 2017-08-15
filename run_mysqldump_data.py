@@ -13,7 +13,7 @@ aws_cli = AWSCli()
 print_session('dump mysql data')
 
 engine = env['rds']['ENGINE']
-if engine != 'mysql':
+if engine not in ('mysql', 'aurora'):
     print('not supported:', engine)
     raise Exception()
 

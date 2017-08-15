@@ -13,7 +13,8 @@ if __name__ == "__main__":
 
 aws_cli = AWSCli()
 
-db_instance_id = env['rds']['DB_ID']
+db_instance_id = env['rds']['DB_INSTANCE_ID']
+engine = env['rds']['ENGINE']
 
 ################################################################################
 #
@@ -25,7 +26,19 @@ print_session('terminate rds')
 ################################################################################
 print_message('delete rds')
 
-cmd = ['rds', 'delete-db-instance']
-cmd += ['--db-instance-identifier', db_instance_id]
-cmd += ['--skip-final-snapshot']
-aws_cli.run(cmd, ignore_error=True)
+if engine == 'mysql':
+    cmd = ['rds', 'delete-db-instance']
+    cmd += ['--db-instance-identifier', db_instance_id]
+    cmd += ['--skip-final-snapshot']
+    aws_cli.run(cmd, ignore_error=True)
+elif engine == 'aurora':
+    cmd = ['rds', 'delete-db-instance']
+    cmd += ['--db-instance-identifier', db_instance_id]
+    cmd += ['--skip-final-snapshot']
+    aws_cli.run(cmd, ignore_error=True)
+    cmd = ['rds', 'delete-db-cluster']
+    cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
+    cmd += ['--skip-final-snapshot']
+    aws_cli.run(cmd, ignore_error=True)
+else:
+    raise Exception()

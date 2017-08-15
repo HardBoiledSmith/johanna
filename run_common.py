@@ -142,37 +142,71 @@ class AWSCli:
                 raise Exception()
 
     def get_rds_address(self, read_replica=None):
-        cmd = ['rds', 'describe-db-instances']
+        engine = env['rds']['ENGINE']
+        if engine == 'aurora':
+            cmd = ['rds', 'describe-db-clusters']
 
-        elapsed_time = 0
-        db_address = None
-        while not db_address:
-            result = self.run(cmd)
+            elapsed_time = 0
+            db_address = None
+            while not db_address:
+                result = self.run(cmd)
 
-            # noinspection PyBroadException
-            try:
-                for db_instance in result['DBInstances']:
-                    db_instance = dict(db_instance)
+                # noinspection PyBroadException
+                try:
+                    for db_cluster in result['DBClusters']:
+                        db_cluster = dict(db_cluster)
 
-                    if not read_replica and 'ReadReplicaSourceDBInstanceIdentifier' in db_instance:
-                        continue
-                    elif read_replica and 'ReadReplicaSourceDBInstanceIdentifier' not in db_instance:
-                        continue
+                        if read_replica and 'ReaderEndpoint' not in db_cluster:
+                            continue
 
-                    db_endpoint = db_instance['Endpoint']
-                    db_address = dict(db_endpoint)['Address']
+                        db_endpoint = db_cluster['Endpoint']
 
-                    if db_address:
-                        return db_address
-            except:
-                pass
+                        if read_replica:
+                            db_endpoint = db_cluster['ReaderEndpoint']
 
-            print('waiting for a new database... (elapsed time: \'%d\' seconds)' % elapsed_time)
-            time.sleep(5)
-            elapsed_time += 5
+                        if db_endpoint:
+                            return db_endpoint
+                except:
+                    pass
 
-            if elapsed_time > 60 * 30:
-                raise Exception()
+                print('waiting for a new database... (elapsed time: \'%d\' seconds)' % elapsed_time)
+                time.sleep(5)
+                elapsed_time += 5
+
+                if elapsed_time > 60 * 30:
+                    raise Exception()
+        else:
+            cmd = ['rds', 'describe-db-instances']
+
+            elapsed_time = 0
+            db_address = None
+            while not db_address:
+                result = self.run(cmd)
+
+                # noinspection PyBroadException
+                try:
+                    for db_cluster in result['DBInstances']:
+                        db_cluster = dict(db_cluster)
+
+                        if not read_replica and 'ReadReplicaSourceDBInstanceIdentifier' in db_cluster:
+                            continue
+                        elif read_replica and 'ReadReplicaSourceDBInstanceIdentifier' not in db_cluster:
+                            continue
+
+                        db_endpoint = db_cluster['Endpoint']
+                        db_address = dict(db_endpoint)['Address']
+
+                        if db_address:
+                            return db_address
+                except:
+                    pass
+
+                print('waiting for a new database... (elapsed time: \'%d\' seconds)' % elapsed_time)
+                time.sleep(5)
+                elapsed_time += 5
+
+                if elapsed_time > 60 * 30:
+                    raise Exception()
 
     def get_role_arn(self, role_name):
         cmd = ['iam', 'get-role']
@@ -208,6 +242,17 @@ class AWSCli:
         while True:
             result = self.run(cmd)
             if len(result['DBInstances']) == 0:
+                break
+
+            print('terminating the rds... (elapsed time: \'%d\' seconds)' % elapsed_time)
+            time.sleep(5)
+            elapsed_time += 5
+
+        cmd = ['rds', 'describe-db-clusters']
+
+        while True:
+            result = self.run(cmd)
+            if len(result['DBClusters']) == 0:
                 break
 
             print('terminating the rds... (elapsed time: \'%d\' seconds)' % elapsed_time)
