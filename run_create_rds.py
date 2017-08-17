@@ -13,10 +13,9 @@ if __name__ == "__main__":
 
 aws_cli = AWSCli()
 
-db_allocated_storage = env['rds']['DB_SIZE']
 db_backup_retention_period = env['rds']['BACKUP_RETENTION_PERIOD']
 db_instance_class = env['rds']['DB_CLASS']
-db_instance_id = env['rds']['DB_ID']
+db_instance_id = env['rds']['DB_INSTANCE_ID']
 db_iops = env['rds']['IOPS']
 db_multi_az = env['rds']['MULTI_AZ']
 db_subnet_group_name = env['rds']['DB_SUBNET_NAME']
@@ -25,7 +24,6 @@ engine_version = env['rds']['ENGINE_VERSION']
 license_model = env['rds']['LICENSE_MODEL']
 master_user_name = env['rds']['USER_NAME']
 master_user_password = env['rds']['USER_PASSWORD']
-storage_type = env['rds']['STORAGE_TYPE']
 
 cidr_subnet = aws_cli.cidr_subnet
 
@@ -64,19 +62,42 @@ for r in result['SecurityGroups']:
 ################################################################################
 print_message('create rds')
 
-cmd = ['rds', 'create-db-instance']
-cmd += ['--db-instance-identifier', db_instance_id]
-cmd += ['--allocated-storage', db_allocated_storage]
-cmd += ['--db-instance-class', db_instance_class]
-cmd += ['--engine', engine]
-cmd += ['--master-username', master_user_name]
-cmd += ['--master-user-password', master_user_password]
-cmd += ['--vpc-security-group-ids', security_group_id]
-cmd += ['--db-subnet-group-name', db_subnet_group_name]
-cmd += ['--backup-retention-period', db_backup_retention_period]
-cmd += [db_multi_az]
-cmd += ['--engine-version', engine_version]
-cmd += ['--license-model', license_model]
-cmd += ['--iops', db_iops]
-cmd += ['--storage-type', storage_type]
-aws_cli.run(cmd)
+if engine == 'mysql':
+    cmd = ['rds', 'create-db-instance']
+    cmd += ['--allocated-storage', env['rds']['DB_SIZE']]
+    cmd += ['--backup-retention-period', db_backup_retention_period]
+    cmd += ['--db-instance-class', db_instance_class]
+    cmd += ['--db-instance-identifier', db_instance_id]
+    cmd += ['--db-subnet-group-name', db_subnet_group_name]
+    cmd += ['--engine', engine]
+    cmd += ['--engine-version', engine_version]
+    cmd += ['--iops', db_iops]
+    cmd += ['--license-model', license_model]
+    cmd += ['--master-user-password', master_user_password]
+    cmd += ['--master-username', master_user_name]
+    cmd += ['--storage-type', env['rds']['STORAGE_TYPE']]
+    cmd += ['--vpc-security-group-ids', security_group_id]
+    cmd += [db_multi_az]
+    aws_cli.run(cmd)
+elif engine == 'aurora':
+    cmd = ['rds', 'create-db-cluster']
+    cmd += ['--backup-retention-period', db_backup_retention_period]
+    cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
+    cmd += ['--db-subnet-group-name', db_subnet_group_name]
+    cmd += ['--engine', engine]
+    cmd += ['--engine-version', engine_version]
+    cmd += ['--master-user-password', master_user_password]
+    cmd += ['--master-username', master_user_name]
+    cmd += ['--vpc-security-group-ids', security_group_id]
+    aws_cli.run(cmd)
+    cmd = ['rds', 'create-db-instance']
+    cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
+    cmd += ['--db-instance-class', db_instance_class]
+    cmd += ['--db-instance-identifier', db_instance_id]
+    cmd += ['--engine', engine]
+    cmd += ['--iops', db_iops]
+    cmd += ['--license-model', license_model]
+    cmd += [db_multi_az]
+    aws_cli.run(cmd)
+else:
+    raise Exception()

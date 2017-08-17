@@ -21,7 +21,20 @@ def describe_db_subnet_groups():
 
 def describe_db_instances():
     cmd = ['rds', 'describe-db-instances']
-    cmd += ['--db-instance-identifier', env['rds']['DB_ID']]
+    cmd += ['--db-instance-identifier', env['rds']['DB_INSTANCE_ID']]
+
+    # noinspection PyBroadException
+    try:
+        aws_cli.run(cmd)
+    except:
+        return False
+
+    return True
+
+
+def describe_db_clusters():
+    cmd = ['rds', 'describe-db-clusters']
+    cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
 
     # noinspection PyBroadException
     try:
@@ -48,6 +61,11 @@ if not describe_db_instances():
     results.append('RDS Instance -------------- X')
 else:
     results.append('RDS Instance -------------- O')
+
+if not describe_db_clusters():
+    results.append('RDS Cluster -------------- X')
+else:
+    results.append('RDS Cluster -------------- O')
 
 print('#' * 80)
 
