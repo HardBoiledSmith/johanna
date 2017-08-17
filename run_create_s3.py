@@ -35,6 +35,10 @@ def run_create_s3_webapp(name, settings):
     environment_path = '%s/s3/%s' % (template_path, name)
     app_root_path = os.path.normpath('%s/%s' % (environment_path, base_path))
 
+    deploy_bucket_name = settings['BUCKET_NAME']
+    bucket_prefix = settings.get('BUCKET_PREFIX', '')
+    deploy_bucket_prefix = os.path.normpath('%s/%s' % (deploy_bucket_name, bucket_prefix))
+
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
     git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
@@ -120,24 +124,18 @@ def run_create_s3_webapp(name, settings):
         print(ll)
 
     ################################################################################
-
     print_message('delete old files from deploy bucket')
 
-    deploy_bucket_name = settings['BUCKET_NAME']
-    bucket_prefix = settings.get('BUCKET_PREFIX', '')
-    deploy_bucket_prefix = os.path.normpath('%s/%s' % (deploy_bucket_name, bucket_prefix))
-
-    cmd = ['s3', 'rm', 's3://%s' % deploy_bucket_prefix, '--recursive']
     delete_excluded_files = list(settings.get('DELETE_EXCLUDED_FILES', ''))
     if len(delete_excluded_files) > 0:
+        cmd = ['s3', 'rm', 's3://%s' % deploy_bucket_prefix, '--recursive']
         for ff in delete_excluded_files:
-            cmd += ['--exclude', '"%s"' % ff]
+            cmd += ['--exclude', '%s' % ff]
         delete_result = aws_cli.run(cmd)
         for ll in delete_result.split('\n'):
             print(ll)
 
     ################################################################################
-
     print_message('sync to deploy bucket')
 
     cmd = ['s3', 'sync', temp_bucket_uri, 's3://%s' % deploy_bucket_prefix]
@@ -148,7 +146,6 @@ def run_create_s3_webapp(name, settings):
         print(ll)
 
     ################################################################################
-
     print_message('tag to deploy bucket')
 
     tag_dict = dict()
