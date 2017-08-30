@@ -2,6 +2,7 @@
 from __future__ import print_function
 
 import json
+import os
 import subprocess
 
 from env import env
@@ -20,16 +21,26 @@ aws_cli = AWSCli()
 
 
 def run_terminate_s3_webapp(name, settings):
-    print_message('terminate ' + name)
     deploy_bucket_name = settings['BUCKET_NAME']
+    bucket_prefix = settings.get('BUCKET_PREFIX', '')
+    deploy_bucket_prefix = os.path.normpath('%s/%s' % (deploy_bucket_name, bucket_prefix))
+
+    ################################################################################
+    print_message('terminate %s' % name)
 
     ################################################################################
     print_message('cleanup deploy bucket')
 
-    cmd = ['s3', 'rm', 's3://%s/' % deploy_bucket_name, '--recursive']
-    upload_result = aws_cli.run(cmd)
-    for ll in upload_result.split('\n'):
+    cmd = ['s3', 'rm', 's3://%s' % deploy_bucket_prefix, '--recursive']
+    delete_excluded_files = list(settings.get('DELETE_EXCLUDED_FILES', ''))
+    for ff in delete_excluded_files:
+        cmd += ['--exclude', '%s' % ff]
+    delete_result = aws_cli.run(cmd)
+    for ll in delete_result.split('\n'):
         print(ll)
+
+    ################################################################################
+    print_message('remove tag from deploy bucket')
 
     cmd = ['s3api', 'delete-bucket-tagging', '--bucket', deploy_bucket_name]
     aws_cli.run(cmd)
@@ -43,7 +54,7 @@ def run_terminate_s3_webapp(name, settings):
     cf_endpoint = 'https://api.cloudflare.com/client/v4/zones/%s/purge_cache' % cf_zone_id
 
     data = dict()
-    data['files'] = list(settings['PURGE_FILES'])
+    data['files'] = list(settings['PURGE_CACHE_FILES'])
 
     cmd = ['curl', '-X', 'DELETE', cf_endpoint,
            '-H', 'X-Auth-Email: %s' % cf_auth_email,
@@ -59,7 +70,7 @@ def run_terminate_s3_webapp(name, settings):
 # start
 #
 ################################################################################
-print_session('terminate eb')
+print_session('terminate s3')
 
 s3 = env['s3']
 if len(args) == 2:

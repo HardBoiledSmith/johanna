@@ -29,10 +29,15 @@ def run_create_s3_webapp(name, settings):
     git_url = settings['GIT_URL']
     phase = env['common']['PHASE']
     template_name = env['template']['NAME']
+    base_path = '%s/%s' % (name, settings.get('BASE_PATH', ''))
 
     template_path = 'template/%s' % template_name
     environment_path = '%s/s3/%s' % (template_path, name)
-    app_root_path = '%s/%s' % (environment_path, name)
+    app_root_path = os.path.normpath('%s/%s' % (environment_path, base_path))
+
+    deploy_bucket_name = settings['BUCKET_NAME']
+    bucket_prefix = settings.get('BUCKET_PREFIX', '')
+    deploy_bucket_prefix = os.path.normpath('%s/%s' % (deploy_bucket_name, bucket_prefix))
 
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
@@ -46,19 +51,19 @@ def run_create_s3_webapp(name, settings):
 
     subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
     if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', git_url]
+        git_command = ['git', 'clone', '--depth=1', git_url, name]
     else:
-        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url, name]
     subprocess.Popen(git_command, cwd=environment_path).communicate()
     if not os.path.exists(app_root_path):
         raise Exception()
 
+    git_clone_folder = '%s/%s' % (environment_path, name)
     git_hash_app = subprocess.Popen(git_rev,
                                     stdout=subprocess.PIPE,
-                                    cwd=app_root_path).communicate()[0]
-
-    subprocess.Popen(['rm', '-rf', './.git'], cwd=app_root_path).communicate()
-    subprocess.Popen(['rm', '-rf', './.gitignore'], cwd=app_root_path).communicate()
+                                    cwd=git_clone_folder).communicate()[0]
+    subprocess.Popen(['rm', '-rf', './.git'], cwd=git_clone_folder).communicate()
+    subprocess.Popen(['rm', '-rf', './.gitignore'], cwd=git_clone_folder).communicate()
 
     ################################################################################
     print_message('bower install')
@@ -79,12 +84,12 @@ def run_create_s3_webapp(name, settings):
 
     lines = read_file('%s/configuration/app/scripts/settings-local-sample.js' % environment_path)
     option_list = list()
-    option_list.append(['PHASE', phase])
+    option_list.append(['phase', phase])
     for key in settings:
         value = settings[key]
         option_list.append([key, value])
     for oo in option_list:
-        lines = re_sub_lines(lines, '^(var %s) .*' % oo[0], '\\1 = \'%s\';' % oo[1])
+        lines = re_sub_lines(lines, '^(const %s) .*' % oo[0], '\\1 = \'%s\';' % oo[1])
     write_file('%s/app/scripts/settings-local.js' % app_root_path, lines)
 
     ################################################################################
@@ -109,29 +114,62 @@ def run_create_s3_webapp(name, settings):
     app_dist_path = '%s/dist' % app_root_path
     temp_bucket_name = aws_cli.get_temp_bucket()
     timestamp = int(time.time())
-    temp_folder = 's3://%s/%s/%s/%s' % (temp_bucket_name, template_name, name, timestamp)
-    cmd = ['s3', 'cp', '.', temp_folder, '--recursive']
+    temp_bucket_prefix = '%s/%s/%s/%s/%s' % (temp_bucket_name, template_name, name, base_path, timestamp)
+    temp_bucket_prefix = os.path.normpath(temp_bucket_prefix)
+    temp_bucket_uri = 's3://%s' % temp_bucket_prefix
+
+    cmd = ['s3', 'cp', '.', temp_bucket_uri, '--recursive']
     upload_result = aws_cli.run(cmd, cwd=app_dist_path)
     for ll in upload_result.split('\n'):
         print(ll)
 
     ################################################################################
+    print_message('delete old files from deploy bucket')
+
+    delete_excluded_files = list(settings.get('DELETE_EXCLUDED_FILES', ''))
+    if len(delete_excluded_files) > 0:
+        cmd = ['s3', 'rm', 's3://%s' % deploy_bucket_prefix, '--recursive']
+        for ff in delete_excluded_files:
+            cmd += ['--exclude', '%s' % ff]
+        delete_result = aws_cli.run(cmd)
+        for ll in delete_result.split('\n'):
+            print(ll)
+
+    ################################################################################
     print_message('sync to deploy bucket')
 
-    deploy_bucket_name = settings['BUCKET_NAME']
-
-    cmd = ['s3', 'sync', temp_folder, 's3://%s' % deploy_bucket_name, '--delete']
+    cmd = ['s3', 'sync', temp_bucket_uri, 's3://%s' % deploy_bucket_prefix]
+    if len(delete_excluded_files) < 1:
+        cmd += ['--delete']
     sync_result = aws_cli.run(cmd)
     for ll in sync_result.split('\n'):
         print(ll)
 
+    ################################################################################
+    print_message('tag to deploy bucket')
+
+    tag_dict = dict()
+
+    cmd = ['s3api', 'get-bucket-tagging', '--bucket', deploy_bucket_name]
+    tag_result = aws_cli.run(cmd, ignore_error=True)
+    if tag_result:
+        tag_result = dict(tag_result)
+        for tt in tag_result['TagSet']:
+            key = tt['Key']
+            value = tt['Value']
+            tag_dict[key] = value
+
+    tag_dict['phase'] = phase
+    tag_dict['git_hash_johanna'] = git_hash_johanna.decode('utf-8')
+    tag_dict['git_hash_template'] = git_hash_template.decode('utf-8')
+    tag_dict['git_hash_%s' % name] = git_hash_app.decode('utf-8')
+    tag_dict['timestamp_%s' % name] = timestamp
+
     tag_format = '{Key=%s, Value=%s}'
     tag_list = list()
-    tag_list.append(tag_format % ('phase', phase))
-    tag_list.append(tag_format % ('git_hash_johanna', git_hash_johanna.decode('utf-8')))
-    tag_list.append(tag_format % ('git_hash_template', git_hash_template.decode('utf-8')))
-    tag_list.append(tag_format % ('git_hash_app', git_hash_app.decode('utf-8')))
-    tag_list.append(tag_format % ('timestamp', timestamp))
+    for key in tag_dict:
+        value = tag_dict[key]
+        tag_list.append(tag_format % (key, value))
 
     cmd = ['s3api', 'put-bucket-tagging', '--bucket', deploy_bucket_name, '--tagging',
            'TagSet=[%s]' % ','.join(tag_list)]
@@ -140,7 +178,7 @@ def run_create_s3_webapp(name, settings):
     ################################################################################
     print_message('cleanup temp bucket')
 
-    cmd = ['s3', 'rm', temp_folder, '--recursive']
+    cmd = ['s3', 'rm', temp_bucket_uri, '--recursive']
     upload_result = aws_cli.run(cmd)
     for ll in upload_result.split('\n'):
         print(ll)
@@ -154,7 +192,7 @@ def run_create_s3_webapp(name, settings):
     cf_endpoint = 'https://api.cloudflare.com/client/v4/zones/%s/purge_cache' % cf_zone_id
 
     data = dict()
-    data['files'] = list(settings['PURGE_FILES'])
+    data['files'] = list(settings['PURGE_CACHE_FILES'])
 
     cmd = ['curl', '-X', 'DELETE', cf_endpoint,
            '-H', 'X-Auth-Email: %s' % cf_auth_email,
