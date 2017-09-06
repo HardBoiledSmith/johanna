@@ -21,10 +21,16 @@ if engine not in ('mysql', 'aurora'):
 
 print_message('get database address')
 
-database = env['rds']['DATABASE']
-db_host = aws_cli.get_rds_address()
+db_host = 'dv-database.hbsmith.io'
+answer = 'no'
+if env['common']['PHASE'] == 'dv':
+    answer = input('Do you use a database of Vagrant VM? (yes/no): ')
+if answer != 'yes':
+    db_host = aws_cli.get_rds_address(read_replica=True)
+
 db_password = env['rds']['USER_PASSWORD']
 db_user = env['rds']['USER_NAME']
+database = env['rds']['DATABASE']
 template_name = env['template']['NAME']
 
 print_message('reset database')
