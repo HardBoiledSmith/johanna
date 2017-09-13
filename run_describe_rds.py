@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import print_function
-
 from env import env
 from run_common import AWSCli
 
@@ -13,7 +11,7 @@ def describe_db_subnet_groups():
     # noinspection PyBroadException
     try:
         aws_cli.run(cmd)
-    except:
+    except Exception:
         return False
 
     return True
@@ -26,7 +24,7 @@ def describe_db_instances():
     # noinspection PyBroadException
     try:
         aws_cli.run(cmd)
-    except:
+    except Exception:
         return False
 
     return True
@@ -39,7 +37,7 @@ def describe_db_clusters():
     # noinspection PyBroadException
     try:
         aws_cli.run(cmd)
-    except:
+    except Exception:
         return False
 
     return True

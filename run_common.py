@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import print_function
-
 import json
 import os
 import re
@@ -83,7 +81,7 @@ class AWSCli:
             # noinspection PyBroadException
             try:
                 return json.loads(result)
-            except:
+            except Exception:
                 return result
         elif args[0] == 'eb':
             return result
@@ -131,7 +129,7 @@ class AWSCli:
                 cache_address = dict(cache_endpoint)['Address']
                 if cache_address:
                     return cache_address
-            except:
+            except Exception:
                 pass
 
             print('waiting for a new cache... (elapsed time: \'%d\' seconds)' % elapsed_time)
@@ -166,7 +164,7 @@ class AWSCli:
 
                         if db_endpoint:
                             return db_endpoint
-                except:
+                except Exception:
                     pass
 
                 print('waiting for a new database... (elapsed time: \'%d\' seconds)' % elapsed_time)
@@ -198,7 +196,7 @@ class AWSCli:
 
                         if db_address:
                             return db_address
-                except:
+                except Exception:
                     pass
 
                 print('waiting for a new database... (elapsed time: \'%d\' seconds)' % elapsed_time)

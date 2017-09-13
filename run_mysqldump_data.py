@@ -52,9 +52,9 @@ data = subprocess.Popen(cmd, stdout=PIPE).communicate()[0].decode()
 line = data.split('\n')
 filename = 'template/%s/rds/mysql_data.sql' % template_name
 with open(filename, 'w') as f:
-    for l in line:
-        l = re.sub('^-- MySQL dump.*$', '', l)
-        l = re.sub('^-- Host.*$', '', l)
-        l = re.sub('^-- Server version.*$', '', l)
-        l = re.sub('^-- Dump completed on.*$', '', l)
-        f.write(l + '\n')
+    for ll in line:
+        ll = re.sub('^-- MySQL dump.*$', '', ll)
+        ll = re.sub('^-- Host.*$', '', ll)
+        ll = re.sub('^-- Server version.*$', '', ll)
+        ll = re.sub('^-- Dump completed on.*$', '', ll)
+        f.write(ll + '\n')
