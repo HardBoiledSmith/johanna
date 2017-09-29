@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import print_function
-
 from run_common import AWSCli
 
 aws_cli = AWSCli()
@@ -55,7 +53,7 @@ def describe_nat_gateways(vpc_id=None):
         result = aws_cli.run(cmd)
         if not result['NatGateways']:
             return False
-    except:
+    except Exception:
         return False
 
     return True

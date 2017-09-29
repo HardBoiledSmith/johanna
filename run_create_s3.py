@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import print_function
-
 import json
 import os
 import subprocess
@@ -30,10 +28,12 @@ def run_create_s3_webapp(name, settings):
     phase = env['common']['PHASE']
     template_name = env['template']['NAME']
     base_path = '%s/%s' % (name, settings.get('BASE_PATH', ''))
+    common_path = '%s/%s' % (name, settings.get('COMMON_PATH', 'common'))
 
     template_path = 'template/%s' % template_name
     environment_path = '%s/s3/%s' % (template_path, name)
     app_root_path = os.path.normpath('%s/%s' % (environment_path, base_path))
+    common_root_path = os.path.normpath('%s/%s' % (environment_path, common_path))
 
     deploy_bucket_name = settings['BUCKET_NAME']
     bucket_prefix = settings.get('BUCKET_PREFIX', '')
@@ -68,6 +68,9 @@ def run_create_s3_webapp(name, settings):
     ################################################################################
     print_message('bower install')
 
+    if not os.path.exists('%s/bower.json' % app_root_path):
+        subprocess.Popen(['cp', '%s/bower.json' % common_root_path, app_root_path]).communicate()
+
     bower_process = subprocess.Popen(['bower', 'install'], cwd=app_root_path)
     bower_result, error = bower_process.communicate()
 
@@ -94,6 +97,9 @@ def run_create_s3_webapp(name, settings):
 
     ################################################################################
     print_message('grunt build')
+
+    if not os.path.exists('%s/package.json' % app_root_path):
+        subprocess.Popen(['cp', '%s/package.json' % common_root_path, app_root_path]).communicate()
 
     npm_process = subprocess.Popen(['npm', 'install'], cwd=app_root_path)
     npm_result, error = npm_process.communicate()
