@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import print_function
-
 import time
 
 from env import env
@@ -29,7 +27,7 @@ def _is_old_environment(cname):
     # noinspection PyBroadException
     try:
         old_timestamp = int(cc)
-    except:
+    except Exception:
         return False
 
     # 'old_timestamp' MUST NOT be greater than current timestamp

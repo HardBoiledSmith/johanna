@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import print_function
-
 from env import env
 from run_common import AWSCli
 
@@ -47,7 +45,7 @@ def describe_role_policy():
     try:
         aws_cli.run(cmd)
         aws_cli.run(cmd_2)
-    except:
+    except Exception:
         return False
 
     return True
@@ -71,7 +69,7 @@ def describe_environments():
     # noinspection PyBroadException
     try:
         result = aws_cli.run(cmd)
-    except:
+    except Exception:
         return False
 
     return result['Environments']
