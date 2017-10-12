@@ -112,7 +112,7 @@ def run_create_s3_webapp(name, settings):
         print(' '.join(['NPM returns:', str(npm_process.returncode)]))
         raise Exception()
 
-    subprocess.Popen(['grunt', 'build'], cwd=app_root_path).communicate()
+    subprocess.Popen(['grunt'], cwd=app_root_path).communicate()
 
     ################################################################################
     print_message('upload to temp bucket')
