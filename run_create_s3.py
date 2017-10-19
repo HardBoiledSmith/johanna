@@ -109,10 +109,19 @@ def run_create_s3_webapp(name, settings):
         raise Exception()
 
     if npm_process.returncode != 0:
-        print(' '.join(['NPM returns:', str(npm_process.returncode)]))
+        print(' '.join(['NPM exited with:', str(npm_process.returncode)]))
         raise Exception()
 
-    subprocess.Popen(['grunt', 'build'], cwd=app_root_path).communicate()
+    grunt_process = subprocess.Popen(['grunt'], cwd=app_root_path)
+    grunt_result, error = grunt_process.communicate()
+
+    if error:
+        print(error)
+        raise Exception()
+
+    if grunt_process.returncode != 0:
+        print(' '.join(['Grunt exited with:', str(grunt_process.returncode)]))
+        raise Exception()
 
     ################################################################################
     print_message('upload to temp bucket')

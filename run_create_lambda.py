@@ -75,7 +75,7 @@ def run_create_default_lambda(name, settings):
     if os.path.exists(requirements_path):
         print_message('install dependencies')
 
-        cmd = ['pip', 'install', '-r', requirements_path, '-t', deploy_folder]
+        cmd = ['pip3', 'install', '-r', requirements_path, '-t', deploy_folder]
         subprocess.Popen(cmd).communicate()
 
     settings_path = '%s/settings_local_sample.py' % deploy_folder
@@ -135,7 +135,7 @@ def run_create_cron_lambda(name, settings):
     if os.path.exists(requirements_path):
         print_message('install dependencies')
 
-        cmd = ['pip', 'install', '-r', requirements_path, '-t', deploy_folder]
+        cmd = ['pip3', 'install', '-r', requirements_path, '-t', deploy_folder]
         subprocess.Popen(cmd).communicate()
 
     settings_path = '%s/settings_local_sample.py' % deploy_folder
