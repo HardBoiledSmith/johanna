@@ -12,6 +12,10 @@ aws_cli = AWSCli()
 
 print_session('reset database')
 
+if env['common']['PHASE'] == 'op':
+    print('\'OP\' phase does not allow this operation.')
+    raise Exception()
+
 check_template_availability()
 
 engine = env['rds']['ENGINE']
@@ -21,12 +25,17 @@ if engine not in ('mysql', 'aurora'):
 
 print_message('get database address')
 
-db_host = 'dv-database.hbsmith.io'
-answer = 'no'
-if env['common']['PHASE'] == 'dv':
-    answer = input('Do you use a database of Vagrant VM? (yes/no): ')
-if answer != 'yes':
+if env['common']['PHASE'] != 'dv':
     db_host = aws_cli.get_rds_address(read_replica=True)
+else:
+    while True:
+        answer = input('Do you use a database of Vagrant VM? (yes/no): ')
+        if answer.lower() == 'no':
+            db_host = aws_cli.get_rds_address(read_replica=True)
+            break
+        if answer.lower() == 'yes':
+            db_host = 'dv-database.hbsmith.io'
+            break
 
 db_password = env['rds']['USER_PASSWORD']
 db_user = env['rds']['USER_NAME']
