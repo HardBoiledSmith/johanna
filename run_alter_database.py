@@ -17,36 +17,43 @@ print_session('alter database')
 check_template_availability()
 
 engine = env['rds']['ENGINE']
-if engine != 'mysql':
+if engine not in ('mysql', 'aurora'):
     print('not supported:', engine)
     raise Exception()
 
 print_message('get database address')
 
-db_host = 'dv-database.hbsmith.io'
-answer = 'no'
-if env['common']['PHASE'] == 'dv':
-    answer = input('Do you use a database of Vagrant VM? (yes/no): ')
-if answer != 'yes':
-    db_host = aws_cli.get_rds_address()
+if env['common']['PHASE'] != 'dv':
+    db_host = aws_cli.get_rds_address(read_replica=True)
+else:
+    while True:
+        answer = input('Do you use a database of Vagrant VM? (yes/no): ')
+        if answer.lower() == 'no':
+            db_host = aws_cli.get_rds_address(read_replica=True)
+            break
+        if answer.lower() == 'yes':
+            db_host = 'dv-database.hbsmith.io'
+            break
 
 db_password = env['rds']['USER_PASSWORD']
 db_user = env['rds']['USER_NAME']
 template_name = env['template']['NAME']
 
-print_message('dump data')
-
-cmd_common = ['mysql']
-cmd_common += ['-h' + db_host]
-cmd_common += ['-u' + db_user]
-cmd_common += ['-p' + db_password]
-
-yyyymmdd = str(input('please input YYYYMMDD: '))
+print('/* YYYYMMDD list */')
+print('\n'.join(os.listdir('template/%s/rds/history' % template_name)))
+yyyymmdd = str(input('\nplease input YYYYMMDD: '))
 yyyymmdd_today = datetime.datetime.today().strftime('%Y%m%d')
 
 if yyyymmdd < yyyymmdd_today:
     print('Not allow to alter with script older than today (%s).' % yyyymmdd_today)
     sys.exit(0)
+
+print_message('alter data')
+
+cmd_common = ['mysql']
+cmd_common += ['-h' + db_host]
+cmd_common += ['-u' + db_user]
+cmd_common += ['-p' + db_password]
 
 cmd = cmd_common + ['--comments']
 
