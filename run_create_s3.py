@@ -92,7 +92,7 @@ def run_create_s3_webapp(name, settings):
         value = settings[key]
         option_list.append([key, value])
     for oo in option_list:
-        lines = re_sub_lines(lines, '^(const %s) .*' % oo[0], '\\1 = \'%s\';' % oo[1])
+        lines = re_sub_lines(lines, '^(var %s) .*' % oo[0], '\\1 = \'%s\';' % oo[1])
     write_file('%s/app/scripts/settings-local.js' % app_root_path, lines)
 
     ################################################################################
