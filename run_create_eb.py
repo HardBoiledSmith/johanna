@@ -20,10 +20,10 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-aws_cli = AWSCli()
-
 
 def _get_s3_bucket_name(settings):
+    aws_cli = AWSCli()
+
     result = aws_cli.run(['s3', 'ls'])
 
     bucket_name = None
@@ -47,7 +47,301 @@ def _get_s3_bucket_name(settings):
     return bucket_name
 
 
+def run_create_eb_cron_job(name, settings):
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+
+    aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
+    aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
+    aws_default_region = settings['AWS_DEFAULT_REGION']
+    aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
+    cname = settings['CNAME']
+    debug = env['common']['DEBUG']
+    eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
+    git_url = settings['GIT_URL']
+    host_maya = settings['HOST_MAYA']
+    key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
+    phase = env['common']['PHASE']
+    subnet_type = settings['SUBNET_TYPE']
+    template_name = env['template']['NAME']
+    if hasattr(settings, 'PRIVATE_IP'):
+        private_ip = settings['PRIVATE_IP']
+    else:
+        private_ip = None
+
+    cidr_subnet = aws_cli.cidr_subnet
+
+    str_timestamp = str(int(time.time()))
+
+    eb_environment_name = '%s-%s' % (name, str_timestamp)
+    eb_environment_name_old = None
+
+    template_path = 'template/%s' % template_name
+    environment_path = '%s/elasticbeanstalk/%s' % (template_path, name)
+    opt_config_path = '%s/configuration/opt' % environment_path
+    etc_config_path = '%s/configuration/etc' % environment_path
+
+    git_rev = ['git', 'rev-parse', 'HEAD']
+    git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
+    git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
+
+    ################################################################################
+    print_session('create %s' % name)
+
+    ################################################################################
+    print_message('get vpc id')
+
+    rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
+
+    if not eb_vpc_id:
+        print('ERROR!!! No VPC found')
+        raise Exception()
+
+    ################################################################################
+    print_message('get subnet id')
+
+    subnet_id_1 = None
+    subnet_id_2 = None
+    cmd = ['ec2', 'describe-subnets']
+    result = aws_cli.run(cmd)
+    for r in result['Subnets']:
+        if r['VpcId'] != eb_vpc_id:
+            continue
+        if 'public' == subnet_type:
+            if r['CidrBlock'] == cidr_subnet['eb']['public_1']:
+                subnet_id_1 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
+                subnet_id_2 = r['SubnetId']
+        elif 'private' == subnet_type:
+            if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
+                subnet_id_1 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
+                subnet_id_2 = r['SubnetId']
+        else:
+            print('ERROR!!! Unknown subnet type:', subnet_type)
+            raise Exception()
+
+    ################################################################################
+    print_message('get security group id')
+
+    security_group_id = None
+    cmd = ['ec2', 'describe-security-groups']
+    result = aws_cli.run(cmd)
+    for r in result['SecurityGroups']:
+        if r['VpcId'] != eb_vpc_id:
+            continue
+        if 'public' == subnet_type:
+            if r['GroupName'] == 'eb_public':
+                security_group_id = r['GroupId']
+                break
+        elif 'private' == subnet_type:
+            if r['GroupName'] == 'eb_private':
+                security_group_id = r['GroupId']
+                break
+        else:
+            print('ERROR!!! Unknown subnet type:', subnet_type)
+            raise Exception()
+
+    ################################################################################
+    print_message('configuration %s' % name)
+
+    with open('%s/configuration/phase' % environment_path, 'w') as f:
+        f.write(phase)
+        f.close()
+
+    lines = read_file('%s/.elasticbeanstalk/config_sample.yml' % environment_path)
+    lines = re_sub_lines(lines, '^(  application_name).*', '\\1: %s' % eb_application_name)
+    lines = re_sub_lines(lines, '^(  default_ec2_keyname).*', '\\1: %s' % key_pair_name)
+    write_file('%s/.elasticbeanstalk/config.yml' % environment_path, lines)
+
+    lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
+    lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
+    lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
+    lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
+    write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
+
+    lines = read_file('%s/collectd_sample.conf' % etc_config_path)
+    lines = re_sub_lines(lines, 'HOST_MAYA', host_maya)
+    write_file('%s/collectd.conf' % etc_config_path, lines)
+
+    lines = read_file('%s/ntpdate_sample.sh' % opt_config_path)
+    lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % host_maya)
+    write_file('%s/ntpdate.sh' % opt_config_path, lines)
+
+    lines = read_file('%s/nc_sample.sh' % opt_config_path)
+    lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % host_maya)
+    write_file('%s/nc.sh' % opt_config_path, lines)
+
+    ################################################################################
+    print_message('git clone')
+
+    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
+    if phase == 'dv':
+        git_command = ['git', 'clone', '--depth=1', git_url]
+    else:
+        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+    subprocess.Popen(git_command, cwd=environment_path).communicate()
+    if not os.path.exists('%s/%s' % (environment_path, name)):
+        raise Exception()
+
+    git_hash_app = subprocess.Popen(git_rev,
+                                    stdout=subprocess.PIPE,
+                                    cwd='%s/%s' % (environment_path, name)).communicate()[0]
+
+    subprocess.Popen(['rm', '-rf', './%s/.git' % name], cwd=environment_path).communicate()
+    subprocess.Popen(['rm', '-rf', './%s/.gitignore' % name], cwd=environment_path).communicate()
+
+    ################################################################################
+
+    for ss in settings['SETTINGS_LOCAL_PATH']:
+        lines = read_file('%s/%s/settings_local_sample.py' % (environment_path, ss))
+        lines = re_sub_lines(lines, '^(DEBUG).*', '\\1 = %s' % debug)
+        option_list = list()
+        option_list.append(['PHASE', phase])
+        for key in settings:
+            value = settings[key]
+            option_list.append([key, value])
+        for oo in option_list:
+            lines = re_sub_lines(lines, '^(%s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
+        write_file('%s/%s/settings_local.py' % (environment_path, ss), lines)
+
+    ################################################################################
+    print_message('check previous version')
+
+    cmd = ['elasticbeanstalk', 'describe-environments']
+    cmd += ['--application-name', eb_application_name]
+    result = aws_cli.run(cmd)
+
+    for r in result['Environments']:
+        if 'CNAME' not in r:
+            continue
+
+        if r['CNAME'] == '%s.%s.elasticbeanstalk.com' % (cname, aws_default_region):
+            if r['Status'] == 'Terminated':
+                continue
+            elif r['Status'] != 'Ready':
+                print('previous version is not ready.')
+                raise Exception()
+
+            eb_environment_name_old = r['EnvironmentName']
+            cname += '-%s' % str_timestamp
+            break
+
+    ################################################################################
+    print_message('create %s' % name)
+
+    tags = list()
+    # noinspection PyUnresolvedReferences
+    tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8'))
+    # noinspection PyUnresolvedReferences
+    tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8')))
+    # noinspection PyUnresolvedReferences
+    tags.append('git_hash_%s=%s' % (name, git_hash_app.decode('utf-8')))
+
+    cmd = ['create', eb_environment_name]
+    cmd += ['--cname', cname]
+    cmd += ['--instance_type', 't2.nano']
+    cmd += ['--region', aws_default_region]
+    cmd += ['--tags', ','.join(tags)]
+    cmd += ['--vpc.id', eb_vpc_id]
+    cmd += ['--vpc.securitygroups', security_group_id]
+    cmd += ['--quiet']
+    if 'public' == subnet_type:
+        cmd += ['--vpc.ec2subnets', ','.join([subnet_id_1, subnet_id_2])]
+        cmd += ['--vpc.elbsubnets', ','.join([subnet_id_1, subnet_id_2])]
+        cmd += ['--vpc.elbpublic']
+        cmd += ['--vpc.publicip']
+    elif 'private' == subnet_type:
+        cmd += ['--vpc.ec2subnets', ','.join([subnet_id_1, subnet_id_2])]
+        cmd += ['--vpc.elbsubnets', ','.join([subnet_id_1, subnet_id_2])]
+    aws_cli.run_eb(cmd, cwd=environment_path)
+
+    elapsed_time = 0
+    while True:
+        cmd = ['elasticbeanstalk', 'describe-environments']
+        cmd += ['--application-name', eb_application_name]
+        cmd += ['--environment-name', eb_environment_name]
+        result = aws_cli.run(cmd)
+
+        ee = result['Environments'][0]
+        print(json.dumps(ee, sort_keys=True, indent=4))
+        if ee.get('Health', '') == 'Green' \
+                and ee.get('HealthStatus', '') == 'Ok' \
+                and ee.get('Status', '') == 'Ready':
+            break
+
+        print('creating... (elapsed time: \'%d\' seconds)' % elapsed_time)
+        time.sleep(5)
+        elapsed_time += 5
+
+        if elapsed_time > 60 * 30:
+            raise Exception()
+
+    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
+
+    ################################################################################
+    print_message('revoke security group ingress')
+
+    cmd = ['ec2', 'describe-security-groups']
+    cmd += ['--filters', 'Name=tag-key,Values=Name,Name=tag-value,Values=%s' % eb_environment_name]
+    result = aws_cli.run(cmd)
+
+    for ss in result['SecurityGroups']:
+        cmd = ['ec2', 'revoke-security-group-ingress']
+        cmd += ['--group-id', ss['GroupId']]
+        cmd += ['--protocol', 'tcp']
+        cmd += ['--port', '22']
+        cmd += ['--cidr', '0.0.0.0/0']
+        aws_cli.run(cmd, ignore_error=True)
+
+    ################################################################################
+    if private_ip is not None:
+        print_message('attach network interface')
+
+        elapsed_time = 0
+        while True:
+            cmd = ['ec2', 'describe-network-interfaces']
+            cmd += ['--filters', 'Name=private-ip-address,Values=%s' % private_ip]
+            result = aws_cli.run(cmd)
+
+            network_interface_id = result['NetworkInterfaces'][0]['NetworkInterfaceId']
+
+            if 'Attachment' not in result['NetworkInterfaces'][0]:
+                cmd = ['ec2', 'describe-instances']
+                cmd += ['--filters', 'Name=tag-key,Values=Name,Name=tag-value,Values=%s' % eb_environment_name]
+                result = aws_cli.run(cmd)
+
+                instance_id = result['Reservations'][0]['Instances'][0]['InstanceId']
+
+                cmd = ['ec2', 'attach-network-interface']
+                cmd += ['--network-interface-id', network_interface_id]
+                cmd += ['--instance-id', instance_id]
+                cmd += ['--device-index', '1']
+                aws_cli.run(cmd)
+
+                break
+
+            attachment_id = result['NetworkInterfaces'][0]['Attachment']['AttachmentId']
+
+            cmd = ['ec2', 'detach-network-interface']
+            cmd += ['--attachment-id', attachment_id]
+            aws_cli.run(cmd, ignore_error=True)
+
+            print('detaching network interface... (elapsed time: \'%d\' seconds)' % elapsed_time)
+            time.sleep(5)
+            elapsed_time += 5
+
+    ################################################################################
+    print_message('swap CNAME if the previous version exists')
+
+    if eb_environment_name_old:
+        cmd = ['elasticbeanstalk', 'swap-environment-cnames']
+        cmd += ['--source-environment-name', eb_environment_name_old]
+        cmd += ['--destination-environment-name', eb_environment_name]
+
+
 def run_create_eb_django(name, settings):
+    aws_cli = AWSCli()
+
     aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
     aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
     aws_default_region = env['aws']['AWS_DEFAULT_REGION']
@@ -350,7 +644,9 @@ def run_create_eb_django(name, settings):
 
 
 def run_create_eb_openvpn(name, settings):
-    aws_default_region = env['aws']['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+
+    aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
     cname = settings['CNAME']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
@@ -593,6 +889,8 @@ def run_create_eb_openvpn(name, settings):
 
 
 def run_create_eb_graphite_grafana(name, settings):
+    aws_cli = AWSCli()
+
     aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
     cname = settings['CNAME']
@@ -921,21 +1219,27 @@ if len(args) == 2:
     for eb_env in eb['ENVIRONMENTS']:
         if eb_env['NAME'] == target_eb_name:
             target_eb_name_exists = True
+            if eb_env['TYPE'] == 'cron job':
+                run_create_eb_cron_job(eb_env['NAME'], eb_env)
+                continue
             if eb_env['TYPE'] == 'django':
                 run_create_eb_django(eb_env['NAME'], eb_env)
-                break
+                continue
             if eb_env['TYPE'] == 'openvpn':
                 run_create_eb_openvpn(eb_env['NAME'], eb_env)
-                break
+                continue
             if eb_env['TYPE'] == 'graphite/grafana':
                 run_create_eb_graphite_grafana(eb_env['NAME'], eb_env)
-                break
+                continue
             print('"%s" is not supported' % eb_env['TYPE'])
             raise Exception()
     if not target_eb_name_exists:
         print('"%s" is not exists in config.json' % target_eb_name)
 else:
     for eb_env in eb['ENVIRONMENTS']:
+        if eb_env['TYPE'] == 'cron job':
+            run_create_eb_cron_job(eb_env['NAME'], eb_env)
+            continue
         if eb_env['TYPE'] == 'django':
             run_create_eb_django(eb_env['NAME'], eb_env)
             continue

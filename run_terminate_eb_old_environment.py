@@ -11,14 +11,6 @@ if __name__ == "__main__":
 
     parse_args()
 
-aws_cli = AWSCli()
-
-aws_default_region = env['aws']['AWS_DEFAULT_REGION']
-eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
-
-timestamp = int(time.time())
-max_age_seconds = 60 * 50
-
 
 def _is_old_environment(cname):
     cc = cname.split('.')[0]
@@ -54,30 +46,38 @@ def _is_old_environment(cname):
 ################################################################################
 print_session('terminate old environment')
 
+timestamp = int(time.time())
+max_age_seconds = 60 * 50
+
 ################################################################################
 print_message('terminate old environment (current timestamp: %d)' % timestamp)
 
-cmd = ['elasticbeanstalk', 'describe-environments']
-cmd += ['--application-name', eb_application_name]
-result = aws_cli.run(cmd)
+eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
 
-for r in result['Environments']:
-    # TODO: do we need to handle worker environment(Balthasar) here?
-    if 'CNAME' not in r:
-        continue
+for vpc_env in env['vpc']:
+    aws_cli = AWSCli(vpc_env['AWS_DEFAULT_REGION'])
+    aws_default_region = vpc_env['AWS_DEFAULT_REGION']
 
-    print('')
-    print('EnvironmentName:', r['EnvironmentName'])
-    print('CNAME:', r['CNAME'])
-    print('Status:', r['Status'])
-    print('')
+    cmd = ['elasticbeanstalk', 'describe-environments']
+    cmd += ['--application-name', eb_application_name]
+    result = aws_cli.run(cmd)
 
-    if r['Status'] != 'Ready':
-        continue
+    for r in result['Environments']:
+        if 'CNAME' not in r:
+            continue
 
-    if not _is_old_environment(r['CNAME']):
-        continue
+        print('')
+        print('EnvironmentName:', r['EnvironmentName'])
+        print('CNAME:', r['CNAME'])
+        print('Status:', r['Status'])
+        print('')
 
-    cmd = ['elasticbeanstalk', 'terminate-environment']
-    cmd += ['--environment-name', r['EnvironmentName']]
-    aws_cli.run(cmd, ignore_error=True)
+        if r['Status'] != 'Ready':
+            continue
+
+        if not _is_old_environment(r['CNAME']):
+            continue
+
+        cmd = ['elasticbeanstalk', 'terminate-environment']
+        cmd += ['--environment-name', r['EnvironmentName']]
+        aws_cli.run(cmd, ignore_error=True)

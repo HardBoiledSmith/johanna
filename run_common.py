@@ -20,13 +20,16 @@ def _confirm_phase():
     phase = env['common']['PHASE']
     print('Your current environment values are below')
     print('-' * 80)
-    print('\tPHASE               : \'%s\'' % phase)
+    print('\tPHASE               : %s' % phase)
     if 'template' in env:
-        print('\tTEMPLATE            : \'%s\'' % env['template']['NAME'])
+        print('\tTEMPLATE            : %s' % env['template']['NAME'])
     if 'elasticbeanstalk' in env:
         eb = env['elasticbeanstalk']
         for eb_env in eb['ENVIRONMENTS']:
-            print('\tCNAME of %-10s : \'%s\'' % (eb_env['NAME'], eb_env['CNAME']))
+            aws_default_region = env['aws']['AWS_DEFAULT_REGION'] \
+                if 'AWS_DEFAULT_REGION' not in eb_env \
+                else eb_env['AWS_DEFAULT_REGION']
+            print('\tCNAME of %-10s : %-20s (%s)' % (eb_env['NAME'], eb_env['CNAME'], aws_default_region))
     print('-' * 80)
 
     answer = input('Please type in the name of phase \'%s\' to confirm: ' % phase)
@@ -50,7 +53,7 @@ class AWSCli:
     cidr_subnet['eb']['public_1'] = env['common']['AWS_SUBNET_EB_PUBLIC_1']
     cidr_subnet['eb']['public_2'] = env['common']['AWS_SUBNET_EB_PUBLIC_2']
 
-    def __init__(self):
+    def __init__(self, aws_default_region=None):
         if not env['aws'].get('AWS_ACCESS_KEY_ID') or \
                 not env['aws'].get('AWS_SECRET_ACCESS_KEY') or \
                 not env['aws'].get('AWS_DEFAULT_REGION'):
@@ -59,13 +62,15 @@ class AWSCli:
         self.env = dict(os.environ)
         self.env['AWS_ACCESS_KEY_ID'] = env['aws']['AWS_ACCESS_KEY_ID']
         self.env['AWS_SECRET_ACCESS_KEY'] = env['aws']['AWS_SECRET_ACCESS_KEY']
-        self.env['AWS_DEFAULT_REGION'] = env['aws']['AWS_DEFAULT_REGION']
+        self.env['AWS_DEFAULT_REGION'] = env['aws']['AWS_DEFAULT_REGION'] \
+            if not aws_default_region \
+            else aws_default_region
 
     def _run(self, args, cwd=None, ignore_error=None):
         if ignore_error:
-            print('\n>> command(ignore error):', end=" ")
+            print('\n>> command(ignore error): [%s]' % self.env['AWS_DEFAULT_REGION'], end=" ")
         else:
-            print('\n>> command:', end=" ")
+            print('\n>> command: [%s]' % self.env['AWS_DEFAULT_REGION'], end=" ")
         print(' '.join(args))
         result, error = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                          cwd=cwd, env=self.env).communicate()

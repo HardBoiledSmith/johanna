@@ -13,10 +13,6 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-aws_cli = AWSCli()
-aws_default_region = aws_cli.env['AWS_DEFAULT_REGION']
-eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
-
 
 def run_terminate_environment(name):
     print_message('terminate %s' % name)
@@ -56,17 +52,24 @@ def run_terminate_environment(name):
 ################################################################################
 print_session('terminate eb')
 
-eb = env['elasticbeanstalk']
-if len(args) == 2:
-    target_eb_name = args[1]
-    target_eb_name_exists = False
-    for eb_env in eb['ENVIRONMENTS']:
-        if eb_env['NAME'] == target_eb_name:
-            target_eb_name_exists = True
+eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
+
+for vpc_env in env['vpc']:
+    aws_cli = AWSCli(vpc_env['AWS_DEFAULT_REGION'])
+    aws_default_region = vpc_env['AWS_DEFAULT_REGION']
+
+    eb = env['elasticbeanstalk']
+
+    if len(args) == 2:
+        target_eb_name = args[1]
+        target_eb_name_exists = False
+        for eb_env in eb['ENVIRONMENTS']:
+            if eb_env['NAME'] == target_eb_name:
+                target_eb_name_exists = True
+                run_terminate_environment(eb_env['NAME'])
+                break
+        if not target_eb_name_exists:
+            print('"%s" is not exists in config.json' % target_eb_name)
+    else:
+        for eb_env in eb['ENVIRONMENTS']:
             run_terminate_environment(eb_env['NAME'])
-            break
-    if not target_eb_name_exists:
-        print('"%s" is not exists in config.json' % target_eb_name)
-else:
-    for eb_env in eb['ENVIRONMENTS']:
-        run_terminate_environment(eb_env['NAME'])
