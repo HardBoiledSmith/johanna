@@ -1,3 +1,3 @@
-awscli==1.11.2
-awsebcli==3.7.8
+awscli==1.11.178
+awsebcli==3.12.0
 colorama==0.3.7
