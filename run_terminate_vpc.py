@@ -341,17 +341,20 @@ def main(settings):
     ################################################################################
     print_message('delete vpc')
 
-    if rds_vpc_id:
-        print('delete vpc (vpc id: %s)' % rds_vpc_id)
-        cmd = ['ec2', 'delete-vpc']
-        cmd += ['--vpc-id', rds_vpc_id]
-        aws_cli.run(cmd, ignore_error=True)
+    while rds_vpc_id or eb_vpc_id:
+        if rds_vpc_id:
+            print('delete vpc (vpc id: %s)' % rds_vpc_id)
+            cmd = ['ec2', 'delete-vpc']
+            cmd += ['--vpc-id', rds_vpc_id]
+            aws_cli.run(cmd, ignore_error=True)
 
-    if eb_vpc_id:
-        print('delete vpc (vpc id: %s)' % eb_vpc_id)
-        cmd = ['ec2', 'delete-vpc']
-        cmd += ['--vpc-id', eb_vpc_id]
-        aws_cli.run(cmd, ignore_error=True)
+        if eb_vpc_id:
+            print('delete vpc (vpc id: %s)' % eb_vpc_id)
+            cmd = ['ec2', 'delete-vpc']
+            cmd += ['--vpc-id', eb_vpc_id]
+            aws_cli.run(cmd, ignore_error=True)
+
+        rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
 
     ################################################################################
     #
