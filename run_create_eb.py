@@ -231,11 +231,11 @@ def run_create_eb_cron_job(name, settings):
 
     tags = list()
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8'))
+    tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8').strip())
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8')))
+    tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8').strip()))
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_%s=%s' % (name, git_hash_app.decode('utf-8')))
+    tags.append('git_hash_%s=%s' % (name, git_hash_app.decode('utf-8').strip()))
 
     cmd = ['create', eb_environment_name]
     cmd += ['--cname', cname]
@@ -337,6 +337,7 @@ def run_create_eb_cron_job(name, settings):
         cmd = ['elasticbeanstalk', 'swap-environment-cnames']
         cmd += ['--source-environment-name', eb_environment_name_old]
         cmd += ['--destination-environment-name', eb_environment_name]
+        aws_cli.run(cmd)
 
 
 def run_create_eb_django(name, settings):
@@ -532,11 +533,11 @@ def run_create_eb_django(name, settings):
 
     tags = list()
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8'))
+    tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8').strip())
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8')))
+    tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8').strip()))
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_%s=%s' % (name, git_hash_app.decode('utf-8')))
+    tags.append('git_hash_%s=%s' % (name, git_hash_app.decode('utf-8').strip()))
 
     cmd = ['create', eb_environment_name]
     cmd += ['--cname', cname]
@@ -786,7 +787,7 @@ def run_create_eb_openvpn(name, settings):
         if 'CNAME' not in r:
             continue
 
-        if r['CNAME'] == '%s.ap-northeast-2.elasticbeanstalk.com' % cname:
+        if r['CNAME'] == '%s.%s.elasticbeanstalk.com' % (cname, aws_default_region):
             if r['Status'] == 'Terminated':
                 continue
             elif r['Status'] != 'Ready':
@@ -802,9 +803,9 @@ def run_create_eb_openvpn(name, settings):
 
     tags = list()
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8'))
+    tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8').strip())
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8')))
+    tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8').strip()))
 
     cmd = ['create', eb_environment_name]
     cmd += ['--cname', cname]
@@ -1097,11 +1098,11 @@ def run_create_eb_graphite_grafana(name, settings):
 
     tags = list()
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8'))
+    tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8').strip())
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8')))
+    tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8').strip()))
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_%s=%s' % (name, git_hash_app.decode('utf-8')))
+    tags.append('git_hash_%s=%s' % (name, git_hash_app.decode('utf-8').strip()))
 
     cmd = ['create', eb_environment_name]
     cmd += ['--cname', cname]
