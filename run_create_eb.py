@@ -356,10 +356,6 @@ def run_create_eb_django(name, settings):
     phase = env['common']['PHASE']
     subnet_type = settings['SUBNET_TYPE']
     template_name = env['template']['NAME']
-    if hasattr(settings, 'PRIVATE_IP'):
-        private_ip = settings['PRIVATE_IP']
-    else:
-        private_ip = None
 
     cidr_subnet = aws_cli.cidr_subnet
 
@@ -553,10 +549,8 @@ def run_create_eb_django(name, settings):
         cmd += ['--vpc.elbpublic']
         cmd += ['--vpc.publicip']
     elif 'private' == subnet_type:
-        # to attach network interface located at 'ap-northeast-2a' (subnet_id_1),
-        # DO NOT include 'ap-northeast-2c' (subnet_id_2)
-        cmd += ['--vpc.ec2subnets', subnet_id_1]
-        cmd += ['--vpc.elbsubnets', subnet_id_1]
+        cmd += ['--vpc.ec2subnets', ','.join([subnet_id_1, subnet_id_2])]
+        cmd += ['--vpc.elbsubnets', ','.join([subnet_id_1, subnet_id_2])]
     aws_cli.run_eb(cmd, cwd=environment_path)
 
     elapsed_time = 0
@@ -596,43 +590,6 @@ def run_create_eb_django(name, settings):
         cmd += ['--port', '22']
         cmd += ['--cidr', '0.0.0.0/0']
         aws_cli.run(cmd, ignore_error=True)
-
-    ################################################################################
-    if private_ip is not None:
-        print_message('attach network interface')
-
-        elapsed_time = 0
-        while True:
-            cmd = ['ec2', 'describe-network-interfaces']
-            cmd += ['--filters', 'Name=private-ip-address,Values=%s' % private_ip]
-            result = aws_cli.run(cmd)
-
-            network_interface_id = result['NetworkInterfaces'][0]['NetworkInterfaceId']
-
-            if 'Attachment' not in result['NetworkInterfaces'][0]:
-                cmd = ['ec2', 'describe-instances']
-                cmd += ['--filters', 'Name=tag-key,Values=Name,Name=tag-value,Values=%s' % eb_environment_name]
-                result = aws_cli.run(cmd)
-
-                instance_id = result['Reservations'][0]['Instances'][0]['InstanceId']
-
-                cmd = ['ec2', 'attach-network-interface']
-                cmd += ['--network-interface-id', network_interface_id]
-                cmd += ['--instance-id', instance_id]
-                cmd += ['--device-index', '1']
-                aws_cli.run(cmd)
-
-                break
-
-            attachment_id = result['NetworkInterfaces'][0]['Attachment']['AttachmentId']
-
-            cmd = ['ec2', 'detach-network-interface']
-            cmd += ['--attachment-id', attachment_id]
-            aws_cli.run(cmd, ignore_error=True)
-
-            print('detaching network interface... (elapsed time: \'%d\' seconds)' % elapsed_time)
-            time.sleep(5)
-            elapsed_time += 5
 
     ################################################################################
     print_message('swap CNAME if the previous version exists')
