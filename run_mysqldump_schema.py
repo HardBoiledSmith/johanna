@@ -67,12 +67,17 @@ def _manual_backup():
     ################################################################################
     print_message('get database address')
 
-    host = 'dv-database.hbsmith.io'
-    answer = 'no'
-    if env['common']['PHASE'] == 'dv':
-        answer = input('Do you use a database of Vagrant VM? (yes/no): ')
-    if answer != 'yes':
+    if env['common']['PHASE'] != 'dv':
         host = aws_cli.get_rds_address(read_replica=True)
+    else:
+        while True:
+            answer = input('Do you use a database of Vagrant VM? (yes/no): ')
+            if answer.lower() == 'no':
+                host = aws_cli.get_rds_address(read_replica=True)
+                break
+            if answer.lower() == 'yes':
+                host = 'dv-database.hbsmith.io'
+                break
 
     database = env['rds']['DATABASE']
     password = env['rds']['USER_PASSWORD']
@@ -99,16 +104,30 @@ def _mysql_dump(host, user, password, database, filename_path):
 
     print('\n>>> ' + ' '.join(cmd) + '\n')
 
-    data = subprocess.Popen(cmd, stdout=PIPE).communicate()[0].decode()
-    line = data.split('\n')
-    with open(filename_path, 'w') as f:
-        for ll in line:
-            ll = re.sub('^-- MySQL dump.*$', '', ll)
-            ll = re.sub('^-- Host.*$', '', ll)
-            ll = re.sub('^-- Server version.*$', '', ll)
-            ll = re.sub(' AUTO_INCREMENT=[0-9]*', '', ll)
-            ll = re.sub('^-- Dump completed on.*$', '', ll)
-            f.write(ll + '\n')
+    filename_path_raw = filename_path + '.raw'
+
+    with open(filename_path_raw, 'w') as ff:
+        subprocess.Popen(cmd, stdout=ff).communicate()
+
+    with open(filename_path_raw, 'r') as ff_raw, open(filename_path, 'w') as ff:
+        while True:
+            line = ff_raw.readline()
+            if not line:
+                break
+
+            if line.startswith('-- MySQL dump') or \
+                    line.startswith('-- Host') or \
+                    line.startswith('-- Server version') or \
+                    line.startswith('-- Dump completed on'):
+                ff.write('\n')
+                continue
+
+            line = re.sub(' AUTO_INCREMENT=[0-9]*', '', line)
+            ff.write(line)
+
+    cmd = ['rm', filename_path_raw]
+
+    subprocess.Popen(cmd, stdout=PIPE).communicate()
 
 
 def _s3_upload(path_config, cwd, yyyymmdd, filename):
