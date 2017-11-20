@@ -180,12 +180,13 @@ def main(settings):
         cmd += ['--group-id', security_group_id_1]
         cmd += ['--protocol', 'all']
         cmd += ['--source-group', security_group_id_2]
+        aws_cli.run(cmd, ignore_error=True)
 
         cmd = ['ec2', 'revoke-security-group-ingress']
         cmd += ['--group-id', security_group_id_2]
         cmd += ['--protocol', 'all']
         cmd += ['--source-group', security_group_id_1]
-        result = aws_cli.run(cmd, ignore_error=True)
+        aws_cli.run(cmd, ignore_error=True)
 
     ################################################################################
     print_message('delete security group')
