@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from env import env
-from run_common import AWSCli
 from run_common import check_template_availability
 from run_common import print_session
 from run_create_eb_cron_job import run_create_eb_cron_job
@@ -15,33 +14,6 @@ if __name__ == "__main__":
     from run_common import parse_args
 
     args = parse_args()
-
-
-def _get_s3_bucket_name(settings):
-    aws_cli = AWSCli()
-
-    result = aws_cli.run(['s3', 'ls'])
-
-    bucket_name = None
-    # noinspection PyTypeChecker
-    for rr in result.split('\n'):
-        print(rr)
-        # noinspection PyTypeChecker
-        bucket_name = rr.split(' ')[2]
-        # noinspection PyTypeChecker,PyUnresolvedReferences
-        if bucket_name.startswith('elasticbeanstalk-%s-' % settings['AWS_DEFAULT_REGION']):
-            break
-        bucket_name = None
-
-    if not bucket_name:
-        raise Exception('cannot find any elasticbeanstalk bucket in AWS Seoul region.')
-
-    # noinspection PyTypeChecker
-    bucket_name = 's3://' + bucket_name
-    print(bucket_name)
-
-    return bucket_name
-
 
 ################################################################################
 #
