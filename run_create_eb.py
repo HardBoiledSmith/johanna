@@ -54,41 +54,40 @@ print_session('create eb')
 check_template_availability()
 
 eb = env['elasticbeanstalk']
-if len(args) == 2:
+target_eb_name = None
+region = None
+check_exists = False
+
+if len(args) > 1:
     target_eb_name = args[1]
-    target_eb_name_exists = False
-    for eb_env in eb['ENVIRONMENTS']:
-        if eb_env['NAME'] == target_eb_name:
-            target_eb_name_exists = True
-            if eb_env['TYPE'] == 'cron job':
-                run_create_eb_cron_job(eb_env['NAME'], eb_env)
-                continue
-            if eb_env['TYPE'] == 'django':
-                run_create_eb_django(eb_env['NAME'], eb_env)
-                continue
-            if eb_env['TYPE'] == 'openvpn':
-                run_create_eb_openvpn(eb_env['NAME'], eb_env)
-                continue
-            if eb_env['TYPE'] == 'graphite/grafana':
-                run_create_eb_graphite_grafana(eb_env['NAME'], eb_env)
-                continue
-            print('"%s" is not supported' % eb_env['TYPE'])
-            raise Exception()
-    if not target_eb_name_exists:
-        print('"%s" is not exists in config.json' % target_eb_name)
-else:
-    for eb_env in eb['ENVIRONMENTS']:
-        if eb_env['TYPE'] == 'cron job':
-            run_create_eb_cron_job(eb_env['NAME'], eb_env)
-            continue
-        if eb_env['TYPE'] == 'django':
-            run_create_eb_django(eb_env['NAME'], eb_env)
-            continue
-        if eb_env['TYPE'] == 'openvpn':
-            run_create_eb_openvpn(eb_env['NAME'], eb_env)
-            continue
-        if eb_env['TYPE'] == 'graphite/grafana':
-            run_create_eb_graphite_grafana(eb_env['NAME'], eb_env)
-            continue
+
+if len(args) > 2:
+    region = args[2]
+
+for eb_env in eb['ENVIRONMENTS']:
+    if target_eb_name and eb_env['NAME'] != target_eb_name:
+        continue
+
+    if region and eb_env.get('AWS_DEFAULT_REGION') != region:
+        continue
+
+    if target_eb_name:
+        check_exists = True
+
+    if eb_env['TYPE'] == 'cron job':
+        run_create_eb_cron_job(eb_env['NAME'], eb_env)
+    elif eb_env['TYPE'] == 'django':
+        run_create_eb_django(eb_env['NAME'], eb_env)
+    elif eb_env['TYPE'] == 'openvpn':
+        run_create_eb_openvpn(eb_env['NAME'], eb_env)
+    elif eb_env['TYPE'] == 'graphite/grafana':
+        run_create_eb_graphite_grafana(eb_env['NAME'], eb_env)
+    else:
         print('"%s" is not supported' % eb_env['TYPE'])
         raise Exception()
+
+if not check_exists and target_eb_name and not region:
+    print('"%s" is not exists in config.json' % target_eb_name)
+
+if not check_exists and target_eb_name and region:
+    print('"%s, %s" is not exists in config.json' % (target_eb_name, region))
