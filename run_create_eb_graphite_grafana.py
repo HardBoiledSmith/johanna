@@ -13,6 +13,32 @@ from run_common import read_file
 from run_common import write_file
 
 
+def _get_s3_bucket_name(settings):
+    aws_cli = AWSCli()
+
+    result = aws_cli.run(['s3', 'ls'])
+
+    bucket_name = None
+    # noinspection PyTypeChecker
+    for rr in result.split('\n'):
+        print(rr)
+        # noinspection PyTypeChecker
+        bucket_name = rr.split(' ')[2]
+        # noinspection PyTypeChecker,PyUnresolvedReferences
+        if bucket_name.startswith('elasticbeanstalk-%s-' % settings['AWS_DEFAULT_REGION']):
+            break
+        bucket_name = None
+
+    if not bucket_name:
+        raise Exception('cannot find any elasticbeanstalk bucket in AWS Seoul region.')
+
+    # noinspection PyTypeChecker
+    bucket_name = 's3://' + bucket_name
+    print(bucket_name)
+
+    return bucket_name
+
+
 def run_create_eb_graphite_grafana(name, settings):
     aws_cli = AWSCli()
 
