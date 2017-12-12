@@ -27,6 +27,7 @@ def run_create_eb_django(name, settings):
     host_maya = settings['HOST_MAYA']
     key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
+    ssl_certificate_id = settings['SSL_CERTIFICATE_ID']
     subnet_type = settings['SUBNET_TYPE']
     template_name = env['template']['NAME']
 
@@ -122,9 +123,10 @@ def run_create_eb_django(name, settings):
     write_file('%s/.elasticbeanstalk/config.yml' % environment_path, lines)
 
     lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
-    lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
+    lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
+    lines = re_sub_lines(lines, 'SSL_CERTIFICATE_ID', ssl_certificate_id)
     write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
 
     lines = read_file('%s/my_sample.cnf' % app_config_path)
