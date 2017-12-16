@@ -200,12 +200,12 @@ def run_create_s3_webapp(name, settings):
     ################################################################################
     print_message('invalidate cache from cloudfront')
 
-    cf_dist_id = settings['CLOUDFRONT_DIST_ID']
-    path_list = list(settings['INVALIDATE_PATHS'])
-
-    cmd = ['cloudfront', 'create-invalidation', '--distribution-id', cf_dist_id, '--paths', ' '.join(path_list)]
-    invalidate_result = aws_cli.run(cmd)
-    print(invalidate_result)
+    cf_dist_id = settings.get('CLOUDFRONT_DIST_ID', '')
+    if len(cf_dist_id) > 0:
+        path_list = list(settings['INVALIDATE_PATHS'])
+        cmd = ['cloudfront', 'create-invalidation', '--distribution-id', cf_dist_id, '--paths', ' '.join(path_list)]
+        invalidate_result = aws_cli.run(cmd)
+        print(invalidate_result)
 
 
 ################################################################################
