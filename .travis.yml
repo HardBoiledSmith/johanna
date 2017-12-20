@@ -7,7 +7,7 @@ notifications:
     rooms:
       - hbsmith:Rum1JFNeVLW6nERPYtXpYkd6#travis_ci
     template:
-      - "Message: [johanna] %{commit_message}"
+      - "<%{result}>[johanna] %{commit_message}"
       - "Repository: %{repository}@%{branch} (%{commit})"
       - "Build: %{build_number}"
       - "Result: %{result}"

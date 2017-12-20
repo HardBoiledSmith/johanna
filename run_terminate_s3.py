@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-import json
 import os
-import subprocess
 
 from env import env
 from run_common import AWSCli
@@ -44,23 +42,14 @@ def run_terminate_s3_webapp(name, settings):
     aws_cli.run(cmd)
 
     ################################################################################
-    print_message('purge cache from cloudflare')
+    print_message('invalidate cache from cloudfront')
 
-    cf_api_key = env['common']['CLOUDFLARE_API_KEY']
-    cf_auth_email = env['common']['CLOUDFLARE_AUTH_EMAIL']
-    cf_zone_id = env['common']['CLOUDFLARE_ZONE_ID']
-    cf_endpoint = 'https://api.cloudflare.com/client/v4/zones/%s/purge_cache' % cf_zone_id
-
-    data = dict()
-    data['files'] = list(settings['PURGE_CACHE_FILES'])
-
-    cmd = ['curl', '-X', 'DELETE', cf_endpoint,
-           '-H', 'X-Auth-Email: %s' % cf_auth_email,
-           '-H', 'X-Auth-Key: %s' % cf_api_key,
-           '-H', 'Content-Type: application/json',
-           '--data', json.dumps(data)]
-
-    subprocess.Popen(cmd).communicate()
+    cf_dist_id = settings.get('CLOUDFRONT_DIST_ID', '')
+    if len(cf_dist_id) > 0:
+        path_list = list(settings['INVALIDATE_PATHS'])
+        cmd = ['cloudfront', 'create-invalidation', '--distribution-id', cf_dist_id, '--paths', ' '.join(path_list)]
+        invalidate_result = aws_cli.run(cmd)
+        print(invalidate_result)
 
 
 ################################################################################
