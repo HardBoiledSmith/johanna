@@ -159,6 +159,9 @@ class AWSCli:
                     for db_cluster in result['DBClusters']:
                         db_cluster = dict(db_cluster)
 
+                        if db_cluster['Status'] != 'available':
+                            continue
+
                         if read_replica and 'ReaderEndpoint' not in db_cluster:
                             continue
 
