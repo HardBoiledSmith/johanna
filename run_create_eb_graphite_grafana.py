@@ -118,37 +118,6 @@ def run_create_eb_graphite_grafana(name, settings):
     settings['DB_USER'] = env['rds']['USER_NAME']
 
     ################################################################################
-
-    print_message('download influxdb backup if available')
-
-    subprocess.Popen(['rm', '-rf',
-                      '%s/configuration/influxd/' % environment_path]).communicate()
-
-    try:
-        bucket_name = _get_s3_bucket_name(settings)
-        s3_folder = '/'.join([bucket_name, 'influxdb_backup'])
-        result = aws_cli.run(['s3', 'ls', s3_folder, '--recursive', '--page-size', '1'])
-        rr = result.strip()
-        if not rr:
-            raise Exception('backup is not found')
-        rr = rr.split('\n')
-        if len(rr) < 1:
-            raise Exception('backup is not found')
-        rr = sorted(rr, reverse=True)[0]
-        print(rr)
-        s3_path = rr.split()[3]
-        file_name = s3_path.split('/')[1]
-        source_file = '/'.join([bucket_name, s3_path])
-        target_folder = '%s/configuration/influxd/' % environment_path
-        result = aws_cli.run(['s3', 'cp', source_file, target_folder])
-        print(result)
-        subprocess.Popen(['unzip', '-P', settings['DB_PASSWORD'], file_name],
-                         cwd=target_folder).communicate()
-        subprocess.Popen(['rm', file_name], cwd=target_folder).communicate()
-    except Exception as e:
-        print(e)
-
-    ################################################################################
     print_message('configuration %s' % name)
 
     with open('%s/configuration/phase' % environment_path, 'w') as f:
