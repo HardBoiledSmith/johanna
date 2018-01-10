@@ -61,7 +61,7 @@ def main(settings):
     aws_availability_zone_2 = settings['AWS_AVAILABILITY_ZONE_2']
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
     rds_subnet_name = env['rds']['DB_SUBNET_NAME']
-    service_name = env['common'].get('SERVICE_NAME')
+    service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = '%s_' % service_name if service_name else ''
 
     cidr_vpc = aws_cli.cidr_vpc

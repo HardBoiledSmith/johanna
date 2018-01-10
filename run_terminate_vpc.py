@@ -106,7 +106,7 @@ def terminate_iam():
 def main(settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
     rds_subnet_name = env['rds']['DB_SUBNET_NAME']
-    service_name = env['common'].get('SERVICE_NAME')
+    service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = '%s_' % service_name if service_name else ''
 
     ################################################################################
