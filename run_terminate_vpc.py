@@ -106,6 +106,8 @@ def terminate_iam():
 def main(settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
     rds_subnet_name = env['rds']['DB_SUBNET_NAME']
+    service_name = env['common'].get('SERVICE_NAME')
+    name_prefix = '%s_' % service_name if service_name else ''
 
     ################################################################################
     print_message('wait terminate rds')
@@ -123,12 +125,19 @@ def main(settings):
     aws_cli.wait_terminate_eb()
 
     ################################################################################
+    print_message('get vpc id')
+
+    rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
+
+    ################################################################################
     print_message('delete network interface')
 
     cmd = ['ec2', 'describe-network-interfaces']
     result = aws_cli.run(cmd, ignore_error=True)
 
     for r in result['NetworkInterfaces']:
+        if r['VpcId'] != rds_vpc_id and r['VpcId'] != eb_vpc_id:
+            continue
         network_interface_id = r['NetworkInterfaceId']
 
         if 'Attachment' in r:
@@ -141,11 +150,6 @@ def main(settings):
         cmd = ['ec2', 'delete-network-interface']
         cmd += ['--network-interface-id', network_interface_id]
         aws_cli.run(cmd, ignore_error=True)
-
-    ################################################################################
-    print_message('get vpc id')
-
-    rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
 
     ################################################################################
     print_message('delete vpc peering connection')
@@ -170,9 +174,9 @@ def main(settings):
     for r in result['SecurityGroups']:
         if r['VpcId'] != rds_vpc_id and r['VpcId'] != eb_vpc_id:
             continue
-        if r['GroupName'] == 'eb_private':
+        if r['GroupName'] == '%seb_private' % name_prefix:
             security_group_id_1 = r['GroupId']
-        if r['GroupName'] == 'eb_public':
+        if r['GroupName'] == '%seb_public' % name_prefix:
             security_group_id_2 = r['GroupId']
 
     if security_group_id_1 and security_group_id_2:
@@ -267,7 +271,7 @@ def main(settings):
     ################################################################################
     print_message('wait delete nat gateway')
 
-    aws_cli.wait_delete_nat_gateway()
+    aws_cli.wait_delete_nat_gateway(eb_vpc_id=eb_vpc_id)
 
     ################################################################################
     print_message('release eip')
@@ -275,6 +279,8 @@ def main(settings):
     cmd = ['ec2', 'describe-addresses']
     result = aws_cli.run(cmd, ignore_error=True)
     for r in result['Addresses']:
+        if 'AssociationId' in r:
+            continue
         print('release address (address id: %s)' % r['AllocationId'])
         cmd = ['ec2', 'release-address']
         cmd += ['--allocation-id', r['AllocationId']]
