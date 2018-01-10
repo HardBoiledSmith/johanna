@@ -294,7 +294,7 @@ def main(settings):
     cmd += ['--allocation-id', eb_eip_id]
     result = aws_cli.run(cmd)
     eb_nat_gateway_id = result['NatGateway']['NatGatewayId']
-    aws_cli.set_name_tag(eb_nat_gateway_id, '%s' % name_prefix)
+    aws_cli.set_name_tag(eb_nat_gateway_id, '%seb' % name_prefix)
 
     ################################################################################
     print_message('create ' + 'route table')  # [FYI] PyCharm inspects 'create route table' as SQL query.
@@ -445,7 +445,7 @@ def main(settings):
     cmd += ['--peer-vpc-id', eb_vpc_id]
     result = aws_cli.run(cmd)
     peering_connection_id = result['VpcPeeringConnection']['VpcPeeringConnectionId']
-    aws_cli.set_name_tag(peering_connection_id, '%s' % name_prefix)
+    aws_cli.set_name_tag(peering_connection_id, '%s' % service_name)
 
     cmd = ['ec2', 'accept-vpc-peering-connection']
     cmd += ['--vpc-peering-connection-id', peering_connection_id]
