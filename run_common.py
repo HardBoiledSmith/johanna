@@ -18,8 +18,10 @@ except NameError:
 
 def _confirm_phase():
     phase = env['common']['PHASE']
+    service_name = env['common'].get('SERVICE_NAME', '(none)')
     print('Your current environment values are below')
     print('-' * 80)
+    print('\tSERVICE_NAME        : %s' % service_name)
     print('\tPHASE               : %s' % phase)
     if 'template' in env:
         print('\tTEMPLATE            : %s' % env['template']['NAME'])
@@ -297,7 +299,7 @@ class AWSCli:
             time.sleep(5)
             elapsed_time += 5
 
-    def wait_delete_nat_gateway(self):
+    def wait_delete_nat_gateway(self, eb_vpc_id=None):
         cmd = ['ec2', 'describe-nat-gateways']
 
         elapsed_time = 0
@@ -305,6 +307,8 @@ class AWSCli:
             result = self.run(cmd)
             count = 0
             for r in result['NatGateways']:
+                if eb_vpc_id and r.get('VpcId') != eb_vpc_id:
+                    continue
                 if r.get('State') != 'deleted':
                     count += 1
 
