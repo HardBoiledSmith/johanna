@@ -187,7 +187,6 @@ def run_create_eb_openvpn(name, settings):
     cmd += ['--vpc.id', eb_vpc_id]
     cmd += ['--vpc.publicip']
     cmd += ['--vpc.securitygroups', security_group_id]
-    cmd += ['--quiet']
     aws_cli.run_eb(cmd, cwd=environment_path)
 
     elapsed_time = 0

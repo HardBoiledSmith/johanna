@@ -68,7 +68,9 @@ class AWSCli:
             if not aws_default_region \
             else aws_default_region
 
-    def _run(self, args, cwd=None, ignore_error=None):
+    def run(self, args, cwd=None, ignore_error=None):
+        args = ['aws'] + args
+
         if ignore_error:
             print('\n>> command(ignore error): [%s]' % self.env['AWS_DEFAULT_REGION'], end=" ")
         else:
@@ -84,24 +86,25 @@ class AWSCli:
             if not ignore_error:
                 raise Exception()
 
-        if args[0] == 'aws':
-            # noinspection PyBroadException
-            try:
-                return json.loads(result)
-            except Exception:
-                return result
-        elif args[0] == 'eb':
+        # noinspection PyBroadException
+        try:
+            return json.loads(result)
+        except Exception:
             return result
-
-        return dict()
-
-    def run(self, args, cwd=None, ignore_error=None):
-        args = ['aws'] + args
-        return self._run(args, cwd, ignore_error)
 
     def run_eb(self, args, cwd=None, ignore_error=None):
         args = ['eb'] + args + ['--region', self.env['AWS_DEFAULT_REGION']]
-        return self._run(args, cwd, ignore_error)
+
+        if ignore_error:
+            print('\n>> command(ignore error): [%s]' % self.env['AWS_DEFAULT_REGION'], end=" ")
+        else:
+            print('\n>> command: [%s]' % self.env['AWS_DEFAULT_REGION'], end=" ")
+        print(' '.join(args))
+        _p = subprocess.Popen(args, cwd=cwd, env=self.env)
+        _p.communicate()
+        if _p.returncode != 0:
+            if not ignore_error:
+                raise Exception()
 
     def get_vpc_id(self):
         rds_vpc_id = None

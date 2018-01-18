@@ -235,7 +235,6 @@ def run_create_eb_graphite_grafana(name, settings):
     cmd += ['--vpc.elbsubnets', subnet_id_1]
     cmd += ['--vpc.id', eb_vpc_id]
     cmd += ['--vpc.securitygroups', security_group_id]
-    cmd += ['--quiet']
     aws_cli.run_eb(cmd, cwd=environment_path)
 
     elapsed_time = 0
