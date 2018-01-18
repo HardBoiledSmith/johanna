@@ -297,6 +297,11 @@ def main(settings):
     aws_cli.set_name_tag(eb_nat_gateway_id, '%seb' % name_prefix)
 
     ################################################################################
+    print_message('wait create nat gateway')
+
+    aws_cli.wait_create_nat_gateway(eb_vpc_id)
+
+    ################################################################################
     print_message('create ' + 'route table')  # [FYI] PyCharm inspects 'create route table' as SQL query.
 
     eb_route_table_id = dict()

@@ -224,6 +224,53 @@ class AWSCli:
         # noinspection PyTypeChecker
         return result['Role']['Arn']
 
+    def get_temp_bucket(self):
+        default_region = env['aws']['AWS_DEFAULT_REGION']
+
+        cmd = ['s3api', 'list-buckets']
+
+        result = self.run(cmd)
+        for bucket in result['Buckets']:
+            bucket = dict(bucket)
+
+            pattern = 'johanna-%s-[0-9]+' % default_region
+            name = bucket['Name']
+            if re.match(pattern, name):
+                return name
+
+        timestamp = int(time.time())
+        bucket_name = 'johanna-%s-%s' % (default_region, timestamp)
+
+        cmd = ['s3api', 'create-bucket', '--bucket', bucket_name, '--region', default_region,
+               '--create-bucket-configuration', 'LocationConstraint=%s' % default_region]
+        self.run(cmd)
+
+        cmd = ['s3api', 'head-bucket', '--bucket', bucket_name]
+
+        elapsed_time = 0
+        while True:
+            result = self.run(cmd)
+
+            if len(result) == 0:
+                break
+
+            print('creating bucket... (elapsed time: \'%d\' seconds)' % elapsed_time)
+            time.sleep(5)
+            elapsed_time += 5
+
+        return bucket_name
+
+    def get_iam_role(self, role_name):
+        cmd = ['iam', 'get-role']
+        cmd += ['--role-name', role_name]
+        return self.run(cmd, ignore_error=True)
+
+    def get_iam_role_policy(self, role_name, policy_name):
+        cmd = ['iam', 'get-role-policy']
+        cmd += ['--role-name', role_name]
+        cmd += ['--policy-name', policy_name]
+        return self.run(cmd, ignore_error=True)
+
     def set_name_tag(self, resource_id, name):
         cmd = ['ec2', 'create-tags']
         cmd += ['--resources', resource_id]
@@ -299,6 +346,26 @@ class AWSCli:
             time.sleep(5)
             elapsed_time += 5
 
+    def wait_create_nat_gateway(self, eb_vpc_id=None):
+        cmd = ['ec2', 'describe-nat-gateways']
+
+        elapsed_time = 0
+        while True:
+            result = self.run(cmd)
+            count = 0
+            for r in result['NatGateways']:
+                if eb_vpc_id and r.get('VpcId') != eb_vpc_id:
+                    continue
+                if r.get('State') != 'available':
+                    count += 1
+
+            if count == 0:
+                break
+
+            print('waiting for a new nat gateway... (elapsed time: \'%d\' seconds)' % elapsed_time)
+            time.sleep(5)
+            elapsed_time += 5
+
     def wait_delete_nat_gateway(self, eb_vpc_id=None):
         cmd = ['ec2', 'describe-nat-gateways']
 
@@ -318,53 +385,6 @@ class AWSCli:
             print('deleting the nat gateway... (elapsed time: \'%d\' seconds)' % elapsed_time)
             time.sleep(5)
             elapsed_time += 5
-
-    def get_temp_bucket(self):
-        default_region = env['aws']['AWS_DEFAULT_REGION']
-
-        cmd = ['s3api', 'list-buckets']
-
-        result = self.run(cmd)
-        for bucket in result['Buckets']:
-            bucket = dict(bucket)
-
-            pattern = 'johanna-%s-[0-9]+' % default_region
-            name = bucket['Name']
-            if re.match(pattern, name):
-                return name
-
-        timestamp = int(time.time())
-        bucket_name = 'johanna-%s-%s' % (default_region, timestamp)
-
-        cmd = ['s3api', 'create-bucket', '--bucket', bucket_name, '--region', default_region,
-               '--create-bucket-configuration', 'LocationConstraint=%s' % default_region]
-        self.run(cmd)
-
-        cmd = ['s3api', 'head-bucket', '--bucket', bucket_name]
-
-        elapsed_time = 0
-        while True:
-            result = self.run(cmd)
-
-            if len(result) == 0:
-                break
-
-            print('creating bucket... (elapsed time: \'%d\' seconds)' % elapsed_time)
-            time.sleep(5)
-            elapsed_time += 5
-
-        return bucket_name
-
-    def get_iam_role(self, role_name):
-        cmd = ['iam', 'get-role']
-        cmd += ['--role-name', role_name]
-        return self.run(cmd, ignore_error=True)
-
-    def get_iam_role_policy(self, role_name, policy_name):
-        cmd = ['iam', 'get-role-policy']
-        cmd += ['--role-name', role_name]
-        cmd += ['--policy-name', policy_name]
-        return self.run(cmd, ignore_error=True)
 
 
 def parse_args(require_arg=False):
