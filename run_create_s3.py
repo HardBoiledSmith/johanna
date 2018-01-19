@@ -65,20 +65,20 @@ def run_create_s3_webapp(name, settings):
     subprocess.Popen(['rm', '-rf', './.gitignore'], cwd=git_clone_folder).communicate()
 
     ################################################################################
-    print_message('bower install')
+    print_message('yarn install')
 
-    if not os.path.exists('%s/bower.json' % app_root_path):
-        subprocess.Popen(['cp', '%s/bower.json' % common_root_path, app_root_path]).communicate()
+    if not os.path.exists('%s/package.json' % app_root_path):
+        subprocess.Popen(['cp', '%s/package.json' % common_root_path, app_root_path]).communicate()
 
-    bower_process = subprocess.Popen(['bower', 'install'], cwd=app_root_path)
-    bower_result, error = bower_process.communicate()
+    yarn_process = subprocess.Popen(['yarn'], cwd=app_root_path)
+    yarn_result, error = yarn_process.communicate()
 
     if error:
         print(error)
         raise Exception()
 
-    if bower_process.returncode != 0:
-        print(' '.join(['Bower returns:', str(bower_process.returncode)]))
+    if yarn_process.returncode != 0:
+        print(' '.join(['yarn returns:', str(yarn_process.returncode)]))
         raise Exception()
 
     ################################################################################
@@ -91,25 +91,11 @@ def run_create_s3_webapp(name, settings):
         value = settings[key]
         option_list.append([key, value])
     for oo in option_list:
-        lines = re_sub_lines(lines, '^(var %s) .*' % oo[0], '\\1 = \'%s\';' % oo[1])
+        lines = re_sub_lines(lines, '^(var %s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
     write_file('%s/app/scripts/settings-local.js' % app_root_path, lines)
 
     ################################################################################
     print_message('grunt build')
-
-    if not os.path.exists('%s/package.json' % app_root_path):
-        subprocess.Popen(['cp', '%s/package.json' % common_root_path, app_root_path]).communicate()
-
-    npm_process = subprocess.Popen(['npm', 'install'], cwd=app_root_path)
-    npm_result, error = npm_process.communicate()
-
-    if error:
-        print(error)
-        raise Exception()
-
-    if npm_process.returncode != 0:
-        print(' '.join(['NPM exited with:', str(npm_process.returncode)]))
-        raise Exception()
 
     grunt_process = subprocess.Popen(['grunt'], cwd=app_root_path)
     grunt_result, error = grunt_process.communicate()

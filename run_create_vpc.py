@@ -28,17 +28,17 @@ def create_iam():
     cmd = ['iam', 'create-role']
     cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
     cmd += ['--assume-role-policy-document', 'file://aws_iam/aws-elasticbeanstalk-ec2-role.json']
-    aws_cli.run(cmd)
+    aws_cli.run(cmd, ignore_error=True)
 
     cmd = ['iam', 'create-role']
     cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-worker-role']
     cmd += ['--assume-role-policy-document', 'file://aws_iam/aws-elasticbeanstalk-ec2-worker-role.json']
-    aws_cli.run(cmd)
+    aws_cli.run(cmd, ignore_error=True)
 
     cmd = ['iam', 'create-role']
     cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
     cmd += ['--assume-role-policy-document', 'file://aws_iam/aws-elasticbeanstalk-service-role.json']
-    aws_cli.run(cmd)
+    aws_cli.run(cmd, ignore_error=True)
 
     ################################################################################
     print_message('put iam role policy')
@@ -47,20 +47,22 @@ def create_iam():
     cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-worker-role']
     cmd += ['--policy-name', 'oneClick_aws-elasticbeanstalk-ec2-worker-role']
     cmd += ['--policy-document', 'file://aws_iam/oneClick_aws-elasticbeanstalk-ec2-worker-role.json']
-    aws_cli.run(cmd)
+    aws_cli.run(cmd, ignore_error=True)
 
     cmd = ['iam', 'put-role-policy']
     cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
     cmd += ['--policy-name', 'oneClick_aws-elasticbeanstalk-service-role']
     cmd += ['--policy-document', 'file://aws_iam/oneClick_aws-elasticbeanstalk-service-role.json']
-    aws_cli.run(cmd)
+    aws_cli.run(cmd, ignore_error=True)
 
 
 def main(settings):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
     aws_availability_zone_1 = settings['AWS_AVAILABILITY_ZONE_1']
     aws_availability_zone_2 = settings['AWS_AVAILABILITY_ZONE_2']
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
     rds_subnet_name = env['rds']['DB_SUBNET_NAME']
+    service_name = env['common'].get('SERVICE_NAME', '')
+    name_prefix = '%s_' % service_name if service_name else ''
 
     cidr_vpc = aws_cli.cidr_vpc
     cidr_subnet = aws_cli.cidr_subnet
@@ -122,7 +124,7 @@ def main(settings):
     cmd += ['--cidr-block', cidr_vpc['rds']]
     result = aws_cli.run(cmd)
     rds_vpc_id = result['Vpc']['VpcId']
-    aws_cli.set_name_tag(rds_vpc_id, 'rds')
+    aws_cli.set_name_tag(rds_vpc_id, '%srds' % name_prefix)
 
     ################################################################################
     print_message('create subnet')
@@ -135,7 +137,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_1]
     result = aws_cli.run(cmd)
     rds_subnet_id['private_1'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(rds_subnet_id['private_1'], 'rds_private_1')
+    aws_cli.set_name_tag(rds_subnet_id['private_1'], '%srds_private_1' % name_prefix)
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', rds_vpc_id]
@@ -143,7 +145,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_2]
     result = aws_cli.run(cmd)
     rds_subnet_id['private_2'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(rds_subnet_id['private_2'], 'rds_private_2')
+    aws_cli.set_name_tag(rds_subnet_id['private_2'], '%srds_private_2' % name_prefix)
 
     ################################################################################
     print_message('create db subnet group')
@@ -163,7 +165,7 @@ def main(settings):
     cmd += ['--vpc-id', rds_vpc_id]
     result = aws_cli.run(cmd)
     rds_route_table_id['private'] = result['RouteTable']['RouteTableId']
-    aws_cli.set_name_tag(rds_route_table_id['private'], 'rds_private')
+    aws_cli.set_name_tag(rds_route_table_id['private'], '%srds_private' % name_prefix)
 
     ################################################################################
     print_message('associate route table')
@@ -184,8 +186,8 @@ def main(settings):
     rds_security_group_id = dict()
 
     cmd = ['ec2', 'create-security-group']
-    cmd += ['--group-name', 'rds']
-    cmd += ['--description', 'rds']
+    cmd += ['--group-name', '%srds' % name_prefix]
+    cmd += ['--description', '%srds' % name_prefix]
     cmd += ['--vpc-id', rds_vpc_id]
     result = aws_cli.run(cmd)
     rds_security_group_id['private'] = result['GroupId']
@@ -220,7 +222,7 @@ def main(settings):
     cmd += ['--cidr-block', cidr_vpc['eb']]
     result = aws_cli.run(cmd)
     eb_vpc_id = result['Vpc']['VpcId']
-    aws_cli.set_name_tag(eb_vpc_id, 'eb')
+    aws_cli.set_name_tag(eb_vpc_id, '%seb' % name_prefix)
 
     ################################################################################
     print_message('create subnet')
@@ -233,7 +235,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_1]
     result = aws_cli.run(cmd)
     eb_subnet_id['private_1'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(eb_subnet_id['private_1'], 'eb_private_1')
+    aws_cli.set_name_tag(eb_subnet_id['private_1'], '%seb_private_1' % name_prefix)
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', eb_vpc_id]
@@ -241,7 +243,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_2]
     result = aws_cli.run(cmd)
     eb_subnet_id['private_2'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(eb_subnet_id['private_2'], 'eb_private_2')
+    aws_cli.set_name_tag(eb_subnet_id['private_2'], '%seb_private_2' % name_prefix)
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', eb_vpc_id]
@@ -249,7 +251,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_1]
     result = aws_cli.run(cmd)
     eb_subnet_id['public_1'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(eb_subnet_id['public_1'], 'eb_public_1')
+    aws_cli.set_name_tag(eb_subnet_id['public_1'], '%seb_public_1' % name_prefix)
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', eb_vpc_id]
@@ -257,7 +259,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_2]
     result = aws_cli.run(cmd)
     eb_subnet_id['public_2'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(eb_subnet_id['public_2'], 'eb_public_2')
+    aws_cli.set_name_tag(eb_subnet_id['public_2'], '%seb_public_2' % name_prefix)
 
     ################################################################################
     print_message('create internet gateway')
@@ -265,7 +267,7 @@ def main(settings):
     cmd = ['ec2', 'create-internet-gateway']
     result = aws_cli.run(cmd)
     internet_gateway_id = result['InternetGateway']['InternetGatewayId']
-    aws_cli.set_name_tag(internet_gateway_id, 'eb')
+    aws_cli.set_name_tag(internet_gateway_id, '%seb' % name_prefix)
 
     ################################################################################
     print_message('attach internet gateway')
@@ -282,6 +284,7 @@ def main(settings):
     cmd += ['--domain', 'vpc']
     result = aws_cli.run(cmd)
     eb_eip_id = result['AllocationId']
+    aws_cli.set_name_tag(eb_eip_id, '%snat' % name_prefix)
 
     ################################################################################
     print_message('create nat gateway')  # We use only one NAT gateway at subnet 'public_1'
@@ -291,6 +294,12 @@ def main(settings):
     cmd += ['--allocation-id', eb_eip_id]
     result = aws_cli.run(cmd)
     eb_nat_gateway_id = result['NatGateway']['NatGatewayId']
+    aws_cli.set_name_tag(eb_nat_gateway_id, '%seb' % name_prefix)
+
+    ################################################################################
+    print_message('wait create nat gateway')
+
+    aws_cli.wait_create_nat_gateway(eb_vpc_id)
 
     ################################################################################
     print_message('create ' + 'route table')  # [FYI] PyCharm inspects 'create route table' as SQL query.
@@ -301,13 +310,13 @@ def main(settings):
     cmd += ['--vpc-id', eb_vpc_id]
     result = aws_cli.run(cmd)
     eb_route_table_id['private'] = result['RouteTable']['RouteTableId']
-    aws_cli.set_name_tag(eb_route_table_id['private'], 'eb_private')
+    aws_cli.set_name_tag(eb_route_table_id['private'], '%seb_private' % name_prefix)
 
     cmd = ['ec2', 'create-route-table']
     cmd += ['--vpc-id', eb_vpc_id]
     result = aws_cli.run(cmd)
     eb_route_table_id['public'] = result['RouteTable']['RouteTableId']
-    aws_cli.set_name_tag(eb_route_table_id['public'], 'eb_public')
+    aws_cli.set_name_tag(eb_route_table_id['public'], '%seb_public' % name_prefix)
 
     ################################################################################
     print_message('associate route table')
@@ -353,15 +362,15 @@ def main(settings):
     eb_security_group_id = dict()
 
     cmd = ['ec2', 'create-security-group']
-    cmd += ['--group-name', 'eb_private']
-    cmd += ['--description', 'eb_private']
+    cmd += ['--group-name', '%seb_private' % name_prefix]
+    cmd += ['--description', '%seb_private' % name_prefix]
     cmd += ['--vpc-id', eb_vpc_id]
     result = aws_cli.run(cmd)
     eb_security_group_id['private'] = result['GroupId']
 
     cmd = ['ec2', 'create-security-group']
-    cmd += ['--group-name', 'eb_public']
-    cmd += ['--description', 'eb_public']
+    cmd += ['--group-name', '%seb_public' % name_prefix]
+    cmd += ['--description', '%seb_public' % name_prefix]
     cmd += ['--vpc-id', eb_vpc_id]
     result = aws_cli.run(cmd)
     eb_security_group_id['public'] = result['GroupId']
@@ -441,6 +450,7 @@ def main(settings):
     cmd += ['--peer-vpc-id', eb_vpc_id]
     result = aws_cli.run(cmd)
     peering_connection_id = result['VpcPeeringConnection']['VpcPeeringConnectionId']
+    aws_cli.set_name_tag(peering_connection_id, '%s' % service_name)
 
     cmd = ['ec2', 'accept-vpc-peering-connection']
     cmd += ['--vpc-peering-connection-id', peering_connection_id]
@@ -521,7 +531,9 @@ def main(settings):
             cmd += ['--description', cname]
             cmd += ['--private-ip-address', private_ip]
             cmd += ['--groups', eb_security_group_id['private']]
-            aws_cli.run(cmd)
+            result = aws_cli.run(cmd)
+            network_interface_id = result['NetworkInterface']['NetworkInterfaceId']
+            aws_cli.set_name_tag(network_interface_id, '%snat' % name_prefix)
 
 
 ################################################################################
