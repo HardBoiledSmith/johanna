@@ -68,16 +68,15 @@ class AWSCli:
             if not aws_default_region \
             else aws_default_region
 
-    def run(self, args, cwd=None, ignore_error=None):
-        args = ['aws'] + args
-
+    def _run(self, args, cwd=None, ignore_error=None):
         if ignore_error:
             print('\n>> command(ignore error): [%s]' % self.env['AWS_DEFAULT_REGION'], end=" ")
         else:
             print('\n>> command: [%s]' % self.env['AWS_DEFAULT_REGION'], end=" ")
         print(' '.join(args))
-        result, error = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                         cwd=cwd, env=self.env).communicate()
+        _p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                              cwd=cwd, env=self.env)
+        result, error = _p.communicate()
         # noinspection PyUnresolvedReferences
         result = result.decode('utf-8')
 
@@ -86,25 +85,29 @@ class AWSCli:
             if not ignore_error:
                 raise Exception()
 
-        # noinspection PyBroadException
-        try:
-            return json.loads(result)
-        except Exception:
+        if _p.returncode != 0:
+            print('command returns: %s' % _p.returncode)
+            if not ignore_error:
+                raise Exception()
+
+        if args[0] == 'aws':
+            # noinspection PyBroadException
+            try:
+                return json.loads(result)
+            except Exception:
+                return result
+        elif args[0] == 'eb':
             return result
+
+        return dict()
+
+    def run(self, args, cwd=None, ignore_error=None):
+        args = ['aws'] + args
+        return self._run(args, cwd, ignore_error)
 
     def run_eb(self, args, cwd=None, ignore_error=None):
         args = ['eb'] + args + ['--region', self.env['AWS_DEFAULT_REGION']]
-
-        if ignore_error:
-            print('\n>> command(ignore error): [%s]' % self.env['AWS_DEFAULT_REGION'], end=" ")
-        else:
-            print('\n>> command: [%s]' % self.env['AWS_DEFAULT_REGION'], end=" ")
-        print(' '.join(args))
-        _p = subprocess.Popen(args, cwd=cwd, env=self.env)
-        _p.communicate()
-        if _p.returncode != 0:
-            if not ignore_error:
-                raise Exception()
+        return self._run(args, cwd, ignore_error)
 
     def get_vpc_id(self):
         rds_vpc_id = None
