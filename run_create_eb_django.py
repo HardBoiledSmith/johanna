@@ -217,7 +217,6 @@ def run_create_eb_django(name, settings):
     cmd += ['--tags', ','.join(tags)]
     cmd += ['--vpc.id', eb_vpc_id]
     cmd += ['--vpc.securitygroups', security_group_id]
-    cmd += ['--quiet']
     if 'public' == subnet_type:
         cmd += ['--vpc.ec2subnets', ','.join([subnet_id_1, subnet_id_2])]
         cmd += ['--vpc.elbsubnets', ','.join([subnet_id_1, subnet_id_2])]
