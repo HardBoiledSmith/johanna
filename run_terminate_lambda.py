@@ -58,9 +58,20 @@ def run_terminate_cron_lambda(name, settings):
 
     print_message('unlink event and lambda')
 
+    cmd = ['events', 'list-targets-by-rule',
+           '--rule', function_name + 'CronRule']
+    result = aws_cli.run(cmd, ignore_error=True)
+    target_list = result['Targets']
+
+    ids_list = []
+    for target in target_list:
+        target_id = '"%s"' % target['Id']
+        ids_list.append(target_id)
+    ids_list = '[%s]' % ','.join(ids_list)
+
     cmd = ['events', 'remove-targets',
            '--rule', function_name + 'CronRule',
-           '--ids', '["1"]']
+           '--ids', ids_list]
     aws_cli.run(cmd, ignore_error=True)
 
     print_message('remove event permission')
