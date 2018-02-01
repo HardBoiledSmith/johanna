@@ -61,7 +61,10 @@ def run_terminate_cron_lambda(name, settings):
     cmd = ['events', 'list-targets-by-rule',
            '--rule', function_name + 'CronRule']
     result = aws_cli.run(cmd, ignore_error=True)
-    target_list = result['Targets']
+    if type(result) is dict:
+        target_list = result['Targets']
+    else:
+        target_list = list()
 
     ids_list = []
     for target in target_list:
