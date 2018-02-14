@@ -68,7 +68,8 @@ class AWSCli:
             if not aws_default_region \
             else aws_default_region
 
-    def _run(self, args, cwd=None, ignore_error=None):
+    def run(self, args, cwd=None, ignore_error=None):
+        args = ['aws'] + args
         if ignore_error:
             print('\n>> command(ignore error): [%s]' % self.env['AWS_DEFAULT_REGION'], end=" ")
         else:
@@ -100,14 +101,6 @@ class AWSCli:
             return result
 
         return dict()
-
-    def run(self, args, cwd=None, ignore_error=None):
-        args = ['aws'] + args
-        return self._run(args, cwd, ignore_error)
-
-    def run_eb(self, args, cwd=None, ignore_error=None):
-        args = ['eb'] + args + ['--region', self.env['AWS_DEFAULT_REGION']]
-        return self._run(args, cwd, ignore_error)
 
     def get_vpc_id(self):
         rds_vpc_id = None
