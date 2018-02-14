@@ -15,6 +15,7 @@ from run_common import write_file
 def run_create_eb_openvpn(name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
+    accounts = settings['ACCOUNTS']
     aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
     cname = settings['CNAME']
@@ -113,6 +114,11 @@ def run_create_eb_openvpn(name, settings):
 
     ################################################################################
     print_message('configuration %s' % name)
+
+    with open('%s/configuration/accounts' % environment_path, 'w') as f:
+        for aa in accounts:
+            f.write(aa + '\n')
+        f.close()
 
     with open('%s/configuration/phase' % environment_path, 'w') as f:
         f.write(phase)
