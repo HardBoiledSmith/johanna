@@ -24,8 +24,6 @@ def describe_list_roles():
     for role in result['Roles']:
         if role['RoleName'] == 'aws-elasticbeanstalk-ec2-role':
             count += 1
-        if role['RoleName'] == 'aws-elasticbeanstalk-ec2-worker-role':
-            count += 1
         if role['RoleName'] == 'aws-elasticbeanstalk-service-role':
             count += 1
 
@@ -37,14 +35,11 @@ def describe_list_roles():
 
 def describe_role_policy():
     cmd = ['iam', 'list-role-policies']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-worker-role']
-    cmd_2 = ['iam', 'list-role-policies']
-    cmd_2 += ['--role-name', 'aws-elasticbeanstalk-service-role']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
 
     # noinspection PyBroadException
     try:
         aws_cli.run(cmd)
-        aws_cli.run(cmd_2)
     except Exception:
         return False
 
