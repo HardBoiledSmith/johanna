@@ -38,6 +38,8 @@ def run_create_eb_cron_job(name, settings):
 
     str_timestamp = str(int(time.time()))
 
+    zip_filename = '%s-%s.zip' % (name, str_timestamp)
+
     eb_environment_name = '%s-%s' % (name, str_timestamp)
     eb_environment_name_old = None
 
@@ -193,32 +195,116 @@ def run_create_eb_cron_job(name, settings):
             break
 
     ################################################################################
-    print_message('create %s' % name)
+    print_message('create storage location')
 
-    tags = list()
-    # noinspection PyUnresolvedReferences
-    tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8').strip())
-    # noinspection PyUnresolvedReferences
-    tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8').strip()))
-    # noinspection PyUnresolvedReferences
-    tags.append('git_hash_%s=%s' % (name, git_hash_app.decode('utf-8').strip()))
+    cmd = ['elasticbeanstalk', 'create-storage-location']
+    result = aws_cli.run(cmd)
 
-    cmd = ['create', eb_environment_name]
-    cmd += ['--cname', cname]
-    cmd += ['--instance_type', 't2.nano']
-    cmd += ['--region', aws_default_region]
-    cmd += ['--tags', ','.join(tags)]
-    cmd += ['--vpc.id', eb_vpc_id]
-    cmd += ['--vpc.securitygroups', security_group_id]
-    if 'public' == subnet_type:
-        cmd += ['--vpc.ec2subnets', ','.join([subnet_id_1, subnet_id_2])]
-        cmd += ['--vpc.elbsubnets', ','.join([subnet_id_1, subnet_id_2])]
-        cmd += ['--vpc.elbpublic']
-        cmd += ['--vpc.publicip']
-    elif 'private' == subnet_type:
-        cmd += ['--vpc.ec2subnets', ','.join([subnet_id_1, subnet_id_2])]
-        cmd += ['--vpc.elbsubnets', ','.join([subnet_id_1, subnet_id_2])]
-    aws_cli.run_eb(cmd, cwd=environment_path)
+    s3_bucket = result['S3Bucket']
+    s3_zip_filename = '/'.join(['s3://' + s3_bucket, eb_application_name, zip_filename])
+
+    ################################################################################
+    print_message('create application version')
+
+    cmd = ['zip', '-r', zip_filename, '.', '.ebextensions']
+    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=environment_path).communicate()
+
+    cmd = ['s3', 'cp', zip_filename, s3_zip_filename]
+    aws_cli.run(cmd, cwd=environment_path)
+
+    cmd = ['rm', '-rf', zip_filename]
+    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=environment_path).communicate()
+
+    cmd = ['elasticbeanstalk', 'create-application-version']
+    cmd += ['--application-name', eb_application_name]
+    cmd += ['--source-bundle', 'S3Bucket="%s",S3Key="%s/%s"' % (s3_bucket, eb_application_name, zip_filename)]
+    cmd += ['--version-label', eb_environment_name]
+    aws_cli.run(cmd, cwd=environment_path)
+
+    ################################################################################
+    print_message('create environment %s' % name)
+
+    option_settings = list()
+
+    oo = dict()
+    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
+    oo['OptionName'] = 'EC2KeyName'
+    oo['Value'] = key_pair_name
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
+    oo['OptionName'] = 'InstanceType'
+    oo['Value'] = 't2.nano'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
+    oo['OptionName'] = 'IamInstanceProfile'
+    oo['Value'] = 'aws-elasticbeanstalk-ec2-role'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
+    oo['OptionName'] = 'SecurityGroups'
+    oo['Value'] = security_group_id
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:ec2:vpc'
+    oo['OptionName'] = 'AssociatePublicIpAddress'
+    oo['Value'] = 'true'
+    if 'private' == subnet_type:
+        oo['Value'] = 'false'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:ec2:vpc'
+    oo['OptionName'] = 'ELBScheme'
+    oo['Value'] = '...'
+    if 'private' == subnet_type:
+        oo['Value'] = 'internal'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:ec2:vpc'
+    oo['OptionName'] = 'ELBSubnets'
+    oo['Value'] = ','.join([subnet_id_1, subnet_id_2])
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:ec2:vpc'
+    oo['OptionName'] = 'Subnets'
+    oo['Value'] = ','.join([subnet_id_1, subnet_id_2])
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:ec2:vpc'
+    oo['OptionName'] = 'VPCId'
+    oo['Value'] = eb_vpc_id
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:environment'
+    oo['OptionName'] = 'EnvironmentType'
+    oo['Value'] = 'LoadBalanced'
+    option_settings.append(oo)
+
+    option_settings = json.dumps(option_settings)
+
+    tag0 = 'Key=git_hash_johanna,Value=%s' % git_hash_johanna.decode('utf-8').strip()
+    tag1 = 'Key=git_hash_%s,Value=%s' % (template_name, git_hash_template.decode('utf-8').strip())
+    tag2 = 'Key=git_hash_%s,Value=%s' % (name, git_hash_app.decode('utf-8').strip())
+
+    cmd = ['elasticbeanstalk', 'create-environment']
+    cmd += ['--application-name', eb_application_name]
+    cmd += ['--cname-prefix', cname]
+    cmd += ['--environment-name', eb_environment_name]
+    cmd += ['--option-settings', option_settings]
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2017.09 v2.6.4 running Python 3.6']
+    cmd += ['--tags', tag0, tag1, tag2]
+    cmd += ['--version-label', eb_environment_name]
+    aws_cli.run(cmd, cwd=environment_path)
 
     elapsed_time = 0
     while True:
@@ -229,9 +315,7 @@ def run_create_eb_cron_job(name, settings):
 
         ee = result['Environments'][0]
         print(json.dumps(ee, sort_keys=True, indent=4))
-        if ee.get('Health', '') == 'Green' \
-                and ee.get('HealthStatus', '') == 'Ok' \
-                and ee.get('Status', '') == 'Ready':
+        if ee.get('Health', '') == 'Green' and ee.get('Status', '') == 'Ready':
             break
 
         print('creating... (elapsed time: \'%d\' seconds)' % elapsed_time)

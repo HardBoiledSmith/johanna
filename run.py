@@ -75,11 +75,6 @@ if __name__ == "__main__":
         else:
             print(result)
         sys.exit(0)
-    elif command == 'eb':
-        aws_cli = AWSCli()
-        result = aws_cli.run_eb(args[2:], ignore_error=True)
-        print(result)
-        sys.exit(0)
 
     if len(args) != 2:
         print_usage()
