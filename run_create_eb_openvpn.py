@@ -126,11 +126,6 @@ def run_create_eb_openvpn(name, settings):
         f.write(phase)
         f.close()
 
-    lines = read_file('%s/.elasticbeanstalk/config_sample.yml' % environment_path)
-    lines = re_sub_lines(lines, '^(  application_name).*', '\\1: %s' % eb_application_name)
-    lines = re_sub_lines(lines, '^(  default_ec2_keyname).*', '\\1: %s' % key_pair_name)
-    write_file('%s/.elasticbeanstalk/config.yml' % environment_path, lines)
-
     lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
     write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
