@@ -27,32 +27,32 @@ def create_iam():
 
     cmd = ['iam', 'create-instance-profile']
     cmd += ['--instance-profile-name', 'aws-elasticbeanstalk-ec2-role']
-    aws_cli.run(cmd, ignore_error=True)
+    aws_cli.run(cmd)
 
     cmd = ['iam', 'create-role']
     cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
     cmd += ['--assume-role-policy-document', 'file://aws_iam/aws-elasticbeanstalk-ec2-role.json']
-    aws_cli.run(cmd, ignore_error=True)
+    aws_cli.run(cmd)
 
     cmd = ['iam', 'add-role-to-instance-profile']
     cmd += ['--instance-profile-name', 'aws-elasticbeanstalk-ec2-role']
     cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
-    aws_cli.run(cmd, ignore_error=True)
+    aws_cli.run(cmd)
 
     cmd = ['iam', 'attach-role-policy']
     cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
     cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier']
-    aws_cli.run(cmd, ignore_error=True)
+    aws_cli.run(cmd)
 
     cmd = ['iam', 'attach-role-policy']
     cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
     cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker']
-    aws_cli.run(cmd, ignore_error=True)
+    aws_cli.run(cmd)
 
     cmd = ['iam', 'attach-role-policy']
     cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
     cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier']
-    aws_cli.run(cmd, ignore_error=True)
+    aws_cli.run(cmd)
 
     ################################################################################
     print_message('create iam: aws-elasticbeanstalk-service-role')
@@ -60,17 +60,17 @@ def create_iam():
     cmd = ['iam', 'create-role']
     cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
     cmd += ['--assume-role-policy-document', 'file://aws_iam/aws-elasticbeanstalk-service-role.json']
-    aws_cli.run(cmd, ignore_error=True)
+    aws_cli.run(cmd)
 
     cmd = ['iam', 'attach-role-policy']
     cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
     cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth']
-    aws_cli.run(cmd, ignore_error=True)
+    aws_cli.run(cmd)
 
     cmd = ['iam', 'attach-role-policy']
     cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
     cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkService']
-    aws_cli.run(cmd, ignore_error=True)
+    aws_cli.run(cmd)
 
 
 def main(settings):

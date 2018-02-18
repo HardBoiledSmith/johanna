@@ -335,6 +335,8 @@ def run_create_eb_openvpn(name, settings):
         if elapsed_time > 60 * 30:
             raise Exception()
 
+    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
+
     ################################################################################
     print_message('revoke security group ingress')
 
