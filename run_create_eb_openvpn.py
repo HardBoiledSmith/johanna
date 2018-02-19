@@ -33,6 +33,8 @@ def run_create_eb_openvpn(name, settings):
     openvpn_subnet_ip = settings['OPENVPN_SUBNET_IP']
     phase = env['common']['PHASE']
     template_name = env['template']['NAME']
+    service_name = env['common'].get('SERVICE_NAME', '')
+    name_prefix = '%s_' % service_name if service_name else ''
 
     cidr_vpc = aws_cli.cidr_vpc
     cidr_subnet = aws_cli.cidr_subnet
@@ -94,7 +96,7 @@ def run_create_eb_openvpn(name, settings):
     for r in result['SecurityGroups']:
         if r['VpcId'] != eb_vpc_id:
             continue
-        if r['GroupName'] == 'eb_public':
+        if r['GroupName'] == '%seb_public' % name_prefix:
             security_group_id = r['GroupId']
             break
 

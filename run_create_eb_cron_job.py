@@ -29,6 +29,8 @@ def run_create_eb_cron_job(name, settings):
     phase = env['common']['PHASE']
     subnet_type = settings['SUBNET_TYPE']
     template_name = env['template']['NAME']
+    service_name = env['common'].get('SERVICE_NAME', '')
+    name_prefix = '%s_' % service_name if service_name else ''
     if hasattr(settings, 'PRIVATE_IP'):
         private_ip = settings['PRIVATE_IP']
     else:
@@ -98,11 +100,11 @@ def run_create_eb_cron_job(name, settings):
         if r['VpcId'] != eb_vpc_id:
             continue
         if 'public' == subnet_type:
-            if r['GroupName'] == 'eb_public':
+            if r['GroupName'] == '%seb_public' % name_prefix:
                 security_group_id = r['GroupId']
                 break
         elif 'private' == subnet_type:
-            if r['GroupName'] == 'eb_private':
+            if r['GroupName'] == '%seb_private' % name_prefix:
                 security_group_id = r['GroupId']
                 break
         else:
