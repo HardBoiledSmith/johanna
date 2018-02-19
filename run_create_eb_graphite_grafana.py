@@ -26,6 +26,8 @@ def run_create_eb_graphite_grafana(name, settings):
     phase = env['common']['PHASE']
     private_ip = settings['PRIVATE_IP']
     template_name = env['template']['NAME']
+    service_name = env['common'].get('SERVICE_NAME', '')
+    name_prefix = '%s_' % service_name if service_name else ''
 
     cidr_vpc = aws_cli.cidr_vpc
     cidr_subnet = aws_cli.cidr_subnet
@@ -80,7 +82,7 @@ def run_create_eb_graphite_grafana(name, settings):
     for r in result['SecurityGroups']:
         if r['VpcId'] != eb_vpc_id:
             continue
-        if r['GroupName'] == 'eb_private':
+        if r['GroupName'] == '%seb_private' % name_prefix:
             security_group_id = r['GroupId']
             break
 

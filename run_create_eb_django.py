@@ -30,6 +30,8 @@ def run_create_eb_django(name, settings):
     ssl_certificate_id = settings['SSL_CERTIFICATE_ID']
     subnet_type = settings['SUBNET_TYPE']
     template_name = env['template']['NAME']
+    service_name = env['common'].get('SERVICE_NAME', '')
+    name_prefix = '%s_' % service_name if service_name else ''
 
     cidr_subnet = aws_cli.cidr_subnet
 
@@ -96,11 +98,11 @@ def run_create_eb_django(name, settings):
         if r['VpcId'] != eb_vpc_id:
             continue
         if 'public' == subnet_type:
-            if r['GroupName'] == 'eb_public':
+            if r['GroupName'] == '%seb_public' % name_prefix:
                 security_group_id = r['GroupId']
                 break
         elif 'private' == subnet_type:
-            if r['GroupName'] == 'eb_private':
+            if r['GroupName'] == '%seb_private' % name_prefix:
                 security_group_id = r['GroupId']
                 break
         else:
