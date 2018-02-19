@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import os
 import subprocess
 import time
 
@@ -19,16 +20,21 @@ def run_create_eb_openvpn(name, settings):
     aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
     cname = settings['CNAME']
+    debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
+    git_url = settings['GIT_URL']
     host_maya = settings['HOST_MAYA']
     key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     openvpn_ca_crt = settings['CA_CRT']
+    openvpn_ca_key = settings['CA_KEY']
     openvpn_dh2048_pem = settings['DH2048_PEM']
     openvpn_server_crt = settings['SERVER_CRT']
     openvpn_server_key = settings['SERVER_KEY']
-    openvpn_subnet_ip = settings['SUBNET_IP']
+    openvpn_subnet_ip = settings['OPENVPN_SUBNET_IP']
     phase = env['common']['PHASE']
     template_name = env['template']['NAME']
+    service_name = env['common'].get('SERVICE_NAME', '')
+    name_prefix = '%s_' % service_name if service_name else ''
 
     cidr_vpc = aws_cli.cidr_vpc
     cidr_subnet = aws_cli.cidr_subnet
@@ -44,6 +50,7 @@ def run_create_eb_openvpn(name, settings):
     environment_path = '%s/elasticbeanstalk/%s' % (template_path, name)
     opt_config_path = '%s/configuration/opt' % environment_path
     etc_config_path = '%s/configuration/etc' % environment_path
+    app_config_path = '%s/%s' % (etc_config_path, name)
 
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
@@ -89,7 +96,7 @@ def run_create_eb_openvpn(name, settings):
     for r in result['SecurityGroups']:
         if r['VpcId'] != eb_vpc_id:
             continue
-        if r['GroupName'] == 'eb_public':
+        if r['GroupName'] == '%seb_public' % name_prefix:
             security_group_id = r['GroupId']
             break
 
@@ -100,6 +107,10 @@ def run_create_eb_openvpn(name, settings):
 
     with open('%s/ca.crt' % path, 'w') as f:
         f.write(openvpn_ca_crt)
+        f.close()
+
+    with open('%s/ca.key' % path, 'w') as f:
+        f.write(openvpn_ca_key)
         f.close()
 
     with open('%s/dh2048.pem' % path, 'w') as f:
@@ -146,6 +157,36 @@ def run_create_eb_openvpn(name, settings):
     lines = re_sub_lines(lines, 'AWS_VPC_EB', cidr_vpc['eb'])
     lines = re_sub_lines(lines, 'OPENVPN_SUBNET_IP', openvpn_subnet_ip)
     write_file('%s/sysconfig/iptables' % etc_config_path, lines)
+
+    lines = read_file('%s/settings_local_sample.py' % app_config_path)
+    lines = re_sub_lines(lines, '^(DEBUG).*', '\\1 = %s' % debug)
+    option_list = list()
+    option_list.append(['PHASE', phase])
+    for key in settings:
+        value = settings[key]
+        option_list.append([key, value])
+    for oo in option_list:
+        lines = re_sub_lines(lines, '^(%s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
+    write_file('%s/settings_local.py' % app_config_path, lines)
+
+    ################################################################################
+    print_message('git clone')
+
+    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
+    if phase == 'dv':
+        git_command = ['git', 'clone', '--depth=1', git_url]
+    else:
+        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+    subprocess.Popen(git_command, cwd=environment_path).communicate()
+    if not os.path.exists('%s/%s' % (environment_path, name)):
+        raise Exception()
+
+    git_hash_app = subprocess.Popen(git_rev,
+                                    stdout=subprocess.PIPE,
+                                    cwd='%s/%s' % (environment_path, name)).communicate()[0]
+
+    subprocess.Popen(['rm', '-rf', './%s/.git' % name], cwd=environment_path).communicate()
+    subprocess.Popen(['rm', '-rf', './%s/.gitignore' % name], cwd=environment_path).communicate()
 
     ################################################################################
     print_message('check previous version')
@@ -265,6 +306,7 @@ def run_create_eb_openvpn(name, settings):
 
     tag0 = 'Key=git_hash_johanna,Value=%s' % git_hash_johanna.decode('utf-8').strip()
     tag1 = 'Key=git_hash_%s,Value=%s' % (template_name, git_hash_template.decode('utf-8').strip())
+    tag2 = 'Key=git_hash_%s,Value=%s' % (name, git_hash_app.decode('utf-8').strip())
 
     cmd = ['elasticbeanstalk', 'create-environment']
     cmd += ['--application-name', eb_application_name]
@@ -272,7 +314,7 @@ def run_create_eb_openvpn(name, settings):
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
     cmd += ['--solution-stack-name', '64bit Amazon Linux 2017.09 v2.6.4 running Python 3.6']
-    cmd += ['--tags', tag0, tag1]
+    cmd += ['--tags', tag0, tag1, tag2]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=environment_path)
 
@@ -294,6 +336,8 @@ def run_create_eb_openvpn(name, settings):
 
         if elapsed_time > 60 * 30:
             raise Exception()
+
+    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
 
     ################################################################################
     print_message('revoke security group ingress')
