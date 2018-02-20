@@ -40,7 +40,9 @@ db_user = env['rds']['USER_NAME']
 template_name = env['template']['NAME']
 
 print('/* YYYYMMDD list */')
-print('\n'.join(os.listdir('template/%s/rds/history' % template_name)))
+list_dir = os.listdir('template/%s/rds/history' % template_name)
+list_dir.sort()
+print('\n'.join(list_dir))
 yyyymmdd = str(input('\nplease input YYYYMMDD: '))
 yyyymmdd_today = datetime.datetime.today().strftime('%Y%m%d')
 
