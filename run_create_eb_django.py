@@ -24,7 +24,6 @@ def run_create_eb_django(name, settings):
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
-    host_maya = settings['HOST_MAYA']
     key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
     ssl_certificate_id = settings['SSL_CERTIFICATE_ID']
@@ -135,16 +134,7 @@ def run_create_eb_django(name, settings):
     write_file('%s/my.cnf' % app_config_path, lines)
 
     lines = read_file('%s/collectd_sample.conf' % etc_config_path)
-    lines = re_sub_lines(lines, 'HOST_MAYA', host_maya)
     write_file('%s/collectd.conf' % etc_config_path, lines)
-
-    lines = read_file('%s/ntpdate_sample.sh' % opt_config_path)
-    lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % host_maya)
-    write_file('%s/ntpdate.sh' % opt_config_path, lines)
-
-    lines = read_file('%s/nc_sample.sh' % opt_config_path)
-    lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % host_maya)
-    write_file('%s/nc.sh' % opt_config_path, lines)
 
     lines = read_file('%s/settings_local_sample.py' % app_config_path)
     lines = re_sub_lines(lines, '^(DEBUG).*', '\\1 = %s' % debug)

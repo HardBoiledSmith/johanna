@@ -5,7 +5,6 @@ from run_common import check_template_availability
 from run_common import print_session
 from run_create_eb_cron_job import run_create_eb_cron_job
 from run_create_eb_django import run_create_eb_django
-from run_create_eb_graphite_grafana import run_create_eb_graphite_grafana
 from run_create_eb_openvpn import run_create_eb_openvpn
 
 args = []
@@ -52,8 +51,6 @@ for eb_env in eb['ENVIRONMENTS']:
         run_create_eb_django(eb_env['NAME'], eb_env)
     elif eb_env['TYPE'] == 'openvpn':
         run_create_eb_openvpn(eb_env['NAME'], eb_env)
-    elif eb_env['TYPE'] == 'graphite/grafana':
-        run_create_eb_graphite_grafana(eb_env['NAME'], eb_env)
     else:
         print('"%s" is not supported' % eb_env['TYPE'])
         raise Exception()
