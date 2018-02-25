@@ -46,7 +46,6 @@ def run_create_eb_cron_job(name, settings):
 
     template_path = 'template/%s' % template_name
     environment_path = '%s/elasticbeanstalk/%s' % (template_path, name)
-    opt_config_path = '%s/configuration/opt' % environment_path
     etc_config_path = '%s/configuration/etc' % environment_path
 
     git_rev = ['git', 'rev-parse', 'HEAD']
