@@ -24,7 +24,6 @@ def run_create_eb_django(name, settings):
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
-    host_maya = settings['HOST_MAYA']
     key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
     ssl_certificate_id = settings['SSL_CERTIFICATE_ID']
@@ -44,7 +43,6 @@ def run_create_eb_django(name, settings):
 
     template_path = 'template/%s' % template_name
     environment_path = '%s/elasticbeanstalk/%s' % (template_path, name)
-    opt_config_path = '%s/configuration/opt' % environment_path
     etc_config_path = '%s/configuration/etc' % environment_path
     app_config_path = '%s/%s' % (etc_config_path, name)
 
@@ -135,16 +133,7 @@ def run_create_eb_django(name, settings):
     write_file('%s/my.cnf' % app_config_path, lines)
 
     lines = read_file('%s/collectd_sample.conf' % etc_config_path)
-    lines = re_sub_lines(lines, 'HOST_MAYA', host_maya)
     write_file('%s/collectd.conf' % etc_config_path, lines)
-
-    lines = read_file('%s/ntpdate_sample.sh' % opt_config_path)
-    lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % host_maya)
-    write_file('%s/ntpdate.sh' % opt_config_path, lines)
-
-    lines = read_file('%s/nc_sample.sh' % opt_config_path)
-    lines = re_sub_lines(lines, '^(SERVER).*', '\\1=\'%s\'' % host_maya)
-    write_file('%s/nc.sh' % opt_config_path, lines)
 
     lines = read_file('%s/settings_local_sample.py' % app_config_path)
     lines = re_sub_lines(lines, '^(DEBUG).*', '\\1 = %s' % debug)
@@ -305,7 +294,7 @@ def run_create_eb_django(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2017.09 v2.6.4 running Python 3.6']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2017.09 v2.6.5 running Python 3.6']
     cmd += ['--tags', tag0, tag1, tag2]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=environment_path)
