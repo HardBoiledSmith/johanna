@@ -12,7 +12,7 @@ if __name__ == "__main__":
     parse_args()
 
 
-def run_create_cloudwatch_dashboard(name, settings):
+def run_create_cloudwatch_dashboard_elasticbeanstalk(name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     print_message('get elasticbeanstalk environment info: %s' % name)
@@ -81,6 +81,60 @@ def run_create_cloudwatch_dashboard(name, settings):
     aws_cli.run(cmd)
 
 
+def run_create_cloudwatch_dashboard_rds_aurora(name, settings):
+    if not env.get('rds'):
+        print_message('No RDS settings in config.json')
+        return
+
+    if env['rds'].get('ENGINE') != 'aurora':
+        print_message('Only RDS Aurora supported')
+
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+
+    cluster_id = env['rds']['DB_CLUSTER_ID']
+    instance_role_list = list()
+    instance_role_list.append('WRITER')
+    instance_role_list.append('READER')
+
+    print_message('create or update cloudwatch dashboard: %s' % name)
+
+    template_name = env['template']['NAME']
+    region = settings['AWS_DEFAULT_REGION']
+    filename_path = 'template/%s/cloudwatch/%s_%s.json' % (template_name, name, region)
+    with open(filename_path, 'r') as ff:
+        dashboard_body = json.load(ff)
+
+    for dw in dashboard_body['widgets']:
+        pm = dw['properties']['metrics']
+
+        cluster_id_only = True
+        for dimension in pm[0]:
+            if dimension == 'Role':
+                cluster_id_only = False
+
+        template = json.dumps(pm[0])
+        new_metrics_list = list()
+        if cluster_id_only:
+            new_metric = template.replace('DB_CLUSTER_IDENTIFIER', cluster_id)
+            new_metric = json.loads(new_metric)
+            new_metrics_list.append(new_metric)
+        else:
+            for ir in instance_role_list:
+                new_metric = template.replace('DB_CLUSTER_IDENTIFIER', cluster_id)
+                new_metric = new_metric.replace('ROLE', ir)
+                new_metric = json.loads(new_metric)
+                new_metrics_list.append(new_metric)
+
+        dw['properties']['metrics'] = new_metrics_list
+
+    dashboard_body = json.dumps(dashboard_body)
+
+    cmd = ['cloudwatch', 'put-dashboard']
+    cmd += ['--dashboard-name', name]
+    cmd += ['--dashboard-body', dashboard_body]
+    aws_cli.run(cmd)
+
+
 ################################################################################
 #
 # start
@@ -91,4 +145,7 @@ print_session('create cloudwatch dashboard')
 cw = env['cloudwatch']
 cw_dashboards = cw['DASHBOARDS']
 for cd in cw_dashboards:
-    run_create_cloudwatch_dashboard(cd['NAME'], cd)
+    if cd['TYPE'] == 'elasticbeanstalk':
+        run_create_cloudwatch_dashboard_elasticbeanstalk(cd['NAME'], cd)
+    if cd['TYPE'] == 'rds/aurora':
+        run_create_cloudwatch_dashboard_rds_aurora(cd['NAME'], cd)

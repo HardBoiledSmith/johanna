@@ -13,6 +13,7 @@ if __name__ == "__main__":
 
 def run_export_cloudwatch_dashboard(name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    type = settings['TYPE']
 
     cmd = ['cloudwatch', 'get-dashboard']
     cmd += ['--dashboard-name', name]
@@ -26,10 +27,16 @@ def run_export_cloudwatch_dashboard(name, settings):
         prev = ''
         current_index = 0
         for dimension in pm[0]:
-            if prev == 'InstanceId':
+            if prev == 'InstanceId' and type == 'elasticbeanstalk':
                 pm[0][current_index] = 'INSTANCE_ID'
-            if prev == 'EnvironmentName':
+            if prev == 'EnvironmentName' and type == 'elasticbeanstalk':
                 pm[0][current_index] = 'ENVIRONMENT_NAME'
+            if prev == 'Role' and type == 'rds/aurora':
+                pm[0][current_index] = 'ROLE'
+            if prev == 'DBClusterIdentifier' and type == 'rds/aurora':
+                pm[0][current_index] = 'DB_CLUSTER_IDENTIFIER'
+            if prev == 'DbClusterIdentifier' and type == 'rds/aurora':
+                pm[0][current_index] = 'DB_CLUSTER_IDENTIFIER'
             prev = dimension
             current_index += 1
         dw['properties']['metrics'] = pm
