@@ -7,6 +7,7 @@ from run_common import check_template_availability
 
 command_list = list()
 command_list.append('create')
+command_list.append('create_cloudwatch_dashboard')
 command_list.append('create_eb')
 command_list.append('create_lambda')
 command_list.append('create_rds')
@@ -15,6 +16,7 @@ command_list.append('create_sqs')
 command_list.append('create_vpc')
 
 command_list.append('terminate')
+command_list.append('terminate_cloudwatch_dashboard')
 command_list.append('terminate_eb')
 command_list.append('terminate_eb_old_environment')
 command_list.append('terminate_lambda')
@@ -29,6 +31,7 @@ command_list.append('describe_rds')
 command_list.append('describe_vpc')
 
 command_list.append('alter_database')
+command_list.append('export_cloudwatch_dashboard')
 command_list.append('mysqldump_data')
 command_list.append('mysqldump_schema')
 command_list.append('reset_database')
