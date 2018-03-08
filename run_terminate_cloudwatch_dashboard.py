@@ -12,12 +12,14 @@ if __name__ == "__main__":
 
 
 def run_terminate_cloudwatch_dashboard(name, settings):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    region = settings['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(region)
 
-    print_message('terminate cloudwatch dashboard: %s' % name)
+    dashboard_name = '%s_%s' % (name, region)
+    print_message('terminate cloudwatch dashboard: %s' % dashboard_name)
 
     cmd = ['cloudwatch', 'delete-dashboards']
-    cmd += ['--dashboard-names', name]
+    cmd += ['--dashboard-names', dashboard_name]
     aws_cli.run(cmd)
 
 

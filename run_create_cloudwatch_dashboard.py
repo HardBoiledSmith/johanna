@@ -13,7 +13,8 @@ if __name__ == "__main__":
 
 
 def run_create_cloudwatch_dashboard_elasticbeanstalk(name, settings):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    region = settings['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(region)
 
     print_message('get elasticbeanstalk environment info: %s' % name)
 
@@ -40,12 +41,11 @@ def run_create_cloudwatch_dashboard_elasticbeanstalk(name, settings):
             env_instances_list.append(ii)
 
     ################################################################################
-
-    print_message('create or update cloudwatch dashboard: %s' % name)
+    dashboard_name = '%s_%s' % (name, region)
+    print_message('create or update cloudwatch dashboard: %s' % dashboard_name)
 
     template_name = env['template']['NAME']
-    region = settings['AWS_DEFAULT_REGION']
-    filename_path = 'template/%s/cloudwatch/%s_%s.json' % (template_name, name, region)
+    filename_path = 'template/%s/cloudwatch/%s.json' % (template_name, dashboard_name)
     with open(filename_path, 'r') as ff:
         dashboard_body = json.load(ff)
 
@@ -76,7 +76,7 @@ def run_create_cloudwatch_dashboard_elasticbeanstalk(name, settings):
     dashboard_body = json.dumps(dashboard_body)
 
     cmd = ['cloudwatch', 'put-dashboard']
-    cmd += ['--dashboard-name', name]
+    cmd += ['--dashboard-name', dashboard_name]
     cmd += ['--dashboard-body', dashboard_body]
     aws_cli.run(cmd)
 
@@ -89,18 +89,20 @@ def run_create_cloudwatch_dashboard_rds_aurora(name, settings):
     if env['rds'].get('ENGINE') != 'aurora':
         print_message('Only RDS Aurora supported')
 
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    region = settings['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(region)
 
     cluster_id = env['rds']['DB_CLUSTER_ID']
     instance_role_list = list()
     instance_role_list.append('WRITER')
     instance_role_list.append('READER')
 
-    print_message('create or update cloudwatch dashboard: %s' % name)
+    dashboard_name = '%s_%s' % (name, region)
+    print_message('create or update cloudwatch dashboard: %s' % dashboard_name)
 
     template_name = env['template']['NAME']
-    region = settings['AWS_DEFAULT_REGION']
-    filename_path = 'template/%s/cloudwatch/%s_%s.json' % (template_name, name, region)
+
+    filename_path = 'template/%s/cloudwatch/%s.json' % (template_name, dashboard_name)
     with open(filename_path, 'r') as ff:
         dashboard_body = json.load(ff)
 
@@ -130,7 +132,7 @@ def run_create_cloudwatch_dashboard_rds_aurora(name, settings):
     dashboard_body = json.dumps(dashboard_body)
 
     cmd = ['cloudwatch', 'put-dashboard']
-    cmd += ['--dashboard-name', name]
+    cmd += ['--dashboard-name', dashboard_name]
     cmd += ['--dashboard-body', dashboard_body]
     aws_cli.run(cmd)
 

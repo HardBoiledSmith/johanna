@@ -314,7 +314,7 @@ def run_create_eb_django(name, settings):
     cfg_doc = dict()
     cfg_doc['CloudWatchMetrics'] = cw
     cfg_doc['Version'] = 1
-    oo['Value'] = cfg_doc
+    oo['Value'] = json.dumps(cfg_doc)
     option_settings.append(oo)
 
     option_settings = json.dumps(option_settings)
