@@ -19,6 +19,7 @@ def run_create_cloudwatch_dashboard_elasticbeanstalk(name, settings):
     print_message('get elasticbeanstalk environment info: %s' % name)
 
     cmd = ['elasticbeanstalk', 'describe-environments']
+    cmd += ['--no-include-deleted']
     result = aws_cli.run(cmd)
 
     env_list = list()
