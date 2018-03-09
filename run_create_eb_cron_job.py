@@ -276,6 +276,33 @@ def run_create_eb_cron_job(name, settings):
     oo['Value'] = 'LoadBalanced'
     option_settings.append(oo)
 
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:environment'
+    oo['OptionName'] = 'ServiceRole'
+    oo['Value'] = 'aws-elasticbeanstalk-service-role'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:healthreporting:system'
+    oo['OptionName'] = 'SystemType'
+    oo['Value'] = 'enhanced'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:healthreporting:system'
+    oo['OptionName'] = 'ConfigDocument'
+    cw_instance = dict()
+    cw_instance['RootFilesystemUtil'] = 60
+    cw_instance['InstanceHealth'] = 60
+    cw_instance['CPUIdle'] = 60
+    cw = dict()
+    cw['Instance'] = cw_instance
+    cfg_doc = dict()
+    cfg_doc['CloudWatchMetrics'] = cw
+    cfg_doc['Version'] = 1
+    oo['Value'] = json.dumps(cfg_doc)
+    option_settings.append(oo)
+
     option_settings = json.dumps(option_settings)
 
     tag0 = 'Key=git_hash_johanna,Value=%s' % git_hash_johanna.decode('utf-8').strip()
