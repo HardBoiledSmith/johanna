@@ -51,6 +51,8 @@ def run_create_cloudwatch_dashboard_elasticbeanstalk(name, settings):
         dashboard_body = json.load(ff)
 
     for dw in dashboard_body['widgets']:
+        if not dw['properties'].get('metrics'):
+            continue
         pm = dw['properties']['metrics']
 
         env_name_only = True
