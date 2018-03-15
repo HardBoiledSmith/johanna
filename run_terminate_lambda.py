@@ -97,6 +97,37 @@ def run_terminate_cron_lambda(name, settings):
     aws_cli.run(cmd, cwd=deploy_folder, ignore_error=True)
 
 
+def run_terminate_sns_lambda(name, settings):
+    function_name = settings['NAME']
+    template_name = env['template']['NAME']
+
+    template_path = 'template/%s' % template_name
+    deploy_folder = '%s/lambda/%s' % (template_path, name)
+
+    ################################################################################
+    print_session('terminate lambda: %s' % function_name)
+
+    cmd = ['lambda', 'get-function',
+           '--function-name', function_name]
+    result = aws_cli.run(cmd, ignore_error=True)
+
+    if result:
+        tags = result['Tags']
+        subscription_arn = tags.get('subscription_arn', '')
+
+        print_message('remove subscription')
+
+        cmd = ['sns', 'unsubscribe',
+               '--subscription-arn', subscription_arn]
+        aws_cli.run(cmd, ignore_error=True)
+
+    print_message('delete lambda function')
+
+    cmd = ['lambda', 'delete-function',
+           '--function-name', function_name]
+    aws_cli.run(cmd, cwd=deploy_folder, ignore_error=True)
+
+
 ################################################################################
 #
 # start
@@ -117,6 +148,9 @@ if len(args) == 2:
             if lambda_env['TYPE'] == 'cron':
                 run_terminate_cron_lambda(lambda_env['NAME'], lambda_env)
                 break
+            if lambda_env['TYPE'] == 'sns':
+                run_terminate_sns_lambda(lambda_env['NAME'], lambda_env)
+                break
             print('"%s" is not supported' % lambda_env['TYPE'])
             raise Exception()
     if not target_lambda_name_exists:
@@ -128,6 +162,9 @@ else:
             continue
         if lambda_env['TYPE'] == 'cron':
             run_terminate_cron_lambda(lambda_env['NAME'], lambda_env)
+            continue
+        if lambda_env['TYPE'] == 'sns':
+            run_terminate_sns_lambda(lambda_env['NAME'], lambda_env)
             continue
         print('"%s" is not supported' % lambda_env['TYPE'])
         raise Exception()

@@ -11,13 +11,14 @@ from run_common import read_file
 from run_common import write_file
 
 
-def run_create_lambda_default(name, settings):
+def run_create_lambda_sns(name, settings):
     aws_cli = AWSCli()
 
     description = settings['DESCRIPTION']
     function_name = settings['NAME']
     phase = env['common']['PHASE']
     template_name = env['template']['NAME']
+    topic_name = settings['SNS_TOPIC_NAME']
 
     template_path = 'template/%s' % template_name
     deploy_folder = '%s/lambda/%s' % (template_path, name)
@@ -25,6 +26,13 @@ def run_create_lambda_default(name, settings):
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
     git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
+
+    ################################################################################
+    print_session('check topic exists: %s' % topic_name)
+
+    topic_arn = aws_cli.get_topic_arn(topic_name)
+    if not topic_arn:
+        raise Exception()
 
     ################################################################################
     print_session('packaging lambda: %s' % function_name)
@@ -110,4 +118,21 @@ def run_create_lambda_default(name, settings):
            '--runtime', 'python3.6',
            '--tags', ','.join(tags),
            '--timeout', '120']
+    result = aws_cli.run(cmd, cwd=deploy_folder)
+
+    function_arn = result['FunctionArn']
+
+    print_message('create subscription')
+
+    cmd = ['sns', 'subscribe',
+           '--topic-arn', topic_arn,
+           '--protocol', 'lambda',
+           '--notification-endpoint', function_arn]
+    result = aws_cli.run(cmd)
+
+    tags.append('subscription_arn=%s' % result['SubscriptionArn'])
+
+    cmd = ['lambda', 'tag-resource',
+           '--resource', function_arn,
+           '--tags', ','.join(tags)]
     aws_cli.run(cmd, cwd=deploy_folder)
