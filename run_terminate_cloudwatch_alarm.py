@@ -12,11 +12,12 @@ if __name__ == "__main__":
 
 
 def run_terminate_cloudwatch_alarm_elasticbeanstalk(name, settings):
+    phase = env['common']['PHASE']
     region = settings['AWS_DEFAULT_REGION']
     aws_cli = AWSCli(region)
 
     ################################################################################
-    alarm_name = '%s_%s_%s' % (name, region, settings['METRIC_NAME'])
+    alarm_name = '%s-%s_%s_%s' % (phase, name, region, settings['METRIC_NAME'])
     print_message('terminate cloudwatch alarm: %s' % alarm_name)
 
     cmd = ['cloudwatch', 'delete-alarms']

@@ -12,6 +12,7 @@ if __name__ == "__main__":
 
 
 def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
+    phase = env['common']['PHASE']
     region = settings['AWS_DEFAULT_REGION']
     aws_cli = AWSCli(region)
 
@@ -44,7 +45,7 @@ def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
             env_instances_list.append(ii)
 
     ################################################################################
-    alarm_name = '%s_%s_%s' % (name, region, settings['METRIC_NAME'])
+    alarm_name = '%s-%s_%s_%s' % (phase, name, region, settings['METRIC_NAME'])
     print_message('create or update cloudwatch alarm: %s' % alarm_name)
 
     topic_arn = aws_cli.get_topic_arn(settings['SNS_TOPIC_NAME'])
