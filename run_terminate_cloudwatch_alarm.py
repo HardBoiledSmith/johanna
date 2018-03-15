@@ -32,8 +32,8 @@ def run_terminate_cloudwatch_alarm_elasticbeanstalk(name, settings):
 ################################################################################
 print_session('terminate cloudwatch alarm')
 
-cw = env['cloudwatch']
-cw_alarms = cw['ALARMS']
+cw = env.get('cloudwatch', dict())
+cw_alarms = cw.get('ALARMS', list())
 for ca in cw_alarms:
     if ca['TYPE'] == 'elasticbeanstalk':
         run_terminate_cloudwatch_alarm_elasticbeanstalk(ca['NAME'], ca)
