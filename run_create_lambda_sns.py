@@ -100,6 +100,14 @@ def run_create_lambda_sns(name, settings):
 
         print_message('update lambda tags')
 
+        cmd = ['lambda', 'list-tags',
+               '--resource', function_arn]
+        result = aws_cli.run(cmd, cwd=deploy_folder)
+        old_tags = result['Tags']
+
+        subscription_arn = old_tags.get('subscription_arn', '')
+        tags.append('subscription_arn=%s' % subscription_arn)
+
         cmd = ['lambda', 'tag-resource',
                '--resource', function_arn,
                '--tags', ','.join(tags)]
@@ -129,6 +137,8 @@ def run_create_lambda_sns(name, settings):
            '--protocol', 'lambda',
            '--notification-endpoint', function_arn]
     result = aws_cli.run(cmd)
+
+    print_message('update tag with subscription info')
 
     tags.append('subscription_arn=%s' % result['SubscriptionArn'])
 
