@@ -28,12 +28,41 @@ def describe_cloudwatch_dashboard():
     return False
 
 
+def describe_cloudwatch_alarm():
+    if not env.get('cloudwatch'):
+        return False
+
+    if not env['cloudwatch'].get('ALARMS'):
+        return False
+
+    a_set = set()
+    alarms_list = env['cloudwatch']['ALARMS']
+    for al in alarms_list:
+        a_name = '%s_%s_%s' % (al['NAME'], al['AWS_DEFAULT_REGION'], al['METRIC_NAME'])
+        a_set.add(a_name)
+
+    cmd = ['cloudwatch', 'describe-alarms']
+    cmd += ['--alarm-names', ' '.join(a_set)]
+    result = aws_cli.run(cmd)
+
+    for ma in result['MetricAlarms']:
+        if ma['AlarmName'] in a_set:
+            return True
+
+    return False
+
+
 results = list()
 
 if describe_cloudwatch_dashboard():
     results.append('CloudWatch Dashboard -------------- O')
 else:
     results.append('CloudWatch Dashboard -------------- X')
+
+if describe_cloudwatch_alarm():
+    results.append('CloudWatch Alarm -------------- O')
+else:
+    results.append('CloudWatch Alarm -------------- X')
 
 print('#' * 80)
 

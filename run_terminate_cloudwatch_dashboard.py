@@ -30,7 +30,7 @@ def run_terminate_cloudwatch_dashboard(name, settings):
 ################################################################################
 print_session('terminate cloudwatch dashboard')
 
-cw = env['cloudwatch']
-cw_dashboards = cw['DASHBOARDS']
+cw = env.get('cloudwatch', dict())
+cw_dashboards = cw.get('DASHBOARDS', list())
 for cd in cw_dashboards:
     run_terminate_cloudwatch_dashboard(cd['NAME'], cd)

@@ -147,8 +147,8 @@ def run_create_cloudwatch_dashboard_rds_aurora(name, settings):
 ################################################################################
 print_session('create cloudwatch dashboard')
 
-cw = env['cloudwatch']
-cw_dashboards = cw['DASHBOARDS']
+cw = env.get('cloudwatch', dict())
+cw_dashboards = cw.get('DASHBOARDS', list())
 for cd in cw_dashboards:
     if cd['TYPE'] == 'elasticbeanstalk':
         run_create_cloudwatch_dashboard_elasticbeanstalk(cd['NAME'], cd)
