@@ -8,6 +8,7 @@ from run_common import print_message
 from run_common import print_session
 from run_create_lambda_cron import run_create_lambda_cron
 from run_create_lambda_default import run_create_lambda_default
+from run_create_lambda_sns import run_create_lambda_sns
 
 args = []
 
@@ -60,11 +61,11 @@ check_template_availability()
 
 create_iam_for_lambda()
 
-_lambda = env['lambda']
+lambdas_list = env['lambda']
 if len(args) == 2:
     target_lambda_name = args[1]
     target_lambda_name_exists = False
-    for lambda_env in _lambda:
+    for lambda_env in lambdas_list:
         if lambda_env['NAME'] == target_lambda_name:
             target_lambda_name_exists = True
             if lambda_env['TYPE'] == 'default':
@@ -73,17 +74,23 @@ if len(args) == 2:
             if lambda_env['TYPE'] == 'cron':
                 run_create_lambda_cron(lambda_env['NAME'], lambda_env)
                 break
+            if lambda_env['TYPE'] == 'sns':
+                run_create_lambda_sns(lambda_env['NAME'], lambda_env)
+                break
             print('"%s" is not supported' % lambda_env['TYPE'])
             raise Exception()
     if not target_lambda_name_exists:
         print('"%s" is not exists in config.json' % target_lambda_name)
 else:
-    for lambda_env in _lambda:
+    for lambda_env in lambdas_list:
         if lambda_env['TYPE'] == 'default':
             run_create_lambda_default(lambda_env['NAME'], lambda_env)
             continue
         if lambda_env['TYPE'] == 'cron':
             run_create_lambda_cron(lambda_env['NAME'], lambda_env)
+            continue
+        if lambda_env['TYPE'] == 'sns':
+            run_create_lambda_sns(lambda_env['NAME'], lambda_env)
             continue
         print('"%s" is not supported' % lambda_env['TYPE'])
         raise Exception()

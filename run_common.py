@@ -223,6 +223,19 @@ class AWSCli:
         # noinspection PyTypeChecker
         return result['Role']['Arn']
 
+    def get_topic_arn(self, topic_name):
+        cmd = ['sns', 'list-topics']
+        result = self.run(cmd)
+
+        for topic in result['Topics']:
+            suffix = ':%s' % topic_name
+            # noinspection PyTypeChecker
+            arn = topic['TopicArn']
+            if arn.endswith(suffix):
+                return arn
+
+        return
+
     def get_temp_bucket(self):
         default_region = env['aws']['AWS_DEFAULT_REGION']
 

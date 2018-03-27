@@ -12,67 +12,6 @@ if __name__ == "__main__":
     parse_args()
 
 
-def create_iam():
-    ################################################################################
-    #
-    # IAM
-    #
-    ################################################################################
-    print_session('create iam')
-
-    aws_cli = AWSCli()
-
-    ################################################################################
-    print_message('create iam: aws-elasticbeanstalk-ec2-role')
-
-    cmd = ['iam', 'create-instance-profile']
-    cmd += ['--instance-profile-name', 'aws-elasticbeanstalk-ec2-role']
-    aws_cli.run(cmd)
-
-    cmd = ['iam', 'create-role']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
-    cmd += ['--assume-role-policy-document', 'file://aws_iam/aws-elasticbeanstalk-ec2-role.json']
-    aws_cli.run(cmd)
-
-    cmd = ['iam', 'add-role-to-instance-profile']
-    cmd += ['--instance-profile-name', 'aws-elasticbeanstalk-ec2-role']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
-    aws_cli.run(cmd)
-
-    cmd = ['iam', 'attach-role-policy']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
-    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier']
-    aws_cli.run(cmd)
-
-    cmd = ['iam', 'attach-role-policy']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
-    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker']
-    aws_cli.run(cmd)
-
-    cmd = ['iam', 'attach-role-policy']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
-    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier']
-    aws_cli.run(cmd)
-
-    ################################################################################
-    print_message('create iam: aws-elasticbeanstalk-service-role')
-
-    cmd = ['iam', 'create-role']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
-    cmd += ['--assume-role-policy-document', 'file://aws_iam/aws-elasticbeanstalk-service-role.json']
-    aws_cli.run(cmd)
-
-    cmd = ['iam', 'attach-role-policy']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
-    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth']
-    aws_cli.run(cmd)
-
-    cmd = ['iam', 'attach-role-policy']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
-    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkService']
-    aws_cli.run(cmd)
-
-
 def main(settings):
     aws_availability_zone_1 = settings['AWS_AVAILABILITY_ZONE_1']
     aws_availability_zone_2 = settings['AWS_AVAILABILITY_ZONE_2']
@@ -559,9 +498,6 @@ def main(settings):
 #
 ################################################################################
 print_session('create vpc')
-
-################################################################################
-create_iam()
 
 for vpc_env in env['vpc']:
     main(vpc_env)

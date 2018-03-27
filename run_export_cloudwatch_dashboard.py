@@ -31,6 +31,8 @@ def run_export_cloudwatch_dashboard(name, settings):
         pm = pm[:1]
         prev = ''
         current_index = 0
+        if len(pm) < 1:
+            return
         for dimension in pm[0]:
             if prev == 'InstanceId' and service_type == 'elasticbeanstalk':
                 pm[0][current_index] = 'INSTANCE_ID'
