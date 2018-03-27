@@ -31,6 +31,6 @@ def run_terminate_cloudwatch_dashboard(name, settings):
 print_session('terminate cloudwatch dashboard')
 
 cw = env.get('cloudwatch', dict())
-cw_dashboards = cw.get('DASHBOARDS', list())
-for cd in cw_dashboards:
-    run_terminate_cloudwatch_dashboard(cd['NAME'], cd)
+cw_dashboards_list = cw.get('DASHBOARDS', list())
+for cw_dashboard_env in cw_dashboards_list:
+    run_terminate_cloudwatch_dashboard(cw_dashboard_env['NAME'], cw_dashboard_env)

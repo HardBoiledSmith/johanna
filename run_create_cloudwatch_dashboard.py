@@ -148,9 +148,9 @@ def run_create_cloudwatch_dashboard_rds_aurora(name, settings):
 print_session('create cloudwatch dashboard')
 
 cw = env.get('cloudwatch', dict())
-cw_dashboards = cw.get('DASHBOARDS', list())
-for cd in cw_dashboards:
-    if cd['TYPE'] == 'elasticbeanstalk':
-        run_create_cloudwatch_dashboard_elasticbeanstalk(cd['NAME'], cd)
-    if cd['TYPE'] == 'rds/aurora':
-        run_create_cloudwatch_dashboard_rds_aurora(cd['NAME'], cd)
+cw_dashboards_list = cw.get('DASHBOARDS', list())
+for cw_dashboard_env in cw_dashboards_list:
+    if cw_dashboard_env['TYPE'] == 'elasticbeanstalk':
+        run_create_cloudwatch_dashboard_elasticbeanstalk(cw_dashboard_env['NAME'], cw_dashboard_env)
+    if cw_dashboard_env['TYPE'] == 'rds/aurora':
+        run_create_cloudwatch_dashboard_rds_aurora(cw_dashboard_env['NAME'], cw_dashboard_env)
