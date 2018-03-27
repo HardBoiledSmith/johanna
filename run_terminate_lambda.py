@@ -135,11 +135,11 @@ def run_terminate_sns_lambda(name, settings):
 ################################################################################
 print_session('terminate lambda')
 
-_lambda = env['lambda']
+lambdas_list = env['lambda']
 if len(args) == 2:
     target_lambda_name = args[1]
     target_lambda_name_exists = False
-    for lambda_env in _lambda:
+    for lambda_env in lambdas_list:
         if lambda_env['NAME'] == target_lambda_name:
             target_lambda_name_exists = True
             if lambda_env['TYPE'] == 'default':
@@ -156,7 +156,7 @@ if len(args) == 2:
     if not target_lambda_name_exists:
         print('"%s" is not exists in config.json' % target_lambda_name)
 else:
-    for lambda_env in _lambda:
+    for lambda_env in lambdas_list:
         if lambda_env['TYPE'] == 'default':
             run_terminate_default_lambda(lambda_env['NAME'], lambda_env)
             continue

@@ -30,7 +30,7 @@ def run_create_sns_topic(name):
 ################################################################################
 print_session('create sns')
 
-sns = env['sns']
-for sns_env in sns:
+sns_list = env.get('sns', list())
+for sns_env in sns_list:
     if sns_env['TYPE'] == 'topic':
         run_create_sns_topic(sns_env['NAME'])

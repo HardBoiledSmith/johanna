@@ -36,7 +36,7 @@ def run_terminate_sns_tpoic(name):
 ################################################################################
 print_session('terminate sns')
 
-sns = env['sns']
-for sns_env in sns:
+sns_list = env.get('sns', list())
+for sns_env in sns_list:
     if sns_env['TYPE'] == 'topic':
         run_terminate_sns_tpoic(sns_env['NAME'])
