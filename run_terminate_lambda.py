@@ -114,22 +114,20 @@ def run_terminate_sns_lambda(name, settings):
     if result:
         tags = result['Tags']
 
-        print_message('remove permission')
-
-        statement_id = tags.get('statement_id', '')
-
-        cmd = ['lambda', 'remove-permission',
-               '--function-name', function_name,
-               '--statement-id', statement_id]
-        aws_cli.run(cmd, ignore_error=True)
-
         print_message('remove subscription')
 
-        subscription_arn = tags.get('subscription_arn', '')
+        index = 1
+        while True:
+            subscription_arn = tags.get('subscription_arn_%s' % index, '')
 
-        cmd = ['sns', 'unsubscribe',
-               '--subscription-arn', subscription_arn]
-        aws_cli.run(cmd, ignore_error=True)
+            if not subscription_arn:
+                break
+
+            sns_region = subscription_arn.split(':')[3]
+            cmd = ['sns', 'unsubscribe',
+                   '--subscription-arn', subscription_arn]
+            AWSCli(sns_region).run(cmd, ignore_error=True)
+            index += 1
 
     print_message('delete lambda function')
 

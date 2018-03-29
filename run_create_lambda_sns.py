@@ -18,7 +18,6 @@ def run_create_lambda_sns(name, settings):
     function_name = settings['NAME']
     phase = env['common']['PHASE']
     template_name = env['template']['NAME']
-    topic_name = settings['SNS_TOPIC_NAME']
 
     template_path = 'template/%s' % template_name
     deploy_folder = '%s/lambda/%s' % (template_path, name)
@@ -28,11 +27,15 @@ def run_create_lambda_sns(name, settings):
     git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
 
     ################################################################################
-    print_session('check topic exists: %s' % topic_name)
+    topic_arn_list = list()
 
-    topic_arn = aws_cli.get_topic_arn(topic_name)
-    if not topic_arn:
-        raise Exception()
+    for sns_topic_name in settings['SNS_TOPICS_NAMES']:
+        region, topic_name = sns_topic_name.split('/')
+        print_message('check topic exists: %s' % topic_name)
+        topic_arn = AWSCli(region).get_topic_arn(topic_name)
+        if not topic_arn:
+            raise Exception()
+        topic_arn_list.append(topic_arn)
 
     ################################################################################
     print_session('packaging lambda: %s' % function_name)
@@ -133,31 +136,40 @@ def run_create_lambda_sns(name, settings):
 
     function_arn = result['FunctionArn']
 
-    print_message('create subscription')
+    subscription_arn_list = list()
 
-    cmd = ['sns', 'subscribe',
-           '--topic-arn', topic_arn,
-           '--protocol', 'lambda',
-           '--notification-endpoint', function_arn]
-    result = aws_cli.run(cmd)
-    subscription_arn = result['SubscriptionArn']
+    for topic_arn in topic_arn_list:
+        print_message('create subscription')
 
-    print_message('Add permission to lambda')
+        topic_region = topic_arn.split(':')[3]
 
-    statement_id = '%sPermission' % function_name
+        cmd = ['sns', 'subscribe',
+               '--topic-arn', topic_arn,
+               '--protocol', 'lambda',
+               '--notification-endpoint', function_arn]
+        result = AWSCli(topic_region).run(cmd)
 
-    cmd = ['lambda', 'add-permission',
-           '--function-name', function_name,
-           '--statement-id', statement_id,
-           '--action', 'lambda:InvokeFunction',
-           '--principal', 'sns.amazonaws.com',
-           '--source-arn', topic_arn]
-    aws_cli.run(cmd)
+        subscription_arn = result['SubscriptionArn']
+        subscription_arn_list.append(subscription_arn)
+
+        print_message('Add permission to lambda')
+
+        statement_id = '%s_%s_Permission' % (function_name, topic_region)
+
+        cmd = ['lambda', 'add-permission',
+               '--function-name', function_name,
+               '--statement-id', statement_id,
+               '--action', 'lambda:InvokeFunction',
+               '--principal', 'sns.amazonaws.com',
+               '--source-arn', topic_arn]
+        aws_cli.run(cmd)
 
     print_message('update tag with subscription info')
 
-    tags.append('subscription_arn=%s' % subscription_arn)
-    tags.append('statement_id=%s' % statement_id)
+    index = 1
+    for subscription_arn in subscription_arn_list:
+        tags.append('subscription_arn_%s=%s' % (index, subscription_arn))
+        index += 1
 
     cmd = ['lambda', 'tag-resource',
            '--resource', function_arn,

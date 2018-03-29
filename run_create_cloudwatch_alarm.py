@@ -63,17 +63,18 @@ def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
             break
 
     cmd = ['cloudwatch', 'put-metric-alarm']
-    cmd += ['--alarm-name', alarm_name]
+    cmd += ['--alarm-actions', topic_arn]
     cmd += ['--alarm-description', settings['DESCRIPTION']]
-    cmd += ['--namespace', settings['NAMESPACE']]
-    cmd += ['--metric-name', settings['METRIC_NAME']]
-    cmd += ['--statistic', settings['STATISTIC']]
-    cmd += ['--period', settings['PERIOD']]
-    cmd += ['--threshold', settings['THRESHOLD']]
+    cmd += ['--alarm-name', alarm_name]
     cmd += ['--comparison-operator', settings['COMPARISON_OPERATOR']]
+    cmd += ['--datapoints-to-alarm', settings['DATAPOINTS_TO_ALARM']]
     cmd += ['--dimensions', ' '.join(dimension_list)]
     cmd += ['--evaluation-periods', settings['EVALUATION_PERIODS']]
-    cmd += ['--alarm-actions', topic_arn]
+    cmd += ['--metric-name', settings['METRIC_NAME']]
+    cmd += ['--namespace', settings['NAMESPACE']]
+    cmd += ['--period', settings['PERIOD']]
+    cmd += ['--statistic', settings['STATISTIC']]
+    cmd += ['--threshold', settings['THRESHOLD']]
     aws_cli.run(cmd)
 
 
