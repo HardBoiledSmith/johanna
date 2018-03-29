@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import json
+
 from env import env
 from run_common import AWSCli
 from run_common import print_message
@@ -107,27 +109,39 @@ def run_terminate_sns_lambda(name, settings):
     ################################################################################
     print_session('terminate lambda: %s' % function_name)
 
-    cmd = ['lambda', 'get-function',
+    cmd = ['lambda', 'get-policy',
            '--function-name', function_name]
     result = aws_cli.run(cmd, ignore_error=True)
 
     if result:
-        tags = result['Tags']
+        policy = result['Policy']
+        policy = json.loads(policy)
 
-        print_message('remove subscription')
+        statement_list = policy['Statement']
 
-        index = 1
-        while True:
-            subscription_arn = tags.get('subscription_arn_%s' % index, '')
+        for statement in statement_list:
+            print_message('remove subscription')
 
-            if not subscription_arn:
-                break
+            arn_like = statement['Condition']['ArnLike']
+            source_arn = arn_like['AWS:SourceArn']
 
-            sns_region = subscription_arn.split(':')[3]
-            cmd = ['sns', 'unsubscribe',
-                   '--subscription-arn', subscription_arn]
-            AWSCli(sns_region).run(cmd, ignore_error=True)
-            index += 1
+            sns_region = source_arn.split(':')[3]
+
+            cmd = ['sns', 'list-subscriptions-by-topic',
+                   '--topic-arn', source_arn]
+            result = AWSCli(sns_region).run(cmd, ignore_error=True)
+            if not result:
+                continue
+
+            subscription_list = result['Subscriptions']
+            for subscription in subscription_list:
+                if subscription['Protocol'] != 'lambda':
+                    continue
+
+                subscription_arn = subscription['SubscriptionArn']
+                cmd = ['sns', 'unsubscribe',
+                       '--subscription-arn', subscription_arn]
+                AWSCli(sns_region).run(cmd, ignore_error=True)
 
     print_message('delete lambda function')
 

@@ -98,21 +98,9 @@ def run_create_lambda_sns(name, settings):
                '--function-name', function_name,
                '--zip-file', 'fileb://deploy.zip']
         result = aws_cli.run(cmd, cwd=deploy_folder)
-
         function_arn = result['FunctionArn']
 
         print_message('update lambda tags')
-
-        cmd = ['lambda', 'list-tags',
-               '--resource', function_arn]
-        result = aws_cli.run(cmd, cwd=deploy_folder)
-        old_tags = result['Tags']
-
-        subscription_arn = old_tags.get('subscription_arn', '')
-        tags.append('subscription_arn=%s' % subscription_arn)
-
-        statement_id = old_tags.get('statement_id', '')
-        tags.append('statement_id=%s' % statement_id)
 
         cmd = ['lambda', 'tag-resource',
                '--resource', function_arn,
@@ -136,8 +124,6 @@ def run_create_lambda_sns(name, settings):
 
     function_arn = result['FunctionArn']
 
-    subscription_arn_list = list()
-
     for topic_arn in topic_arn_list:
         print_message('create subscription')
 
@@ -147,10 +133,7 @@ def run_create_lambda_sns(name, settings):
                '--topic-arn', topic_arn,
                '--protocol', 'lambda',
                '--notification-endpoint', function_arn]
-        result = AWSCli(topic_region).run(cmd)
-
-        subscription_arn = result['SubscriptionArn']
-        subscription_arn_list.append(subscription_arn)
+        AWSCli(topic_region).run(cmd)
 
         print_message('Add permission to lambda')
 
@@ -165,11 +148,6 @@ def run_create_lambda_sns(name, settings):
         aws_cli.run(cmd)
 
     print_message('update tag with subscription info')
-
-    index = 1
-    for subscription_arn in subscription_arn_list:
-        tags.append('subscription_arn_%s=%s' % (index, subscription_arn))
-        index += 1
 
     cmd = ['lambda', 'tag-resource',
            '--resource', function_arn,

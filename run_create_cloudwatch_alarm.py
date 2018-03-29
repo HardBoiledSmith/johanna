@@ -78,6 +78,39 @@ def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
     aws_cli.run(cmd)
 
 
+def run_create_cloudwatch_alarm_rds(name, settings):
+    phase = env['common']['PHASE']
+    region = settings['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(region)
+
+    alarm_name = '%s-%s_%s_%s' % (phase, name, region, settings['METRIC_NAME'])
+    print_message('create or update cloudwatch alarm: %s' % alarm_name)
+
+    topic_arn = aws_cli.get_topic_arn(settings['SNS_TOPIC_NAME'])
+    if not topic_arn:
+        raise Exception()
+
+    dimension_list = list()
+    db_cluster_id = env['rds']['DB_CLUSTER_ID']
+    dimension = 'Name=DBClusterIdentifier,Value=%s' % db_cluster_id
+    dimension_list.append(dimension)
+
+    cmd = ['cloudwatch', 'put-metric-alarm']
+    cmd += ['--alarm-actions', topic_arn]
+    cmd += ['--alarm-description', settings['DESCRIPTION']]
+    cmd += ['--alarm-name', alarm_name]
+    cmd += ['--comparison-operator', settings['COMPARISON_OPERATOR']]
+    cmd += ['--datapoints-to-alarm', settings['DATAPOINTS_TO_ALARM']]
+    cmd += ['--dimensions', ' '.join(dimension_list)]
+    cmd += ['--evaluation-periods', settings['EVALUATION_PERIODS']]
+    cmd += ['--metric-name', settings['METRIC_NAME']]
+    cmd += ['--namespace', settings['NAMESPACE']]
+    cmd += ['--period', settings['PERIOD']]
+    cmd += ['--statistic', settings['STATISTIC']]
+    cmd += ['--threshold', settings['THRESHOLD']]
+    aws_cli.run(cmd)
+
+
 ################################################################################
 #
 # start
@@ -90,3 +123,5 @@ cw_alarms_list = cw.get('ALARMS', list())
 for cw_alarm_env in cw_alarms_list:
     if cw_alarm_env['TYPE'] == 'elasticbeanstalk':
         run_create_cloudwatch_alarm_elasticbeanstalk(cw_alarm_env['NAME'], cw_alarm_env)
+    if cw_alarm_env['TYPE'] == 'rds':
+        run_create_cloudwatch_alarm_rds(cw_alarm_env['NAME'], cw_alarm_env)
