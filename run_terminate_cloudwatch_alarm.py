@@ -22,7 +22,7 @@ def run_terminate_cloudwatch_alarm_elasticbeanstalk(name, settings):
 
     cmd = ['cloudwatch', 'delete-alarms']
     cmd += ['--alarm-names', alarm_name]
-    aws_cli.run(cmd)
+    aws_cli.run(cmd, ignore_error=True)
 
 
 ################################################################################
