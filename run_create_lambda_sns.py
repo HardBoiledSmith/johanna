@@ -108,6 +108,9 @@ def run_create_lambda_sns(name, settings):
         subscription_arn = old_tags.get('subscription_arn', '')
         tags.append('subscription_arn=%s' % subscription_arn)
 
+        statement_id = old_tags.get('statement_id', '')
+        tags.append('statement_id=%s' % statement_id)
+
         cmd = ['lambda', 'tag-resource',
                '--resource', function_arn,
                '--tags', ','.join(tags)]
@@ -137,10 +140,24 @@ def run_create_lambda_sns(name, settings):
            '--protocol', 'lambda',
            '--notification-endpoint', function_arn]
     result = aws_cli.run(cmd)
+    subscription_arn = result['SubscriptionArn']
+
+    print_message('Add permission to lambda')
+
+    statement_id = '%sPermission' % function_name
+
+    cmd = ['lambda', 'add-permission',
+           '--function-name', function_name,
+           '--statement-id', statement_id,
+           '--action', 'lambda:InvokeFunction',
+           '--principal', 'sns.amazonaws.com',
+           '--source-arn', topic_arn]
+    aws_cli.run(cmd)
 
     print_message('update tag with subscription info')
 
-    tags.append('subscription_arn=%s' % result['SubscriptionArn'])
+    tags.append('subscription_arn=%s' % subscription_arn)
+    tags.append('statement_id=%s' % statement_id)
 
     cmd = ['lambda', 'tag-resource',
            '--resource', function_arn,
