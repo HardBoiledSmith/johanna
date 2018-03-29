@@ -91,9 +91,10 @@ def run_create_cloudwatch_alarm_rds(name, settings):
         raise Exception()
 
     dimension_list = list()
-    db_cluster_id = env['rds']['DB_CLUSTER_ID']
-    dimension = 'Name=DBClusterIdentifier,Value=%s' % db_cluster_id
-    dimension_list.append(dimension)
+    if settings['DIMENSIONS'] == 'DBClusterIdentifier':
+        db_cluster_id = env['rds']['DB_CLUSTER_ID']
+        dimension = 'Name=DBClusterIdentifier,Value=%s' % db_cluster_id
+        dimension_list.append(dimension)
 
     cmd = ['cloudwatch', 'put-metric-alarm']
     cmd += ['--alarm-actions', topic_arn]
