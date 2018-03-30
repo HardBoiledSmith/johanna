@@ -11,7 +11,7 @@ if __name__ == "__main__":
     parse_args()
 
 
-def run_terminate_cloudwatch_alarm_elasticbeanstalk(name, settings):
+def run_terminate_cloudwatch_alarm(name, settings):
     phase = env['common']['PHASE']
     region = settings['AWS_DEFAULT_REGION']
     aws_cli = AWSCli(region)
@@ -22,7 +22,7 @@ def run_terminate_cloudwatch_alarm_elasticbeanstalk(name, settings):
 
     cmd = ['cloudwatch', 'delete-alarms']
     cmd += ['--alarm-names', alarm_name]
-    aws_cli.run(cmd)
+    aws_cli.run(cmd, ignore_error=True)
 
 
 ################################################################################
@@ -35,5 +35,4 @@ print_session('terminate cloudwatch alarm')
 cw = env.get('cloudwatch', dict())
 cw_alarms_list = cw.get('ALARMS', list())
 for cw_alarm_env in cw_alarms_list:
-    if cw_alarm_env['TYPE'] == 'elasticbeanstalk':
-        run_terminate_cloudwatch_alarm_elasticbeanstalk(cw_alarm_env['NAME'], cw_alarm_env)
+    run_terminate_cloudwatch_alarm(cw_alarm_env['NAME'], cw_alarm_env)
