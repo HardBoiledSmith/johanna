@@ -25,7 +25,9 @@ def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
     env_list = list()
     for ee in result['Environments']:
         cname = ee['CNAME']
-        if not cname.endswith('%s.%s.elasticbeanstalk.com' % (name, region)):
+        if not cname.endswith('%s.elasticbeanstalk.com' % region):
+            continue
+        if '%s.' % name not in cname and '%s2.' % name not in cname:
             continue
         ename = ee['EnvironmentName']
         if ename.startswith(name):
