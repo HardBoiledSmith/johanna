@@ -30,8 +30,8 @@ def run_create_lambda_sns(name, settings):
     topic_arn_list = list()
 
     for sns_topic_name in settings['SNS_TOPICS_NAMES']:
+        print_message('check topic exists: %s' % sns_topic_name)
         region, topic_name = sns_topic_name.split('/')
-        print_message('check topic exists: %s' % topic_name)
         topic_arn = AWSCli(region).get_topic_arn(topic_name)
         if not topic_arn:
             raise Exception()
