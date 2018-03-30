@@ -10,10 +10,11 @@ if __name__ == "__main__":
 
     parse_args()
 
-aws_cli = AWSCli()
 
+def run_create_sns_topic(name, settings):
+    region = settings['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(region)
 
-def run_create_sns_topic(name):
     ################################################################################
     print_message('create sns topic: %s' % name)
 
@@ -33,4 +34,4 @@ print_session('create sns')
 sns_list = env.get('sns', list())
 for sns_env in sns_list:
     if sns_env['TYPE'] == 'topic':
-        run_create_sns_topic(sns_env['NAME'])
+        run_create_sns_topic(sns_env['NAME'], sns_env)
