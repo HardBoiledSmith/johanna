@@ -40,7 +40,7 @@ target_cw_alarm_name = args[1]
 target_cw_alarm_name_exists = False
 
 if len(args) == 2:
-    for cw_alarm_env in cw.get('DASHBOARDS', list()):
+    for cw_alarm_env in cw.get('ALARMS', list()):
         if cw_alarm_env['NAME'] == target_cw_alarm_name:
             target_cw_alarm_name_exists = True
             run_terminate_cw_alarm(cw_alarm_env['NAME'], cw_alarm_env)
