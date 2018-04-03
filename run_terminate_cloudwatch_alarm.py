@@ -5,13 +5,15 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
+args = []
+
 if __name__ == "__main__":
     from run_common import parse_args
 
-    parse_args()
+    args = parse_args()
 
 
-def run_terminate_cloudwatch_alarm(name, settings):
+def run_terminate_cw_alarm(name, settings):
     phase = env['common']['PHASE']
     region = settings['AWS_DEFAULT_REGION']
     aws_cli = AWSCli(region)
@@ -33,6 +35,17 @@ def run_terminate_cloudwatch_alarm(name, settings):
 print_session('terminate cloudwatch alarm')
 
 cw = env.get('cloudwatch', dict())
-cw_alarms_list = cw.get('ALARMS', list())
-for cw_alarm_env in cw_alarms_list:
-    run_terminate_cloudwatch_alarm(cw_alarm_env['NAME'], cw_alarm_env)
+
+target_cw_alarm_name = args[1]
+target_cw_alarm_name_exists = False
+
+if len(args) == 2:
+    for cw_alarm_env in cw.get('DASHBOARDS', list()):
+        if cw_alarm_env['NAME'] == target_cw_alarm_name:
+            target_cw_alarm_name_exists = True
+            run_terminate_cw_alarm(cw_alarm_env['NAME'], cw_alarm_env)
+    if not target_cw_alarm_name_exists:
+        print('"%s" is not exists in config.json' % target_cw_alarm_name)
+else:
+    for cw_alarm_env in cw.get('ALARMS', list()):
+        run_terminate_cw_alarm(cw_alarm_env['NAME'], cw_alarm_env)
