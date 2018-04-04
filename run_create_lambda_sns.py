@@ -34,6 +34,7 @@ def run_create_lambda_sns(name, settings):
         region, topic_name = sns_topic_name.split('/')
         topic_arn = AWSCli(region).get_topic_arn(topic_name)
         if not topic_arn:
+            print('sns topic: "%s" is not exists in %s' % (settings['SNS_TOPIC_NAME'], region))
             raise Exception()
         topic_arn_list.append(topic_arn)
 

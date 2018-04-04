@@ -5,16 +5,18 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
+args = []
+
 if __name__ == "__main__":
     from run_common import parse_args
 
-    parse_args()
+    args = parse_args()
 
 
 def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
     phase = env['common']['PHASE']
-    region = settings['AWS_DEFAULT_REGION']
-    aws_cli = AWSCli(region)
+    alarm_region = settings['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(alarm_region)
 
     print_message('get elasticbeanstalk environment info: %s' % name)
 
@@ -25,7 +27,7 @@ def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
     env_list = list()
     for ee in result['Environments']:
         cname = ee['CNAME']
-        if not cname.endswith('%s.elasticbeanstalk.com' % region):
+        if not cname.endswith('%s.elasticbeanstalk.com' % alarm_region):
             continue
         if '%s.' % name not in cname and '%s2.' % name not in cname:
             continue
@@ -47,11 +49,12 @@ def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
             env_instances_list.append(ii)
 
     ################################################################################
-    alarm_name = '%s-%s_%s_%s' % (phase, name, region, settings['METRIC_NAME'])
+    alarm_name = '%s-%s_%s_%s' % (phase, name, alarm_region, settings['METRIC_NAME'])
     print_message('create or update cloudwatch alarm: %s' % alarm_name)
 
     topic_arn = aws_cli.get_topic_arn(settings['SNS_TOPIC_NAME'])
     if not topic_arn:
+        print('sns topic: "%s" is not exists in %s' % (settings['SNS_TOPIC_NAME'], alarm_region))
         raise Exception()
 
     dimension_list = list()
@@ -82,14 +85,15 @@ def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
 
 def run_create_cloudwatch_alarm_rds(name, settings):
     phase = env['common']['PHASE']
-    region = settings['AWS_DEFAULT_REGION']
-    aws_cli = AWSCli(region)
+    alarm_region = settings['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(alarm_region)
 
-    alarm_name = '%s-%s_%s_%s' % (phase, name, region, settings['METRIC_NAME'])
+    alarm_name = '%s-%s_%s_%s' % (phase, name, alarm_region, settings['METRIC_NAME'])
     print_message('create or update cloudwatch alarm: %s' % alarm_name)
 
     topic_arn = aws_cli.get_topic_arn(settings['SNS_TOPIC_NAME'])
     if not topic_arn:
+        print('sns topic: "%s" is not exists in %s' % (settings['SNS_TOPIC_NAME'], alarm_region))
         raise Exception()
 
     dimension_list = list()
@@ -122,9 +126,36 @@ def run_create_cloudwatch_alarm_rds(name, settings):
 print_session('create cloudwatch alarm')
 
 cw = env.get('cloudwatch', dict())
-cw_alarms_list = cw.get('ALARMS', list())
-for cw_alarm_env in cw_alarms_list:
+target_cw_alarm_name = None
+region = None
+check_exists = False
+
+if len(args) > 1:
+    target_cw_alarm_name = args[1]
+
+if len(args) > 2:
+    region = args[2]
+
+for cw_alarm_env in cw.get('ALARMS', list()):
+    if target_cw_alarm_name and cw_alarm_env['NAME'] != target_cw_alarm_name:
+        continue
+
+    if region and cw_alarm_env.get('AWS_DEFAULT_REGION') != region:
+        continue
+
+    if target_cw_alarm_name:
+        check_exists = True
+
     if cw_alarm_env['TYPE'] == 'elasticbeanstalk':
         run_create_cloudwatch_alarm_elasticbeanstalk(cw_alarm_env['NAME'], cw_alarm_env)
-    if cw_alarm_env['TYPE'] == 'rds':
+    elif cw_alarm_env['TYPE'] == 'rds':
         run_create_cloudwatch_alarm_rds(cw_alarm_env['NAME'], cw_alarm_env)
+    else:
+        print('"%s" is not supported' % cw_alarm_env['TYPE'])
+        raise Exception()
+
+if not check_exists and target_cw_alarm_name and not region:
+    print('"%s" is not exists in config.json' % target_cw_alarm_name)
+
+if not check_exists and target_cw_alarm_name and region:
+    print('"%s, %s" is not exists in config.json' % (target_cw_alarm_name, region))
