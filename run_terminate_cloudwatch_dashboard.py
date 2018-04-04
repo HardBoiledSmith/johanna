@@ -34,10 +34,10 @@ print_session('terminate cloudwatch dashboard')
 
 cw = env.get('cloudwatch', dict())
 
-target_cw_dashboard_name = args[1]
-target_cw_dashboard_name_exists = False
-
 if len(args) == 2:
+    target_cw_dashboard_name = args[1]
+    target_cw_dashboard_name_exists = False
+
     for cw_dashboard_env in cw.get('DASHBOARDS', list()):
         if cw_dashboard_env['NAME'] == target_cw_dashboard_name:
             target_cw_dashboard_name_exists = True

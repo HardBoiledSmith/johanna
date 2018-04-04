@@ -54,6 +54,7 @@ def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
 
     topic_arn = aws_cli.get_topic_arn(settings['SNS_TOPIC_NAME'])
     if not topic_arn:
+        print('sns topic: "%s" is not exists in %s' % (settings['SNS_TOPIC_NAME'], alarm_region))
         raise Exception()
 
     dimension_list = list()
@@ -92,6 +93,7 @@ def run_create_cloudwatch_alarm_rds(name, settings):
 
     topic_arn = aws_cli.get_topic_arn(settings['SNS_TOPIC_NAME'])
     if not topic_arn:
+        print('sns topic: "%s" is not exists in %s' % (settings['SNS_TOPIC_NAME'], alarm_region))
         raise Exception()
 
     dimension_list = list()
