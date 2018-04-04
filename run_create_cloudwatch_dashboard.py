@@ -3,18 +3,21 @@ import json
 
 from env import env
 from run_common import AWSCli
+from run_common import check_template_availability
 from run_common import print_message
 from run_common import print_session
+
+args = []
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    parse_args()
+    args = parse_args()
 
 
-def run_create_cloudwatch_dashboard_elasticbeanstalk(name, settings):
-    region = settings['AWS_DEFAULT_REGION']
-    aws_cli = AWSCli(region)
+def run_create_cw_dashboard_elasticbeanstalk(name, settings):
+    dashboard_region = settings['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(dashboard_region)
 
     print_message('get elasticbeanstalk environment info: %s' % name)
 
@@ -42,7 +45,7 @@ def run_create_cloudwatch_dashboard_elasticbeanstalk(name, settings):
             env_instances_list.append(ii)
 
     ################################################################################
-    dashboard_name = '%s_%s' % (name, region)
+    dashboard_name = '%s_%s' % (name, dashboard_region)
     print_message('create or update cloudwatch dashboard: %s' % dashboard_name)
 
     template_name = env['template']['NAME']
@@ -84,7 +87,7 @@ def run_create_cloudwatch_dashboard_elasticbeanstalk(name, settings):
     aws_cli.run(cmd)
 
 
-def run_create_cloudwatch_dashboard_rds_aurora(name, settings):
+def run_create_cw_dashboard_rds_aurora(name, settings):
     if not env.get('rds'):
         print_message('No RDS settings in config.json')
         return
@@ -92,15 +95,15 @@ def run_create_cloudwatch_dashboard_rds_aurora(name, settings):
     if env['rds'].get('ENGINE') != 'aurora':
         print_message('Only RDS Aurora supported')
 
-    region = settings['AWS_DEFAULT_REGION']
-    aws_cli = AWSCli(region)
+    dashboard_region = settings['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(dashboard_region)
 
     cluster_id = env['rds']['DB_CLUSTER_ID']
     instance_role_list = list()
     instance_role_list.append('WRITER')
     instance_role_list.append('READER')
 
-    dashboard_name = '%s_%s' % (name, region)
+    dashboard_name = '%s_%s' % (name, dashboard_region)
     print_message('create or update cloudwatch dashboard: %s' % dashboard_name)
 
     template_name = env['template']['NAME']
@@ -147,10 +150,39 @@ def run_create_cloudwatch_dashboard_rds_aurora(name, settings):
 ################################################################################
 print_session('create cloudwatch dashboard')
 
+check_template_availability()
+
 cw = env.get('cloudwatch', dict())
-cw_dashboards_list = cw.get('DASHBOARDS', list())
-for cw_dashboard_env in cw_dashboards_list:
+target_cw_dashboard_name = None
+region = None
+check_exists = False
+
+if len(args) > 1:
+    target_cw_dashboard_name = args[1]
+
+if len(args) > 2:
+    region = args[2]
+
+for cw_dashboard_env in cw.get('DASHBOARDS', list()):
+    if target_cw_dashboard_name and cw_dashboard_env['NAME'] != target_cw_dashboard_name:
+        continue
+
+    if region and cw_dashboard_env.get('AWS_DEFAULT_REGION') != region:
+        continue
+
+    if target_cw_dashboard_name:
+        check_exists = True
+
     if cw_dashboard_env['TYPE'] == 'elasticbeanstalk':
-        run_create_cloudwatch_dashboard_elasticbeanstalk(cw_dashboard_env['NAME'], cw_dashboard_env)
-    if cw_dashboard_env['TYPE'] == 'rds/aurora':
-        run_create_cloudwatch_dashboard_rds_aurora(cw_dashboard_env['NAME'], cw_dashboard_env)
+        run_create_cw_dashboard_elasticbeanstalk(cw_dashboard_env['NAME'], cw_dashboard_env)
+    elif cw_dashboard_env['TYPE'] == 'rds/aurora':
+        run_create_cw_dashboard_rds_aurora(cw_dashboard_env['NAME'], cw_dashboard_env)
+    else:
+        print('"%s" is not supported' % cw_dashboard_env['TYPE'])
+        raise Exception()
+
+if not check_exists and target_cw_dashboard_name and not region:
+    print('"%s" is not exists in config.json' % target_cw_dashboard_name)
+
+if not check_exists and target_cw_dashboard_name and region:
+    print('"%s, %s" is not exists in config.json' % (target_cw_dashboard_name, region))
