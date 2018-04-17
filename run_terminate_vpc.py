@@ -4,10 +4,12 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
+args = []
+
 if __name__ == "__main__":
     from run_common import parse_args
 
-    parse_args()
+    args = parse_args()
 
 
 def main(settings):
@@ -299,6 +301,20 @@ def main(settings):
 ################################################################################
 print_session('terminate vpc')
 
-################################################################################
+region = None
+check_exists = False
+
+if len(args) > 1:
+    region = args[1]
+
 for vpc_env in env['vpc']:
+
+    if region and vpc_env.get('AWS_DEFAULT_REGION') != region:
+        continue
+
+    check_exists = True
+
     main(vpc_env)
+
+if not check_exists and region:
+    print('vpc for "%s" is not exists in config.json' % region)

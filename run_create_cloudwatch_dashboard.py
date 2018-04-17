@@ -143,6 +143,46 @@ def run_create_cw_dashboard_rds_aurora(name, settings):
     aws_cli.run(cmd)
 
 
+def run_create_cw_dashboard_sqs_lambda(name, settings):
+    phase = env['common']['PHASE']
+    dashboard_region = settings['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(dashboard_region)
+
+    dashboard_name = '%s_%s' % (name, dashboard_region)
+    print_message('create or update cloudwatch dashboard: %s' % dashboard_name)
+
+    template_name = env['template']['NAME']
+
+    filename_path = 'template/%s/cloudwatch/%s.json' % (template_name, dashboard_name)
+    with open(filename_path, 'r') as ff:
+        dashboard_body = json.load(ff)
+
+    for dw in dashboard_body['widgets']:
+        pm = dw['properties']['metrics']
+
+        current_index = 0
+
+        for pp in pm:
+            template = json.dumps(pp)
+            template = template.replace('PHASE-', '%s-' % phase)
+            pm[current_index] = json.loads(template)
+            current_index += 1
+
+        dw['properties']['metrics'] = pm
+
+        title = dw['properties']['title']
+        if title.startswith('SQS: PHASE-'):
+            title = title.replace('SQS: PHASE-', 'SQS: %s-' % phase)
+            dw['properties']['title'] = title
+
+    dashboard_body = json.dumps(dashboard_body)
+
+    cmd = ['cloudwatch', 'put-dashboard']
+    cmd += ['--dashboard-name', dashboard_name]
+    cmd += ['--dashboard-body', dashboard_body]
+    aws_cli.run(cmd)
+
+
 ################################################################################
 #
 # start
@@ -177,6 +217,8 @@ for cw_dashboard_env in cw.get('DASHBOARDS', list()):
         run_create_cw_dashboard_elasticbeanstalk(cw_dashboard_env['NAME'], cw_dashboard_env)
     elif cw_dashboard_env['TYPE'] == 'rds/aurora':
         run_create_cw_dashboard_rds_aurora(cw_dashboard_env['NAME'], cw_dashboard_env)
+    elif cw_dashboard_env['TYPE'] == 'sqs,lambda':
+        run_create_cw_dashboard_sqs_lambda(cw_dashboard_env['NAME'], cw_dashboard_env)
     else:
         print('"%s" is not supported' % cw_dashboard_env['TYPE'])
         raise Exception()
