@@ -139,9 +139,6 @@ def run_create_eb_openvpn(name, settings):
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
     write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
 
-    lines = read_file('%s/collectd_sample.conf' % etc_config_path)
-    write_file('%s/collectd.conf' % etc_config_path, lines)
-
     lines = read_file('%s/openvpn/server_sample.conf' % etc_config_path)
     lines = re_sub_lines(lines, 'OPENVPN_SUBNET_IP', openvpn_subnet_ip)
     write_file('%s/openvpn/server.conf' % etc_config_path, lines)
