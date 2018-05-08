@@ -132,9 +132,6 @@ def run_create_eb_django(name, settings):
     lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
     write_file('%s/my.cnf' % app_config_path, lines)
 
-    lines = read_file('%s/collectd_sample.conf' % etc_config_path)
-    write_file('%s/collectd.conf' % etc_config_path, lines)
-
     lines = read_file('%s/settings_local_sample.py' % app_config_path)
     lines = re_sub_lines(lines, '^(DEBUG).*', '\\1 = %s' % debug)
     option_list = list()

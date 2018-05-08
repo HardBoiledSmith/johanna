@@ -46,7 +46,6 @@ def run_create_eb_cron_job(name, settings):
 
     template_path = 'template/%s' % template_name
     environment_path = '%s/elasticbeanstalk/%s' % (template_path, name)
-    etc_config_path = '%s/configuration/etc' % environment_path
 
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
@@ -121,9 +120,6 @@ def run_create_eb_cron_job(name, settings):
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
     write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
-
-    lines = read_file('%s/collectd_sample.conf' % etc_config_path)
-    write_file('%s/collectd.conf' % etc_config_path, lines)
 
     ################################################################################
     print_message('git clone')

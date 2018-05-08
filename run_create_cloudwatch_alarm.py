@@ -118,6 +118,41 @@ def run_create_cloudwatch_alarm_rds(name, settings):
     aws_cli.run(cmd)
 
 
+def run_create_cloudwatch_alarm_sqs(name, settings):
+    phase = env['common']['PHASE']
+    alarm_region = settings['AWS_DEFAULT_REGION']
+    sqs_name = settings['QUEUE_NAME']
+    aws_cli = AWSCli(alarm_region)
+
+    alarm_name = '%s-%s_%s_%s_%s' % (phase, name, alarm_region, sqs_name, settings['METRIC_NAME'])
+    print_message('create or update cloudwatch alarm: %s' % alarm_name)
+
+    topic_arn = aws_cli.get_topic_arn(settings['SNS_TOPIC_NAME'])
+    if not topic_arn:
+        print('sns topic: "%s" is not exists in %s' % (settings['SNS_TOPIC_NAME'], alarm_region))
+        raise Exception()
+
+    dimension_list = list()
+    if settings['DIMENSIONS'] == 'QueueName':
+        dimension = 'Name=QueueName,Value=%s' % sqs_name
+        dimension_list.append(dimension)
+
+    cmd = ['cloudwatch', 'put-metric-alarm']
+    cmd += ['--alarm-actions', topic_arn]
+    cmd += ['--alarm-description', settings['DESCRIPTION']]
+    cmd += ['--alarm-name', alarm_name]
+    cmd += ['--comparison-operator', settings['COMPARISON_OPERATOR']]
+    cmd += ['--datapoints-to-alarm', settings['DATAPOINTS_TO_ALARM']]
+    cmd += ['--dimensions', ' '.join(dimension_list)]
+    cmd += ['--evaluation-periods', settings['EVALUATION_PERIODS']]
+    cmd += ['--metric-name', settings['METRIC_NAME']]
+    cmd += ['--namespace', settings['NAMESPACE']]
+    cmd += ['--period', settings['PERIOD']]
+    cmd += ['--statistic', settings['STATISTIC']]
+    cmd += ['--threshold', settings['THRESHOLD']]
+    aws_cli.run(cmd)
+
+
 ################################################################################
 #
 # start
@@ -150,6 +185,8 @@ for cw_alarm_env in cw.get('ALARMS', list()):
         run_create_cloudwatch_alarm_elasticbeanstalk(cw_alarm_env['NAME'], cw_alarm_env)
     elif cw_alarm_env['TYPE'] == 'rds':
         run_create_cloudwatch_alarm_rds(cw_alarm_env['NAME'], cw_alarm_env)
+    elif cw_alarm_env['TYPE'] == 'sqs':
+        run_create_cloudwatch_alarm_sqs(cw_alarm_env['NAME'], cw_alarm_env)
     else:
         print('"%s" is not supported' % cw_alarm_env['TYPE'])
         raise Exception()
