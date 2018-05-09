@@ -11,6 +11,15 @@ if __name__ == "__main__":
 
 aws_cli = AWSCli()
 
+
+def terminate_iam_for_rds():
+    print_message('delete iam role')
+
+    cc = ['iam', 'delete-role']
+    cc += ['--role-name', 'rds-monitoring-role']
+    aws_cli.run(cc, ignore_error=True)
+
+
 db_instance_id = env['rds']['DB_INSTANCE_ID']
 engine = env['rds']['ENGINE']
 
@@ -29,6 +38,7 @@ if engine == 'mysql':
     cmd += ['--db-instance-identifier', db_instance_id]
     cmd += ['--skip-final-snapshot']
     aws_cli.run(cmd, ignore_error=True)
+    terminate_iam_for_rds()
 elif engine == 'aurora':
     cmd = ['rds', 'delete-db-instance']
     cmd += ['--db-instance-identifier', db_instance_id]
@@ -38,5 +48,6 @@ elif engine == 'aurora':
     cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
     cmd += ['--skip-final-snapshot']
     aws_cli.run(cmd, ignore_error=True)
+    terminate_iam_for_rds()
 else:
     raise Exception()
