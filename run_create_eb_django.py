@@ -111,6 +111,7 @@ def run_create_eb_django(name, settings):
 
     print_message('get database address')
     db_address = aws_cli.get_rds_address()
+    db_address_read_replica = aws_cli.get_rds_address(read_replica=True)
 
     ################################################################################
     print_message('configuration %s' % name)
@@ -131,6 +132,13 @@ def run_create_eb_django(name, settings):
     lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
     lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
     write_file('%s/my.cnf' % app_config_path, lines)
+    write_file('%s/my_primary.cnf' % app_config_path, lines)
+
+    lines = read_file('%s/my_sample.cnf' % app_config_path)
+    lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address_read_replica)
+    lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
+    lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
+    write_file('%s/my_replica.cnf' % app_config_path, lines)
 
     lines = read_file('%s/settings_local_sample.py' % app_config_path)
     lines = re_sub_lines(lines, '^(DEBUG).*', '\\1 = %s' % debug)
