@@ -23,6 +23,11 @@ def create_iam_for_rds():
         cc += ['--assume-role-policy-document', 'file://aws_iam/rds-monitoring-role.json']
         aws_cli.run(cc)
 
+        cc = ['iam', 'attach-role-policy']
+        cc += ['--role-name', role_name]
+        cc += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole']
+        aws_cli.run(cc)
+
 
 db_backup_retention_period = env['rds']['BACKUP_RETENTION_PERIOD']
 db_instance_class = env['rds']['DB_CLASS']
