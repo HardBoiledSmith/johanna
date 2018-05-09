@@ -24,12 +24,12 @@ if engine not in ('mysql', 'aurora'):
 print_message('get database address')
 
 if env['common']['PHASE'] != 'dv':
-    db_host = aws_cli.get_rds_address(read_replica=True)
+    db_host = aws_cli.get_rds_address()
 else:
     while True:
         answer = input('Do you use a database of Vagrant VM? (yes/no): ')
         if answer.lower() == 'no':
-            db_host = aws_cli.get_rds_address(read_replica=True)
+            db_host = aws_cli.get_rds_address()
             break
         if answer.lower() == 'yes':
             db_host = 'dv-database.hbsmith.io'
