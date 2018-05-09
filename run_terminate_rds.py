@@ -16,7 +16,7 @@ def terminate_iam_for_rds():
     print_message('delete iam role')
 
     cc = ['iam', 'detach-role-policy']
-    cc += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
+    cc += ['--role-name', 'rds-monitoring-role']
     cc += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole']
     aws_cli.run(cc, ignore_error=True)
 
