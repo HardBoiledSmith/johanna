@@ -217,7 +217,7 @@ def run_create_eb_cron_job(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'InstanceType'
-    oo['Value'] = 't2.nano'
+    oo['Value'] = 't2.small'
     option_settings.append(oo)
 
     oo = dict()
