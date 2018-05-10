@@ -20,6 +20,11 @@ def run_terminate_cw_alarm(name, settings):
 
     ################################################################################
     alarm_name = '%s-%s_%s_%s' % (phase, name, region, settings['METRIC_NAME'])
+
+    if settings['TYPE'] == 'sqs':
+        sqs_name = settings['QUEUE_NAME']
+        alarm_name = '%s-%s_%s_%s_%s' % (phase, name, region, sqs_name, settings['METRIC_NAME'])
+
     print_message('terminate cloudwatch alarm: %s' % alarm_name)
 
     cmd = ['cloudwatch', 'delete-alarms']
