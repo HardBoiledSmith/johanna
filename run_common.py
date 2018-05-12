@@ -120,30 +120,50 @@ class AWSCli:
         return rds_vpc_id, eb_vpc_id
 
     def get_elasticache_address(self):
-        cmd = ['elasticache', 'describe-cache-clusters', '--show-cache-node-info']
+        engine = env['elasticache']['ENGINE']
+        cache_cluster_id = env['elasticache']['CACHE_CLUSTER_ID']
+        if engine == 'redis':
+            cmd = ['elasticache', 'describe-cache-clusters']
+            cmd += ['--show-cache-node-info']
+            cmd += ['--show-cache-clusters-not-in-replication-groups']
 
-        elapsed_time = 0
-        cache_address = None
-        while not cache_address:
-            result = self.run(cmd)
+            elapsed_time = 0
+            cache_address = None
+            while not cache_address:
+                result = self.run(cmd)
 
-            # noinspection PyBroadException
-            try:
-                cache_clusters = result['CacheClusters'][0]
-                cache_nodes = dict(cache_clusters)['CacheNodes'][0]
-                cache_endpoint = dict(cache_nodes)['Endpoint']
-                cache_address = dict(cache_endpoint)['Address']
-                if cache_address:
-                    return cache_address
-            except Exception:
-                pass
+                # noinspection PyBroadException
+                try:
+                    for cache_cluster in result['CacheClusters']:
+                        cache_cluster = dict(cache_cluster)
 
-            print('waiting for a new cache... (elapsed time: \'%d\' seconds)' % elapsed_time)
-            time.sleep(5)
-            elapsed_time += 5
+                        if cache_cluster['CacheClusterStatus'] != 'available':
+                            continue
 
-            if elapsed_time > 60 * 30:
-                raise Exception()
+                        if cache_cluster['CacheClusterId'] != cache_cluster_id:
+                            continue
+
+                        cache_nodes = list(cache_cluster['CacheNodes'])
+
+                        if len(cache_nodes) < 1:
+                            continue
+
+                        cache_endpoint = cache_nodes[0]['Endpoint']
+                        cache_address = cache_endpoint['Address']
+
+                        if cache_address:
+                            return cache_address
+                except Exception:
+                    pass
+
+                print('waiting for a new elasticache... (elapsed time: \'%d\' seconds)' % elapsed_time)
+                time.sleep(5)
+                elapsed_time += 5
+
+                if elapsed_time > 60 * 30:
+                    raise Exception()
+        else:
+            raise Exception()
 
     def get_rds_address(self, read_replica=None):
         engine = env['rds']['ENGINE']
@@ -166,13 +186,13 @@ class AWSCli:
                         if read_replica and 'ReaderEndpoint' not in db_cluster:
                             continue
 
-                        db_endpoint = db_cluster['Endpoint']
+                        db_address = db_cluster['Endpoint']
 
                         if read_replica:
-                            db_endpoint = db_cluster['ReaderEndpoint']
+                            db_address = db_cluster['ReaderEndpoint']
 
-                        if db_endpoint:
-                            return db_endpoint
+                        if db_address:
+                            return db_address
                 except Exception:
                     pass
 

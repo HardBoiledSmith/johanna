@@ -6,6 +6,7 @@ from run_common import print_session
 from run_create_eb_cron_job import run_create_eb_cron_job
 from run_create_eb_django import run_create_eb_django
 from run_create_eb_openvpn import run_create_eb_openvpn
+from run_create_eb_spring import run_create_eb_spring
 
 args = []
 
@@ -51,6 +52,8 @@ for eb_env in eb['ENVIRONMENTS']:
         run_create_eb_django(eb_env['NAME'], eb_env)
     elif eb_env['TYPE'] == 'openvpn':
         run_create_eb_openvpn(eb_env['NAME'], eb_env)
+    elif eb_env['TYPE'] == 'spring':
+        run_create_eb_spring(eb_env['NAME'], eb_env)
     else:
         print('"%s" is not supported' % eb_env['TYPE'])
         raise Exception()
