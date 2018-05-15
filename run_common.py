@@ -378,6 +378,31 @@ class AWSCli:
             time.sleep(5)
             elapsed_time += 5
 
+    def wait_create_rds_cluster(self, cluster_identifier):
+        cmd = ['rds', 'describe-db-clusters']
+        cmd += ['--db-cluster-identifier', cluster_identifier]
+
+        elapsed_time = 0
+        while True:
+            result = self.run(cmd)
+
+            # noinspection PyBroadException
+            try:
+                for db_cluster in result['DBClusters']:
+                    db_cluster = dict(db_cluster)
+
+                    if db_cluster['Status'] == 'available':
+                        return
+            except Exception:
+                pass
+
+            print('waiting for a new cluster is ready... (elapsed time: \'%d\' seconds)' % elapsed_time)
+            time.sleep(5)
+            elapsed_time += 5
+
+            if elapsed_time > 60 * 30:
+                raise Exception()
+
     def wait_create_nat_gateway(self, eb_vpc_id=None):
         cmd = ['ec2', 'describe-nat-gateways']
 
