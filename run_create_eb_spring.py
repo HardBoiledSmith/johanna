@@ -99,7 +99,7 @@ def run_create_eb_spring(name, settings):
         if r['VpcId'] != eb_vpc_id:
             continue
         if 'public' == subnet_type:
-            if r['GroupName'] == '%seb_public' % name_prefix:
+            if r['GroupName'] == '%seb_private' % name_prefix:
                 security_group_id = r['GroupId']
                 break
         elif 'private' == subnet_type:
@@ -123,9 +123,9 @@ def run_create_eb_spring(name, settings):
 
     subprocess.Popen(['rm', '-rf', '%s/' % name], cwd='template').communicate()
     if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', '-b', 'dev', git_url]
+        git_command = ['git', 'clone', '--depth=1', '-b', 'SS2-1310', git_url]
     else:
-        git_command = ['git', 'clone', '--depth=1', '-b', 'master', git_url]
+        git_command = ['git', 'clone', '--depth=1', '-b', 'SS2-1310', git_url]
     subprocess.Popen(git_command, cwd='template').communicate()
     if not os.path.exists('%s' % template_folder):
         raise Exception()
@@ -143,6 +143,9 @@ def run_create_eb_spring(name, settings):
     with open('%s/phase' % configuration_folder, 'w') as f:
         f.write(phase)
         f.close()
+
+    lines = read_file('%s/etc/logstash/conf.d/logstash_sample.conf' % configuration_folder)
+    write_file('%s/etc/logstash/conf.d/logstash.conf' % configuration_folder, lines)
 
     lines = read_file('%s/%s.config.sample' % (ebextensions_folder, name))
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
@@ -204,7 +207,7 @@ def run_create_eb_spring(name, settings):
     ################################################################################
     print_message('create application version')
 
-    cmd = ['zip', '-r', zip_filename, '%s.war' % war_filename, '.ebextensions']
+    cmd = ['zip', '-r', zip_filename, '.']
     subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=provisioning_folder).communicate()
 
     cmd = ['s3', 'cp', zip_filename, s3_zip_filename]
@@ -233,7 +236,7 @@ def run_create_eb_spring(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'InstanceType'
-    oo['Value'] = 't2.nano'
+    oo['Value'] = 't2.micro'
     option_settings.append(oo)
 
     oo = dict()
@@ -251,15 +254,13 @@ def run_create_eb_spring(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'AssociatePublicIpAddress'
-    oo['Value'] = 'true'
-    if 'private' == subnet_type:
-        oo['Value'] = 'false'
+    oo['Value'] = 'false'
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'ELBScheme'
-    oo['Value'] = '...'
+    oo['Value'] = 'public'
     if 'private' == subnet_type:
         oo['Value'] = 'internal'
     option_settings.append(oo)
