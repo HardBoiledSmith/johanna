@@ -26,20 +26,19 @@ def run_create_eb_spring(name, settings):
     phase = env['common']['PHASE']
     service_name = env['common'].get('SERVICE_NAME', '')
     subnet_type = settings['SUBNET_TYPE']
-    war_filename = settings['WAR_FILENAME']
     name_prefix = '%s_' % service_name if service_name else ''
 
     cidr_subnet = aws_cli.cidr_subnet
 
     str_timestamp = str(int(time.time()))
 
-    zip_filename = '%s-%s.zip' % (name, str_timestamp)
+    war_filename = '%s-%s.war' % (name, str_timestamp)
 
     eb_environment_name = '%s-%s' % (name, str_timestamp)
     eb_environment_name_old = None
 
     template_folder = 'template/%s' % name
-    provisioning_folder = 'template/%s/_provisioning' % name
+    target_folder = 'template/%s/target' % name
     ebextensions_folder = 'template/%s/_provisioning/.ebextensions' % name
     configuration_folder = 'template/%s/_provisioning/configuration' % name
     properties_file = 'template/%s/%s' % (name, settings['PROPERTIES_FILE'])
@@ -193,7 +192,6 @@ def run_create_eb_spring(name, settings):
     print_message('build artifact')
 
     subprocess.Popen(['mvn', 'package'], cwd=template_folder).communicate()
-    subprocess.Popen(['cp', 'target/%s.war' % war_filename, '_provisioning'], cwd=template_folder).communicate()
 
     ################################################################################
     print_message('create storage location')
@@ -202,23 +200,23 @@ def run_create_eb_spring(name, settings):
     result = aws_cli.run(cmd)
 
     s3_bucket = result['S3Bucket']
-    s3_zip_filename = '/'.join(['s3://' + s3_bucket, eb_application_name, zip_filename])
+    s3_war_filename = '/'.join(['s3://' + s3_bucket, eb_application_name, war_filename])
 
     ################################################################################
     print_message('create application version')
 
-    cmd = ['zip', '-r', zip_filename, '.']
-    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=provisioning_folder).communicate()
+    cmd = ['mv', 'ROOT.war', war_filename]
+    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=target_folder).communicate()
 
-    cmd = ['s3', 'cp', zip_filename, s3_zip_filename]
-    aws_cli.run(cmd, cwd=provisioning_folder)
+    cmd = ['s3', 'cp', war_filename, s3_war_filename]
+    aws_cli.run(cmd, cwd=target_folder)
 
-    cmd = ['rm', '-rf', zip_filename]
-    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=provisioning_folder).communicate()
+    cmd = ['rm', '-rf', war_filename]
+    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=target_folder).communicate()
 
     cmd = ['elasticbeanstalk', 'create-application-version']
     cmd += ['--application-name', eb_application_name]
-    cmd += ['--source-bundle', 'S3Bucket="%s",S3Key="%s/%s"' % (s3_bucket, eb_application_name, zip_filename)]
+    cmd += ['--source-bundle', 'S3Bucket="%s",S3Key="%s/%s"' % (s3_bucket, eb_application_name, war_filename)]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_folder)
 
