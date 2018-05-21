@@ -20,7 +20,7 @@ def run_create_eb_spring(name, settings):
     aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
     aws_default_region = env['aws']['AWS_DEFAULT_REGION']
     cname = settings['CNAME']
-    db_connection_option = settings.get('DB_CONNECTION_OPTION', '')
+    db_conn_str_suffix = settings.get('DB_CONNECTION_STR_SUFFIX', '')
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
     key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
@@ -156,7 +156,7 @@ def run_create_eb_spring(name, settings):
     lines = read_file(sample_file)
     option_list = list()
     option_list.append(['operation_type', phase.upper()])
-    option_list.append(['jdbc.url', 'jdbc:mysql://%s%s' % (db_address, db_connection_option)])
+    option_list.append(['jdbc.url', 'jdbc:mysql://%s%s' % (db_address, db_conn_str_suffix)])
     option_list.append(['jdbc.username', env['rds']['USER_NAME']])
     option_list.append(['jdbc.password', env['rds']['USER_PASSWORD']])
     option_list.append(['redis.host', cache_address])
