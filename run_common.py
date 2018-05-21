@@ -168,6 +168,7 @@ class AWSCli:
     def get_rds_address(self, read_replica=None):
         engine = env['rds']['ENGINE']
         if engine == 'aurora':
+            cluster_id = env['rds']['DB_CLUSTER_ID']
             cmd = ['rds', 'describe-db-clusters']
 
             elapsed_time = 0
@@ -181,6 +182,9 @@ class AWSCli:
                         db_cluster = dict(db_cluster)
 
                         if db_cluster['Status'] != 'available':
+                            continue
+
+                        if db_cluster['DBClusterIdentifier'] != cluster_id:
                             continue
 
                         if read_replica and 'ReaderEndpoint' not in db_cluster:
@@ -203,6 +207,7 @@ class AWSCli:
                 if elapsed_time > 60 * 30:
                     raise Exception()
         else:
+            instance_id = env['rds']['DB_INSTANCE_ID']
             cmd = ['rds', 'describe-db-instances']
 
             elapsed_time = 0
@@ -212,15 +217,20 @@ class AWSCli:
 
                 # noinspection PyBroadException
                 try:
-                    for db_cluster in result['DBInstances']:
-                        db_cluster = dict(db_cluster)
+                    for db_instance in result['DBInstances']:
+                        db_instance = dict(db_instance)
 
-                        if not read_replica and 'ReadReplicaSourceDBInstanceIdentifier' in db_cluster:
+                        if not read_replica and 'ReadReplicaSourceDBInstanceIdentifier' in db_instance:
                             continue
-                        elif read_replica and 'ReadReplicaSourceDBInstanceIdentifier' not in db_cluster:
+                        elif read_replica and 'ReadReplicaSourceDBInstanceIdentifier' not in db_instance:
                             continue
 
-                        db_endpoint = db_cluster['Endpoint']
+                        if not read_replica and db_instance['DBInstanceIdentifier'] != instance_id:
+                            continue
+                        elif read_replica and db_instance['ReadReplicaSourceDBInstanceIdentifier'] != instance_id:
+                            continue
+
+                        db_endpoint = db_instance['Endpoint']
                         db_address = dict(db_endpoint)['Address']
 
                         if db_address:
