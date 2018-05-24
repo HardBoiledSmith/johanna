@@ -506,6 +506,7 @@ def re_sub_lines(lines, pattern, repl):
     return new_lines
 
 
+# TODO: This function must removed after resolve GEN-1863
 def check_template_availability():
     if 'template' not in env:
         print('template is not defined in config.json')

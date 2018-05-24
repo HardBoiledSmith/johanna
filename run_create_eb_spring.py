@@ -121,7 +121,10 @@ def run_create_eb_spring(name, settings):
     ################################################################################
     print_message('git clone')
 
+    subprocess.Popen(['mkdir', '-p', 'template']).communicate()
+
     subprocess.Popen(['rm', '-rf', '%s/' % name], cwd='template').communicate()
+    # TODO: Reference of branch SS2-1310 must be replaced into dev, master respectively
     if phase == 'dv':
         git_command = ['git', 'clone', '--depth=1', '-b', 'SS2-1310', git_url]
     else:
