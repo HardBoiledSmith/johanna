@@ -195,7 +195,12 @@ def run_create_eb_spring(name, settings):
     ################################################################################
     print_message('build artifact')
 
-    subprocess.Popen(['mvn', 'exec:exec', 'package'], cwd=template_folder).communicate()
+    build_command = ['mvn']
+    if phase != 'dv':
+        git_command += ['exec:exec']
+    build_command += ['package']
+
+    subprocess.Popen(build_command, cwd=template_folder).communicate()
 
     ################################################################################
     print_message('create storage location')
