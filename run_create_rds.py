@@ -118,6 +118,9 @@ elif engine == 'aurora':
     cmd += ['--master-username', master_user_name]
     cmd += ['--vpc-security-group-ids', security_group_id]
     aws_cli.run(cmd)
+
+    aws_cli.wait_create_rds_cluster(env['rds']['DB_CLUSTER_ID'])
+
     cmd = ['rds', 'create-db-instance']
     cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
     cmd += ['--db-instance-class', db_instance_class]

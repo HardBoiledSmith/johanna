@@ -120,34 +120,55 @@ class AWSCli:
         return rds_vpc_id, eb_vpc_id
 
     def get_elasticache_address(self):
-        cmd = ['elasticache', 'describe-cache-clusters', '--show-cache-node-info']
+        engine = env['elasticache']['ENGINE']
+        cache_cluster_id = env['elasticache']['CACHE_CLUSTER_ID']
+        if engine == 'redis':
+            cmd = ['elasticache', 'describe-cache-clusters']
+            cmd += ['--show-cache-node-info']
+            cmd += ['--show-cache-clusters-not-in-replication-groups']
 
-        elapsed_time = 0
-        cache_address = None
-        while not cache_address:
-            result = self.run(cmd)
+            elapsed_time = 0
+            cache_address = None
+            while not cache_address:
+                result = self.run(cmd)
 
-            # noinspection PyBroadException
-            try:
-                cache_clusters = result['CacheClusters'][0]
-                cache_nodes = dict(cache_clusters)['CacheNodes'][0]
-                cache_endpoint = dict(cache_nodes)['Endpoint']
-                cache_address = dict(cache_endpoint)['Address']
-                if cache_address:
-                    return cache_address
-            except Exception:
-                pass
+                # noinspection PyBroadException
+                try:
+                    for cache_cluster in result['CacheClusters']:
+                        cache_cluster = dict(cache_cluster)
 
-            print('waiting for a new cache... (elapsed time: \'%d\' seconds)' % elapsed_time)
-            time.sleep(5)
-            elapsed_time += 5
+                        if cache_cluster['CacheClusterStatus'] != 'available':
+                            continue
 
-            if elapsed_time > 60 * 30:
-                raise Exception()
+                        if cache_cluster['CacheClusterId'] != cache_cluster_id:
+                            continue
+
+                        cache_nodes = list(cache_cluster['CacheNodes'])
+
+                        if len(cache_nodes) < 1:
+                            continue
+
+                        cache_endpoint = cache_nodes[0]['Endpoint']
+                        cache_address = cache_endpoint['Address']
+
+                        if cache_address:
+                            return cache_address
+                except Exception:
+                    pass
+
+                print('waiting for a new elasticache... (elapsed time: \'%d\' seconds)' % elapsed_time)
+                time.sleep(5)
+                elapsed_time += 5
+
+                if elapsed_time > 60 * 30:
+                    raise Exception()
+        else:
+            raise Exception()
 
     def get_rds_address(self, read_replica=None):
         engine = env['rds']['ENGINE']
         if engine == 'aurora':
+            cluster_id = env['rds']['DB_CLUSTER_ID']
             cmd = ['rds', 'describe-db-clusters']
 
             elapsed_time = 0
@@ -163,16 +184,19 @@ class AWSCli:
                         if db_cluster['Status'] != 'available':
                             continue
 
+                        if db_cluster['DBClusterIdentifier'] != cluster_id:
+                            continue
+
                         if read_replica and 'ReaderEndpoint' not in db_cluster:
                             continue
 
-                        db_endpoint = db_cluster['Endpoint']
+                        db_address = db_cluster['Endpoint']
 
                         if read_replica:
-                            db_endpoint = db_cluster['ReaderEndpoint']
+                            db_address = db_cluster['ReaderEndpoint']
 
-                        if db_endpoint:
-                            return db_endpoint
+                        if db_address:
+                            return db_address
                 except Exception:
                     pass
 
@@ -183,6 +207,7 @@ class AWSCli:
                 if elapsed_time > 60 * 30:
                     raise Exception()
         else:
+            instance_id = env['rds']['DB_INSTANCE_ID']
             cmd = ['rds', 'describe-db-instances']
 
             elapsed_time = 0
@@ -192,15 +217,20 @@ class AWSCli:
 
                 # noinspection PyBroadException
                 try:
-                    for db_cluster in result['DBInstances']:
-                        db_cluster = dict(db_cluster)
+                    for db_instance in result['DBInstances']:
+                        db_instance = dict(db_instance)
 
-                        if not read_replica and 'ReadReplicaSourceDBInstanceIdentifier' in db_cluster:
+                        if not read_replica and 'ReadReplicaSourceDBInstanceIdentifier' in db_instance:
                             continue
-                        elif read_replica and 'ReadReplicaSourceDBInstanceIdentifier' not in db_cluster:
+                        elif read_replica and 'ReadReplicaSourceDBInstanceIdentifier' not in db_instance:
                             continue
 
-                        db_endpoint = db_cluster['Endpoint']
+                        if not read_replica and db_instance['DBInstanceIdentifier'] != instance_id:
+                            continue
+                        elif read_replica and db_instance['ReadReplicaSourceDBInstanceIdentifier'] != instance_id:
+                            continue
+
+                        db_endpoint = db_instance['Endpoint']
                         db_address = dict(db_endpoint)['Address']
 
                         if db_address:
@@ -358,6 +388,31 @@ class AWSCli:
             time.sleep(5)
             elapsed_time += 5
 
+    def wait_create_rds_cluster(self, cluster_identifier):
+        cmd = ['rds', 'describe-db-clusters']
+        cmd += ['--db-cluster-identifier', cluster_identifier]
+
+        elapsed_time = 0
+        while True:
+            result = self.run(cmd)
+
+            # noinspection PyBroadException
+            try:
+                for db_cluster in result['DBClusters']:
+                    db_cluster = dict(db_cluster)
+
+                    if db_cluster['Status'] == 'available':
+                        return
+            except Exception:
+                pass
+
+            print('waiting for a new cluster is ready... (elapsed time: \'%d\' seconds)' % elapsed_time)
+            time.sleep(5)
+            elapsed_time += 5
+
+            if elapsed_time > 60 * 30:
+                raise Exception()
+
     def wait_create_nat_gateway(self, eb_vpc_id=None):
         cmd = ['ec2', 'describe-nat-gateways']
 
@@ -451,6 +506,7 @@ def re_sub_lines(lines, pattern, repl):
     return new_lines
 
 
+# TODO: This function must removed after resolve GEN-1863
 def check_template_availability():
     if 'template' not in env:
         print('template is not defined in config.json')
