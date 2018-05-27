@@ -15,7 +15,7 @@ from run_common import print_session
 
 def _auto_hourly_backup(path_config):
     config_dict = dict()
-    with open(path_config + '/my.cnf', 'r') as ff:
+    with open(path_config + '/my_replica.cnf', 'r') as ff:
         ll_iter = ff.readlines()
         for ll in ll_iter:
             ll_part = ll.split('=')
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     args = parse_args()
 
     if len(args) != 2 \
-            or not os.path.exists(args[1] + '/my.cnf') \
+            or not os.path.exists(args[1] + '/my_replica.cnf') \
             or not os.path.exists(args[1] + '/settings_local.py'):
         print('input the path of \'my.conf\' and \'settings_local.py\'')
         sys.exit()

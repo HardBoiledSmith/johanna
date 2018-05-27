@@ -131,7 +131,6 @@ def run_create_eb_django(name, settings):
     lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address)
     lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
     lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
-    write_file('%s/my.cnf' % app_config_path, lines)
     write_file('%s/my_primary.cnf' % app_config_path, lines)
 
     lines = read_file('%s/my_sample.cnf' % app_config_path)
@@ -333,7 +332,7 @@ def run_create_eb_django(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2017.09 v2.6.6 running Python 3.6']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.7.0 running Python 3.6']
     cmd += ['--tags', tag0, tag1, tag2]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=environment_path)
