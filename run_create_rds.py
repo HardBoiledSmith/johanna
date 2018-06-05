@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import datetime
+
 from env import env
 from run_common import AWSCli
 from run_common import check_template_availability
@@ -130,7 +132,15 @@ elif engine == 'aurora':
     cmd += ['--license-model', license_model]
     cmd += ['--monitoring-interval', monitoring_interval]
     cmd += ['--monitoring-role-arn', monitoring_role_arn]
-    cmd += [db_multi_az]
     aws_cli.run(cmd)
+
+    if db_multi_az:
+        cmd = ['rds', 'create-db-instance']
+        cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
+        ss = datetime.datetime.today().strftime('%Y%m%d')
+        cmd += ['--db-instance-identifier', '%s-%s' % (db_instance_id, ss)]
+        cmd += ['--db-instance-class', db_instance_class]
+        cmd += ['--engine', engine]
+        aws_cli.run(cmd)
 else:
     raise Exception()
