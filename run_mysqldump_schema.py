@@ -35,6 +35,12 @@ def _auto_hourly_backup(path_config):
     filename_zip = filename + '.zip'
     cwd_filename = '/'.join([cwd, filename])
 
+    cmd = ['rm', '-f', 'mysql_schema_*.sql']
+    subprocess.Popen(cmd, cwd=cwd, stdout=PIPE).communicate()
+
+    cmd = ['rm', '-f', 'mysql_schema_*.sql.raw']
+    subprocess.Popen(cmd, cwd=cwd, stdout=PIPE).communicate()
+
     _mysql_dump(host, user, password, database, cwd_filename)
 
     cmd = ['zip']
