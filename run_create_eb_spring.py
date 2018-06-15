@@ -124,11 +124,12 @@ def run_create_eb_spring(name, settings):
     subprocess.Popen(['mkdir', '-p', 'template']).communicate()
 
     subprocess.Popen(['rm', '-rf', '%s/' % name], cwd='template').communicate()
-    # TODO: Reference of branch SS2-1310 must be replaced into dev, master respectively
-    if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', '-b', 'SS2-1310', git_url]
-    else:
-        git_command = ['git', 'clone', '--depth=1', '-b', 'SS2-1310', git_url]
+
+    branch = aws_cli.env.get('GIT_BRANCH_APP', phase)
+    git_command = ['git', 'clone', '--depth=1']
+    if branch != 'dv':
+        git_command += ['-b', branch]
+    git_command += [git_url]
     subprocess.Popen(git_command, cwd='template').communicate()
     if not os.path.exists('%s' % template_folder):
         raise Exception()
