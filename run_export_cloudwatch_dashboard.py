@@ -36,6 +36,10 @@ def run_export_cloudwatch_dashboard(name, settings):
         for dimension in pm[0]:
             if prev == 'InstanceId' and service_type == 'elasticbeanstalk':
                 pm[0][current_index] = 'INSTANCE_ID'
+            if prev == 'AutoScalingGroupName' and service_type == 'elasticbeanstalk':
+                pm[0][current_index] = 'AUTO_SCALING_GROUP_NAME'
+            if prev == 'LoadBalancerName' and service_type == 'elasticbeanstalk':
+                pm[0][current_index] = 'LOAD_BALANCER_NAME'
             if prev == 'EnvironmentName' and service_type == 'elasticbeanstalk':
                 pm[0][current_index] = 'ENVIRONMENT_NAME'
             if prev == 'Role' and service_type == 'rds/aurora':
