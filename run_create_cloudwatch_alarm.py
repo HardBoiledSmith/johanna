@@ -36,6 +36,8 @@ def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
             env_list.append(ee)
 
     env_instances_list = list()
+    env_asg_list = list()
+    env_elb_list = list()
 
     for ee in env_list:
         cmd = ['elasticbeanstalk', 'describe-environment-resources']
@@ -47,6 +49,10 @@ def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
             ii['Id'] = instance['Id']
             ii['EnvironmentName'] = ee_res['EnvironmentName']
             env_instances_list.append(ii)
+        for asg in ee_res['AutoScalingGroups']:
+            env_asg_list.append(asg)
+        for elb in ee_res['LoadBalancers']:
+            env_elb_list.append(elb)
 
     ################################################################################
     alarm_name = '%s-%s_%s_%s' % (phase, name, alarm_region, settings['METRIC_NAME'])
@@ -66,6 +72,16 @@ def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
             dimension = 'Name=EnvironmentName,Value=%s' % ei['EnvironmentName']
             dimension_list.append(dimension)
             break
+
+    for ei in env_asg_list:
+        if settings['DIMENSIONS'] == 'AutoScalingGroupName':
+            dimension = 'Name=AutoScalingGroupName,Value=%s' % ei['Name']
+            dimension_list.append(dimension)
+
+    for ei in env_elb_list:
+        if settings['DIMENSIONS'] == 'LoadBalancerName':
+            dimension = 'Name=LoadBalancerName,Value=%s' % ei['Name']
+            dimension_list.append(dimension)
 
     cmd = ['cloudwatch', 'put-metric-alarm']
     cmd += ['--alarm-actions', topic_arn]
