@@ -160,7 +160,6 @@ def run_create_eb_spring(name, settings):
     sample_file = properties_file.replace('.properties', '-sample.properties')
     lines = read_file(sample_file)
     option_list = list()
-    option_list.append(['operation_type', phase.upper()])
     option_list.append(['jdbc.url', 'jdbc:mysql://%s%s' % (db_address, db_conn_str_suffix)])
     option_list.append(['jdbc.username', env['rds']['USER_NAME']])
     option_list.append(['jdbc.password', env['rds']['USER_PASSWORD']])
