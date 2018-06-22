@@ -341,7 +341,7 @@ def run_create_eb_spring(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v3.0.0 running Tomcat 8.5 Java 8']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v3.0.1 running Tomcat 8.5 Java 8']
     cmd += ['--tags', tag0, tag2]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_folder)
