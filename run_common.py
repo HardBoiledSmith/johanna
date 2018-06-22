@@ -121,8 +121,10 @@ class AWSCli:
 
     def get_elasticache_address(self):
         engine = env['elasticache']['ENGINE']
-        cache_cluster_id = env['elasticache']['CACHE_CLUSTER_ID']
-        if engine == 'redis':
+        if engine != 'redis':
+            raise Exception()
+        cache_cluster_id = env['elasticache'].get('CACHE_CLUSTER_ID')
+        if cache_cluster_id:
             cmd = ['elasticache', 'describe-cache-clusters']
             cmd += ['--show-cache-node-info']
             cmd += ['--show-cache-clusters-not-in-replication-groups']
@@ -162,8 +164,41 @@ class AWSCli:
 
                 if elapsed_time > 60 * 30:
                     raise Exception()
-        else:
-            raise Exception()
+
+        replication_group_id = env['elasticache'].get('REPLICATION_GROUP_ID')
+        if replication_group_id:
+            cmd = ['elasticache', 'describe-replication-groups']
+
+            elapsed_time = 0
+            cfg_address = None
+            while not cfg_address:
+                result = self.run(cmd)
+
+                # noinspection PyBroadException
+                try:
+                    for replication_group in result['ReplicationGroups']:
+                        replication_group = dict(replication_group)
+
+                        if replication_group['Status'] != 'available':
+                            continue
+
+                        if replication_group['ReplicationGroupId'] != replication_group_id:
+                            continue
+
+                        cfg_endpoint = replication_group['ConfigurationEndpoint']
+                        cfg_address = cfg_endpoint['Address']
+
+                        if cfg_address:
+                            return cfg_address
+                except Exception:
+                    pass
+
+                print('waiting for a new elasticache... (elapsed time: \'%d\' seconds)' % elapsed_time)
+                time.sleep(5)
+                elapsed_time += 5
+
+                if elapsed_time > 60 * 30:
+                    raise Exception()
 
     def get_rds_address(self, read_replica=None):
         engine = env['rds']['ENGINE']
