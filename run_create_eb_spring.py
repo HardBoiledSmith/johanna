@@ -198,8 +198,10 @@ def run_create_eb_spring(name, settings):
 
     build_command = ['mvn']
     if phase != 'dv':
-        git_command += ['exec:exec']
+        build_command += ['exec:exec']
     build_command += ['package']
+
+    print_message('build %s: %s' % (name, ' '.join(build_command)))
 
     subprocess.Popen(build_command, cwd=template_folder).communicate()
 
