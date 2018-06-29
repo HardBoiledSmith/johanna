@@ -23,6 +23,7 @@ def run_create_eb_spring(name, settings):
     db_conn_str_suffix = settings.get('DB_CONNECTION_STR_SUFFIX', '')
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
+    instance_type = settings.get('INSTANCE_TYPE', 't2.medium')
     key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
     service_name = env['common'].get('SERVICE_NAME', '')
@@ -159,7 +160,6 @@ def run_create_eb_spring(name, settings):
     sample_file = properties_file.replace('.properties', '-sample.properties')
     lines = read_file(sample_file)
     option_list = list()
-    option_list.append(['operation_type', phase.upper()])
     option_list.append(['jdbc.url', 'jdbc:mysql://%s%s' % (db_address, db_conn_str_suffix)])
     option_list.append(['jdbc.username', env['rds']['USER_NAME']])
     option_list.append(['jdbc.password', env['rds']['USER_PASSWORD']])
@@ -198,8 +198,10 @@ def run_create_eb_spring(name, settings):
 
     build_command = ['mvn']
     if phase != 'dv':
-        git_command += ['exec:exec']
+        build_command += ['exec:exec']
     build_command += ['package']
+
+    print_message('build %s: %s' % (name, ' '.join(build_command)))
 
     subprocess.Popen(build_command, cwd=template_folder).communicate()
 
@@ -244,7 +246,7 @@ def run_create_eb_spring(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'InstanceType'
-    oo['Value'] = 't2.micro'
+    oo['Value'] = instance_type
     option_settings.append(oo)
 
     oo = dict()
@@ -341,7 +343,7 @@ def run_create_eb_spring(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v3.0.0 running Tomcat 8.5 Java 8']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v3.0.1 running Tomcat 8.5 Java 8']
     cmd += ['--tags', tag0, tag2]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_folder)

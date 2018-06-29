@@ -39,6 +39,11 @@ def terminate_iam():
     ################################################################################
     print_message('terminate iam: aws-elasticbeanstalk-ec2-role')
 
+    cmd = ['iam', 'delete-role-policy']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
+    cmd += ['--policy-name', 'aws-elasticbeanstalk-ec2-policy']
+    aws_cli.run(cmd, ignore_error=True)
+
     cmd = ['iam', 'detach-role-policy']
     cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
     cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier']

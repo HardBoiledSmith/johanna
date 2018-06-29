@@ -46,9 +46,15 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
             ii['EnvironmentName'] = ee_res['EnvironmentName']
             env_instances_list.append(ii)
         for asg in ee_res['AutoScalingGroups']:
-            env_asg_list.append(asg)
+            ii = dict()
+            ii['Name'] = asg['Name']
+            ii['EnvironmentName'] = ee_res['EnvironmentName']
+            env_asg_list.append(ii)
         for elb in ee_res['LoadBalancers']:
-            env_elb_list.append(elb)
+            ii = dict()
+            ii['Name'] = elb['Name']
+            ii['EnvironmentName'] = ee_res['EnvironmentName']
+            env_elb_list.append(ii)
 
     ################################################################################
     dashboard_name = '%s_%s' % (name, dashboard_region)
@@ -78,6 +84,7 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
         if dimension_type == 'asg':
             for ii in env_asg_list:
                 new_metric = template.replace('AUTO_SCALING_GROUP_NAME', ii['Name'])
+                new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
                 new_metric = json.loads(new_metric)
                 new_metrics_list.append(new_metric)
         elif dimension_type == 'instance':
@@ -89,6 +96,7 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
         elif dimension_type == 'elb':
             for ii in env_elb_list:
                 new_metric = template.replace('LOAD_BALANCER_NAME', ii['Name'])
+                new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
                 new_metric = json.loads(new_metric)
                 new_metrics_list.append(new_metric)
         else:

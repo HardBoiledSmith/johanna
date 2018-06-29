@@ -14,35 +14,37 @@ You can do provisioning/deprovisioning/reprovisioning of the whole system or par
 
 # How To Play
 
-Using [Lili](https://github.com/addnull/lili)(Vagrant provisioning script) is the simplest way to get a playground.
+Using [Lili](https://github.com/HardBoiledSmith/lili)(Vagrant provisioning script) is the simplest way to get a playground.
 
-1. follow Lili [README manual](https://github.com/addnull/lili/blob/master/README.md)
-1. on Vagrant VM(Ubuntu 16.04)
-	1. `sudo su`
-	1. `cd /opt/johanna`
-	1. execute 'conf.py' to configure your aws environment.
+- Follow Lili [README manual](https://github.com/addnull/lili/blob/master/README.md)
+- On Vagrant VM (Ubuntu 16.04)
+  1. `sudo su`
 
-		```
-		./conf.py --accesskey YOUR_AWS_ACCESSKEY --secretkey YOUR_AWS_SECRETKEY --region AWS_REGION_NAME --az1 AVAILABILITY_ZONE_1 --az2 AVAILABILITY_ZONE_2 --template TEMPLATE_GIT_URL --db DB_ENGINE --user DB_USER --pw DB_PASSWORD
-		```
-		
-		*[Example]*
-		```
-		./conf.py --accesskey ... --secretkey ... --region ap-northeast-2 --az1 ap-northeast-2a --az2 ap-northeast-2c --template git@github.com:HardBoiledSmith/kerrigan.git --db mysql --user db-user --pw db-password
-		```
+  2. `cd /opt/johanna`
 
-	1. `./run.py`
+  3. Execute `conf.py` to configure your aws environment.
 
--
+     ```bash
+     ./conf.py --accesskey YOUR_AWS_ACCESSKEY --secretkey YOUR_AWS_SECRETKEY --region AWS_REGION_NAME --az1 AVAILABILITY_ZONE_1 --az2 AVAILABILITY_ZONE_2 --template TEMPLATE_GIT_URL --db DB_ENGINE --user DB_USER --pw DB_PASSWORD
+     ```
+
+     *[Example]*
+
+     ```bash
+     ./conf.py --accesskey ... --secretkey ... --region ap-northeast-2 --az1 ap-northeast-2a --az2 ap-northeast-2c --template git@github.com:HardBoiledSmith/kerrigan.git --db mysql --user db-user --pw db-password
+     ```
+
+  4. `./run.py`
 
 You can use this on web GUI
 
-* [raynor](https://github.com/addnull/raynor) is web based GUI for johanna
+* [raynor](https://github.com/HardBoiledSmith/raynor) is web based GUI for johanna
 
 # Notes
 
 * If you use AWS IAM user credential instead of master account, it must have IAMFullAccess, AWSElasticBeanstalkFullAccess and PowerUserAccess permissions.
-![alt text](https://github.com/addnull/johanna/raw/master/docs/images/iam_user_permissions.png "IAM user permissions")
+
+	![alt text](https://github.com/HardBoiledSmith/johanna/raw/master/docs/images/iam_user_permissions.png "IAM user permissions")
 
 # Links
 

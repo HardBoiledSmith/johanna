@@ -299,6 +299,24 @@ def run_create_eb_cron_job(name, settings):
     oo['Value'] = json.dumps(cfg_doc)
     option_settings.append(oo)
 
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:cloudwatch:logs'
+    oo['OptionName'] = 'StreamLogs'
+    oo['Value'] = 'true'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:cloudwatch:logs'
+    oo['OptionName'] = 'DeleteOnTerminate'
+    oo['Value'] = 'true'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:cloudwatch:logs'
+    oo['OptionName'] = 'RetentionInDays'
+    oo['Value'] = '3'
+    option_settings.append(oo)
+
     option_settings = json.dumps(option_settings)
 
     tag0 = 'Key=git_hash_johanna,Value=%s' % git_hash_johanna.decode('utf-8').strip()
@@ -310,7 +328,7 @@ def run_create_eb_cron_job(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.7.0 running Python 3.6']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.7.1 running Python 3.6']
     cmd += ['--tags', tag0, tag1, tag2]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=environment_path)
