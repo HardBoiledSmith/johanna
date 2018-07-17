@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import datetime
+import json
 
 from env import env
 from run_common import AWSCli
@@ -40,6 +41,7 @@ db_subnet_group_name = env['rds']['DB_SUBNET_NAME']
 engine = env['rds']['ENGINE']
 engine_version = env['rds']['ENGINE_VERSION']
 license_model = env['rds']['LICENSE_MODEL']
+logs_export_to_cloudwatch = json.dumps(['error', 'general', 'audit', 'slowquery'])
 master_user_name = env['rds']['USER_NAME']
 master_user_password = env['rds']['USER_PASSWORD']
 monitoring_interval = env['rds']['MONITORING_INTERVAL']
@@ -97,6 +99,7 @@ if engine == 'mysql':
     cmd += ['--db-instance-class', db_instance_class]
     cmd += ['--db-instance-identifier', db_instance_id]
     cmd += ['--db-subnet-group-name', db_subnet_group_name]
+    cmd += ['--enable-cloudwatch-logs-exports', logs_export_to_cloudwatch]
     cmd += ['--engine', engine]
     cmd += ['--engine-version', engine_version]
     cmd += ['--iops', db_iops]
@@ -114,6 +117,7 @@ elif engine == 'aurora':
     cmd += ['--backup-retention-period', db_backup_retention_period]
     cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
     cmd += ['--db-subnet-group-name', db_subnet_group_name]
+    cmd += ['--enable-cloudwatch-logs-exports', logs_export_to_cloudwatch]
     cmd += ['--engine', engine]
     cmd += ['--engine-version', engine_version]
     cmd += ['--master-user-password', master_user_password]
