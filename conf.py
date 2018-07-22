@@ -62,7 +62,7 @@ if __name__ == '__main__':
     config['aws']['AWS_AVAILABILITY_ZONE_2'] = args.az2
 
     # AWS TEMPLATE
-    if args.template:
+    if args.template and args.template != config['template']['GIT_URL']:
         config['template']['GIT_URL'] = args.template
         config['elasticbeanstalk']['ENVIRONMENTS'] = []
     else:
@@ -83,6 +83,11 @@ if __name__ == '__main__':
     config['rds']['USER_NAME'] = args.user
     config['rds']['USER_PASSWORD'] = args.pw
 
+    # VPC Configuration
+    config['vpc'][0]['AWS_DEFAULT_REGION'] = args.region
+    config['vpc'][0]['AWS_AVAILABILITY_ZONE_1'] = args.az1
+    config['vpc'][0]['AWS_AVAILABILITY_ZONE_2'] = args.az2
+
     config_file = open('config.json', 'w+')
-    config_file.write(json.dumps(config, sort_keys=True, indent=4))
+    config_file.write(json.dumps(config, sort_keys=True, indent=2))
     config_file.close()

@@ -37,31 +37,25 @@ print_session('terminate rds')
 ################################################################################
 print_message('delete rds')
 
-if engine == 'mysql':
-    cmd = ['rds', 'delete-db-instance']
-    cmd += ['--db-instance-identifier', env['rds']['DB_INSTANCE_ID']]
-    cmd += ['--skip-final-snapshot']
-    aws_cli.run(cmd, ignore_error=True)
-    terminate_iam_for_rds()
-elif engine == 'aurora':
-    cmd = ['rds', 'describe-db-clusters']
-    cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
-    result = aws_cli.run(cmd, ignore_error=True)
-
-    if type(result) == dict:
-        cluster_list = result.get('DBClusters', list())
-        for cc in cluster_list:
-            member_list = cc['DBClusterMembers']
-            for mm in member_list:
-                cmd = ['rds', 'delete-db-instance']
-                cmd += ['--db-instance-identifier', mm['DBInstanceIdentifier']]
-                cmd += ['--skip-final-snapshot']
-                aws_cli.run(cmd, ignore_error=True)
-
-    cmd = ['rds', 'delete-db-cluster']
-    cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
-    cmd += ['--skip-final-snapshot']
-    aws_cli.run(cmd, ignore_error=True)
-    terminate_iam_for_rds()
-else:
+if engine != 'aurora':
     raise Exception()
+
+cmd = ['rds', 'describe-db-clusters']
+cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
+result = aws_cli.run(cmd, ignore_error=True)
+
+if type(result) == dict:
+    cluster_list = result.get('DBClusters', list())
+    for cc in cluster_list:
+        member_list = cc['DBClusterMembers']
+        for mm in member_list:
+            cmd = ['rds', 'delete-db-instance']
+            cmd += ['--db-instance-identifier', mm['DBInstanceIdentifier']]
+            cmd += ['--skip-final-snapshot']
+            aws_cli.run(cmd, ignore_error=True)
+
+cmd = ['rds', 'delete-db-cluster']
+cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
+cmd += ['--skip-final-snapshot']
+aws_cli.run(cmd, ignore_error=True)
+terminate_iam_for_rds()

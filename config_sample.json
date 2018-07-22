@@ -26,10 +26,12 @@
       {
         "AWS_ASG_MAX_VALUE": "1",
         "AWS_ASG_MIN_VALUE": "1",
+        "AWS_EB_NOTIFICATION_EMAIL": "...",
         "CNAME": "dv-nova",
         "GIT_URL": "git@github.com:HardBoiledSmith/nova.git",
         "HOST": "dv-nova.hbsmith.io",
         "NAME": "nova",
+        "SSL_CERTIFICATE_ID": "...",
         "PRIVATE_IP": "10.210.128.100",
         "SUBNET_TYPE": "public",
         "TYPE": "django",
@@ -41,13 +43,15 @@
     "BACKUP_RETENTION_PERIOD": "0",
     "DATABASE": "...",
     "DB_CLASS": "db.t2.micro",
-    "DB_ID": "db-test",
+    "DB_INSTANCE_ID": "db-test",
+    "DB_CLUSTER_ID": "db-test",
     "DB_SIZE": "5",
     "DB_SUBNET_NAME": "db-subnet",
-    "ENGINE": "mysql",
+    "ENGINE": "aurora",
     "ENGINE_VERSION": "5.7.11",
     "IOPS": "0",
     "LICENSE_MODEL": "general-public-license",
+    "MONITORING_INTERVAL": "60",
     "MULTI_AZ": "--no-multi-az",
     "STORAGE_TYPE": "gp2",
     "USER_NAME": "...",
@@ -58,12 +62,21 @@
       "DELAY_SECONDS": "0",
       "NAME": "sqs-test",
       "RECEIVE_COUNT": "3",
+      "RECEIVE_MESSAGE_WAIT_TIME_SECONDS": "0",
       "RETENTION": "345600",
-      "TIMEOUT": "180"
+      "TIMEOUT": "180",
+      "USE_REDRIVE_POLICY": "False"
     }
   ],
   "template": {
     "GIT_URL": "git@github.com:HardBoiledSmith/kerrigan.git",
     "NAME": "kerrigan"
-  }
+  },
+  "vpc": [
+    {
+      "AWS_AVAILABILITY_ZONE_1": "ap-northeast-2a",
+      "AWS_AVAILABILITY_ZONE_2": "ap-northeast-2c",
+      "AWS_DEFAULT_REGION": "ap-northeast-2"
+    }
+  ]
 }

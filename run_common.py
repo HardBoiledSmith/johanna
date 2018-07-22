@@ -202,83 +202,47 @@ class AWSCli:
 
     def get_rds_address(self, read_replica=None):
         engine = env['rds']['ENGINE']
-        if engine == 'aurora':
-            cluster_id = env['rds']['DB_CLUSTER_ID']
-            cmd = ['rds', 'describe-db-clusters']
+        if engine != 'aurora':
+            raise Exception()
 
-            elapsed_time = 0
-            db_address = None
-            while not db_address:
-                result = self.run(cmd)
+        cluster_id = env['rds']['DB_CLUSTER_ID']
+        cmd = ['rds', 'describe-db-clusters']
 
-                # noinspection PyBroadException
-                try:
-                    for db_cluster in result['DBClusters']:
-                        db_cluster = dict(db_cluster)
+        elapsed_time = 0
+        db_address = None
+        while not db_address:
+            result = self.run(cmd)
 
-                        if db_cluster['Status'] != 'available':
-                            continue
+            # noinspection PyBroadException
+            try:
+                for db_cluster in result['DBClusters']:
+                    db_cluster = dict(db_cluster)
 
-                        if db_cluster['DBClusterIdentifier'] != cluster_id:
-                            continue
+                    if db_cluster['Status'] != 'available':
+                        continue
 
-                        if read_replica and 'ReaderEndpoint' not in db_cluster:
-                            continue
+                    if db_cluster['DBClusterIdentifier'] != cluster_id:
+                        continue
 
-                        db_address = db_cluster['Endpoint']
+                    if read_replica and 'ReaderEndpoint' not in db_cluster:
+                        continue
 
-                        if read_replica:
-                            db_address = db_cluster['ReaderEndpoint']
+                    db_address = db_cluster['Endpoint']
 
-                        if db_address:
-                            return db_address
-                except Exception:
-                    pass
+                    if read_replica:
+                        db_address = db_cluster['ReaderEndpoint']
 
-                print('waiting for a new database... (elapsed time: \'%d\' seconds)' % elapsed_time)
-                time.sleep(5)
-                elapsed_time += 5
+                    if db_address:
+                        return db_address
+            except Exception:
+                pass
 
-                if elapsed_time > 60 * 30:
-                    raise Exception()
-        else:
-            instance_id = env['rds']['DB_INSTANCE_ID']
-            cmd = ['rds', 'describe-db-instances']
+            print('waiting for a new database... (elapsed time: \'%d\' seconds)' % elapsed_time)
+            time.sleep(5)
+            elapsed_time += 5
 
-            elapsed_time = 0
-            db_address = None
-            while not db_address:
-                result = self.run(cmd)
-
-                # noinspection PyBroadException
-                try:
-                    for db_instance in result['DBInstances']:
-                        db_instance = dict(db_instance)
-
-                        if not read_replica and 'ReadReplicaSourceDBInstanceIdentifier' in db_instance:
-                            continue
-                        elif read_replica and 'ReadReplicaSourceDBInstanceIdentifier' not in db_instance:
-                            continue
-
-                        if not read_replica and db_instance['DBInstanceIdentifier'] != instance_id:
-                            continue
-                        elif read_replica and db_instance['ReadReplicaSourceDBInstanceIdentifier'] != instance_id:
-                            continue
-
-                        db_endpoint = db_instance['Endpoint']
-                        db_address = dict(db_endpoint)['Address']
-
-                        if db_address:
-                            return db_address
-                except Exception:
-                    pass
-
-                print('waiting for a new database... (elapsed time: \'%d\' seconds)' % elapsed_time)
-                time.sleep(5)
-                elapsed_time += 5
-
-                if elapsed_time > 60 * 30:
-                    raise Exception()
+            if elapsed_time > 60 * 30:
+                raise Exception()
 
     def get_role_arn(self, role_name):
         cmd = ['iam', 'get-role']

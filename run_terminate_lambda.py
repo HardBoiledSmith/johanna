@@ -157,7 +157,7 @@ def run_terminate_sns_lambda(name, settings):
 ################################################################################
 print_session('terminate lambda')
 
-lambdas_list = env['lambda']
+lambdas_list = env.get('lambda', list())
 if len(args) == 2:
     target_lambda_name = args[1]
     target_lambda_name_exists = False

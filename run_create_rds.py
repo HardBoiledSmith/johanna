@@ -92,59 +92,39 @@ monitoring_role_arn = aws_cli.get_role_arn('rds-monitoring-role')
 ################################################################################
 print_message('create rds')
 
-if engine == 'mysql':
-    cmd = ['rds', 'create-db-instance']
-    cmd += ['--allocated-storage', env['rds']['DB_SIZE']]
-    cmd += ['--backup-retention-period', db_backup_retention_period]
-    cmd += ['--db-instance-class', db_instance_class]
-    cmd += ['--db-instance-identifier', db_instance_id]
-    cmd += ['--db-subnet-group-name', db_subnet_group_name]
-    cmd += ['--enable-cloudwatch-logs-exports', logs_export_to_cloudwatch]
-    cmd += ['--engine', engine]
-    cmd += ['--engine-version', engine_version]
-    cmd += ['--iops', db_iops]
-    cmd += ['--license-model', license_model]
-    cmd += ['--master-user-password', master_user_password]
-    cmd += ['--master-username', master_user_name]
-    cmd += ['--monitoring-interval', monitoring_interval]
-    cmd += ['--monitoring-role-arn', monitoring_role_arn]
-    cmd += ['--storage-type', env['rds']['STORAGE_TYPE']]
-    cmd += ['--vpc-security-group-ids', security_group_id]
-    cmd += [db_multi_az]
-    aws_cli.run(cmd)
-elif engine == 'aurora':
-    cmd = ['rds', 'create-db-cluster']
-    cmd += ['--backup-retention-period', db_backup_retention_period]
-    cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
-    cmd += ['--db-subnet-group-name', db_subnet_group_name]
-    cmd += ['--enable-cloudwatch-logs-exports', logs_export_to_cloudwatch]
-    cmd += ['--engine', engine]
-    cmd += ['--engine-version', engine_version]
-    cmd += ['--master-user-password', master_user_password]
-    cmd += ['--master-username', master_user_name]
-    cmd += ['--vpc-security-group-ids', security_group_id]
-    aws_cli.run(cmd)
-
-    aws_cli.wait_create_rds_cluster(env['rds']['DB_CLUSTER_ID'])
-
-    cmd = ['rds', 'create-db-instance']
-    cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
-    cmd += ['--db-instance-class', db_instance_class]
-    cmd += ['--db-instance-identifier', db_instance_id]
-    cmd += ['--engine', engine]
-    cmd += ['--iops', db_iops]
-    cmd += ['--license-model', license_model]
-    cmd += ['--monitoring-interval', monitoring_interval]
-    cmd += ['--monitoring-role-arn', monitoring_role_arn]
-    aws_cli.run(cmd)
-
-    if db_multi_az:
-        cmd = ['rds', 'create-db-instance']
-        cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
-        ss = datetime.datetime.today().strftime('%Y%m%d')
-        cmd += ['--db-instance-identifier', '%s-%s' % (db_instance_id, ss)]
-        cmd += ['--db-instance-class', db_instance_class]
-        cmd += ['--engine', engine]
-        aws_cli.run(cmd)
-else:
+if engine != 'aurora':
     raise Exception()
+
+cmd = ['rds', 'create-db-cluster']
+cmd += ['--backup-retention-period', db_backup_retention_period]
+cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
+cmd += ['--db-subnet-group-name', db_subnet_group_name]
+cmd += ['--enable-cloudwatch-logs-exports', logs_export_to_cloudwatch]
+cmd += ['--engine', engine]
+cmd += ['--engine-version', engine_version]
+cmd += ['--master-user-password', master_user_password]
+cmd += ['--master-username', master_user_name]
+cmd += ['--vpc-security-group-ids', security_group_id]
+aws_cli.run(cmd)
+
+aws_cli.wait_create_rds_cluster(env['rds']['DB_CLUSTER_ID'])
+
+cmd = ['rds', 'create-db-instance']
+cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
+cmd += ['--db-instance-class', db_instance_class]
+cmd += ['--db-instance-identifier', db_instance_id]
+cmd += ['--engine', engine]
+cmd += ['--iops', db_iops]
+cmd += ['--license-model', license_model]
+cmd += ['--monitoring-interval', monitoring_interval]
+cmd += ['--monitoring-role-arn', monitoring_role_arn]
+aws_cli.run(cmd)
+
+if db_multi_az:
+    cmd = ['rds', 'create-db-instance']
+    cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
+    ss = datetime.datetime.today().strftime('%Y%m%d')
+    cmd += ['--db-instance-identifier', '%s-%s' % (db_instance_id, ss)]
+    cmd += ['--db-instance-class', db_instance_class]
+    cmd += ['--engine', engine]
+    aws_cli.run(cmd)
