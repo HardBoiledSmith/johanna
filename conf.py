@@ -83,9 +83,6 @@ if __name__ == '__main__':
         nova['URL'] = 'http://%s.%s.elasticbeanstalk.com' % (nova_cname, args.region)
         nova['AWS_EB_NOTIFICATION_EMAIL'] = args.email
 
-    # RDS Engine (aurora only)
-    config['rds']['ENGINE'] = 'aurora'
-
     # RDS User Configuration
     config['rds']['USER_NAME'] = args.user
     config['rds']['USER_PASSWORD'] = args.pw

@@ -9,6 +9,8 @@ The backend includes below:
 - IAM roles for Elastic Beanstalk
 - EC2 key pair (SSH key)
 - An Elastic Beanstalk application and an environment for Python Django API server
+- An aurora RDS cluster with instances
+- An sample SQS
 
 You can do provisioning/deprovisioning/reprovisioning of the whole system or partial at once. Especially, the reprovisioning of Django API server means a '[continuous deployement](https://en.wikipedia.org/wiki/Continuous_delivery#Relationship_to_continuous_deployment)'.
 

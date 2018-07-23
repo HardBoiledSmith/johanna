@@ -32,7 +32,6 @@
         "HOST": "dv-nova.hbsmith.io",
         "NAME": "nova",
         "SSL_CERTIFICATE_ID": "...",
-        "PRIVATE_IP": "10.210.128.100",
         "SUBNET_TYPE": "public",
         "TYPE": "django",
         "URL": "http://dv-nova.hbsmith.io"
@@ -40,15 +39,15 @@
     ]
   },
   "rds": {
-    "BACKUP_RETENTION_PERIOD": "0",
+    "BACKUP_RETENTION_PERIOD": "1",
     "DATABASE": "...",
-    "DB_CLASS": "db.t2.micro",
-    "DB_INSTANCE_ID": "db-test",
+    "DB_CLASS": "db.t2.small",
     "DB_CLUSTER_ID": "db-test",
+    "DB_INSTANCE_ID": "db-test",
     "DB_SIZE": "5",
     "DB_SUBNET_NAME": "db-subnet",
-    "ENGINE": "aurora",
-    "ENGINE_VERSION": "5.7.11",
+    "ENGINE": "aurora-mysql",
+    "ENGINE_VERSION": "5.7.12",
     "IOPS": "0",
     "LICENSE_MODEL": "general-public-license",
     "MONITORING_INTERVAL": "60",

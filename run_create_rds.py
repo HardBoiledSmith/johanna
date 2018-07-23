@@ -92,7 +92,7 @@ monitoring_role_arn = aws_cli.get_role_arn('rds-monitoring-role')
 ################################################################################
 print_message('create rds')
 
-if engine != 'aurora':
+if engine not in ('aurora', 'aurora-mysql', 'aurora-postgresql'):
     raise Exception()
 
 cmd = ['rds', 'create-db-cluster']

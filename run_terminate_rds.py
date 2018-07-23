@@ -37,7 +37,7 @@ print_session('terminate rds')
 ################################################################################
 print_message('delete rds')
 
-if engine != 'aurora':
+if engine not in ('aurora', 'aurora-mysql', 'aurora-postgresql'):
     raise Exception()
 
 cmd = ['rds', 'describe-db-clusters']
