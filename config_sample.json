@@ -8,7 +8,7 @@
   },
   "common": {
     "AWS_KEY_PAIR_MATERIAL": "...",
-    "AWS_KEY_PAIR_NAME": "dv",
+    "AWS_KEY_PAIR_NAME": "...",
     "AWS_SUBNET_EB_PRIVATE_1": "10.210.0.0/20",
     "AWS_SUBNET_EB_PRIVATE_2": "10.210.16.0/20",
     "AWS_SUBNET_EB_PUBLIC_1": "10.210.128.0/20",
