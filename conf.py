@@ -3,7 +3,11 @@ import argparse
 import json
 import sys
 
+from run_create_ec2_keypair import run_create_ec2_keypair
+
 parser = argparse.ArgumentParser(description='Johanna configuration script')
+parser.add_argument('--email', help='Your Admin Email')
+parser.add_argument('--keypairname', help='AWS EC2 Key Pair Name')
 parser.add_argument('--accesskey', help='AWS Access Key ID')
 parser.add_argument('--secretkey', help='AWS Secret Access Key')
 parser.add_argument('--region', help='Choose AWS Region')
@@ -19,13 +23,15 @@ if __name__ == '__main__':
 
     required_args = [
         args.accesskey,
-        args.secretkey,
-        args.region,
         args.az1,
         args.az2,
         args.db,
-        args.user,
-        args.pw
+        args.email,
+        args.keypairname,
+        args.pw,
+        args.region,
+        args.secretkey,
+        args.user
     ]
 
     for arg in required_args:
@@ -61,6 +67,13 @@ if __name__ == '__main__':
         sys.exit(0)
     config['aws']['AWS_AVAILABILITY_ZONE_2'] = args.az2
 
+    # AWS KEY PAIR NAME
+    config['common']['AWS_KEY_PAIR_NAME'] = args.keypairname
+
+    # AWS KEY PAIR MATERIAL
+    pub_key = run_create_ec2_keypair(args.keypairname)
+    config['common']['AWS_KEY_PAIR_MATERIAL'] = pub_key
+
     # AWS TEMPLATE
     if args.template and args.template != config['template']['GIT_URL']:
         config['template']['GIT_URL'] = args.template
@@ -70,6 +83,7 @@ if __name__ == '__main__':
         nova_cname = nova['CNAME']
         nova['HOST'] = '%s.%s.elasticbeanstalk.com' % (nova_cname, args.region)
         nova['URL'] = 'http://%s.%s.elasticbeanstalk.com' % (nova_cname, args.region)
+        nova['AWS_EB_NOTIFICATION_EMAIL'] = args.email
 
     # RDS Engine
     AWS_RDS_ENGINES = ['mysql', 'mariadb', 'oracle-se1', 'oracle-se2', 'oracle-se', 'oracle-ee', 'sqlserver-ee',
