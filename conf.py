@@ -14,7 +14,6 @@ parser.add_argument('--region', help='Choose AWS Region')
 parser.add_argument('--az1', help='AWS Availability Zone 1')
 parser.add_argument('--az2', help='AWS Availability Zone 2')
 parser.add_argument('--template', help='git URL of provisioning template repository')
-parser.add_argument('--db', help='AWS RDS Engine')
 parser.add_argument('--user', help='RDS User Name')
 parser.add_argument('--pw', help='RDS User Password')
 
@@ -25,7 +24,6 @@ if __name__ == '__main__':
         args.accesskey,
         args.az1,
         args.az2,
-        args.db,
         args.email,
         args.keypairname,
         args.pw,
@@ -85,13 +83,8 @@ if __name__ == '__main__':
         nova['URL'] = 'http://%s.%s.elasticbeanstalk.com' % (nova_cname, args.region)
         nova['AWS_EB_NOTIFICATION_EMAIL'] = args.email
 
-    # RDS Engine
-    AWS_RDS_ENGINES = ['mysql', 'mariadb', 'oracle-se1', 'oracle-se2', 'oracle-se', 'oracle-ee', 'sqlserver-ee',
-                       'sqlserver-se', 'sqlserver-ex', 'sqlserver-web', 'postgres', 'aurora']
-    if args.db not in AWS_RDS_ENGINES:
-        print('Invalid AWS RDS ENGINE')
-        sys.exit(0)
-    config['rds']['ENGINE'] = args.db
+    # RDS Engine (aurora only)
+    config['rds']['ENGINE'] = 'aurora'
 
     # RDS User Configuration
     config['rds']['USER_NAME'] = args.user

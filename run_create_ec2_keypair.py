@@ -3,10 +3,17 @@ import os
 import subprocess
 from multiprocessing import Process
 
-from run_common import print_session
-from run_common import read_file
-
 env = dict(os.environ)
+
+
+def read_file(file_path):
+    f = open(file_path)
+    lines = list()
+    for ll in f.readlines():
+        lines.append(ll)
+    f.close()
+
+    return lines
 
 
 # noinspection PyShadowingNames
@@ -91,9 +98,6 @@ def run_create_ec2_keypair(key_name):
 #
 # start
 #
-################################################################################
-print_session('create ec2 keypair')
-
 ################################################################################
 
 if __name__ == "__main__":
