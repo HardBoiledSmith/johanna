@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import datetime
 import json
+import time
 
 from env import env
 from run_common import AWSCli
@@ -17,6 +18,8 @@ aws_cli = AWSCli()
 
 
 def create_iam_for_rds():
+    sleep_required = False
+
     role_name = 'rds-monitoring-role'
     if not aws_cli.get_iam_role(role_name):
         print_message('create iam role')
@@ -30,6 +33,11 @@ def create_iam_for_rds():
         cc += ['--role-name', role_name]
         cc += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole']
         aws_cli.run(cc)
+        sleep_required = True
+
+    if sleep_required:
+        print_message('wait 30 seconds to let iam role and policy propagated to all regions...')
+        time.sleep(30)
 
 
 db_backup_retention_period = env['rds']['BACKUP_RETENTION_PERIOD']
