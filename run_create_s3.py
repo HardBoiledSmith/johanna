@@ -23,14 +23,14 @@ print_session('create s3')
 ################################################################################
 check_template_availability()
 
-s3 = env['s3']
+s3_list = env.get('s3', list())
 target_s3_name = None
 check_exists = False
 
 if len(args) > 1:
     target_s3_name = args[1]
 
-for s3_env in s3:
+for s3_env in s3_list:
     if target_s3_name and s3_env['NAME'] != target_s3_name:
         continue
 
