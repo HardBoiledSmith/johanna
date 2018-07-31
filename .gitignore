@@ -1,3 +1,5 @@
+*.pem
+*.pub
 *.pyc
 *.swp
 /*config.json

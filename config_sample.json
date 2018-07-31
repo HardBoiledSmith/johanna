@@ -7,8 +7,8 @@
     "AWS_SECRET_ACCESS_KEY": "..."
   },
   "common": {
-    "AWS_KEY_PAIR_MATERIAL": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDp2885zRJicpdtoDwA05cSqsMWa/6wxtKhl75K9nvDsMt5o7wz2+CSD1fx+cXje+LQW9EXpQ9WDkey2FtItE4kgk7J1es0iNg4kQ2VH9PQQZ/58J7mTq6wSRH55IBVOA3t7/TbCNieojK6LB/qTKqp723l4AzcYZ0RwhJOmoo7dqLk7LbeXWWEXUEHrS7NrBL1+ClTPcC52pCgxn4CZY3OYJiBDug2Cwqm9s2HZiO7+7UNcOO9Ay2n3EynGbmqs7P296aymuPazHKDgt7HaUBr9KPbHHpQlfTPZDGEiu1B5mG6ZeYxEnJNUX/EHBzDEmGUHrtSK2Wj6b7unNS03wU3",
-    "AWS_KEY_PAIR_NAME": "dv",
+    "AWS_KEY_PAIR_MATERIAL": "...",
+    "AWS_KEY_PAIR_NAME": "...",
     "AWS_SUBNET_EB_PRIVATE_1": "10.210.0.0/20",
     "AWS_SUBNET_EB_PRIVATE_2": "10.210.16.0/20",
     "AWS_SUBNET_EB_PUBLIC_1": "10.210.128.0/20",
@@ -26,11 +26,12 @@
       {
         "AWS_ASG_MAX_VALUE": "1",
         "AWS_ASG_MIN_VALUE": "1",
+        "AWS_EB_NOTIFICATION_EMAIL": "...",
         "CNAME": "dv-nova",
         "GIT_URL": "git@github.com:HardBoiledSmith/nova.git",
         "HOST": "dv-nova.hbsmith.io",
         "NAME": "nova",
-        "PRIVATE_IP": "10.210.128.100",
+        "SSL_CERTIFICATE_ID": "...",
         "SUBNET_TYPE": "public",
         "TYPE": "django",
         "URL": "http://dv-nova.hbsmith.io"
@@ -38,16 +39,18 @@
     ]
   },
   "rds": {
-    "BACKUP_RETENTION_PERIOD": "0",
+    "BACKUP_RETENTION_PERIOD": "1",
     "DATABASE": "...",
-    "DB_CLASS": "db.t2.micro",
-    "DB_ID": "db-test",
+    "DB_CLASS": "db.t2.small",
+    "DB_CLUSTER_ID": "db-test",
+    "DB_INSTANCE_ID": "db-test",
     "DB_SIZE": "5",
     "DB_SUBNET_NAME": "db-subnet",
-    "ENGINE": "mysql",
-    "ENGINE_VERSION": "5.7.11",
+    "ENGINE": "aurora-mysql",
+    "ENGINE_VERSION": "5.7.12",
     "IOPS": "0",
     "LICENSE_MODEL": "general-public-license",
+    "MONITORING_INTERVAL": "60",
     "MULTI_AZ": "--no-multi-az",
     "STORAGE_TYPE": "gp2",
     "USER_NAME": "...",
@@ -58,12 +61,21 @@
       "DELAY_SECONDS": "0",
       "NAME": "sqs-test",
       "RECEIVE_COUNT": "3",
+      "RECEIVE_MESSAGE_WAIT_TIME_SECONDS": "0",
       "RETENTION": "345600",
-      "TIMEOUT": "180"
+      "TIMEOUT": "180",
+      "USE_REDRIVE_POLICY": "False"
     }
   ],
   "template": {
     "GIT_URL": "git@github.com:HardBoiledSmith/kerrigan.git",
     "NAME": "kerrigan"
-  }
+  },
+  "vpc": [
+    {
+      "AWS_AVAILABILITY_ZONE_1": "ap-northeast-2a",
+      "AWS_AVAILABILITY_ZONE_2": "ap-northeast-2c",
+      "AWS_DEFAULT_REGION": "ap-northeast-2"
+    }
+  ]
 }
