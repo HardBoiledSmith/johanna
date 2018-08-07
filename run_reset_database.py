@@ -19,7 +19,7 @@ if env['common']['PHASE'] == 'op':
 check_template_availability()
 
 engine = env['rds']['ENGINE']
-if engine not in ('mysql', 'aurora'):
+if engine not in ('aurora', 'aurora-mysql', 'aurora-postgresql'):
     print('not supported:', engine)
     raise Exception()
 
