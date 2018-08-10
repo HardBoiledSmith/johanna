@@ -30,10 +30,6 @@ def run_create_eb_cron_job(name, settings):
     template_name = env['template']['NAME']
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = '%s_' % service_name if service_name else ''
-    if hasattr(settings, 'PRIVATE_IP'):
-        private_ip = settings['PRIVATE_IP']
-    else:
-        private_ip = None
 
     cidr_subnet = aws_cli.cidr_subnet
 
@@ -66,8 +62,10 @@ def run_create_eb_cron_job(name, settings):
     ################################################################################
     print_message('get subnet id')
 
-    subnet_id_1 = None
-    subnet_id_2 = None
+    elb_subnet_id_1 = None
+    elb_subnet_id_2 = None
+    ec2_subnet_id_1 = None
+    ec2_subnet_id_2 = None
     cmd = ['ec2', 'describe-subnets']
     result = aws_cli.run(cmd)
     for r in result['Subnets']:
@@ -75,14 +73,18 @@ def run_create_eb_cron_job(name, settings):
             continue
         if 'public' == subnet_type:
             if r['CidrBlock'] == cidr_subnet['eb']['public_1']:
-                subnet_id_1 = r['SubnetId']
+                elb_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
-                subnet_id_2 = r['SubnetId']
+                elb_subnet_id_2 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
+                ec2_subnet_id_1 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
+                ec2_subnet_id_2 = r['SubnetId']
         elif 'private' == subnet_type:
             if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
-                subnet_id_1 = r['SubnetId']
+                elb_subnet_id_1 = ec2_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
-                subnet_id_2 = r['SubnetId']
+                elb_subnet_id_2 = ec2_subnet_id_2 = r['SubnetId']
         else:
             print('ERROR!!! Unknown subnet type:', subnet_type)
             raise Exception()
@@ -97,7 +99,7 @@ def run_create_eb_cron_job(name, settings):
         if r['VpcId'] != eb_vpc_id:
             continue
         if 'public' == subnet_type:
-            if r['GroupName'] == '%seb_public' % name_prefix:
+            if r['GroupName'] == '%seb_private' % name_prefix:
                 security_group_id = r['GroupId']
                 break
         elif 'private' == subnet_type:
@@ -235,9 +237,7 @@ def run_create_eb_cron_job(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'AssociatePublicIpAddress'
-    oo['Value'] = 'true'
-    if 'private' == subnet_type:
-        oo['Value'] = 'false'
+    oo['Value'] = 'false'
     option_settings.append(oo)
 
     oo = dict()
@@ -251,13 +251,13 @@ def run_create_eb_cron_job(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'ELBSubnets'
-    oo['Value'] = ','.join([subnet_id_1, subnet_id_2])
+    oo['Value'] = ','.join([elb_subnet_id_1, elb_subnet_id_2])
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'Subnets'
-    oo['Value'] = ','.join([subnet_id_1, subnet_id_2])
+    oo['Value'] = ','.join([ec2_subnet_id_1, ec2_subnet_id_2])
     option_settings.append(oo)
 
     oo = dict()
@@ -270,6 +270,12 @@ def run_create_eb_cron_job(name, settings):
     oo['Namespace'] = 'aws:elasticbeanstalk:environment'
     oo['OptionName'] = 'EnvironmentType'
     oo['Value'] = 'LoadBalanced'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:environment'
+    oo['OptionName'] = 'LoadBalancerType'
+    oo['Value'] = 'application'
     option_settings.append(oo)
 
     oo = dict()
@@ -368,43 +374,6 @@ def run_create_eb_cron_job(name, settings):
         cmd += ['--port', '22']
         cmd += ['--cidr', '0.0.0.0/0']
         aws_cli.run(cmd, ignore_error=True)
-
-    ################################################################################
-    if private_ip is not None:
-        print_message('attach network interface')
-
-        elapsed_time = 0
-        while True:
-            cmd = ['ec2', 'describe-network-interfaces']
-            cmd += ['--filters', 'Name=private-ip-address,Values=%s' % private_ip]
-            result = aws_cli.run(cmd)
-
-            network_interface_id = result['NetworkInterfaces'][0]['NetworkInterfaceId']
-
-            if 'Attachment' not in result['NetworkInterfaces'][0]:
-                cmd = ['ec2', 'describe-instances']
-                cmd += ['--filters', 'Name=tag-key,Values=Name,Name=tag-value,Values=%s' % eb_environment_name]
-                result = aws_cli.run(cmd)
-
-                instance_id = result['Reservations'][0]['Instances'][0]['InstanceId']
-
-                cmd = ['ec2', 'attach-network-interface']
-                cmd += ['--network-interface-id', network_interface_id]
-                cmd += ['--instance-id', instance_id]
-                cmd += ['--device-index', '1']
-                aws_cli.run(cmd)
-
-                break
-
-            attachment_id = result['NetworkInterfaces'][0]['Attachment']['AttachmentId']
-
-            cmd = ['ec2', 'detach-network-interface']
-            cmd += ['--attachment-id', attachment_id]
-            aws_cli.run(cmd, ignore_error=True)
-
-            print('detaching network interface... (elapsed time: \'%d\' seconds)' % elapsed_time)
-            time.sleep(5)
-            elapsed_time += 5
 
     ################################################################################
     print_message('swap CNAME if the previous version exists')
