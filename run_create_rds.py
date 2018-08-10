@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import datetime
 import json
-import sys
 import time
 
 from env import env
@@ -130,13 +129,11 @@ cmd += ['--monitoring-interval', monitoring_interval]
 cmd += ['--monitoring-role-arn', monitoring_role_arn]
 aws_cli.run(cmd)
 
-if db_multi_az == '--no-multi-az':
-    sys.exit(0)
-
-cmd = ['rds', 'create-db-instance']
-cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
-ss = datetime.datetime.today().strftime('%Y%m%d')
-cmd += ['--db-instance-identifier', '%s-%s' % (db_instance_id, ss)]
-cmd += ['--db-instance-class', db_instance_class]
-cmd += ['--engine', engine]
-aws_cli.run(cmd)
+if db_multi_az == '--multi-az':
+    cmd = ['rds', 'create-db-instance']
+    cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
+    ss = datetime.datetime.today().strftime('%Y%m%d')
+    cmd += ['--db-instance-identifier', '%s-%s' % (db_instance_id, ss)]
+    cmd += ['--db-instance-class', db_instance_class]
+    cmd += ['--engine', engine]
+    aws_cli.run(cmd)
