@@ -36,7 +36,7 @@ def create_iam_for_rds():
         sleep_required = True
 
     if sleep_required:
-        print_message('wait 30 seconds to let iam role and policy propagated to all regions...')
+        print_message('wait 120 seconds to let iam role and policy propagated to all regions...')
         time.sleep(120)
 
 
