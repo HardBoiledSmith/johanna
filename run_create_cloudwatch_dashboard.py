@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import re
 
 from env import env
 from run_common import AWSCli
@@ -34,6 +35,7 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
     env_instances_list = list()
     env_asg_list = list()
     env_elb_list = list()
+    env_tg_list = list()
 
     for ee in env_list:
         cmd = ['elasticbeanstalk', 'describe-environment-resources']
@@ -55,6 +57,18 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
             ii['Name'] = elb['Name']
             ii['EnvironmentName'] = ee_res['EnvironmentName']
             env_elb_list.append(ii)
+        for elb in ee_res['LoadBalancers']:
+            cmd = ['elbv2', 'describe-target-groups']
+            cmd += ['--load-balancer-arn', elb['Name']]
+            result = aws_cli.run(cmd, ignore_error=True)
+            for tg in result.get('TargetGroups', list()):
+                tt = re.match(r'^.+(targetgroup/.+)$', tg['TargetGroupArn'])
+                ll = re.match(r'^.+loadbalancer/(.+)$', elb['Name'])
+                ii = dict()
+                ii['Name'] = tt[1]
+                ii['LoadBalancer'] = ll[1]
+                ii['EnvironmentName'] = ee_res['EnvironmentName']
+                env_tg_list.append(ii)
 
     ################################################################################
     dashboard_name = '%s_%s' % (name, dashboard_region)
@@ -78,6 +92,8 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
                 dimension_type = 'asg'
             elif dimension == 'LoadBalancerName':
                 dimension_type = 'elb'
+            elif dimension == 'TargetGroup':
+                dimension_type = 'tg'
 
         template = json.dumps(pm[0])
         new_metrics_list = list()
@@ -96,6 +112,13 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
         elif dimension_type == 'elb':
             for ii in env_elb_list:
                 new_metric = template.replace('LOAD_BALANCER_NAME', ii['Name'])
+                new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
+                new_metric = json.loads(new_metric)
+                new_metrics_list.append(new_metric)
+        elif dimension_type == 'tg':
+            for ii in env_tg_list:
+                new_metric = template.replace('TARGET_GROUP', ii['Name'])
+                new_metric = new_metric.replace('LOAD_BALANCER', ii['LoadBalancer'])
                 new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
                 new_metric = json.loads(new_metric)
                 new_metrics_list.append(new_metric)
