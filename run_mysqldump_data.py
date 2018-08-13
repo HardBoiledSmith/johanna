@@ -102,6 +102,7 @@ def _mysql_dump(host, user, password, database, filename_path):
     cmd += ['-h' + host]
     cmd += ['-u' + user]
     cmd += ['-p' + password]
+    cmd += ['--column-statistics=0']
     cmd += ['--comments']
     cmd += ['--databases', database]
     cmd += ['--hex-blob']
