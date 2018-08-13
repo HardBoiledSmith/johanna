@@ -36,8 +36,8 @@ def create_iam_for_rds():
         sleep_required = True
 
     if sleep_required:
-        print_message('wait 30 seconds to let iam role and policy propagated to all regions...')
-        time.sleep(30)
+        print_message('wait 120 seconds to let iam role and policy propagated to all regions...')
+        time.sleep(120)
 
 
 db_backup_retention_period = env['rds']['BACKUP_RETENTION_PERIOD']
