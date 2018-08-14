@@ -65,8 +65,10 @@ def run_create_eb_django(name, settings):
     ################################################################################
     print_message('get subnet id')
 
-    subnet_id_1 = None
-    subnet_id_2 = None
+    elb_subnet_id_1 = None
+    elb_subnet_id_2 = None
+    ec2_subnet_id_1 = None
+    ec2_subnet_id_2 = None
     cmd = ['ec2', 'describe-subnets']
     result = aws_cli.run(cmd)
     for r in result['Subnets']:
@@ -74,14 +76,18 @@ def run_create_eb_django(name, settings):
             continue
         if 'public' == subnet_type:
             if r['CidrBlock'] == cidr_subnet['eb']['public_1']:
-                subnet_id_1 = r['SubnetId']
+                elb_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
-                subnet_id_2 = r['SubnetId']
+                elb_subnet_id_2 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
+                ec2_subnet_id_1 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
+                ec2_subnet_id_2 = r['SubnetId']
         elif 'private' == subnet_type:
             if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
-                subnet_id_1 = r['SubnetId']
+                elb_subnet_id_1 = ec2_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
-                subnet_id_2 = r['SubnetId']
+                elb_subnet_id_2 = ec2_subnet_id_2 = r['SubnetId']
         else:
             print('ERROR!!! Unknown subnet type:', subnet_type)
             raise Exception()
@@ -96,7 +102,7 @@ def run_create_eb_django(name, settings):
         if r['VpcId'] != eb_vpc_id:
             continue
         if 'public' == subnet_type:
-            if r['GroupName'] == '%seb_public' % name_prefix:
+            if r['GroupName'] == '%seb_private' % name_prefix:
                 security_group_id = r['GroupId']
                 break
         elif 'private' == subnet_type:
@@ -108,7 +114,6 @@ def run_create_eb_django(name, settings):
             raise Exception()
 
     ################################################################################
-
     print_message('get database address')
     db_address = aws_cli.get_rds_address()
     db_address_read_replica = aws_cli.get_rds_address(read_replica=True)
@@ -250,15 +255,13 @@ def run_create_eb_django(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'AssociatePublicIpAddress'
-    oo['Value'] = 'true'
-    if 'private' == subnet_type:
-        oo['Value'] = 'false'
+    oo['Value'] = 'false'
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'ELBScheme'
-    oo['Value'] = '...'
+    oo['Value'] = 'public'
     if 'private' == subnet_type:
         oo['Value'] = 'internal'
     option_settings.append(oo)
@@ -266,13 +269,13 @@ def run_create_eb_django(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'ELBSubnets'
-    oo['Value'] = ','.join([subnet_id_1, subnet_id_2])
+    oo['Value'] = ','.join([elb_subnet_id_1, elb_subnet_id_2])
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'Subnets'
-    oo['Value'] = ','.join([subnet_id_1, subnet_id_2])
+    oo['Value'] = ','.join([ec2_subnet_id_1, ec2_subnet_id_2])
     option_settings.append(oo)
 
     oo = dict()
@@ -285,6 +288,12 @@ def run_create_eb_django(name, settings):
     oo['Namespace'] = 'aws:elasticbeanstalk:environment'
     oo['OptionName'] = 'EnvironmentType'
     oo['Value'] = 'LoadBalanced'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:environment'
+    oo['OptionName'] = 'LoadBalancerType'
+    oo['Value'] = 'application'
     option_settings.append(oo)
 
     oo = dict()

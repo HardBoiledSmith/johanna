@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import datetime
 import json
-import sys
 import time
 
 from env import env
@@ -37,8 +36,8 @@ def create_iam_for_rds():
         sleep_required = True
 
     if sleep_required:
-        print_message('wait 30 seconds to let iam role and policy propagated to all regions...')
-        time.sleep(30)
+        print_message('wait 120 seconds to let iam role and policy propagated to all regions...')
+        time.sleep(120)
 
 
 db_backup_retention_period = env['rds']['BACKUP_RETENTION_PERIOD']
@@ -130,13 +129,11 @@ cmd += ['--monitoring-interval', monitoring_interval]
 cmd += ['--monitoring-role-arn', monitoring_role_arn]
 aws_cli.run(cmd)
 
-if db_multi_az == '--no-multi-az':
-    sys.exit(0)
-
-cmd = ['rds', 'create-db-instance']
-cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
-ss = datetime.datetime.today().strftime('%Y%m%d')
-cmd += ['--db-instance-identifier', '%s-%s' % (db_instance_id, ss)]
-cmd += ['--db-instance-class', db_instance_class]
-cmd += ['--engine', engine]
-aws_cli.run(cmd)
+if db_multi_az == '--multi-az':
+    cmd = ['rds', 'create-db-instance']
+    cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
+    ss = datetime.datetime.today().strftime('%Y%m%d')
+    cmd += ['--db-instance-identifier', '%s-%s' % (db_instance_id, ss)]
+    cmd += ['--db-instance-class', db_instance_class]
+    cmd += ['--engine', engine]
+    aws_cli.run(cmd)
