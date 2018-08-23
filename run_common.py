@@ -67,6 +67,7 @@ class AWSCli:
         self.env['AWS_DEFAULT_REGION'] = env['aws']['AWS_DEFAULT_REGION'] \
             if not aws_default_region \
             else aws_default_region
+        self.env['AWS_DEFAULT_OUTPUT'] = 'json'
 
     def run(self, args, cwd=None, ignore_error=None):
         args = ['aws'] + args
