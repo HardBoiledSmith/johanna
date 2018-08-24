@@ -383,21 +383,3 @@ def run_create_eb_cron_job(name, settings):
         cmd += ['--source-environment-name', eb_environment_name_old]
         cmd += ['--destination-environment-name', eb_environment_name]
         aws_cli.run(cmd)
-
-    ################################################################################
-
-    if 'T2.UNLIMITED' in settings and settings['T2.UNLIMITED']:
-        print_message('modify to t2.unlimited')
-
-        cmd = ['elasticbeanstalk', 'describe-environment-resources']
-        cmd += ['--environment-name', eb_environment_name]
-        result = aws_cli.run(cmd)
-        instances = result['EnvironmentResources']['Instances']
-        for ii in instances:
-            cmd = ['ec2', 'modify-instance-credit-specification']
-            cmd += ['--region', aws_default_region]
-            cmd += ['--instance-credit-specification', 'InstanceId=%s,CpuCredits=unlimited' % ii['Id']]
-            result = aws_cli.run(cmd)
-            if result['SuccessfulInstanceCreditSpecifications'][0]['InstanceId'] != ii['Id']:
-                print('ERROR!!! failed to modify to t2.unlimited')
-                raise Exception()
