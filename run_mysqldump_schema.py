@@ -66,7 +66,7 @@ def _manual_backup():
     print_session('dump mysql schema')
 
     engine = env['rds']['ENGINE']
-    if engine not in ('mysql', 'aurora'):
+    if engine not in ('aurora', 'aurora-mysql', 'aurora-postgresql'):
         print('not supported:', engine)
         raise Exception()
 

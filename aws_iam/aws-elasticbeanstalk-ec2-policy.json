@@ -16,6 +16,15 @@
       "Resource": [
         "arn:aws:logs:*:*:*"
       ]
+    },
+    {
+      "Sid": "T2UnlimitedSetup",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:ModifyInstanceCreditSpecification",
+        "ec2:DescribeInstanceCreditSpecifications"
+      ],
+      "Resource": "*"
     }
   ]
 }
