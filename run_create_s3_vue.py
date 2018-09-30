@@ -29,6 +29,7 @@ def run_create_s3_vue(name, settings):
     deploy_bucket_name = settings['BUCKET_NAME']
     bucket_prefix = settings.get('BUCKET_PREFIX', '')
     deploy_bucket_prefix = os.path.normpath('%s/%s' % (deploy_bucket_name, bucket_prefix))
+    deploy_protocol = settings.get('PROTOCOL', 'http')
 
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
@@ -114,6 +115,37 @@ def run_create_s3_vue(name, settings):
     upload_result = aws_cli.run(cmd, cwd=app_dist_path)
     for ll in upload_result.split('\n'):
         print(ll)
+
+    ################################################################################
+    print_message('create deploy bucket if not exists')
+
+    cmd = ['s3', 'mb', 's3://%s' % deploy_bucket_name]
+    aws_cli.run(cmd, ignore_error=True)
+
+    ################################################################################
+    print_message('set bucket policy')
+
+    lines = read_file('%s/configuration/aws-s3-bucket-policy-sample.json' % environment_path)
+    lines = re_sub_lines(lines, 'BUCKET_NAME', deploy_bucket_name)
+    write_file('%s/configuration/aws-s3-bucket-policy.json' % environment_path, lines)
+
+    cmd = ['s3api', 'put-bucket-policy']
+    cmd += ['--bucket', deploy_bucket_name]
+    cmd += ['--policy', 'file://%s/configuration/aws-s3-bucket-policy.json' % environment_path]
+    aws_cli.run(cmd)
+
+    ################################################################################
+    print_message('set website configuration')
+
+    lines = read_file('%s/configuration/aws-s3-website-configuration-sample.json' % environment_path)
+    lines = re_sub_lines(lines, 'BUCKET_NAME', deploy_bucket_name)
+    lines = re_sub_lines(lines, 'PROTOCOL', deploy_protocol)
+    write_file('%s/configuration/aws-s3-website-configuration.json' % environment_path, lines)
+
+    cmd = ['s3api', 'put-bucket-website']
+    cmd += ['--bucket', deploy_bucket_name]
+    cmd += ['--website-configuration', 'file://%s/configuration/aws-s3-website-configuration.json' % environment_path]
+    aws_cli.run(cmd)
 
     ################################################################################
     print_message('delete old files from deploy bucket')
