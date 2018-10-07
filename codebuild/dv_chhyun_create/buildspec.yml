@@ -1,0 +1,30 @@
+version: 0.2
+
+phases:
+  pre_install:
+    commands:
+      - yum install -y git-core
+      - mkdir template
+      - cd template
+      - git clone -b master https://github.com/HardBoiledSmith/magi.git
+      - unzip -P $SEELE_ZIP_PASSWORD ./magi/_seele/$SEELE_ZIP -d ./magi/_seele
+  install:
+    commands:
+      - cd magi/_seele
+      - ls
+      - pwd
+    finally:
+      - command
+  pre_build:
+    commands:
+      - command
+    finally:
+      - command
+  build:
+    commands:
+      - command
+    finally:
+      - command
+  post_build:
+    commands:
+      - command
