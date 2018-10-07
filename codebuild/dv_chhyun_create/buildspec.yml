@@ -17,7 +17,7 @@ phases:
   build:
     commands:
       - cd ..
-      - pwd
+      - ./run.py -f create
   post_build:
     commands:
-      - ls
+      - ./run.py -f describe
