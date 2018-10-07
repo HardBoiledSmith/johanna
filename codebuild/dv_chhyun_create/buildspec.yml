@@ -10,7 +10,8 @@ phases:
       - unzip -P $SEELE_ZIP_PASSWORD ./magi/_seele/$SEELE_ZIP -d ./magi/_seele
       - cp magi/_seele/dv-chhyun-config.json ../config.json˚
       - curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash
-      - . /root/.nvm/nvm.sh
+      - export NVM_DIR="/root/.nvm"
+      - [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
       - nvm install node
       - npm install -g npm@latest
       - npm install -g which-pm-runs-cli
