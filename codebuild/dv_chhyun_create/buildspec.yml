@@ -8,8 +8,9 @@ phases:
       - cd template
       - git clone -b GEN-2701 https://$GITHUB_TOKEN@github.com/HardBoiledSmith/magi.git
       - unzip -P $SEELE_ZIP_PASSWORD ./magi/_seele/$SEELE_ZIP -d ./magi/_seele
-      - cp magi/_seele/dv-chhyun-config.json ../config.json
+      - cp magi/_seele/dv-chhyun-config.json ../config.json˚
       - curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash
+      - . ~/.nvm/nvm.sh
       - nvm install node
       - npm install -g npm@latest
       - npm install -g which-pm-runs-cli
