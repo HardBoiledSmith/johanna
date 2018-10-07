@@ -6,7 +6,7 @@ phases:
       - yum install -y git-core
       - mkdir template
       - cd template
-      - git clone -b GEN-2701 https://github.com/HardBoiledSmith/magi.git
+      - git clone -b GEN-2701 https://$GITHUB_TOKEN@github.com/HardBoiledSmith/magi.git
       - unzip -P $SEELE_ZIP_PASSWORD ./magi/_seele/$SEELE_ZIP -d ./magi/_seele
     finally:
       - cd magi/_seele
