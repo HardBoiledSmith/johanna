@@ -10,6 +10,7 @@ phases:
       - unzip -P $SEELE_ZIP_PASSWORD ./magi/_seele/$SEELE_ZIP -d ./magi/_seele
       - cp magi/_seele/dv-chhyun-config.json ../config.json
       - cp magi/_seele/dv-chhyun-20180809.* ../
+      - pip install awscli --upgrade --user
       - npm install -g npm@latest
       - npm install -g which-pm-runs-cli
       - npm install -g grunt-cli
