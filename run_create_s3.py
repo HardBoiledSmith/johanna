@@ -44,9 +44,9 @@ for s3_env in s3_list:
     #     run_create_s3_angular(s3_env['NAME'], s3_env)
     # elif s3_env['TYPE'] == 'vue-app':
     #     run_create_s3_vue(s3_env['NAME'], s3_env)
-    else:
-        print('"%s" is not supported' % s3_env['TYPE'])
-        raise Exception()
+    # else:
+    #     print('"%s" is not supported' % s3_env['TYPE'])
+    #     raise Exception()
 
 if not check_exists and target_s3_name:
     print('"%s" is not exists in config.json' % target_s3_name)
