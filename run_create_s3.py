@@ -37,10 +37,13 @@ for s3_env in s3_list:
     if target_s3_name:
         check_exists = True
 
-    if s3_env['TYPE'] == 'angular-app':
-        run_create_s3_angular(s3_env['NAME'], s3_env)
-    elif s3_env['TYPE'] == 'vue-app':
+    if s3_env['TYPE'] == 'vue-app':
         run_create_s3_vue(s3_env['NAME'], s3_env)
+
+    # if s3_env['TYPE'] == 'angular-app':
+    #     run_create_s3_angular(s3_env['NAME'], s3_env)
+    # elif s3_env['TYPE'] == 'vue-app':
+    #     run_create_s3_vue(s3_env['NAME'], s3_env)
     else:
         print('"%s" is not supported' % s3_env['TYPE'])
         raise Exception()
