@@ -6,7 +6,7 @@ phases:
       - yum install -y git-core
       - mkdir template
       - cd template
-      - git clone -b GEN-2701 https://$GITHUB_TOKEN@github.com/HardBoiledSmith/magi.git
+      - git clone -b GEN-2717 https://$GITHUB_TOKEN@github.com/HardBoiledSmith/magi.git
       - unzip -P $SEELE_ZIP_PASSWORD ./magi/_seele/$SEELE_ZIP -d ./magi/_seele
       - cp magi/_seele/dv-chhyun-config.json ../config.json
       - cp magi/_seele/dv-chhyun-20180809.* ../
@@ -17,6 +17,7 @@ phases:
       - npm install -g grunt-cli
       - npm install -g standard
       - yum install -y python36
+      - yum install -y zip
   build:
     commands:
       - cd ..

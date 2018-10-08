@@ -98,7 +98,7 @@ def create_codebuild():
             },
             "environment": {
                 "type": "LINUX_CONTAINER",
-                "image": "aws/codebuild/eb-python-3.4-amazonlinux-64:2.1.6",
+                "image": "aws/codebuild/eb-nodejs-6.10.0-amazonlinux-64:4.0.0",
                 "computeType": codebuild['ENV_COMPUTE_TYPE'],
                 "environmentVariables": codebuild['ENV_VARIABLES']
             },
