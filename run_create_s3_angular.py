@@ -41,6 +41,11 @@ def run_create_s3_angular(name, settings):
     print_message('git clone')
 
     subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
+
+    #
+    print_message(git_url)
+    #
+
     if phase == 'dv':
         git_command = ['git', 'clone', '--depth=1', git_url, name]
     else:
@@ -89,7 +94,6 @@ def run_create_s3_angular(name, settings):
     ################################################################################
     print_message('grunt build')
 
-    print_message(app_root_path)
     # grunt_process = subprocess.Popen(['grunt'], cwd=app_root_path)
     # grunt_result, error = grunt_process.communicate()
     #
