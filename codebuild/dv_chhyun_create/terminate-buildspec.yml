@@ -1,0 +1,25 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - yum install -y git-core
+      - mkdir template
+      - cd template
+      - git clone -b GEN-2717 https://$GITHUB_TOKEN@github.com/HardBoiledSmith/magi.git
+      - unzip -P $SEELE_ZIP_PASSWORD ./magi/_seele/$SEELE_ZIP -d ./magi/_seele
+      - cp magi/_seele/dv-chhyun-config.json ../config.json
+      - cp magi/_seele/dv-chhyun-20180809.* ../
+      - pip install awscli --upgrade --user
+      - export PATH=~/.local/bin:$PATH
+      - yum install -y python36
+      - yum install -y python36-devel
+      - yum install -y python36-setuptools
+      - easy_install-3.6 pip
+  build:
+    commands:
+      - cd ..
+      - ./run.py -f terminate
+  post_build:
+    commands:
+      - ./run.py -f describe

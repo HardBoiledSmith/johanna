@@ -90,98 +90,98 @@ def run_create_s3_angular(name, settings):
     print_message('grunt build')
 
     print_message(app_root_path)
-    grunt_process = subprocess.Popen(['grunt'], cwd=app_root_path)
-    grunt_result, error = grunt_process.communicate()
-
-    if error:
-        print(error)
-        raise Exception()
-
-    if grunt_process.returncode != 0:
-        print(' '.join(['Grunt exited with:', str(grunt_process.returncode)]))
-        raise Exception()
-
-    ################################################################################
-    print_message('upload to temp bucket')
-
-    app_dist_path = '%s/dist' % app_root_path
-    temp_bucket_name = aws_cli.get_temp_bucket()
-    timestamp = int(time.time())
-    temp_bucket_prefix = '%s/%s/%s/%s/%s' % (temp_bucket_name, template_name, name, base_path, timestamp)
-    temp_bucket_prefix = os.path.normpath(temp_bucket_prefix)
-    temp_bucket_uri = 's3://%s' % temp_bucket_prefix
-
-    cmd = ['s3', 'cp', '.', temp_bucket_uri, '--recursive']
-    upload_result = aws_cli.run(cmd, cwd=app_dist_path)
-    for ll in upload_result.split('\n'):
-        print(ll)
-
-    ################################################################################
-    print_message('delete old files from deploy bucket')
-
-    delete_excluded_files = list(settings.get('DELETE_EXCLUDED_FILES', ''))
-    if len(delete_excluded_files) > 0:
-        cmd = ['s3', 'rm', 's3://%s' % deploy_bucket_prefix, '--recursive']
-        for ff in delete_excluded_files:
-            cmd += ['--exclude', '%s' % ff]
-        delete_result = aws_cli.run(cmd)
-        for ll in delete_result.split('\n'):
-            print(ll)
-
-    ################################################################################
-    print_message('sync to deploy bucket')
-
-    cmd = ['s3', 'sync', temp_bucket_uri, 's3://%s' % deploy_bucket_prefix]
-    if len(delete_excluded_files) < 1:
-        cmd += ['--delete']
-    sync_result = aws_cli.run(cmd)
-    for ll in sync_result.split('\n'):
-        print(ll)
-
-    ################################################################################
-    print_message('tag to deploy bucket')
-
-    tag_dict = dict()
-
-    cmd = ['s3api', 'get-bucket-tagging', '--bucket', deploy_bucket_name]
-    tag_result = aws_cli.run(cmd, ignore_error=True)
-    if tag_result:
-        tag_result = dict(tag_result)
-        for tt in tag_result['TagSet']:
-            key = tt['Key']
-            value = tt['Value']
-            tag_dict[key] = value
-
-    tag_dict['phase'] = phase
-    tag_dict['git_hash_johanna'] = git_hash_johanna.decode('utf-8')
-    tag_dict['git_hash_template'] = git_hash_template.decode('utf-8')
-    tag_dict['git_hash_%s' % name] = git_hash_app.decode('utf-8')
-    tag_dict['timestamp_%s' % name] = timestamp
-
-    tag_format = '{Key=%s, Value=%s}'
-    tag_list = list()
-    for key in tag_dict:
-        value = tag_dict[key]
-        tag_list.append(tag_format % (key, value))
-
-    cmd = ['s3api', 'put-bucket-tagging', '--bucket', deploy_bucket_name, '--tagging',
-           'TagSet=[%s]' % ','.join(tag_list)]
-    aws_cli.run(cmd)
-
-    ################################################################################
-    print_message('cleanup temp bucket')
-
-    cmd = ['s3', 'rm', temp_bucket_uri, '--recursive']
-    upload_result = aws_cli.run(cmd)
-    for ll in upload_result.split('\n'):
-        print(ll)
-
-    ################################################################################
-    print_message('invalidate cache from cloudfront')
-
-    cf_dist_id = settings.get('CLOUDFRONT_DIST_ID', '')
-    if len(cf_dist_id) > 0:
-        path_list = list(settings['INVALIDATE_PATHS'])
-        cmd = ['cloudfront', 'create-invalidation', '--distribution-id', cf_dist_id, '--paths', ' '.join(path_list)]
-        invalidate_result = aws_cli.run(cmd)
-        print(invalidate_result)
+    # grunt_process = subprocess.Popen(['grunt'], cwd=app_root_path)
+    # grunt_result, error = grunt_process.communicate()
+    #
+    # if error:
+    #     print(error)
+    #     raise Exception()
+    #
+    # if grunt_process.returncode != 0:
+    #     print(' '.join(['Grunt exited with:', str(grunt_process.returncode)]))
+    #     raise Exception()
+    #
+    # ################################################################################
+    # print_message('upload to temp bucket')
+    #
+    # app_dist_path = '%s/dist' % app_root_path
+    # temp_bucket_name = aws_cli.get_temp_bucket()
+    # timestamp = int(time.time())
+    # temp_bucket_prefix = '%s/%s/%s/%s/%s' % (temp_bucket_name, template_name, name, base_path, timestamp)
+    # temp_bucket_prefix = os.path.normpath(temp_bucket_prefix)
+    # temp_bucket_uri = 's3://%s' % temp_bucket_prefix
+    #
+    # cmd = ['s3', 'cp', '.', temp_bucket_uri, '--recursive']
+    # upload_result = aws_cli.run(cmd, cwd=app_dist_path)
+    # for ll in upload_result.split('\n'):
+    #     print(ll)
+    #
+    # ################################################################################
+    # print_message('delete old files from deploy bucket')
+    #
+    # delete_excluded_files = list(settings.get('DELETE_EXCLUDED_FILES', ''))
+    # if len(delete_excluded_files) > 0:
+    #     cmd = ['s3', 'rm', 's3://%s' % deploy_bucket_prefix, '--recursive']
+    #     for ff in delete_excluded_files:
+    #         cmd += ['--exclude', '%s' % ff]
+    #     delete_result = aws_cli.run(cmd)
+    #     for ll in delete_result.split('\n'):
+    #         print(ll)
+    #
+    # ################################################################################
+    # print_message('sync to deploy bucket')
+    #
+    # cmd = ['s3', 'sync', temp_bucket_uri, 's3://%s' % deploy_bucket_prefix]
+    # if len(delete_excluded_files) < 1:
+    #     cmd += ['--delete']
+    # sync_result = aws_cli.run(cmd)
+    # for ll in sync_result.split('\n'):
+    #     print(ll)
+    #
+    # ################################################################################
+    # print_message('tag to deploy bucket')
+    #
+    # tag_dict = dict()
+    #
+    # cmd = ['s3api', 'get-bucket-tagging', '--bucket', deploy_bucket_name]
+    # tag_result = aws_cli.run(cmd, ignore_error=True)
+    # if tag_result:
+    #     tag_result = dict(tag_result)
+    #     for tt in tag_result['TagSet']:
+    #         key = tt['Key']
+    #         value = tt['Value']
+    #         tag_dict[key] = value
+    #
+    # tag_dict['phase'] = phase
+    # tag_dict['git_hash_johanna'] = git_hash_johanna.decode('utf-8')
+    # tag_dict['git_hash_template'] = git_hash_template.decode('utf-8')
+    # tag_dict['git_hash_%s' % name] = git_hash_app.decode('utf-8')
+    # tag_dict['timestamp_%s' % name] = timestamp
+    #
+    # tag_format = '{Key=%s, Value=%s}'
+    # tag_list = list()
+    # for key in tag_dict:
+    #     value = tag_dict[key]
+    #     tag_list.append(tag_format % (key, value))
+    #
+    # cmd = ['s3api', 'put-bucket-tagging', '--bucket', deploy_bucket_name, '--tagging',
+    #        'TagSet=[%s]' % ','.join(tag_list)]
+    # aws_cli.run(cmd)
+    #
+    # ################################################################################
+    # print_message('cleanup temp bucket')
+    #
+    # cmd = ['s3', 'rm', temp_bucket_uri, '--recursive']
+    # upload_result = aws_cli.run(cmd)
+    # for ll in upload_result.split('\n'):
+    #     print(ll)
+    #
+    # ################################################################################
+    # print_message('invalidate cache from cloudfront')
+    #
+    # cf_dist_id = settings.get('CLOUDFRONT_DIST_ID', '')
+    # if len(cf_dist_id) > 0:
+    #     path_list = list(settings['INVALIDATE_PATHS'])
+    #     cmd = ['cloudfront', 'create-invalidation', '--distribution-id', cf_dist_id, '--paths', ' '.join(path_list)]
+    #     invalidate_result = aws_cli.run(cmd)
+    #     print(invalidate_result)
