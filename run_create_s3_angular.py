@@ -89,6 +89,9 @@ def run_create_s3_angular(name, settings):
     ################################################################################
     print_message('grunt build')
 
+    subprocess.Popen(['pwd'], cwd=app_root_path)
+    subprocess.Popen(['ls'], cwd=app_root_path)
+
     grunt_process = subprocess.Popen(['grunt'], cwd=app_root_path)
     grunt_result, error = grunt_process.communicate()
 

@@ -16,8 +16,14 @@ phases:
       - npm install -g which-pm-runs-cli
       - npm install -g grunt-cli
       - npm install -g standard
-      - yum install -y python36
       - yum install -y zip
+      - yum install -y python36
+      - yum install -y python36-devel
+      - yum install -y python36-setuptools
+      - easy_install-3.6 pip
+      - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --rc
+      - export PATH=~/.yarn/bin:$PATH
+      - yum install -y bzip2
   build:
     commands:
       - cd ..
