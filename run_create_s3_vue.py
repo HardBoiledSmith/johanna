@@ -16,7 +16,6 @@ def run_create_s3_vue(name, settings):
     aws_cli = AWSCli()
 
     git_url = settings['GIT_URL']
-    branch = settings['BRANCH']
     phase = env['common']['PHASE']
     template_name = env['template']['NAME']
     base_path = '%s/%s' % (name, settings.get('BASE_PATH', ''))
@@ -44,7 +43,7 @@ def run_create_s3_vue(name, settings):
 
     subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
     if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', '-b', branch, git_url, name]
+        git_command = ['git', 'clone', '--depth=1', git_url, name]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url, name]
     subprocess.Popen(git_command, cwd=environment_path).communicate()
