@@ -16,18 +16,18 @@ if __name__ == "__main__":
 aws_cli = AWSCli()
 
 
-def terminate_iam_for_lambda():
+def terminate_iam_for_lambda(lambda_type):
     print_message('delete iam role policy')
 
     cmd = ['iam', 'delete-role-policy']
-    cmd += ['--role-name', 'aws-lambda-default-role']
-    cmd += ['--policy-name', 'aws-lambda-default-policy']
+    cmd += ['--role-name', 'aws-lambda-%s-role' % lambda_type]
+    cmd += ['--policy-name', 'aws-lambda-%s-policy' % lambda_type]
     aws_cli.run(cmd, ignore_error=True)
 
     print_message('delete iam role')
 
     cmd = ['iam', 'delete-role']
-    cmd += ['--role-name', 'aws-lambda-default-role']
+    cmd += ['--role-name', 'aws-lambda-%s-role' % lambda_type]
     aws_cli.run(cmd, ignore_error=True)
 
 
@@ -150,6 +150,30 @@ def run_terminate_sns_lambda(name, settings):
     aws_cli.run(cmd, cwd=deploy_folder, ignore_error=True)
 
 
+def run_terminate_sqs_lambda(name, settings):
+    function_name = settings['NAME']
+    template_name = env['template']['NAME']
+    template_path = 'template/%s' % template_name
+    deploy_folder = '%s/lambda/%s' % (template_path, name)
+
+    ################################################################################
+    print_session('terminate lambda: %s' % function_name)
+
+    print_message('delete event sources for %s' % function_name)
+    cmd = ['lambda', 'list-event-source-mappings',
+           '--function-name', function_name]
+    mappings = aws_cli.run(cmd)['EventSourceMappings']
+    for mapping in mappings:
+        cmd = ['lambda', 'delete-event-source-mapping',
+               '--uuid', mapping['UUID']]
+        aws_cli.run(cmd)
+
+    print_message('delete lambda function')
+    cmd = ['lambda', 'delete-function',
+           '--function-name', function_name]
+    aws_cli.run(cmd, cwd=deploy_folder, ignore_error=True)
+
+
 ################################################################################
 #
 # start
@@ -173,6 +197,9 @@ if len(args) == 2:
             if lambda_env['TYPE'] == 'sns':
                 run_terminate_sns_lambda(lambda_env['NAME'], lambda_env)
                 break
+            if lambda_env['TYPE'] == 'sqs':
+                run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
+                break
             print('"%s" is not supported' % lambda_env['TYPE'])
             raise Exception()
     if not target_lambda_name_exists:
@@ -188,6 +215,10 @@ else:
         if lambda_env['TYPE'] == 'sns':
             run_terminate_sns_lambda(lambda_env['NAME'], lambda_env)
             continue
+        if lambda_env['TYPE'] == 'sqs':
+            run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
+            continue
         print('"%s" is not supported' % lambda_env['TYPE'])
         raise Exception()
-    terminate_iam_for_lambda()
+    terminate_iam_for_lambda('sqs')
+    terminate_iam_for_lambda('default')
