@@ -48,9 +48,8 @@ def run_terminate_default_lambda(name, settings):
     aws_cli.run(cmd, cwd=deploy_folder, ignore_error=True)
 
 
-def run_terminate_cron_lambda(name, settings):
+def run_terminate_cron_lambda(name):
     function_name = name
-    source_path = settings['SOURCE_PATH']
 
     ################################################################################
     print_session('terminate lambda: %s' % function_name)
@@ -93,7 +92,7 @@ def run_terminate_cron_lambda(name, settings):
 
     cmd = ['lambda', 'delete-function',
            '--function-name', function_name]
-    aws_cli.run(cmd, cwd=source_path, ignore_error=True)
+    aws_cli.run(cmd, ignore_error=True)
 
 
 def run_terminate_sns_lambda(name, settings):
@@ -189,7 +188,7 @@ if len(args) == 2:
                 run_terminate_default_lambda(lambda_env['NAME'], lambda_env)
                 break
             if lambda_env['TYPE'] == 'cron':
-                run_terminate_cron_lambda(lambda_env['NAME'], lambda_env)
+                run_terminate_cron_lambda(lambda_env['NAME'])
                 break
             if lambda_env['TYPE'] == 'sns':
                 run_terminate_sns_lambda(lambda_env['NAME'], lambda_env)
@@ -207,7 +206,7 @@ else:
             run_terminate_default_lambda(lambda_env['NAME'], lambda_env)
             continue
         if lambda_env['TYPE'] == 'cron':
-            run_terminate_cron_lambda(lambda_env['NAME'], lambda_env)
+            run_terminate_cron_lambda(lambda_env['NAME'])
             continue
         if lambda_env['TYPE'] == 'sns':
             run_terminate_sns_lambda(lambda_env['NAME'], lambda_env)
