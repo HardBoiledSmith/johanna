@@ -49,11 +49,8 @@ def run_terminate_default_lambda(name, settings):
 
 
 def run_terminate_cron_lambda(name, settings):
-    function_name = settings['NAME']
-    template_name = env['template']['NAME']
-
-    template_path = 'template/%s' % template_name
-    deploy_folder = '%s/lambda/%s' % (template_path, name)
+    function_name = name
+    source_path = settings['SOURCE_PATH']
 
     ################################################################################
     print_session('terminate lambda: %s' % function_name)
@@ -96,7 +93,7 @@ def run_terminate_cron_lambda(name, settings):
 
     cmd = ['lambda', 'delete-function',
            '--function-name', function_name]
-    aws_cli.run(cmd, cwd=deploy_folder, ignore_error=True)
+    aws_cli.run(cmd, cwd=source_path, ignore_error=True)
 
 
 def run_terminate_sns_lambda(name, settings):

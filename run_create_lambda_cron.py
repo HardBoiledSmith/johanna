@@ -2,62 +2,60 @@
 import os
 import subprocess
 
-from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
-from run_common import re_sub_lines
-from run_common import read_file
-from run_common import write_file
 
 
 def run_create_lambda_cron(name, settings):
     aws_cli = AWSCli()
-
     description = settings['DESCRIPTION']
-    function_name = settings['NAME']
-    phase = env['common']['PHASE']
+    function_name = name
+    phase = settings['PHASE']
+    git_url = settings['GIT_URL']
     schedule_expression = settings['SCHEDULE_EXPRESSION']
-    template_name = env['template']['NAME']
+    source_path = settings['SOURCE_PATH']
+    environment_variables = settings['ENVIRONMENT_VARIABLES']
 
-    template_path = 'template/%s' % template_name
-    deploy_folder = '%s/lambda/%s' % (template_path, name)
+    ################################################################################
+    print_message('git clone')
+
+    cmd = ['rm', '-rf', 'template/kaji']
+    subprocess.Popen(cmd).communicate()
+
+    if phase == 'dv':
+        git_command = ['git', 'clone', '--depth=1', git_url]
+    else:
+        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+
+    subprocess.Popen(git_command, cwd='template').communicate()
+    if not os.path.exists('%s' % source_path):
+        raise Exception()
 
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
-    git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
+    git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=source_path).communicate()[0]
 
     ################################################################################
     print_session('packaging lambda: %s' % function_name)
 
-    print_message('cleanup generated files')
-    subprocess.Popen(['git', 'clean', '-d', '-f', '-x'], cwd=deploy_folder).communicate()
+    print_message('create environment values')
+    with open('%s/settings_local.py' % source_path, 'w') as f:
+        for key in environment_variables:
+            f.write('%s = \'%s\'' % (key, environment_variables[key]))
+        f.close()
 
-    requirements_path = '%s/requirements.txt' % deploy_folder
+    requirements_path = '%s/requirements.txt' % source_path
     if os.path.exists(requirements_path):
         print_message('install dependencies')
 
-        cmd = ['pip3', 'install', '-r', requirements_path, '-t', deploy_folder]
+        cmd = ['pip3', 'install', '-r', requirements_path, '-t', source_path]
         subprocess.Popen(cmd).communicate()
-
-    settings_path = '%s/settings_local_sample.py' % deploy_folder
-    if os.path.exists(settings_path):
-        print_message('create environment values')
-
-        lines = read_file(settings_path)
-        option_list = list()
-        option_list.append(['PHASE', phase])
-        for key in settings:
-            value = settings[key]
-            option_list.append([key, value])
-        for oo in option_list:
-            lines = re_sub_lines(lines, '^(%s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
-        write_file('%s/settings_local.py' % deploy_folder, lines)
 
     print_message('zip files')
 
     cmd = ['zip', '-r', 'deploy.zip', '.']
-    subprocess.Popen(cmd, cwd=deploy_folder).communicate()
+    subprocess.Popen(cmd, cwd=source_path).communicate()
 
     print_message('create lambda function')
 
@@ -67,7 +65,7 @@ def run_create_lambda_cron(name, settings):
     # noinspection PyUnresolvedReferences
     tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8').strip())
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8').strip()))
+    tags.append('git_hash_%s=%s' % (source_path, git_hash_template.decode('utf-8').strip()))
 
     ################################################################################
     print_message('check previous version')
@@ -87,7 +85,7 @@ def run_create_lambda_cron(name, settings):
         cmd = ['lambda', 'update-function-code',
                '--function-name', function_name,
                '--zip-file', 'fileb://deploy.zip']
-        result = aws_cli.run(cmd, cwd=deploy_folder)
+        result = aws_cli.run(cmd, cwd=source_path)
 
         function_arn = result['FunctionArn']
 
@@ -96,7 +94,7 @@ def run_create_lambda_cron(name, settings):
         cmd = ['lambda', 'tag-resource',
                '--resource', function_arn,
                '--tags', ','.join(tags)]
-        aws_cli.run(cmd, cwd=deploy_folder)
+        aws_cli.run(cmd, cwd=source_path)
 
         print_message('update cron event')
 
@@ -119,7 +117,7 @@ def run_create_lambda_cron(name, settings):
            '--runtime', 'python3.6',
            '--tags', ','.join(tags),
            '--timeout', '120']
-    result = aws_cli.run(cmd, cwd=deploy_folder)
+    result = aws_cli.run(cmd, cwd=source_path)
 
     function_arn = result['FunctionArn']
 
