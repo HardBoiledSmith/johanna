@@ -10,7 +10,7 @@ from run_common import print_session
 def run_create_lambda_cron(name, settings):
     aws_cli = AWSCli()
     description = settings['DESCRIPTION']
-    function_name = name
+    origin_function_name = name
     phase = settings['PHASE']
     git_url = settings['GIT_URL']
     crons = settings['CRONS']
@@ -37,7 +37,6 @@ def run_create_lambda_cron(name, settings):
     git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=source_path).communicate()[0]
 
     ################################################################################
-    print_session('packaging lambda: %s' % function_name)
 
     print_message('create environment values')
     with open('%s/settings_local.py' % source_path, 'w') as f:
@@ -52,102 +51,104 @@ def run_create_lambda_cron(name, settings):
         cmd = ['pip3', 'install', '-r', requirements_path, '-t', source_path]
         subprocess.Popen(cmd).communicate()
 
-    print_message('zip files')
+    for ii in range(len(crons)):
+        function_name = origin_function_name + str(ii)
+        cron = crons[ii]
+        print_session('packaging lambda: %s' % function_name)
 
-    cmd = ['zip', '-r', 'deploy.zip', '.']
-    subprocess.Popen(cmd, cwd=source_path).communicate()
+        print_message('zip files')
 
-    print_message('create lambda function')
+        cmd = ['zip', '-r', 'deploy.zip', '.']
+        subprocess.Popen(cmd, cwd=source_path).communicate()
 
-    role_arn = aws_cli.get_role_arn('aws-lambda-default-role')
+        print_message('create lambda function')
 
-    tags = list()
-    # noinspection PyUnresolvedReferences
-    tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8').strip())
-    # noinspection PyUnresolvedReferences
-    tags.append('git_hash_%s=%s' % (source_path, git_hash_template.decode('utf-8').strip()))
+        role_arn = aws_cli.get_role_arn('aws-lambda-default-role')
 
-    ################################################################################
-    print_message('check previous version')
+        tags = list()
+        # noinspection PyUnresolvedReferences
+        tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8').strip())
+        # noinspection PyUnresolvedReferences
+        tags.append('git_hash_%s=%s' % (source_path, git_hash_template.decode('utf-8').strip()))
 
-    need_update = False
-    cmd = ['lambda', 'list-functions']
-    result = aws_cli.run(cmd)
-    for ff in result['Functions']:
-        if function_name == ff['FunctionName']:
-            need_update = True
-            break
+        ################################################################################
+        print_message('check previous version')
 
-    ################################################################################
-    if need_update:
-        print_session('update lambda: %s' % function_name)
+        need_update = False
+        cmd = ['lambda', 'list-functions']
+        result = aws_cli.run(cmd)
+        for ff in result['Functions']:
+            if function_name == ff['FunctionName']:
+                need_update = True
+                break
 
-        cmd = ['lambda', 'update-function-code',
-               '--function-name', function_name,
-               '--zip-file', 'fileb://deploy.zip']
-        result = aws_cli.run(cmd, cwd=source_path)
+        ################################################################################
+        if need_update:
+            print_session('update lambda: %s' % function_name)
 
-        function_arn = result['FunctionArn']
+            cmd = ['lambda', 'update-function-code',
+                   '--function-name', function_name,
+                   '--zip-file', 'fileb://deploy.zip']
+            result = aws_cli.run(cmd, cwd=source_path)
 
-        print_message('update lambda tags')
+            function_arn = result['FunctionArn']
 
-        cmd = ['lambda', 'tag-resource',
-               '--resource', function_arn,
-               '--tags', ','.join(tags)]
-        aws_cli.run(cmd, cwd=source_path)
+            print_message('update lambda tags')
 
-        print_message('update cron event')
+            cmd = ['lambda', 'tag-resource',
+                   '--resource', function_arn,
+                   '--tags', ','.join(tags)]
+            aws_cli.run(cmd, cwd=source_path)
 
-        for cron in crons:
+            print_message('update cron event')
+
             cmd = ['events', 'put-rule',
                    '--name', cron['NAME'],
                    '--description', description,
                    '--schedule-expression', cron['SCHEDULE_EXPRESSION']]
             aws_cli.run(cmd)
-        return
+            return
 
-    ################################################################################
-    print_session('create lambda: %s' % function_name)
+        ################################################################################
+        print_session('create lambda: %s' % function_name)
 
-    cmd = ['lambda', 'create-function',
-           '--function-name', function_name,
-           '--description', description,
-           '--zip-file', 'fileb://deploy.zip',
-           '--role', role_arn,
-           '--handler', 'lambda.handler',
-           '--runtime', 'python3.6',
-           '--tags', ','.join(tags),
-           '--timeout', '120']
-    result = aws_cli.run(cmd, cwd=source_path)
+        cmd = ['lambda', 'create-function',
+               '--function-name', function_name,
+               '--description', description,
+               '--zip-file', 'fileb://deploy.zip',
+               '--role', role_arn,
+               '--handler', 'lambda.handler',
+               '--runtime', 'python3.6',
+               '--tags', ','.join(tags),
+               '--timeout', '120']
+        result = aws_cli.run(cmd, cwd=source_path)
 
-    function_arn = result['FunctionArn']
+        function_arn = result['FunctionArn']
 
-    print_message('create cron event')
+        print_message('create cron event')
 
-    for cron in crons:
         cmd = ['events', 'put-rule',
                '--name', cron['NAME'],
                '--description', description,
                '--schedule-expression', cron['SCHEDULE_EXPRESSION']]
         aws_cli.run(cmd)
 
-    result = aws_cli.run(cmd)
+        result = aws_cli.run(cmd)
 
-    rule_arn = result['RuleArn']
+        rule_arn = result['RuleArn']
 
-    print_message('give event permission')
+        print_message('give event permission')
 
-    cmd = ['lambda', 'add-permission',
-           '--function-name', function_name,
-           '--statement-id', function_name + 'StatementId',
-           '--action', 'lambda:InvokeFunction',
-           '--principal', 'events.amazonaws.com',
-           '--source-arn', rule_arn]
-    aws_cli.run(cmd)
+        cmd = ['lambda', 'add-permission',
+               '--function-name', function_name,
+               '--statement-id', function_name + 'StatementId',
+               '--action', 'lambda:InvokeFunction',
+               '--principal', 'events.amazonaws.com',
+               '--source-arn', rule_arn]
+        aws_cli.run(cmd)
 
-    print_message('link event and lambda')
+        print_message('link event and lambda')
 
-    for cron in crons:
         cmd = ['events', 'put-targets',
                '--rule', cron['NAME'],
                '--targets', '{"Id" : "1", "Arn": "%s"}' % function_arn]
