@@ -13,7 +13,7 @@ def run_create_lambda_cron(name, settings):
     function_name = name
     phase = settings['PHASE']
     git_url = settings['GIT_URL']
-    schedule_expression = settings['SCHEDULE_EXPRESSION']
+    crons = settings['CRONS']
     source_path = settings['SOURCE_PATH']
     environment_variables = settings['ENVIRONMENT_VARIABLES']
 
@@ -42,7 +42,7 @@ def run_create_lambda_cron(name, settings):
     print_message('create environment values')
     with open('%s/settings_local.py' % source_path, 'w') as f:
         for key in environment_variables:
-            f.write('%s = \'%s\'' % (key, environment_variables[key]))
+            f.write('%s = \'%s\'' % (key, environment_variables[key]) + '\n')
         f.close()
 
     requirements_path = '%s/requirements.txt' % source_path
@@ -98,11 +98,12 @@ def run_create_lambda_cron(name, settings):
 
         print_message('update cron event')
 
-        cmd = ['events', 'put-rule',
-               '--name', function_name + 'CronRule',
-               '--description', description,
-               '--schedule-expression', schedule_expression]
-        aws_cli.run(cmd)
+        for cron in crons:
+            cmd = ['events', 'put-rule',
+                   '--name', cron['NAME'],
+                   '--description', description,
+                   '--schedule-expression', cron['SCHEDULE_EXPRESSION']]
+            aws_cli.run(cmd)
         return
 
     ################################################################################
@@ -123,10 +124,13 @@ def run_create_lambda_cron(name, settings):
 
     print_message('create cron event')
 
-    cmd = ['events', 'put-rule',
-           '--name', function_name + 'CronRule',
-           '--description', description,
-           '--schedule-expression', schedule_expression]
+    for cron in crons:
+        cmd = ['events', 'put-rule',
+               '--name', cron['NAME'],
+               '--description', description,
+               '--schedule-expression', cron['SCHEDULE_EXPRESSION']]
+        aws_cli.run(cmd)
+
     result = aws_cli.run(cmd)
 
     rule_arn = result['RuleArn']
@@ -143,7 +147,8 @@ def run_create_lambda_cron(name, settings):
 
     print_message('link event and lambda')
 
-    cmd = ['events', 'put-targets',
-           '--rule', function_name + 'CronRule',
-           '--targets', '{"Id" : "1", "Arn": "%s"}' % function_arn]
-    aws_cli.run(cmd)
+    for cron in crons:
+        cmd = ['events', 'put-targets',
+               '--rule', cron['NAME'],
+               '--targets', '{"Id" : "1", "Arn": "%s"}' % function_arn]
+        aws_cli.run(cmd)
