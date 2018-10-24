@@ -7,6 +7,7 @@ from run_common import check_template_availability
 
 command_list = list()
 command_list.append('create')
+command_list.append('create_codebuild')
 command_list.append('create_cloudwatch_alarm')
 command_list.append('create_cloudwatch_dashboard')
 command_list.append('create_eb')
@@ -19,6 +20,7 @@ command_list.append('create_sqs')
 command_list.append('create_vpc')
 
 command_list.append('terminate')
+command_list.append('terminate_codebuild')
 command_list.append('terminate_cloudwatch_alarm')
 command_list.append('terminate_cloudwatch_dashboard')
 command_list.append('terminate_eb')
