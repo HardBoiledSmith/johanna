@@ -163,11 +163,7 @@ def run_create_eb_django(name, settings):
         git_command = ['git', 'clone', '--depth=1', git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
-    print('git_command:', git_command)
-    result, error = subprocess.Popen(git_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                     cwd=environment_path).communicate()
-    print('result:', result)
-    print('error:', error)
+    subprocess.Popen(git_command, cwd=environment_path).communicate()
     if not os.path.exists('%s/%s' % (environment_path, name)):
         raise Exception()
 
