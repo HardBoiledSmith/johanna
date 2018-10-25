@@ -2,6 +2,7 @@
 import os
 import subprocess
 import sys
+import re
 from datetime import datetime
 from subprocess import PIPE
 from time import time
@@ -110,6 +111,11 @@ def _mysql_dump(host, user, password, database, filename_path):
     cmd += ['--ignore-table=%s.django_content_type' % database]
     cmd += ['--ignore-table=%s.django_migrations' % database]
     cmd += ['--ignore-table=%s.django_session' % database]
+    cmd += ['--ignore-table=%s.hbsmith_scenario_alarm' % database]
+    cmd += ['--ignore-table=%s.hbsmith_scenario_lock' % database]
+    cmd += ['--ignore-table=%s.hbsmith_cache' % database]
+    cmd += ['--ignore-table=%s.oauth2_provider_accesstoken' % database]
+    cmd += ['--ignore-table=%s.oauth2_provider_refreshtoken' % database]
     cmd += ['--no-create-info']
     cmd += ['--single-transaction']
     cmd += ['--skip-extended-insert']
@@ -133,7 +139,11 @@ def _mysql_dump(host, user, password, database, filename_path):
                     line.startswith('-- Dump completed on'):
                 ff.write('\n')
                 continue
-
+            if 'INSERT INTO `auth_user` VALUES (' in line:
+                rr1 = re.compile(r'^INSERT INTO `auth_user` VALUES \(([3-9],|[0-9]{2,9},)')
+                if rr1.search(line) is not None:
+                    rr2 = re.compile(r'\'[a-zA-Z0-9._+\-#$%^&*@!><\[\]{\}]+@[a-zA-Z0-9._+#$%^&*]+.[a-z.]+\',')
+                    line = rr2.sub("'bounced@hbsmith.io,'", line)
             ff.write(line)
 
     cmd = ['rm', filename_path_raw]
