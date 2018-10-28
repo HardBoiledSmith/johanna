@@ -159,7 +159,9 @@ def _mysql_dump(host, user, password, database, filename_path):
                     'INSERT INTO `hbsmith_scenario_lock` VALUES (',
                     'INSERT INTO `hbsmith_cache` VALUES (',
                     'INSERT INTO `oauth2_provider_accesstoken` VALUES (',
-                    'INSERT INTO `oauth2_provider_refreshtoken` VALUES ('
+                    'INSERT INTO `oauth2_provider_refreshtoken` VALUES (',
+                    'INSERT INTO `hbsmith_scenario_result` VALUES (',
+                    'INSERT INTO `hbsmith_case_result` VALUES ('
             )):
                 continue
             ff.write(line)
