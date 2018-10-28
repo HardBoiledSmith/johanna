@@ -111,11 +111,6 @@ def _mysql_dump(host, user, password, database, filename_path):
     cmd += ['--ignore-table=%s.django_content_type' % database]
     cmd += ['--ignore-table=%s.django_migrations' % database]
     cmd += ['--ignore-table=%s.django_session' % database]
-    cmd += ['--ignore-table=%s.hbsmith_scenario_alarm' % database]
-    cmd += ['--ignore-table=%s.hbsmith_scenario_lock' % database]
-    cmd += ['--ignore-table=%s.hbsmith_cache' % database]
-    cmd += ['--ignore-table=%s.oauth2_provider_accesstoken' % database]
-    cmd += ['--ignore-table=%s.oauth2_provider_refreshtoken' % database]
     cmd += ['--no-create-info']
     cmd += ['--single-transaction']
     cmd += ['--skip-extended-insert']
@@ -139,11 +134,34 @@ def _mysql_dump(host, user, password, database, filename_path):
                     line.startswith('-- Dump completed on'):
                 ff.write('\n')
                 continue
-            if 'INSERT INTO `auth_user` VALUES (' in line:
-                rr1 = re.compile(r'^INSERT INTO `auth_user` VALUES \(([3-9],|[0-9]{2,9},)')
-                if rr1.search(line) is not None:
-                    rr2 = re.compile(r'\'[a-zA-Z0-9._+\-#$%^&*@!><\[\]{\}]+@[a-zA-Z0-9._+#$%^&*]+.[a-z.]+\',')
-                    line = rr2.sub("'bounced@hbsmith.io,'", line)
+
+            if re.search(r'^INSERT INTO `auth_user` VALUES \([1-2],', line) is not None:
+                splited_lines = line.split(',')
+                line = ''
+                for sl in splited_lines:
+                    if sl == splited_lines[1]:
+                        line += '\'pbkdf2_sha256$36000$1eLKAkz2Ki55$jrvEzikMhfTLm/tYzfdTcWndnMddR9fMucTpvcVYqSc=\','
+                    else:
+                        line += sl + ','
+                line = line[:-1]
+            elif 'INSERT INTO `auth_user` VALUES (' in line:
+                if re.search(r'^INSERT INTO `auth_user` VALUES \(([3-9],|[0-9]{2,9},)', line) is not None:
+                    splited_lines = line.split(',')
+                    line = ''
+                    for sl in splited_lines:
+                        if sl == splited_lines[7]:
+                            line += '\'bounced@hbsmith.io\','
+                        else:
+                            line += sl + ','
+                    line = line[:-1]
+            elif any(_ in line for _ in (
+                    'INSERT INTO `hbsmith_scenario_alarm` VALUES (',
+                    'INSERT INTO `hbsmith_scenario_lock` VALUES (',
+                    'INSERT INTO `hbsmith_cache` VALUES (',
+                    'INSERT INTO `oauth2_provider_accesstoken` VALUES (',
+                    'INSERT INTO `oauth2_provider_refreshtoken` VALUES ('
+            )):
+                continue
             ff.write(line)
 
     cmd = ['rm', filename_path_raw]
