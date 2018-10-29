@@ -48,9 +48,14 @@ def run_terminate_default_lambda(name, settings):
     aws_cli.run(cmd, cwd=deploy_folder, ignore_error=True)
 
 
-def run_terminate_cron_lambda(name, lambda_env):
-    aws_cli = AWSCli(lambda_env['AWS_DEFAULT_REGION'])
+def run_terminate_cron_lambda(name, settings):
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+
     function_name = name
+    template_name = env['template']['NAME']
+
+    template_path = 'template/%s' % template_name
+    deploy_folder = '%s/lambda/%s' % (template_path, settings['FOLDER_NAME'])
 
     ################################################################################
     print_session('terminate lambda: %s' % function_name)
@@ -58,7 +63,7 @@ def run_terminate_cron_lambda(name, lambda_env):
     print_message('unlink event and lambda')
 
     cmd = ['events', 'list-targets-by-rule',
-           '--rule', '%s_rule' % function_name]
+           '--rule', function_name + 'CronRule']
     result = aws_cli.run(cmd, ignore_error=True)
     if type(result) is dict:
         target_list = result['Targets']
@@ -72,7 +77,7 @@ def run_terminate_cron_lambda(name, lambda_env):
     ids_list = '[%s]' % ','.join(ids_list)
 
     cmd = ['events', 'remove-targets',
-           '--rule', '%s_rule' % function_name,
+           '--rule', function_name + 'CronRule',
            '--ids', ids_list]
     aws_cli.run(cmd, ignore_error=True)
 
@@ -86,14 +91,14 @@ def run_terminate_cron_lambda(name, lambda_env):
     print_message('delete cron event')
 
     cmd = ['events', 'delete-rule',
-           '--name', '%s_rule' % function_name]
+           '--name', function_name + 'CronRule']
     aws_cli.run(cmd, ignore_error=True)
 
     print_message('delete lambda function')
 
     cmd = ['lambda', 'delete-function',
            '--function-name', function_name]
-    aws_cli.run(cmd, ignore_error=True)
+    aws_cli.run(cmd, cwd=deploy_folder, ignore_error=True)
 
 
 def run_terminate_sns_lambda(name, settings):
