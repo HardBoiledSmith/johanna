@@ -49,54 +49,51 @@ def run_terminate_default_lambda(name, settings):
 
 
 def run_terminate_cron_lambda(name, lambda_env):
-    origin_function_name = name
+    aws_cli = AWSCli(lambda_env['AWS_DEFAULT_REGION'])
+    function_name = name
 
     ################################################################################
-    for ii in range(len(lambda_env['CRONS'])):
-        function_name = origin_function_name + str(ii)
-        cron = lambda_env['CRONS'][ii]
+    print_session('terminate lambda: %s' % function_name)
 
-        print_session('terminate lambda: %s' % function_name)
+    print_message('unlink event and lambda')
 
-        print_message('unlink event and lambda')
+    cmd = ['events', 'list-targets-by-rule',
+           '--rule', '%s_rule' % function_name]
+    result = aws_cli.run(cmd, ignore_error=True)
+    if type(result) is dict:
+        target_list = result['Targets']
+    else:
+        target_list = list()
 
-        cmd = ['events', 'list-targets-by-rule',
-               '--rule', cron['NAME']]
-        result = aws_cli.run(cmd, ignore_error=True)
-        if type(result) is dict:
-            target_list = result['Targets']
-        else:
-            target_list = list()
+    ids_list = []
+    for target in target_list:
+        target_id = '"%s"' % target['Id']
+        ids_list.append(target_id)
+    ids_list = '[%s]' % ','.join(ids_list)
 
-        ids_list = []
-        for target in target_list:
-            target_id = '"%s"' % target['Id']
-            ids_list.append(target_id)
-        ids_list = '[%s]' % ','.join(ids_list)
+    cmd = ['events', 'remove-targets',
+           '--rule', '%s_rule' % function_name,
+           '--ids', ids_list]
+    aws_cli.run(cmd, ignore_error=True)
 
-        cmd = ['events', 'remove-targets',
-               '--rule', cron['NAME'],
-               '--ids', ids_list]
-        aws_cli.run(cmd, ignore_error=True)
+    print_message('remove event permission')
 
-        print_message('remove event permission')
+    cmd = ['lambda', 'remove-permission',
+           '--function-name', function_name,
+           '--statement-id', function_name + 'StatementId']
+    aws_cli.run(cmd, ignore_error=True)
 
-        cmd = ['lambda', 'remove-permission',
-               '--function-name', function_name,
-               '--statement-id', function_name + 'StatementId']
-        aws_cli.run(cmd, ignore_error=True)
+    print_message('delete cron event')
 
-        print_message('delete cron event')
+    cmd = ['events', 'delete-rule',
+           '--name', '%s_rule' % function_name]
+    aws_cli.run(cmd, ignore_error=True)
 
-        cmd = ['events', 'delete-rule',
-               '--name', cron['NAME']]
-        aws_cli.run(cmd, ignore_error=True)
+    print_message('delete lambda function')
 
-        print_message('delete lambda function')
-
-        cmd = ['lambda', 'delete-function',
-               '--function-name', function_name]
-        aws_cli.run(cmd, ignore_error=True)
+    cmd = ['lambda', 'delete-function',
+           '--function-name', function_name]
+    aws_cli.run(cmd, ignore_error=True)
 
 
 def run_terminate_sns_lambda(name, settings):
