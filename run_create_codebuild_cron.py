@@ -38,7 +38,8 @@ def run_create_codebuild_cron(name, settings):
                 "type": "OAUTH",
                 "resource": github_token
             },
-            "insecureSsl": True
+            "insecureSsl": True,
+            "sourceIdentifier": git_branch
         },
         "artifacts": {
             "type": "NO_ARTIFACTS"
