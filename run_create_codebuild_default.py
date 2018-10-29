@@ -8,6 +8,7 @@ from run_common import print_message
 def run_create_codebuild_default(name, settings):
     aws_cli = AWSCli()
 
+    git_branch = settings['BRANCH']
     build_spec = settings['BUILD_SPEC']
     build_timeout = settings['BUILD_TIMEOUT']
     compute_type = settings['ENV_COMPUTE_TYPE']
@@ -37,7 +38,8 @@ def run_create_codebuild_default(name, settings):
                 "type": "OAUTH",
                 "resource": github_token
             },
-            "insecureSsl": True
+            "insecureSsl": True,
+            "sourceIdentifier": git_branch
         },
         "artifacts": {
             "type": "NO_ARTIFACTS"
