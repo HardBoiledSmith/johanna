@@ -21,21 +21,6 @@ if __name__ == "__main__":
 aws_cli = AWSCli()
 
 
-def _create_iam_role(role_name, role_file_path):
-    cmd = ['iam', 'create-role']
-    cmd += ['--role-name', role_name]
-    cmd += ['--assume-role-policy-document', role_file_path]
-    return aws_cli.run(cmd)
-
-
-def _create_iam_policy(role_name, policy_name, policy_file_path):
-    cmd = ['iam', 'put-role-policy']
-    cmd += ['--role-name', role_name]
-    cmd += ['--policy-name', policy_name]
-    cmd += ['--policy-document', policy_file_path]
-    return aws_cli.run(cmd)
-
-
 def create_iam_for_lambda(lambda_type):
     sleep_required = False
 
@@ -43,15 +28,18 @@ def create_iam_for_lambda(lambda_type):
     if not aws_cli.get_iam_role(role_name):
         print_message('create iam role')
 
-        role_file_path = 'file://aws_iam/aws-lambda-%s-role.json' % lambda_type
-        _create_iam_role(role_name, role_file_path)
+        role_file_path = 'file://aws_iam/%s.json' % role_name
+        cmd = ['iam', 'create-role']
+        cmd += ['--role-name', role_name]
+        cmd += ['--assume-role-policy-document', role_file_path]
+        aws_cli.run(cmd)
         sleep_required = True
 
     policy_name = 'aws-lambda-%s-policy' % lambda_type
     if not aws_cli.get_iam_role_policy(role_name, policy_name):
         print_message('put iam role policy')
 
-        policy_file_path = 'file://aws_iam/aws-lambda-%s-policy.json' % lambda_type
+        policy_file_path = 'file://aws_iam/%s.json' % policy_name
         cmd = ['iam', 'put-role-policy']
         cmd += ['--role-name', role_name]
         cmd += ['--policy-name', policy_name]
