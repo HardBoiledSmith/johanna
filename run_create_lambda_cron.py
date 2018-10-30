@@ -14,13 +14,13 @@ from run_common import write_file
 def run_create_lambda_cron(name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
     description = settings['DESCRIPTION']
-    function_name = settings['NAME']
+    function_name = name
     phase = env['common']['PHASE']
     schedule_expression = settings['SCHEDULE_EXPRESSION']
     template_name = env['template']['NAME']
 
     template_path = 'template/%s' % template_name
-    deploy_folder = '%s/lambda/%s' % (template_path, settings['FOLDER_NAME'])
+    deploy_folder = '%s/lambda/%s' % (template_path, settings.get('FOLDER_NAME', name))
 
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]

@@ -55,7 +55,7 @@ def run_terminate_cron_lambda(name, settings):
     template_name = env['template']['NAME']
 
     template_path = 'template/%s' % template_name
-    deploy_folder = '%s/lambda/%s' % (template_path, settings['FOLDER_NAME'])
+    deploy_folder = '%s/lambda/%s' % (template_path, settings.get('FOLDER_NAME', name))
 
     ################################################################################
     print_session('terminate lambda: %s' % function_name)
