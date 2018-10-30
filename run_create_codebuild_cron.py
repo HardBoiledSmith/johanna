@@ -96,6 +96,8 @@ def run_create_codebuild_cron(name, settings):
     }
     target_input = json.dumps(target_input)
 
+    role_arn = aws_cli.get_role_arn('aws-events-rule-codebuild-role')
+
     target = {
         "Id": "1",
         "Arn": project_arn,
