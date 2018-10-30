@@ -16,6 +16,7 @@ def run_create_codebuild_cron(name, settings):
     env_list = settings['ENV_VARIABLES']
     git_repo = settings['GITHUB_REPO']
     github_token = settings['GITHUB_TOKEN']
+    image = settings['IMAGE']
 
     ################################################################################
     print_message('check previous version')
@@ -49,7 +50,7 @@ def run_create_codebuild_cron(name, settings):
         },
         "environment": {
             "type": "LINUX_CONTAINER",
-            "image": "aws/codebuild/eb-python-3.4-amazonlinux-64:2.1.6",
+            "image": image,
             "computeType": compute_type,
             "environmentVariables": env_list
         },
@@ -94,6 +95,8 @@ def run_create_codebuild_cron(name, settings):
         "timeoutInMinutesOverride": 60
     }
     target_input = json.dumps(target_input)
+
+    role_arn = aws_cli.get_role_arn('aws-events-rule-codebuild-role')
 
     target = {
         "Id": "1",
