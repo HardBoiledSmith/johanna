@@ -16,6 +16,7 @@ def run_create_codebuild_default(name, settings):
     env_list = settings['ENV_VARIABLES']
     git_repo = settings['GITHUB_REPO']
     github_token = settings['GITHUB_TOKEN']
+    image = settings['IMAGE']
 
     ################################################################################
     print_message('check previous version')
@@ -49,7 +50,7 @@ def run_create_codebuild_default(name, settings):
         },
         "environment": {
             "type": "LINUX_CONTAINER",
-            "image": "aws/codebuild/eb-nodejs-6.10.0-amazonlinux-64:4.0.0",
+            "image": image,
             "computeType": compute_type,
             "environmentVariables": env_list
         },
