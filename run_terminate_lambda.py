@@ -32,13 +32,14 @@ def terminate_iam_for_lambda(lambda_type):
 
 
 def run_terminate_default_lambda(name, settings):
-    aws_cli = AWSCli()
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
-    function_name = settings['NAME']
+    folder_name = settings.get('FOLDER_NAME', name)
+    function_name = name
     template_name = env['template']['NAME']
 
     template_path = 'template/%s' % template_name
-    deploy_folder = '%s/lambda/%s' % (template_path, name)
+    deploy_folder = '%s/lambda/%s' % (template_path, folder_name)
 
     ################################################################################
     print_session('terminate lambda: %s' % function_name)
@@ -53,11 +54,12 @@ def run_terminate_default_lambda(name, settings):
 def run_terminate_cron_lambda(name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
+    folder_name = settings.get('FOLDER_NAME', name)
     function_name = name
     template_name = env['template']['NAME']
 
     template_path = 'template/%s' % template_name
-    deploy_folder = '%s/lambda/%s' % (template_path, settings.get('FOLDER_NAME', name))
+    deploy_folder = '%s/lambda/%s' % (template_path, folder_name)
 
     ################################################################################
     print_session('terminate lambda: %s' % function_name)
@@ -106,11 +108,12 @@ def run_terminate_cron_lambda(name, settings):
 def run_terminate_sns_lambda(name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
-    function_name = settings['NAME']
+    folder_name = settings.get('FOLDER_NAME', name)
+    function_name = name
     template_name = env['template']['NAME']
 
     template_path = 'template/%s' % template_name
-    deploy_folder = '%s/lambda/%s' % (template_path, name)
+    deploy_folder = '%s/lambda/%s' % (template_path, folder_name)
 
     ################################################################################
     print_session('terminate lambda: %s' % function_name)
@@ -159,10 +162,12 @@ def run_terminate_sns_lambda(name, settings):
 def run_terminate_sqs_lambda(name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
-    function_name = settings['NAME']
+    folder_name = settings.get('FOLDER_NAME', name)
+    function_name = name
     template_name = env['template']['NAME']
+
     template_path = 'template/%s' % template_name
-    deploy_folder = '%s/lambda/%s' % (template_path, name)
+    deploy_folder = '%s/lambda/%s' % (template_path, folder_name)
 
     ################################################################################
     print_session('terminate lambda: %s' % function_name)
