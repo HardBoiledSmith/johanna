@@ -5,7 +5,7 @@ from run_common import AWSCli
 from run_common import print_message
 
 
-def run_create_codebuild_cron(name, settings):
+def run_create_codebuild_default(name, settings):
     aws_cli = AWSCli()
 
     git_branch = settings['BRANCH']
@@ -25,7 +25,7 @@ def run_create_codebuild_cron(name, settings):
     result = aws_cli.run(cmd)
     need_update = name in result['projects']
     ################################################################################
-    role_arn = aws_cli.get_role_arn('aws-codebuild-cron-role')
+    role_arn = aws_cli.get_role_arn('aws-codebuild-default-role')
 
     config = {
         "name": name,
@@ -65,48 +65,9 @@ def run_create_codebuild_cron(name, settings):
 
         cmd = ['codebuild', 'update-project', '--cli-input-json', config]
         aws_cli.run(cmd)
-
-        print_message('update cron event')
-
-        cmd = ['events', 'put-rule']
-        cmd += ['--name', name + 'CronRule']
-        cmd += ['--schedule-expression', settings['SCHEDULE_EXPRESSION']]
-        aws_cli.run(cmd)
         return
 
     print_message('create project: %s' % name)
 
     cmd = ['codebuild', 'create-project', '--cli-input-json', config]
-    result = aws_cli.run(cmd)
-
-    project_arn = result['project']['arn']
-
-    print_message('create cron event')
-
-    cmd = ['events', 'put-rule']
-    cmd += ['--name', name + 'CronRule']
-    cmd += ['--schedule-expression', settings['SCHEDULE_EXPRESSION']]
-    aws_cli.run(cmd)
-
-    print_message('link event and codebuild project')
-
-    target_input = {
-        "sourceVersion": git_branch,
-        "timeoutInMinutesOverride": 60
-    }
-    target_input = json.dumps(target_input)
-
-    role_arn = aws_cli.get_role_arn('aws-events-rule-codebuild-role')
-
-    target = {
-        "Id": "1",
-        "Arn": project_arn,
-        "RoleArn": role_arn,
-        "Input": target_input
-    }
-    target = json.dumps(target)
-
-    cmd = ['events', 'put-targets']
-    cmd += ['--rule', name + 'CronRule']
-    cmd += ['--targets', target]
     aws_cli.run(cmd)
