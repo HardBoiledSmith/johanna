@@ -13,10 +13,10 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-aws_cli = AWSCli()
-
 
 def terminate_iam_for_lambda(lambda_type):
+    aws_cli = AWSCli()
+
     print_message('delete iam role policy')
 
     cmd = ['iam', 'delete-role-policy']
@@ -32,6 +32,8 @@ def terminate_iam_for_lambda(lambda_type):
 
 
 def run_terminate_default_lambda(name, settings):
+    aws_cli = AWSCli()
+
     function_name = settings['NAME']
     template_name = env['template']['NAME']
 
@@ -102,6 +104,8 @@ def run_terminate_cron_lambda(name, settings):
 
 
 def run_terminate_sns_lambda(name, settings):
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+
     function_name = settings['NAME']
     template_name = env['template']['NAME']
 
@@ -153,6 +157,8 @@ def run_terminate_sns_lambda(name, settings):
 
 
 def run_terminate_sqs_lambda(name, settings):
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+
     function_name = settings['NAME']
     template_name = env['template']['NAME']
     template_path = 'template/%s' % template_name
