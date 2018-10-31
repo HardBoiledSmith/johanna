@@ -6,3 +6,5 @@
 /*config.yml
 /.idea
 template/
+*~
+.DS_Store
