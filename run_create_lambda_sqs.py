@@ -13,15 +13,17 @@ from run_common import write_file
 
 
 def run_create_lambda_sqs(name, settings):
-    aws_cli = AWSCli()
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     description = settings['DESCRIPTION']
-    function_name = settings['NAME']
+    folder_name = settings.get('FOLDER_NAME', name)
+    function_name = name
     sqs_name = settings['SQS_NAME']
     phase = env['common']['PHASE']
     template_name = env['template']['NAME']
+
     template_path = 'template/%s' % template_name
-    deploy_folder = '%s/lambda/%s' % (template_path, name)
+    deploy_folder = '%s/lambda/%s' % (template_path, folder_name)
 
     queue_arn = _get_queue_arn(aws_cli, sqs_name)
     build_info = _build(deploy_folder, function_name, phase, settings, template_name, template_path)
