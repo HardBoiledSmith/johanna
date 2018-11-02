@@ -156,7 +156,5 @@ def _mysql_dump(host, user, password, database, filename_path):
 print_session('mysqldump data')
 
 ################################################################################
-# if __name__ != "__main__":
-#     _manual_backup()
-if __name__ == "__main__":
+if __name__ != "__main__":
     _manual_backup()
