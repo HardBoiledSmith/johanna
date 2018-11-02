@@ -27,11 +27,29 @@ def create_config_set():
 
     exist_config_names = [exist_config_set['Name'] for exist_config_set in exist_config_sets]
     for config_set in ses['CONFIGURATION_SETS']:
+        config = {
+            "NAME": config_set['NAME'],
+            "EVENT_DESTINATIONS": [{
+                "Name": config_set['EVENT_DESTINATIONS_NAME'],
+                "Enabled": config_set['EVENT_DESTINATIONS_Enabled'],
+                "MatchingEventTypes": config_set['MATCHING_TYPE'],
+                "CloudWatchDestination": {
+                    "DimensionConfigurations": [
+                        {
+                            "DimensionName": config_set['DIMENSION_CONFIG_NAME'],
+                            "DimensionValueSource": config_set['DIMENSION_CONFIG_VALUE_SOURCE'],
+                            "DefaultDimensionValue": config_set['DIMENSION_CONFIG_VALUE']
+                        }
+                    ]
+                }
+            }]
+        }
+
         if config_set['NAME'] not in exist_config_names:
             cmd = ['ses', 'create-configuration-set',
-                   '--configuration-set', 'Name=%s' % config_set['NAME']]
+                   '--configuration-set', 'Name=%s' % config['NAME']]
             aws_cli.run(cmd)
-            for event_destination in config_set['EVENT_DESTINATIONS']:
+            for event_destination in config['EVENT_DESTINATIONS']:
                 cmd = ['ses', 'create-configuration-set-event-destination',
                        '--configuration-set-name', config_set['NAME'],
                        '--event-destination', json.dumps(event_destination)
