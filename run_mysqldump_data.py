@@ -106,6 +106,18 @@ def _mysql_dump(host, user, password, database, filename_path):
                         else:
                             line += sl + ','
                     line = line[:-1]
+            elif 'INSERT INTO `hbsmith_team` VALUES (' in line:
+                ss = line.split(',')
+                ss[3:6] = ['\'\'', '\'\'', '\'\'']
+                line = ','.join(ss)
+            elif 'INSERT INTO `hbsmith_case` VALUES (' in line:
+                ss = line.split(',')
+                ss[-4] = 'NULL'
+                line = ','.join(ss)
+            elif 'INSERT INTO `hbsmith_scenario` VALUES (' in line:
+                ss = line.split(',')
+                ss[9:11] = ['\'\'', 'NULL']
+                line = ','.join(ss)
             elif 'INSERT INTO `hbsmith_case_alarm` VALUES (' in line:
                 case_alarm_insert_count += 1
                 if case_alarm_insert_count >= 1000:
@@ -115,15 +127,15 @@ def _mysql_dump(host, user, password, database, filename_path):
                 if scenario_alarm_insert_count >= 1000:
                     continue
             elif any([(lambda qq: qq in line)(qq) for qq in [
-                    'INSERT INTO `hbsmith_cache` VALUES (',
-                    'INSERT INTO `oauth2_provider_accesstoken` VALUES (',
-                    'INSERT INTO `oauth2_provider_refreshtoken` VALUES (',
-                    'INSERT INTO `hbsmith_case_result` VALUES (',
-                    'INSERT INTO `hbsmith_scenario_result` VALUES (',
-                    'INSERT INTO `hbsmith_case_lock` VALUES (',
-                    'INSERT INTO `hbsmith_scenario_lock` VALUES (',
-                    'INSERT INTO `hbsmith_report_lock` VALUES (',
-                    'INSERT INTO `hbsmith_revenue_lock` VALUES ('
+                'INSERT INTO `hbsmith_cache` VALUES (',
+                'INSERT INTO `oauth2_provider_accesstoken` VALUES (',
+                'INSERT INTO `oauth2_provider_refreshtoken` VALUES (',
+                'INSERT INTO `hbsmith_case_result` VALUES (',
+                'INSERT INTO `hbsmith_scenario_result` VALUES (',
+                'INSERT INTO `hbsmith_case_lock` VALUES (',
+                'INSERT INTO `hbsmith_scenario_lock` VALUES (',
+                'INSERT INTO `hbsmith_report_lock` VALUES (',
+                'INSERT INTO `hbsmith_revenue_lock` VALUES ('
             ]]):
                 continue
             ff.write(line)
