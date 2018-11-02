@@ -54,7 +54,7 @@ def _create(aws_cli, deploy_folder, description, function_name, build_info, queu
            '--handler', 'lambda.handler',
            '--runtime', 'python3.6',
            '--tags', ','.join(build_info),
-           '--timeout', '120']
+           '--timeout', '240']
     aws_cli.run(cmd, cwd=deploy_folder)
     print_message('give event permission')
     cmd = ['lambda', 'add-permission',

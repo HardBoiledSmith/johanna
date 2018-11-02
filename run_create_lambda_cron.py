@@ -119,7 +119,7 @@ def run_create_lambda_cron(name, settings):
            '--handler', 'lambda.handler',
            '--runtime', 'python3.6',
            '--tags', ','.join(tags),
-           '--timeout', '120']
+           '--timeout', '240']
     result = aws_cli.run(cmd, cwd=deploy_folder)
 
     function_arn = result['FunctionArn']

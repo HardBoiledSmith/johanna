@@ -110,5 +110,5 @@ def run_create_lambda_default(name, settings):
            '--handler', 'lambda.handler',
            '--runtime', 'python3.6',
            '--tags', ','.join(tags),
-           '--timeout', '120']
+           '--timeout', '240']
     aws_cli.run(cmd, cwd=deploy_folder)
