@@ -103,6 +103,15 @@ def run_create_lambda_sns(name, settings):
 
         function_arn = result['FunctionArn']
 
+        cmd = ['lambda', 'update-function-configuration',
+               '--function-name', function_name,
+               '--description', description,
+               '--role', role_arn,
+               '--handler', 'lambda.handler',
+               '--runtime', 'python3.6',
+               '--timeout', '240']
+        aws_cli.run(cmd, cwd=deploy_folder)
+
         print_message('update lambda tags')
 
         cmd = ['lambda', 'tag-resource',
