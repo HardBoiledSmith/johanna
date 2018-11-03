@@ -58,7 +58,7 @@ def _create(aws_cli, deploy_folder, description, function_name, build_info, queu
            '--handler', 'lambda.handler',
            '--runtime', 'python3.6',
            '--tags', ','.join(build_info),
-           '--timeout', '240']
+           '--timeout', '480']
     aws_cli.run(cmd, cwd=deploy_folder)
 
     print_message('give event permission')
@@ -97,7 +97,7 @@ def _update(aws_cli, deploy_folder, description, function_name, build_info, queu
            '--role', role_arn,
            '--handler', 'lambda.handler',
            '--runtime', 'python3.6',
-           '--timeout', '240']
+           '--timeout', '480']
     aws_cli.run(cmd, cwd=deploy_folder)
 
     print_message('update lambda tags')
