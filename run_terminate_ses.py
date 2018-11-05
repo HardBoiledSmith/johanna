@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-import json
-
 from env import env
 from run_common import check_template_availability
 from run_common import print_session
