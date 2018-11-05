@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import subprocess
-import re
 from subprocess import PIPE
 
 from env import env
@@ -87,28 +86,16 @@ def _mysql_dump(host, user, password, database, filename_path):
                 ff.write('\n')
                 continue
 
-            if re.search(r'^INSERT INTO `auth_user` VALUES \([1-2],', line) is not None:
-                splited_lines = line.split(',')
-                line = ''
-                for sl in splited_lines:
-                    if sl == splited_lines[1]:
-                        line += '\'pbkdf2_sha256$36000$1eLKAkz2Ki55$jrvEzikMhfTLm/tYzfdTcWndnMddR9fMucTpvcVYqSc=\','
-                    else:
-                        line += sl + ','
-                line = line[:-1]
-            elif 'INSERT INTO `auth_user` VALUES (' in line:
-                if re.search(r'^INSERT INTO `auth_user` VALUES \(([3-9],|[0-9]{2,9},)', line) is not None:
-                    splited_lines = line.split(',')
-                    line = ''
-                    for sl in splited_lines:
-                        if sl == splited_lines[7]:
-                            line += '\'bounced@hbsmith.io\','
-                        else:
-                            line += sl + ','
-                    line = line[:-1]
+            if 'INSERT INTO `auth_user` VALUES (' in line:
+                ss = line.split(',')
+                if ss[0].endswith('(1') or ss[0].endswith('(2'):
+                    ss[1] = "'pbkdf2_sha256$36000$1eLKAkz2Ki55$jrvEzikMhfTLm/tYzfdTcWndnMddR9fMucTpvcVYqSc='"
+                else:
+                    ss[7] = "'bounced@hbsmith.io'"
+                line = ','.join(ss)
             elif 'INSERT INTO `hbsmith_team` VALUES (' in line:
                 ss = line.split(',')
-                ss[3:6] = ['\'\'', '\'\'', '\'\'']
+                ss[3:6] = ["''", "''", "''"]
                 line = ','.join(ss)
             elif 'INSERT INTO `hbsmith_case` VALUES (' in line:
                 ss = line.split(',')
@@ -116,7 +103,7 @@ def _mysql_dump(host, user, password, database, filename_path):
                 line = ','.join(ss)
             elif 'INSERT INTO `hbsmith_scenario` VALUES (' in line:
                 ss = line.split(',')
-                ss[9:11] = ['\'\'', 'NULL']
+                ss[9:11] = ["''", 'NULL']
                 line = ','.join(ss)
             elif 'INSERT INTO `hbsmith_case_alarm` VALUES (' in line:
                 case_alarm_insert_count += 1
@@ -126,6 +113,11 @@ def _mysql_dump(host, user, password, database, filename_path):
                 scenario_alarm_insert_count += 1
                 if scenario_alarm_insert_count >= 1000:
                     continue
+            elif 'INSERT INTO `hbsmith_bounced_email` VALUES (' in line:
+                ss = line.split(',')
+                if ss[0].endswith('(1'):
+                    ss[3] = "'bounced@hbsmith.io'"
+                line = ','.join(ss)
             elif any([(lambda qq: qq in line)(qq) for qq in [
                 'INSERT INTO `hbsmith_cache` VALUES (',
                 'INSERT INTO `oauth2_provider_accesstoken` VALUES (',
