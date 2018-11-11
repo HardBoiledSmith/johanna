@@ -92,6 +92,9 @@ def _mysql_dump(host, user, password, database, filename_path):
                     ss[1] = "'pbkdf2_sha256$36000$1eLKAkz2Ki55$jrvEzikMhfTLm/tYzfdTcWndnMddR9fMucTpvcVYqSc='"
                 else:
                     ss[7] = "'bounced@hbsmith.io'"
+                if ss[0].endswith('(2'):
+                    ss[4] = "'dev0000@hbsmith.io'"
+                    ss[7] = "'hello@hbsmith.io'"
                 line = ','.join(ss)
             elif 'INSERT INTO `hbsmith_team` VALUES (' in line:
                 ss = line.split(',')
@@ -103,7 +106,7 @@ def _mysql_dump(host, user, password, database, filename_path):
                 line = ','.join(ss)
             elif 'INSERT INTO `hbsmith_scenario` VALUES (' in line:
                 ss = line.split(',')
-                ss[9:11] = ["''", 'NULL']
+                ss[-6:-4] = ["''", 'NULL']
                 line = ','.join(ss)
             elif 'INSERT INTO `hbsmith_case_alarm` VALUES (' in line:
                 case_alarm_insert_count += 1
@@ -116,7 +119,7 @@ def _mysql_dump(host, user, password, database, filename_path):
             elif 'INSERT INTO `hbsmith_bounced_email` VALUES (' in line:
                 ss = line.split(',')
                 if ss[0].endswith('(1'):
-                    ss[3] = "'bounced@hbsmith.io'"
+                    ss[3] = "'bounced@hbsmith.io');\n"
                 line = ','.join(ss)
             elif any([(lambda qq: qq in line)(qq) for qq in [
                 'INSERT INTO `hbsmith_cache` VALUES (',
