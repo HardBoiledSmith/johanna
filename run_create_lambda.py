@@ -10,6 +10,7 @@ from run_create_lambda_cron import run_create_lambda_cron
 from run_create_lambda_default import run_create_lambda_default
 from run_create_lambda_sns import run_create_lambda_sns
 from run_create_lambda_sqs import run_create_lambda_sqs
+from run_create_lambda_event import run_create_lambda_event
 
 args = []
 
@@ -85,6 +86,9 @@ if len(args) == 2:
             if lambda_env['TYPE'] == 'sqs':
                 run_create_lambda_sqs(lambda_env['NAME'], lambda_env)
                 break
+            if lambda_env['TYPE'] == 'event':
+                run_create_lambda_event(lambda_env['NAME'], lambda_env)
+                break
             print('"%s" is not supported' % lambda_env['TYPE'])
             raise Exception()
     if not target_lambda_name_exists:
@@ -103,5 +107,8 @@ else:
         if lambda_env['TYPE'] == 'sqs':
             run_create_lambda_sqs(lambda_env['NAME'], lambda_env)
             continue
+        if lambda_env['TYPE'] == 'event':
+            run_create_lambda_event(lambda_env['NAME'], lambda_env)
+            break
         print('"%s" is not supported' % lambda_env['TYPE'])
         raise Exception()

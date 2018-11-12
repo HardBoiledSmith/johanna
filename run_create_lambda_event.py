@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 import os
 import subprocess
 
@@ -11,7 +12,7 @@ from run_common import read_file
 from run_common import write_file
 
 
-def run_create_lambda_sns(name, settings):
+def run_create_lambda_event(name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     description = settings['DESCRIPTION']
@@ -26,18 +27,6 @@ def run_create_lambda_sns(name, settings):
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
     git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
-
-    ################################################################################
-    topic_arn_list = list()
-
-    for sns_topic_name in settings['SNS_TOPICS_NAMES']:
-        print_message('check topic exists: %s' % sns_topic_name)
-        region, topic_name = sns_topic_name.split('/')
-        topic_arn = AWSCli(region).get_topic_arn(topic_name)
-        if not topic_arn:
-            print('sns topic: "%s" is not exists in %s' % (sns_topic_name, region))
-            raise Exception()
-        topic_arn_list.append(topic_arn)
 
     ################################################################################
     print_session('packaging lambda: %s' % function_name)
@@ -93,6 +82,7 @@ def run_create_lambda_sns(name, settings):
             break
 
     ################################################################################
+
     if need_update:
         print_session('update lambda: %s' % function_name)
 
@@ -103,65 +93,56 @@ def run_create_lambda_sns(name, settings):
 
         function_arn = result['FunctionArn']
 
-        cmd = ['lambda', 'update-function-configuration',
-               '--function-name', function_name,
-               '--description', description,
-               '--role', role_arn,
-               '--handler', 'lambda.handler',
-               '--runtime', 'python3.6',
-               '--timeout', '480']
-        aws_cli.run(cmd, cwd=deploy_folder)
-
         print_message('update lambda tags')
 
         cmd = ['lambda', 'tag-resource',
                '--resource', function_arn,
                '--tags', ','.join(tags)]
         aws_cli.run(cmd, cwd=deploy_folder)
-        return
+    else:
+        print_session('create lambda: %s' % function_name)
+
+        cmd = ['lambda', 'create-function',
+               '--function-name', function_name,
+               '--description', description,
+               '--zip-file', 'fileb://deploy.zip',
+               '--role', role_arn,
+               '--handler', 'lambda.handler',
+               '--runtime', 'python3.6',
+               '--tags', ','.join(tags),
+               '--timeout', '120']
+        function_arn = aws_cli.run(cmd, cwd=deploy_folder)['FunctionArn']
 
     ################################################################################
-    print_session('create lambda: %s' % function_name)
+    print_session('create event')
 
-    cmd = ['lambda', 'create-function',
+    event_pattern = json.dumps({
+        "source": [
+            "aws.codebuild"
+        ],
+        "detail-type": [
+            "CodeBuild Build State Change"
+        ]
+    })
+    cmd = ['events', 'put-rule',
+           '--name', settings['EVENT_NAME'],
+           '--event-pattern', event_pattern]
+    result = aws_cli.run(cmd)
+    rule_arn = result['RuleArn']
+
+    targets = json.dumps([{
+        "Id": settings['EVENT_NAME'],
+        "Arn": function_arn
+    }])
+    cmd = ['events', 'put-targets',
+           '--rule', settings['EVENT_NAME'],
+           '--targets', targets]
+    aws_cli.run(cmd)
+
+    cmd = ['lambda', 'add-permission',
            '--function-name', function_name,
-           '--description', description,
-           '--zip-file', 'fileb://deploy.zip',
-           '--role', role_arn,
-           '--handler', 'lambda.handler',
-           '--runtime', 'python3.6',
-           '--tags', ','.join(tags),
-           '--timeout', '480']
-    result = aws_cli.run(cmd, cwd=deploy_folder)
-
-    function_arn = result['FunctionArn']
-
-    for topic_arn in topic_arn_list:
-        print_message('create subscription')
-
-        topic_region = topic_arn.split(':')[3]
-
-        cmd = ['sns', 'subscribe',
-               '--topic-arn', topic_arn,
-               '--protocol', 'lambda',
-               '--notification-endpoint', function_arn]
-        AWSCli(topic_region).run(cmd)
-
-        print_message('Add permission to lambda')
-
-        statement_id = '%s_%s_Permission' % (function_name, topic_region)
-
-        cmd = ['lambda', 'add-permission',
-               '--function-name', function_name,
-               '--statement-id', statement_id,
-               '--action', 'lambda:InvokeFunction',
-               '--principal', 'sns.amazonaws.com',
-               '--source-arn', topic_arn]
-        aws_cli.run(cmd)
-
-    print_message('update tag with subscription info')
-
-    cmd = ['lambda', 'tag-resource',
-           '--resource', function_arn,
-           '--tags', ','.join(tags)]
-    aws_cli.run(cmd, cwd=deploy_folder)
+           '--statement-id', function_name + 'StatementId',
+           '--action', 'lambda:InvokeFunction',
+           '--principal', 'events.amazonaws.com',
+           '--source-arn', rule_arn]
+    aws_cli.run(cmd, ignore_error=True)
