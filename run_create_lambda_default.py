@@ -12,15 +12,16 @@ from run_common import write_file
 
 
 def run_create_lambda_default(name, settings):
-    aws_cli = AWSCli()
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     description = settings['DESCRIPTION']
-    function_name = settings['NAME']
+    folder_name = settings.get('FOLDER_NAME', name)
+    function_name = name
     phase = env['common']['PHASE']
     template_name = env['template']['NAME']
 
     template_path = 'template/%s' % template_name
-    deploy_folder = '%s/lambda/%s' % (template_path, name)
+    deploy_folder = '%s/lambda/%s' % (template_path, folder_name)
 
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]

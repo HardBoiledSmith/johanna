@@ -2,9 +2,9 @@
 *.pub
 *.pyc
 *.swp
+*~
+.DS_Store
 /*config.json
 /*config.yml
 /.idea
 template/
-*~
-.DS_Store
