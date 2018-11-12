@@ -31,7 +31,7 @@ def run_terminate_s3_webapp(name, settings):
     delete_excluded_files = list(settings.get('DELETE_EXCLUDED_FILES', ''))
     for ff in delete_excluded_files:
         cmd += ['--exclude', '%s' % ff]
-    delete_result = aws_cli.run(cmd)
+    delete_result = aws_cli.run(cmd, ignore_error=True)
     for ll in delete_result.split('\n'):
         print(ll)
 
@@ -39,7 +39,7 @@ def run_terminate_s3_webapp(name, settings):
     print_message('remove tag from deploy bucket')
 
     cmd = ['s3api', 'delete-bucket-tagging', '--bucket', deploy_bucket_name]
-    aws_cli.run(cmd)
+    aws_cli.run(cmd, ignore_error=True)
 
     ################################################################################
     print_message('invalidate cache from cloudfront')
@@ -48,7 +48,7 @@ def run_terminate_s3_webapp(name, settings):
     if len(cf_dist_id) > 0:
         path_list = list(settings['INVALIDATE_PATHS'])
         cmd = ['cloudfront', 'create-invalidation', '--distribution-id', cf_dist_id, '--paths', ' '.join(path_list)]
-        invalidate_result = aws_cli.run(cmd)
+        invalidate_result = aws_cli.run(cmd, ignore_error=True)
         print(invalidate_result)
 
 
