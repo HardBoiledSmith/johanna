@@ -187,6 +187,37 @@ def run_terminate_sqs_lambda(name, settings):
     aws_cli.run(cmd, cwd=deploy_folder, ignore_error=True)
 
 
+def run_terminate_event_lambda(name, settings):
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+
+    folder_name = settings.get('FOLDER_NAME', name)
+    function_name = name
+    template_name = env['template']['NAME']
+
+    template_path = 'template/%s' % template_name
+    deploy_folder = '%s/lambda/%s' % (template_path, folder_name)
+
+    ################################################################################
+    print_session('terminate lambda: %s' % function_name)
+
+    print_message('unlink event and lambda')
+
+    cmd = ['events', 'remove-targets',
+           '--rule', settings['EVENT_NAME'],
+           '--ids', settings['EVENT_NAME']]
+    aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['events', 'delete-rule',
+           '--name', settings['EVENT_NAME']]
+    aws_cli.run(cmd, ignore_error=True)
+
+    print_message('delete lambda function')
+
+    cmd = ['lambda', 'delete-function',
+           '--function-name', function_name]
+    aws_cli.run(cmd, cwd=deploy_folder, ignore_error=True)
+
+
 ################################################################################
 #
 # start
@@ -213,6 +244,9 @@ if len(args) == 2:
             if lambda_env['TYPE'] == 'sqs':
                 run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
                 break
+            if lambda_env['TYPE'] == 'event':
+                run_terminate_event_lambda(lambda_env['NAME'], lambda_env)
+                continue
             print('"%s" is not supported' % lambda_env['TYPE'])
             raise Exception()
     if not target_lambda_name_exists:
@@ -230,6 +264,9 @@ else:
             continue
         if lambda_env['TYPE'] == 'sqs':
             run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
+            continue
+        if lambda_env['TYPE'] == 'event':
+            run_terminate_event_lambda(lambda_env['NAME'], lambda_env)
             continue
         print('"%s" is not supported' % lambda_env['TYPE'])
         raise Exception()
