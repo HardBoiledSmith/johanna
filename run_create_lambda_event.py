@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 import os
 import subprocess
 
@@ -11,7 +12,7 @@ from run_common import read_file
 from run_common import write_file
 
 
-def run_create_lambda_default(name, settings):
+def run_create_lambda_event(name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     description = settings['DESCRIPTION']
@@ -81,6 +82,7 @@ def run_create_lambda_default(name, settings):
             break
 
     ################################################################################
+
     if need_update:
         print_session('update lambda: %s' % function_name)
 
@@ -91,33 +93,56 @@ def run_create_lambda_default(name, settings):
 
         function_arn = result['FunctionArn']
 
-        cmd = ['lambda', 'update-function-configuration',
-               '--function-name', function_name,
-               '--description', description,
-               '--role', role_arn,
-               '--handler', 'lambda.handler',
-               '--runtime', 'python3.6',
-               '--timeout', '480']
-        aws_cli.run(cmd, cwd=deploy_folder)
-
         print_message('update lambda tags')
 
         cmd = ['lambda', 'tag-resource',
                '--resource', function_arn,
                '--tags', ','.join(tags)]
         aws_cli.run(cmd, cwd=deploy_folder)
-        return
+    else:
+        print_session('create lambda: %s' % function_name)
+
+        cmd = ['lambda', 'create-function',
+               '--function-name', function_name,
+               '--description', description,
+               '--zip-file', 'fileb://deploy.zip',
+               '--role', role_arn,
+               '--handler', 'lambda.handler',
+               '--runtime', 'python3.6',
+               '--tags', ','.join(tags),
+               '--timeout', '120']
+        function_arn = aws_cli.run(cmd, cwd=deploy_folder)['FunctionArn']
 
     ################################################################################
-    print_session('create lambda: %s' % function_name)
+    print_session('create event')
 
-    cmd = ['lambda', 'create-function',
+    event_pattern = json.dumps({
+        "source": [
+            "aws.codebuild"
+        ],
+        "detail-type": [
+            "CodeBuild Build State Change"
+        ]
+    })
+    cmd = ['events', 'put-rule',
+           '--name', settings['EVENT_NAME'],
+           '--event-pattern', event_pattern]
+    result = aws_cli.run(cmd)
+    rule_arn = result['RuleArn']
+
+    targets = json.dumps([{
+        "Id": settings['EVENT_NAME'],
+        "Arn": function_arn
+    }])
+    cmd = ['events', 'put-targets',
+           '--rule', settings['EVENT_NAME'],
+           '--targets', targets]
+    aws_cli.run(cmd)
+
+    cmd = ['lambda', 'add-permission',
            '--function-name', function_name,
-           '--description', description,
-           '--zip-file', 'fileb://deploy.zip',
-           '--role', role_arn,
-           '--handler', 'lambda.handler',
-           '--runtime', 'python3.6',
-           '--tags', ','.join(tags),
-           '--timeout', '480']
-    aws_cli.run(cmd, cwd=deploy_folder)
+           '--statement-id', function_name + 'StatementId',
+           '--action', 'lambda:InvokeFunction',
+           '--principal', 'events.amazonaws.com',
+           '--source-arn', rule_arn]
+    aws_cli.run(cmd, ignore_error=True)
