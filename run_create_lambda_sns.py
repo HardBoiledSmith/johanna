@@ -87,6 +87,7 @@ def run_create_lambda_sns(name, settings):
     need_update = False
     cmd = ['lambda', 'list-functions']
     result = aws_cli.run(cmd)
+
     for ff in result['Functions']:
         if function_name == ff['FunctionName']:
             need_update = True

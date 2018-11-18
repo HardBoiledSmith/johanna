@@ -82,7 +82,6 @@ def run_create_lambda_event(name, settings):
             break
 
     ################################################################################
-
     if need_update:
         print_session('update lambda: %s' % function_name)
 
