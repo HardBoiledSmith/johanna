@@ -3,14 +3,13 @@ import time
 
 from env import env
 from run_common import AWSCli
-from run_common import check_template_availability
 from run_common import print_message
 from run_common import print_session
 from run_create_lambda_cron import run_create_lambda_cron
 from run_create_lambda_default import run_create_lambda_default
+from run_create_lambda_event import run_create_lambda_event
 from run_create_lambda_sns import run_create_lambda_sns
 from run_create_lambda_sqs import run_create_lambda_sqs
-from run_create_lambda_event import run_create_lambda_event
 
 args = []
 
@@ -59,8 +58,6 @@ def create_iam_for_lambda(lambda_type):
 print_session('create lambda')
 
 ################################################################################
-check_template_availability()
-
 default_role_created = create_iam_for_lambda('default')
 sqs_role_created = create_iam_for_lambda('sqs')
 if default_role_created or sqs_role_created:
