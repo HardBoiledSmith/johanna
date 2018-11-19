@@ -31,11 +31,10 @@ def terminate_iam_for_lambda(lambda_type):
     aws_cli.run(cmd, ignore_error=True)
 
 
-def run_terminate_default_lambda(name, settings):
+def run_terminate_default_lambda(function_name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
-    folder_name = settings.get('FOLDER_NAME', name)
-    function_name = name
+    folder_name = settings.get('FOLDER_NAME', function_name)
     template_name = env['template']['NAME']
 
     template_path = 'template/%s' % template_name
@@ -51,11 +50,10 @@ def run_terminate_default_lambda(name, settings):
     aws_cli.run(cmd, cwd=deploy_folder, ignore_error=True)
 
 
-def run_terminate_cron_lambda(name, settings):
+def run_terminate_cron_lambda(function_name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
-    folder_name = settings.get('FOLDER_NAME', name)
-    function_name = name
+    folder_name = settings.get('FOLDER_NAME', function_name)
     template_name = env['template']['NAME']
 
     template_path = 'template/%s' % template_name
@@ -105,11 +103,10 @@ def run_terminate_cron_lambda(name, settings):
     aws_cli.run(cmd, cwd=deploy_folder, ignore_error=True)
 
 
-def run_terminate_sns_lambda(name, settings):
+def run_terminate_sns_lambda(function_name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
-    folder_name = settings.get('FOLDER_NAME', name)
-    function_name = name
+    folder_name = settings.get('FOLDER_NAME', function_name)
     template_name = env['template']['NAME']
 
     template_path = 'template/%s' % template_name
@@ -159,11 +156,10 @@ def run_terminate_sns_lambda(name, settings):
     aws_cli.run(cmd, cwd=deploy_folder, ignore_error=True)
 
 
-def run_terminate_sqs_lambda(name, settings):
+def run_terminate_sqs_lambda(function_name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
-    folder_name = settings.get('FOLDER_NAME', name)
-    function_name = name
+    folder_name = settings.get('FOLDER_NAME', function_name)
     template_name = env['template']['NAME']
 
     template_path = 'template/%s' % template_name
@@ -187,11 +183,10 @@ def run_terminate_sqs_lambda(name, settings):
     aws_cli.run(cmd, cwd=deploy_folder, ignore_error=True)
 
 
-def run_terminate_event_lambda(name, settings):
+def run_terminate_event_lambda(function_name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
-    folder_name = settings.get('FOLDER_NAME', name)
-    function_name = name
+    folder_name = settings.get('FOLDER_NAME', function_name)
     template_name = env['template']['NAME']
 
     template_path = 'template/%s' % template_name
