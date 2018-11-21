@@ -117,12 +117,18 @@ def run_create_lambda_event(name, settings):
     print_session('create event')
 
     event_pattern = json.dumps({
-        "source": [
-            "aws.codebuild"
+        'source': [
+            'aws.codebuild'
         ],
-        "detail-type": [
-            "CodeBuild Build State Change"
-        ]
+        'detail-type': [
+            'CodeBuild Build State Change'
+        ],
+        'detail': {
+            'build-status': [
+                'SUCCEEDED',
+                'FAILED'
+            ]
+        }
     })
     cmd = ['events', 'put-rule',
            '--name', settings['EVENT_NAME'],
@@ -131,8 +137,8 @@ def run_create_lambda_event(name, settings):
     rule_arn = result['RuleArn']
 
     targets = json.dumps([{
-        "Id": settings['EVENT_NAME'],
-        "Arn": function_arn
+        'Id': settings['EVENT_NAME'],
+        'Arn': function_arn
     }])
     cmd = ['events', 'put-targets',
            '--rule', settings['EVENT_NAME'],
