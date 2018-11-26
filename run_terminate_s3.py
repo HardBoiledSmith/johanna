@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 
 from env import env
 from run_common import AWSCli
@@ -18,8 +17,6 @@ aws_cli = AWSCli()
 
 def run_terminate_s3_webapp(name, settings):
     deploy_bucket_name = settings['BUCKET_NAME']
-    bucket_prefix = settings.get('BUCKET_PREFIX', '')
-    deploy_bucket_prefix = os.path.normpath('%s/%s' % (deploy_bucket_name, bucket_prefix))
 
     ################################################################################
     print_message('terminate %s' % name)
@@ -27,10 +24,7 @@ def run_terminate_s3_webapp(name, settings):
     ################################################################################
     print_message('cleanup deploy bucket')
 
-    cmd = ['s3', 'rm', 's3://%s' % deploy_bucket_prefix, '--recursive']
-    delete_excluded_files = list(settings.get('DELETE_EXCLUDED_FILES', ''))
-    for ff in delete_excluded_files:
-        cmd += ['--exclude', '%s' % ff]
+    cmd = ['s3', 'rm', 's3://%s' % deploy_bucket_name, '--recursive']
     delete_result = aws_cli.run(cmd, ignore_error=True)
     for ll in delete_result.split('\n'):
         print(ll)
@@ -46,8 +40,7 @@ def run_terminate_s3_webapp(name, settings):
 
     cf_dist_id = settings.get('CLOUDFRONT_DIST_ID', '')
     if len(cf_dist_id) > 0:
-        path_list = list(settings['INVALIDATE_PATHS'])
-        cmd = ['cloudfront', 'create-invalidation', '--distribution-id', cf_dist_id, '--paths', ' '.join(path_list)]
+        cmd = ['cloudfront', 'create-invalidation', '--distribution-id', cf_dist_id, '--paths', '/*']
         invalidate_result = aws_cli.run(cmd, ignore_error=True)
         print(invalidate_result)
 
