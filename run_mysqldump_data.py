@@ -106,7 +106,7 @@ def _mysql_dump(host, user, password, database, filename_path):
                 line = ','.join(ss)
             elif 'INSERT INTO `hbsmith_scenario` VALUES (' in line:
                 ss = line.split(',')
-                ss[-6:-4] = ["''", 'NULL']
+                ss[-5] = 'NULL'
                 line = ','.join(ss)
             elif 'INSERT INTO `hbsmith_case_alarm` VALUES (' in line:
                 case_alarm_insert_count += 1
