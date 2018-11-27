@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 import subprocess
 
 from env import env
@@ -11,25 +12,39 @@ from run_common import read_file
 from run_common import write_file
 
 
-def run_create_lambda_cron(name, settings):
+def run_create_lambda_cron(function_name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     description = settings['DESCRIPTION']
-    folder_name = settings.get('FOLDER_NAME', name)
-    function_name = name
+    folder_name = settings.get('FOLDER_NAME', function_name)
+    git_url = settings['GIT_URL']
     phase = env['common']['PHASE']
     schedule_expression = settings['SCHEDULE_EXPRESSION']
-    template_name = env['template']['NAME']
 
-    template_path = 'template/%s' % template_name
-    deploy_folder = '%s/lambda/%s' % (template_path, folder_name)
-
-    git_rev = ['git', 'rev-parse', 'HEAD']
-    git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
-    git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
+    mm = re.match(r'^.+/(.+)\.git$', git_url)
+    if not mm:
+        raise Exception()
+    git_folder_name = mm.group(1)
 
     ################################################################################
-    print_session('packaging lambda: %s' % function_name)
+    print_session('create %s' % function_name)
+
+    ################################################################################
+    print_message('download template: %s' % git_folder_name)
+
+    if not os.path.exists('template/%s' % git_folder_name):
+        if phase == 'dv':
+            git_command = ['git', 'clone', '--depth=1', git_url]
+        else:
+            git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+        subprocess.Popen(git_command, cwd='template').communicate()
+        if not os.path.exists('template/%s' % git_folder_name):
+            raise Exception()
+
+    deploy_folder = 'template/%s/lambda/%s' % (git_folder_name, folder_name)
+
+    ################################################################################
+    print_message('packaging lambda: %s' % function_name)
 
     print_message('cleanup generated files')
     subprocess.Popen(['git', 'clean', '-d', '-f', '-x'], cwd=deploy_folder).communicate()
@@ -64,11 +79,16 @@ def run_create_lambda_cron(name, settings):
 
     role_arn = aws_cli.get_role_arn('aws-lambda-default-role')
 
+    git_hash_johanna = subprocess.Popen(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE).communicate()[0]
+    git_hash_template = subprocess.Popen(['git', 'rev-parse', 'HEAD'],
+                                         stdout=subprocess.PIPE,
+                                         cwd='template/%s' % git_folder_name).communicate()[0]
+
     tags = list()
     # noinspection PyUnresolvedReferences
     tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8').strip())
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8').strip()))
+    tags.append('git_hash_%s=%s' % (git_folder_name, git_hash_template.decode('utf-8').strip()))
 
     ################################################################################
     print_message('check previous version')

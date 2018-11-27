@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 import subprocess
 import time
 
@@ -12,29 +13,38 @@ from run_common import read_file
 from run_common import write_file
 
 
-def run_create_lambda_sqs(name, settings):
+def run_create_lambda_sqs(function_name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     description = settings['DESCRIPTION']
-    folder_name = settings.get('FOLDER_NAME', name)
-    function_name = name
+    folder_name = settings.get('FOLDER_NAME', function_name)
+    git_url = settings['GIT_URL']
     phase = env['common']['PHASE']
     sqs_name = settings['SQS_NAME']
-    template_name = env['template']['NAME']
 
-    template_path = 'template/%s' % template_name
-    deploy_folder = '%s/lambda/%s' % (template_path, folder_name)
+    mm = re.match(r'^.+/(.+)\.git$', git_url)
+    if not mm:
+        raise Exception()
+    git_folder_name = mm.group(1)
 
-    queue_arn = _get_queue_arn(aws_cli, sqs_name)
-    build_info = _build(deploy_folder, function_name, phase, settings, template_name, template_path)
+    ################################################################################
+    print_session('create %s' % function_name)
 
-    if _check_need_update(aws_cli, function_name):
-        _update(aws_cli, deploy_folder, description, function_name, build_info, queue_arn)
-    else:
-        _create(aws_cli, deploy_folder, description, function_name, build_info, queue_arn)
+    ################################################################################
+    print_message('download template: %s' % git_folder_name)
 
+    if not os.path.exists('template/%s' % git_folder_name):
+        if phase == 'dv':
+            git_command = ['git', 'clone', '--depth=1', git_url]
+        else:
+            git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+        subprocess.Popen(git_command, cwd='template').communicate()
+        if not os.path.exists('template/%s' % git_folder_name):
+            raise Exception()
 
-def _get_queue_arn(aws_cli, sqs_name):
+    deploy_folder = 'template/%s/lambda/%s' % (git_folder_name, folder_name)
+
+    ################################################################################
     cmd = ['sqs', 'get-queue-url']
     cmd += ['--queue-name', sqs_name]
     queue_url = aws_cli.run(cmd)['QueueUrl']
@@ -42,113 +52,12 @@ def _get_queue_arn(aws_cli, sqs_name):
     cmd = ['sqs', 'get-queue-attributes']
     cmd += ['--queue-url', queue_url]
     cmd += ['--attribute-names', 'QueueArn']
-    return aws_cli.run(cmd)['Attributes']['QueueArn']
+    queue_arn = aws_cli.run(cmd)['Attributes']['QueueArn']
 
-
-def _create(aws_cli, deploy_folder, description, function_name, build_info, queue_arn):
-    print_session('create lambda: %s' % function_name)
-
-    role_arn = aws_cli.get_role_arn('aws-lambda-sqs-role')
-
-    cmd = ['lambda', 'create-function',
-           '--function-name', function_name,
-           '--description', description,
-           '--zip-file', 'fileb://deploy.zip',
-           '--role', role_arn,
-           '--handler', 'lambda.handler',
-           '--runtime', 'python3.6',
-           '--tags', ','.join(build_info),
-           '--timeout', '120']
-    aws_cli.run(cmd, cwd=deploy_folder)
-
-    print_message('give event permission')
-
-    cmd = ['lambda', 'add-permission',
-           '--function-name', function_name,
-           '--statement-id', function_name + 'StatementId',
-           '--action', 'lambda:InvokeFunction',
-           '--principal', 'events.amazonaws.com',
-           '--source-arn', queue_arn]
-    aws_cli.run(cmd)
-
-    print_message('create sqs event source for %s' % function_name)
-
-    cmd = ['lambda', 'create-event-source-mapping',
-           '--event-source-arn', queue_arn,
-           '--function-name', function_name]
-    aws_cli.run(cmd)
-
-
-def _update(aws_cli, deploy_folder, description, function_name, build_info, queue_arn):
-    print_session('update lambda: %s' % function_name)
-
-    role_arn = aws_cli.get_role_arn('aws-lambda-sqs-role')
-
-    cmd = ['lambda', 'update-function-code',
-           '--function-name', function_name,
-           '--zip-file', 'fileb://deploy.zip']
-    result = aws_cli.run(cmd, cwd=deploy_folder)
-
-    function_arn = result['FunctionArn']
-
-    cmd = ['lambda', 'update-function-configuration',
-           '--function-name', function_name,
-           '--description', description,
-           '--role', role_arn,
-           '--handler', 'lambda.handler',
-           '--runtime', 'python3.6',
-           '--timeout', '120']
-    aws_cli.run(cmd, cwd=deploy_folder)
-
-    print_message('update lambda tags')
-
-    cmd = ['lambda', 'tag-resource',
-           '--resource', function_arn,
-           '--tags', ','.join(build_info)]
-    aws_cli.run(cmd, cwd=deploy_folder)
-
-    print_message('update sqs event source for %s' % function_name)
-
-    cmd = ['lambda', 'list-event-source-mappings',
-           '--function-name', function_name]
-    mappings = aws_cli.run(cmd)['EventSourceMappings']
-
-    for mapping in mappings:
-        cmd = ['lambda', 'delete-event-source-mapping',
-               '--uuid', mapping['UUID']]
-        aws_cli.run(cmd)
-
-    print_message('wait two minutes until deletion is complete')
-    time.sleep(120)
-
-    cmd = ['lambda', 'create-event-source-mapping',
-           '--event-source-arn', queue_arn,
-           '--function-name', function_name]
-    aws_cli.run(cmd)
-
-
-def _check_need_update(aws_cli, function_name):
-    print_message('check previous version')
-    need_update = False
-    cmd = ['lambda', 'list-functions']
-    result = aws_cli.run(cmd)
-
-    for ff in result['Functions']:
-        if function_name == ff['FunctionName']:
-            need_update = True
-            break
-    return need_update
-
-
-def _build(deploy_folder, function_name, phase, settings, template_name, template_path):
-    git_rev = ['git', 'rev-parse', 'HEAD']
-    git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
-    git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
-
-    print_session('packaging lambda: %s' % function_name)
+    ################################################################################
+    print_message('packaging lambda: %s' % function_name)
 
     print_message('cleanup generated files')
-
     subprocess.Popen(['git', 'clean', '-d', '-f', '-x'], cwd=deploy_folder).communicate()
 
     requirements_path = '%s/requirements.txt' % deploy_folder
@@ -177,7 +86,106 @@ def _build(deploy_folder, function_name, phase, settings, template_name, templat
     cmd = ['zip', '-r', 'deploy.zip', '.']
     subprocess.Popen(cmd, cwd=deploy_folder).communicate()
 
-    return [
-        'git_hash_johanna=%s' % git_hash_johanna.decode('utf-8').strip(),
-        'git_hash_%s=%s' % (template_name, git_hash_template.decode('utf-8').strip())
-    ]
+    print_message('create lambda function')
+
+    role_arn = aws_cli.get_role_arn('aws-lambda-sqs-role')
+
+    git_hash_johanna = subprocess.Popen(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE).communicate()[0]
+    git_hash_template = subprocess.Popen(['git', 'rev-parse', 'HEAD'],
+                                         stdout=subprocess.PIPE,
+                                         cwd='template/%s' % git_folder_name).communicate()[0]
+
+    tags = list()
+    # noinspection PyUnresolvedReferences
+    tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8').strip())
+    # noinspection PyUnresolvedReferences
+    tags.append('git_hash_%s=%s' % (git_folder_name, git_hash_template.decode('utf-8').strip()))
+
+    ################################################################################
+    print_message('check previous version')
+
+    need_update = False
+    cmd = ['lambda', 'list-functions']
+    result = aws_cli.run(cmd)
+    for ff in result['Functions']:
+        if function_name == ff['FunctionName']:
+            need_update = True
+            break
+
+    ################################################################################
+    if need_update:
+        print_session('update lambda: %s' % function_name)
+
+        cmd = ['lambda', 'update-function-code',
+               '--function-name', function_name,
+               '--zip-file', 'fileb://deploy.zip']
+        result = aws_cli.run(cmd, cwd=deploy_folder)
+
+        function_arn = result['FunctionArn']
+
+        cmd = ['lambda', 'update-function-configuration',
+               '--function-name', function_name,
+               '--description', description,
+               '--role', role_arn,
+               '--handler', 'lambda.handler',
+               '--runtime', 'python3.6',
+               '--timeout', '120']
+        aws_cli.run(cmd, cwd=deploy_folder)
+
+        print_message('update lambda tags')
+
+        cmd = ['lambda', 'tag-resource',
+               '--resource', function_arn,
+               '--tags', ','.join(tags)]
+        aws_cli.run(cmd, cwd=deploy_folder)
+
+        print_message('update sqs event source for %s' % function_name)
+
+        cmd = ['lambda', 'list-event-source-mappings',
+               '--function-name', function_name]
+        mappings = aws_cli.run(cmd)['EventSourceMappings']
+
+        for mapping in mappings:
+            cmd = ['lambda', 'delete-event-source-mapping',
+                   '--uuid', mapping['UUID']]
+            aws_cli.run(cmd)
+
+        print_message('wait two minutes until deletion is complete')
+        time.sleep(120)
+
+        cmd = ['lambda', 'create-event-source-mapping',
+               '--event-source-arn', queue_arn,
+               '--function-name', function_name]
+        aws_cli.run(cmd)
+        return
+
+    ################################################################################
+    print_session('create lambda: %s' % function_name)
+
+    cmd = ['lambda', 'create-function',
+           '--function-name', function_name,
+           '--description', description,
+           '--zip-file', 'fileb://deploy.zip',
+           '--role', role_arn,
+           '--handler', 'lambda.handler',
+           '--runtime', 'python3.6',
+           '--tags', ','.join(tags),
+           '--timeout', '120']
+    aws_cli.run(cmd, cwd=deploy_folder)
+
+    print_message('give event permission')
+
+    cmd = ['lambda', 'add-permission',
+           '--function-name', function_name,
+           '--statement-id', function_name + 'StatementId',
+           '--action', 'lambda:InvokeFunction',
+           '--principal', 'events.amazonaws.com',
+           '--source-arn', queue_arn]
+    aws_cli.run(cmd)
+
+    print_message('create sqs event source for %s' % function_name)
+
+    cmd = ['lambda', 'create-event-source-mapping',
+           '--event-source-arn', queue_arn,
+           '--function-name', function_name]
+    aws_cli.run(cmd)

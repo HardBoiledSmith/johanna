@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 import subprocess
 import time
 
@@ -15,25 +16,14 @@ from run_common import write_file
 def run_create_s3_vue(name, settings):
     aws_cli = AWSCli()
 
+    deploy_bucket_name = settings['BUCKET_NAME']
     git_url = settings['GIT_URL']
     phase = env['common']['PHASE']
-    template_name = env['template']['NAME']
-    base_path = '%s/%s' % (name, settings.get('BASE_PATH', ''))
-    common_path = '%s/%s' % (name, settings.get('COMMON_PATH', 'common'))
 
-    template_path = 'template/%s' % template_name
-    environment_path = '%s/s3/%s' % (template_path, name)
-    app_root_path = os.path.normpath('%s/%s' % (environment_path, base_path))
-    common_root_path = os.path.normpath('%s/%s' % (environment_path, common_path))
-
-    deploy_bucket_name = settings['BUCKET_NAME']
-    bucket_prefix = settings.get('BUCKET_PREFIX', '')
-    deploy_bucket_prefix = os.path.normpath('%s/%s' % (deploy_bucket_name, bucket_prefix))
-    deploy_protocol = settings.get('PROTOCOL', 'http')
-
-    git_rev = ['git', 'rev-parse', 'HEAD']
-    git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
-    git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
+    mm = re.match(r'^.+/(.+)\.git$', git_url)
+    if not mm:
+        raise Exception()
+    git_folder_name = mm.group(1)
 
     ################################################################################
     print_session('create %s' % name)
@@ -41,29 +31,25 @@ def run_create_s3_vue(name, settings):
     ################################################################################
     print_message('git clone')
 
-    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
+    subprocess.Popen(['rm', '-rf', './%s' % git_folder_name], cwd='template').communicate()
     if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', git_url, name]
+        git_command = ['git', 'clone', '--depth=1', git_url]
     else:
-        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url, name]
-    subprocess.Popen(git_command, cwd=environment_path).communicate()
-    if not os.path.exists(app_root_path):
+        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+    subprocess.Popen(git_command, cwd='template').communicate()
+    if not os.path.exists('template/%s' % git_folder_name):
         raise Exception()
 
-    git_clone_folder = '%s/%s' % (environment_path, name)
-    git_hash_app = subprocess.Popen(git_rev,
+    git_hash_app = subprocess.Popen(['git', 'rev-parse', 'HEAD'],
                                     stdout=subprocess.PIPE,
-                                    cwd=git_clone_folder).communicate()[0]
-    subprocess.Popen(['rm', '-rf', './.git'], cwd=git_clone_folder).communicate()
-    subprocess.Popen(['rm', '-rf', './.gitignore'], cwd=git_clone_folder).communicate()
+                                    cwd='template/%s' % git_folder_name).communicate()[0]
+    subprocess.Popen(['rm', '-rf', './.git'], cwd='template/%s' % git_folder_name).communicate()
+    subprocess.Popen(['rm', '-rf', './.gitignore'], cwd='template/%s' % git_folder_name).communicate()
 
     ################################################################################
     print_message('npm install')
 
-    if not os.path.exists('%s/package.json' % app_root_path):
-        subprocess.Popen(['cp', '%s/package.json' % common_root_path, app_root_path]).communicate()
-
-    npm_process = subprocess.Popen(['npm', 'install'], cwd=app_root_path)
+    npm_process = subprocess.Popen(['npm', 'install'], cwd='template/%s' % git_folder_name)
     npm_result, error = npm_process.communicate()
 
     if error:
@@ -77,7 +63,7 @@ def run_create_s3_vue(name, settings):
     ################################################################################
     print_message('configure %s' % name)
 
-    lines = read_file('%s/configuration/static/settings-local-sample.js' % environment_path)
+    lines = read_file('template/%s/%s/static/settings-local-sample.js' % (git_folder_name, name))
     option_list = list()
     option_list.append(['phase', phase])
     for key in settings:
@@ -85,12 +71,15 @@ def run_create_s3_vue(name, settings):
         option_list.append([key, value])
     for oo in option_list:
         lines = re_sub_lines(lines, '^(const %s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
-    write_file('%s/static/settings-local.js' % app_root_path, lines)
+    write_file('template/%s/%s/static/settings-local.js' % (git_folder_name, name), lines)
 
     ################################################################################
     print_message('npm build')
 
-    npm_process = subprocess.Popen(['npm', 'run', 'build'], cwd=app_root_path)
+    nm = os.path.abspath('template/%s/node_modules' % git_folder_name)
+    subprocess.Popen(['ln', '-s', nm, 'node_modules'], cwd='template/%s/%s' % (git_folder_name, name)).communicate()
+
+    npm_process = subprocess.Popen(['npm', 'run', 'build-%s' % name], cwd='template/%s' % git_folder_name)
     npm_result, error = npm_process.communicate()
 
     if error:
@@ -104,15 +93,13 @@ def run_create_s3_vue(name, settings):
     ################################################################################
     print_message('upload to temp bucket')
 
-    app_dist_path = '%s/dist' % app_root_path
     temp_bucket_name = aws_cli.get_temp_bucket()
     timestamp = int(time.time())
-    temp_bucket_prefix = '%s/%s/%s/%s/%s' % (temp_bucket_name, template_name, name, base_path, timestamp)
-    temp_bucket_prefix = os.path.normpath(temp_bucket_prefix)
+    temp_bucket_prefix = '%s/%s/%s/%s' % (temp_bucket_name, git_folder_name, name, timestamp)
     temp_bucket_uri = 's3://%s' % temp_bucket_prefix
 
     cmd = ['s3', 'cp', '.', temp_bucket_uri, '--recursive']
-    upload_result = aws_cli.run(cmd, cwd=app_dist_path)
+    upload_result = aws_cli.run(cmd, cwd='template/%s/%s/dist' % (git_folder_name, name))
     for ll in upload_result.split('\n'):
         print(ll)
 
@@ -125,52 +112,41 @@ def run_create_s3_vue(name, settings):
     ################################################################################
     print_message('set bucket policy')
 
-    lines = read_file('%s/configuration/aws-s3-bucket-policy-sample.json' % environment_path)
+    lines = read_file('aws_s3/aws-s3-bucket-policy-sample.json')
     lines = re_sub_lines(lines, 'BUCKET_NAME', deploy_bucket_name)
-    write_file('%s/configuration/aws-s3-bucket-policy.json' % environment_path, lines)
+    write_file('template/%s/%s/aws-s3-bucket-policy.json' % (git_folder_name, name), lines)
 
     cmd = ['s3api', 'put-bucket-policy']
     cmd += ['--bucket', deploy_bucket_name]
-    cmd += ['--policy', 'file://%s/configuration/aws-s3-bucket-policy.json' % environment_path]
+    cmd += ['--policy', 'file://template/%s/%s/aws-s3-bucket-policy.json' % (git_folder_name, name)]
     aws_cli.run(cmd)
 
     ################################################################################
     print_message('set website configuration')
 
-    lines = read_file('%s/configuration/aws-s3-website-configuration-sample.json' % environment_path)
+    lines = read_file('aws_s3/aws-s3-website-configuration-sample.json')
     lines = re_sub_lines(lines, 'BUCKET_NAME', deploy_bucket_name)
-    lines = re_sub_lines(lines, 'PROTOCOL', deploy_protocol)
-    write_file('%s/configuration/aws-s3-website-configuration.json' % environment_path, lines)
+    lines = re_sub_lines(lines, 'PROTOCOL', settings.get('PROTOCOL', 'http'))
+    write_file('template/%s/%s/aws-s3-website-configuration.json' % (git_folder_name, name), lines)
 
     cmd = ['s3api', 'put-bucket-website']
     cmd += ['--bucket', deploy_bucket_name]
-    cmd += ['--website-configuration', 'file://%s/configuration/aws-s3-website-configuration.json' % environment_path]
+    cmd += ['--website-configuration',
+            'file://template/%s/%s/aws-s3-website-configuration.json' % (git_folder_name, name)]
     aws_cli.run(cmd)
-
-    ################################################################################
-    print_message('delete old files from deploy bucket')
-
-    delete_excluded_files = list(settings.get('DELETE_EXCLUDED_FILES', ''))
-    if len(delete_excluded_files) > 0:
-        cmd = ['s3', 'rm', 's3://%s' % deploy_bucket_prefix, '--recursive']
-        for ff in delete_excluded_files:
-            cmd += ['--exclude', '%s' % ff]
-        delete_result = aws_cli.run(cmd)
-        for ll in delete_result.split('\n'):
-            print(ll)
 
     ################################################################################
     print_message('sync to deploy bucket')
 
-    cmd = ['s3', 'sync', temp_bucket_uri, 's3://%s' % deploy_bucket_prefix]
-    if len(delete_excluded_files) < 1:
-        cmd += ['--delete']
+    cmd = ['s3', 'sync', temp_bucket_uri, 's3://%s' % deploy_bucket_name, '--delete']
     sync_result = aws_cli.run(cmd)
     for ll in sync_result.split('\n'):
         print(ll)
 
     ################################################################################
     print_message('tag to deploy bucket')
+
+    git_hash_johanna = subprocess.Popen(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE).communicate()[0]
 
     tag_dict = dict()
 
@@ -185,8 +161,7 @@ def run_create_s3_vue(name, settings):
 
     tag_dict['phase'] = phase
     tag_dict['git_hash_johanna'] = git_hash_johanna.decode('utf-8')
-    tag_dict['git_hash_template'] = git_hash_template.decode('utf-8')
-    tag_dict['git_hash_%s' % name] = git_hash_app.decode('utf-8')
+    tag_dict['git_hash_%s/%s' % (git_folder_name, name)] = git_hash_app.decode('utf-8')
     tag_dict['timestamp_%s' % name] = timestamp
 
     tag_format = '{Key=%s, Value=%s}'
@@ -212,7 +187,6 @@ def run_create_s3_vue(name, settings):
 
     cf_dist_id = settings.get('CLOUDFRONT_DIST_ID', '')
     if len(cf_dist_id) > 0:
-        path_list = list(settings['INVALIDATE_PATHS'])
-        cmd = ['cloudfront', 'create-invalidation', '--distribution-id', cf_dist_id, '--paths', ' '.join(path_list)]
+        cmd = ['cloudfront', 'create-invalidation', '--distribution-id', cf_dist_id, '--paths', '/*']
         invalidate_result = aws_cli.run(cmd)
         print(invalidate_result)
