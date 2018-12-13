@@ -118,7 +118,7 @@ def run_create_lambda_cron(function_name, settings):
                '--role', role_arn,
                '--handler', 'lambda.handler',
                '--runtime', 'python3.6',
-               '--timeout', '480']
+               '--timeout', '900']
         aws_cli.run(cmd, cwd=deploy_folder)
 
         print_message('update lambda tags')
@@ -148,7 +148,7 @@ def run_create_lambda_cron(function_name, settings):
            '--handler', 'lambda.handler',
            '--runtime', 'python3.6',
            '--tags', ','.join(tags),
-           '--timeout', '480']
+           '--timeout', '900']
     result = aws_cli.run(cmd, cwd=deploy_folder)
 
     function_arn = result['FunctionArn']
