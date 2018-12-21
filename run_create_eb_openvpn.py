@@ -241,7 +241,7 @@ def run_create_eb_openvpn(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'InstanceType'
-    oo['Value'] = 't2.nano'
+    oo['Value'] = 't3.nano'
     option_settings.append(oo)
 
     oo = dict()
@@ -348,7 +348,7 @@ def run_create_eb_openvpn(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.7.6 running Python 3.6']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.7.7 running Python 3.6']
     cmd += ['--tags', tag0, tag1, tag2]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=environment_path)
