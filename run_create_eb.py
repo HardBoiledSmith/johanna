@@ -49,7 +49,6 @@ for eb_env in eb['ENVIRONMENTS']:
         check_template_availability()
         run_create_eb_cron_job(eb_env['NAME'], eb_env)
     elif eb_env['TYPE'] == 'django':
-        check_template_availability()
         run_create_eb_django(eb_env['NAME'], eb_env)
     elif eb_env['TYPE'] == 'openvpn':
         check_template_availability()

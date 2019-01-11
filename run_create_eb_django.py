@@ -28,7 +28,6 @@ def run_create_eb_django(name, settings):
     phase = env['common']['PHASE']
     ssl_certificate_id = settings['SSL_CERTIFICATE_ID']
     subnet_type = settings['SUBNET_TYPE']
-    template_name = env['template']['NAME']
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = '%s_' % service_name if service_name else ''
 
@@ -41,14 +40,10 @@ def run_create_eb_django(name, settings):
     eb_environment_name = '%s-%s' % (name, str_timestamp)
     eb_environment_name_old = None
 
-    template_path = 'template/%s' % template_name
-    environment_path = '%s/elasticbeanstalk/%s' % (template_path, name)
-    etc_config_path = '%s/configuration/etc' % environment_path
-    app_config_path = '%s/%s' % (etc_config_path, name)
+    template_path = 'template/%s' % name
 
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
-    git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
 
     ################################################################################
     print_session('create %s' % name)
@@ -119,32 +114,58 @@ def run_create_eb_django(name, settings):
     db_address_read_replica = aws_cli.get_rds_address(read_replica=True)
 
     ################################################################################
+    print_message('git clone')
+
+    subprocess.Popen(['rm', '-rf', template_path]).communicate()
+    subprocess.Popen(['mkdir', '-p', template_path]).communicate()
+
+    if phase == 'dv':
+        git_command = ['git', 'clone', '--depth=1', '-b', 'GEN-1863', git_url]
+    else:
+        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+    subprocess.Popen(git_command, cwd=template_path).communicate()
+    if not os.path.exists('%s/%s' % (template_path, name)):
+        raise Exception()
+
+    git_hash_app = subprocess.Popen(git_rev,
+                                    stdout=subprocess.PIPE,
+                                    cwd='%s/%s' % (template_path, name)).communicate()[0]
+
+    subprocess.Popen(['rm', '-rf', './%s/.git' % name], cwd=template_path).communicate()
+    subprocess.Popen(['rm', '-rf', './%s/.gitignore' % name], cwd=template_path).communicate()
+
+    ################################################################################
     print_message('configuration %s' % name)
 
-    with open('%s/configuration/phase' % environment_path, 'w') as f:
+    with open('%s/%s/_provisioning/configuration/phase' % (template_path, name), 'w') as f:
         f.write(phase)
         f.close()
 
-    lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
+    lines = read_file('%s/%s/_provisioning/configuration/etc/cron.d/%s' % (template_path, name, name))
+    rr = '/opt/python/run/venv/bin/python3 /opt/python/current/app/%s/\\1.py' % name
+    lines = re_sub_lines(lines, r'/opt/%s/(.+)\.py' % name, rr)
+    write_file('%s/%s/_provisioning/configuration/etc/cron.d/%s' % (template_path, name, name), lines)
+
+    lines = read_file('%s/%s/_provisioning/.ebextensions/%s.config.sample' % (template_path, name, name))
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
     lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
     lines = re_sub_lines(lines, 'SSL_CERTIFICATE_ID', ssl_certificate_id)
-    write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
+    write_file('%s/%s/_provisioning/.ebextensions/%s.config' % (template_path, name, name), lines)
 
-    lines = read_file('%s/my_sample.cnf' % app_config_path)
+    lines = read_file('%s/%s/_provisioning/configuration/etc/%s/my_primary.cnf' % (template_path, name, name))
     lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address)
     lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
     lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
-    write_file('%s/my_primary.cnf' % app_config_path, lines)
+    write_file('%s/%s/_provisioning/configuration/etc/%s/my_primary.cnf' % (template_path, name, name), lines)
 
-    lines = read_file('%s/my_sample.cnf' % app_config_path)
+    lines = read_file('%s/%s/_provisioning/configuration/etc/%s/my_replica.cnf' % (template_path, name, name))
     lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address_read_replica)
     lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
     lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
-    write_file('%s/my_replica.cnf' % app_config_path, lines)
+    write_file('%s/%s/_provisioning/configuration/etc/%s/my_replica.cnf' % (template_path, name, name), lines)
 
-    lines = read_file('%s/settings_local_sample.py' % app_config_path)
+    lines = read_file('%s/%s/_provisioning/configuration/etc/%s/settings_local_sample.py' % (template_path, name, name))
     lines = re_sub_lines(lines, '^(DEBUG).*', '\\1 = %s' % debug)
     option_list = list()
     option_list.append(['PHASE', phase])
@@ -153,26 +174,7 @@ def run_create_eb_django(name, settings):
         option_list.append([key, value])
     for oo in option_list:
         lines = re_sub_lines(lines, '^(%s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
-    write_file('%s/settings_local.py' % app_config_path, lines)
-
-    ################################################################################
-    print_message('git clone')
-
-    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
-    if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', git_url]
-    else:
-        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
-    subprocess.Popen(git_command, cwd=environment_path).communicate()
-    if not os.path.exists('%s/%s' % (environment_path, name)):
-        raise Exception()
-
-    git_hash_app = subprocess.Popen(git_rev,
-                                    stdout=subprocess.PIPE,
-                                    cwd='%s/%s' % (environment_path, name)).communicate()[0]
-
-    subprocess.Popen(['rm', '-rf', './%s/.git' % name], cwd=environment_path).communicate()
-    subprocess.Popen(['rm', '-rf', './%s/.gitignore' % name], cwd=environment_path).communicate()
+    write_file('%s/%s/_provisioning/configuration/etc/%s/settings_local.py' % (template_path, name, name), lines)
 
     ################################################################################
     print_message('check previous version')
@@ -208,20 +210,26 @@ def run_create_eb_django(name, settings):
     ################################################################################
     print_message('create application version')
 
+    cmd = ['cp', '-r', '%s/_provisioning/' % name, '.']
+    subprocess.Popen(cmd, cwd=template_path).communicate()
+
+    cmd = ['rm', '-rf', '%s/_provisioning' % name]
+    subprocess.Popen(cmd, cwd=template_path).communicate()
+
     cmd = ['zip', '-r', zip_filename, '.', '.ebextensions']
-    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=environment_path).communicate()
+    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=template_path).communicate()
 
     cmd = ['s3', 'cp', zip_filename, s3_zip_filename]
-    aws_cli.run(cmd, cwd=environment_path)
+    aws_cli.run(cmd, cwd=template_path)
 
     cmd = ['rm', '-rf', zip_filename]
-    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=environment_path).communicate()
+    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=template_path).communicate()
 
     cmd = ['elasticbeanstalk', 'create-application-version']
     cmd += ['--application-name', eb_application_name]
     cmd += ['--source-bundle', 'S3Bucket="%s",S3Key="%s/%s"' % (s3_bucket, eb_application_name, zip_filename)]
     cmd += ['--version-label', eb_environment_name]
-    aws_cli.run(cmd, cwd=environment_path)
+    aws_cli.run(cmd, cwd=template_path)
 
     ################################################################################
     print_message('create environment %s' % name)
@@ -351,8 +359,7 @@ def run_create_eb_django(name, settings):
     option_settings = json.dumps(option_settings)
 
     tag0 = 'Key=git_hash_johanna,Value=%s' % git_hash_johanna.decode('utf-8').strip()
-    tag1 = 'Key=git_hash_%s,Value=%s' % (template_name, git_hash_template.decode('utf-8').strip())
-    tag2 = 'Key=git_hash_%s,Value=%s' % (name, git_hash_app.decode('utf-8').strip())
+    tag1 = 'Key=git_hash_%s,Value=%s' % (name, git_hash_app.decode('utf-8').strip())
 
     cmd = ['elasticbeanstalk', 'create-environment']
     cmd += ['--application-name', eb_application_name]
@@ -360,9 +367,9 @@ def run_create_eb_django(name, settings):
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
     cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.7.7 running Python 3.6']
-    cmd += ['--tags', tag0, tag1, tag2]
+    cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
-    aws_cli.run(cmd, cwd=environment_path)
+    aws_cli.run(cmd, cwd=template_path)
 
     elapsed_time = 0
     while True:
@@ -383,7 +390,7 @@ def run_create_eb_django(name, settings):
         if elapsed_time > 60 * 30:
             raise Exception()
 
-    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
+    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=template_path).communicate()
 
     ################################################################################
     print_message('revoke security group ingress')
