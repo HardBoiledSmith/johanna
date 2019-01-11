@@ -120,7 +120,7 @@ def run_create_eb_django(name, settings):
     subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
     if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', '-b', 'GEN-1863', git_url]
+        git_command = ['git', 'clone', '--depth=1', git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
     subprocess.Popen(git_command, cwd=template_path).communicate()
