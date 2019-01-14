@@ -210,8 +210,15 @@ def run_create_eb_django(name, settings):
     ################################################################################
     print_message('create application version')
 
-    cmd = ['cp', '-r', '%s/_provisioning/' % name, '.']
-    subprocess.Popen(cmd, cwd=template_path).communicate()
+    file_list = list()
+    file_list.append('.ebextensions')
+    file_list.append('configuration')
+    file_list.append('provisioning.py')
+    file_list.append('requirements.txt')
+
+    for ff in file_list:
+        cmd = ['mv', '%s/_provisioning/%s' % (name, ff), '.']
+        subprocess.Popen(cmd, cwd=template_path).communicate()
 
     cmd = ['rm', '-rf', '%s/_provisioning' % name]
     subprocess.Popen(cmd, cwd=template_path).communicate()
