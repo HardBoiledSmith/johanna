@@ -3,7 +3,6 @@
 from env import env
 from run_common import check_template_availability
 from run_common import print_session
-from run_create_eb_cron_job import run_create_eb_cron_job
 from run_create_eb_django import run_create_eb_django
 from run_create_eb_openvpn import run_create_eb_openvpn
 from run_create_eb_spring import run_create_eb_spring
@@ -45,11 +44,7 @@ for eb_env in eb['ENVIRONMENTS']:
     if target_eb_name:
         check_exists = True
 
-    if eb_env['TYPE'] == 'cron job':
-        check_template_availability()
-        run_create_eb_cron_job(eb_env['NAME'], eb_env)
-    elif eb_env['TYPE'] == 'django':
-        check_template_availability()
+    if eb_env['TYPE'] == 'django':
         run_create_eb_django(eb_env['NAME'], eb_env)
     elif eb_env['TYPE'] == 'openvpn':
         check_template_availability()
