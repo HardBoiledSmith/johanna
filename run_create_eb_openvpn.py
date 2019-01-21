@@ -385,6 +385,15 @@ def run_create_eb_openvpn(name, settings):
 
     subprocess.Popen(['rm', '-rf', './%s' % name], cwd=template_path).communicate()
 
+    file_list = list()
+    file_list.append('.ebextensions')
+    file_list.append('configuration')
+    file_list.append('provisioning.py')
+    file_list.append('requirements.txt')
+
+    for ff in file_list:
+        subprocess.Popen(['rm', '-rf', './%s' % ff], cwd=template_path).communicate()
+
     ################################################################################
     print_message('revoke security group ingress')
 
