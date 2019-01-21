@@ -31,7 +31,6 @@ def run_create_eb_openvpn(name, settings):
     openvpn_server_key = settings['SERVER_KEY']
     openvpn_subnet_ip = settings['OPENVPN_SUBNET_IP']
     phase = env['common']['PHASE']
-    template_name = env['template']['NAME']
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = '%s_' % service_name if service_name else ''
 
@@ -45,14 +44,13 @@ def run_create_eb_openvpn(name, settings):
     eb_environment_name = '%s-%s' % (name, str_timestamp)
     eb_environment_name_old = None
 
-    template_path = 'template/%s' % template_name
-    environment_path = '%s/elasticbeanstalk/%s' % (template_path, name)
-    etc_config_path = '%s/configuration/etc' % environment_path
+    template_path = 'template/%s' % name
+    provisioning_path = '%s/%s/_provisioning' % (template_path, name)
+    etc_config_path = '%s/configuration/etc' % provisioning_path
     app_config_path = '%s/%s' % (etc_config_path, name)
 
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
-    git_hash_template = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=template_path).communicate()[0]
 
     ################################################################################
     #
@@ -99,9 +97,29 @@ def run_create_eb_openvpn(name, settings):
             break
 
     ################################################################################
+    print_message('git clone')
+
+    subprocess.Popen(['rm', '-rf', template_path]).communicate()
+    subprocess.Popen(['mkdir', '-p', template_path]).communicate()
+    if phase == 'dv':
+        git_command = ['git', 'clone', '--depth=1', git_url]
+    else:
+        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+    subprocess.Popen(git_command, cwd=template_path).communicate()
+    if not os.path.exists('%s/%s' % (template_path, name)):
+        raise Exception()
+
+    git_hash_app = subprocess.Popen(git_rev,
+                                    stdout=subprocess.PIPE,
+                                    cwd='%s/%s' % (template_path, name)).communicate()[0]
+
+    subprocess.Popen(['rm', '-rf', './%s/.git' % name], cwd=template_path).communicate()
+    subprocess.Popen(['rm', '-rf', './%s/.gitignore' % name], cwd=template_path).communicate()
+
+    ################################################################################
     print_message('configuration openvpn')
 
-    path = '%s/configuration/etc/openvpn' % environment_path
+    path = '%s/configuration/etc/openvpn' % provisioning_path
 
     with open('%s/ca.crt' % path, 'w') as f:
         f.write(openvpn_ca_crt)
@@ -126,18 +144,18 @@ def run_create_eb_openvpn(name, settings):
     ################################################################################
     print_message('configuration %s' % name)
 
-    with open('%s/configuration/accounts' % environment_path, 'w') as f:
+    with open('%s/configuration/accounts' % provisioning_path, 'w') as f:
         for aa in accounts:
             f.write(aa + '\n')
         f.close()
 
-    with open('%s/configuration/phase' % environment_path, 'w') as f:
+    with open('%s/configuration/phase' % provisioning_path, 'w') as f:
         f.write(phase)
         f.close()
 
-    lines = read_file('%s/.ebextensions/%s.config.sample' % (environment_path, name))
+    lines = read_file('%s/.ebextensions/%s.config.sample' % (provisioning_path, name))
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
-    write_file('%s/.ebextensions/%s.config' % (environment_path, name), lines)
+    write_file('%s/.ebextensions/%s.config' % (provisioning_path, name), lines)
 
     lines = read_file('%s/openvpn/server_sample.conf' % etc_config_path)
     lines = re_sub_lines(lines, 'OPENVPN_SUBNET_IP', openvpn_subnet_ip)
@@ -158,25 +176,6 @@ def run_create_eb_openvpn(name, settings):
     for oo in option_list:
         lines = re_sub_lines(lines, '^(%s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
     write_file('%s/settings_local.py' % app_config_path, lines)
-
-    ################################################################################
-    print_message('git clone')
-
-    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
-    if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', git_url]
-    else:
-        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
-    subprocess.Popen(git_command, cwd=environment_path).communicate()
-    if not os.path.exists('%s/%s' % (environment_path, name)):
-        raise Exception()
-
-    git_hash_app = subprocess.Popen(git_rev,
-                                    stdout=subprocess.PIPE,
-                                    cwd='%s/%s' % (environment_path, name)).communicate()[0]
-
-    subprocess.Popen(['rm', '-rf', './%s/.git' % name], cwd=environment_path).communicate()
-    subprocess.Popen(['rm', '-rf', './%s/.gitignore' % name], cwd=environment_path).communicate()
 
     ################################################################################
     print_message('check previous version')
@@ -212,20 +211,33 @@ def run_create_eb_openvpn(name, settings):
     ################################################################################
     print_message('create application version')
 
+    file_list = list()
+    file_list.append('.ebextensions')
+    file_list.append('configuration')
+    file_list.append('provisioning.py')
+    file_list.append('requirements.txt')
+
+    for ff in file_list:
+        cmd = ['mv', '%s/_provisioning/%s' % (name, ff), '.']
+        subprocess.Popen(cmd, cwd=template_path).communicate()
+
+    cmd = ['rm', '-rf', '%s/_provisioning' % name]
+    subprocess.Popen(cmd, cwd=template_path).communicate()
+
     cmd = ['zip', '-r', zip_filename, '.', '.ebextensions']
-    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=environment_path).communicate()
+    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=template_path).communicate()
 
     cmd = ['s3', 'cp', zip_filename, s3_zip_filename]
-    aws_cli.run(cmd, cwd=environment_path)
+    aws_cli.run(cmd, cwd=template_path)
 
     cmd = ['rm', '-rf', zip_filename]
-    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=environment_path).communicate()
+    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=template_path).communicate()
 
     cmd = ['elasticbeanstalk', 'create-application-version']
     cmd += ['--application-name', eb_application_name]
     cmd += ['--source-bundle', 'S3Bucket="%s",S3Key="%s/%s"' % (s3_bucket, eb_application_name, zip_filename)]
     cmd += ['--version-label', eb_environment_name]
-    aws_cli.run(cmd, cwd=environment_path)
+    aws_cli.run(cmd, cwd=template_path)
 
     ################################################################################
     print_message('create environment %s' % name)
@@ -340,8 +352,7 @@ def run_create_eb_openvpn(name, settings):
     option_settings = json.dumps(option_settings)
 
     tag0 = 'Key=git_hash_johanna,Value=%s' % git_hash_johanna.decode('utf-8').strip()
-    tag1 = 'Key=git_hash_%s,Value=%s' % (template_name, git_hash_template.decode('utf-8').strip())
-    tag2 = 'Key=git_hash_%s,Value=%s' % (name, git_hash_app.decode('utf-8').strip())
+    tag1 = 'Key=git_hash_%s,Value=%s' % (name, git_hash_app.decode('utf-8').strip())
 
     cmd = ['elasticbeanstalk', 'create-environment']
     cmd += ['--application-name', eb_application_name]
@@ -349,9 +360,9 @@ def run_create_eb_openvpn(name, settings):
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
     cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.7.7 running Python 3.6']
-    cmd += ['--tags', tag0, tag1, tag2]
+    cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
-    aws_cli.run(cmd, cwd=environment_path)
+    aws_cli.run(cmd, cwd=template_path)
 
     elapsed_time = 0
     while True:
@@ -372,7 +383,7 @@ def run_create_eb_openvpn(name, settings):
         if elapsed_time > 60 * 30:
             raise Exception()
 
-    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=environment_path).communicate()
+    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=template_path).communicate()
 
     ################################################################################
     print_message('revoke security group ingress')
