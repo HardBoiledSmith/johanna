@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import subprocess
 from subprocess import PIPE
 
@@ -38,8 +39,23 @@ def _manual_backup():
     password = env['rds']['USER_PASSWORD']
     user = env['rds']['USER_NAME']
 
-    template_name = env['template']['NAME']
-    filename_path = 'template/%s/rds/mysql_data.sql' % template_name
+    name = env['rds']['NAME']
+    filename_path = 'template/%s/%s/rds/mysql_data.sql' % (name, name)
+
+    print_message('git clone')
+
+    git_url = env['rds']['GIT_URL']
+    name = env['rds']['NAME']
+    template_path = 'template/%s' % name
+
+    subprocess.Popen(['rm', '-rf', template_path]).communicate()
+    subprocess.Popen(['mkdir', '-p', template_path]).communicate()
+
+    git_command = ['git', 'clone', '--depth=1', git_url]
+
+    subprocess.Popen(git_command, cwd=template_path).communicate()
+    if not os.path.exists('%s/%s' % (template_path, name)):
+        raise Exception()
 
     _mysql_dump(host, user, password, database, filename_path)
 
