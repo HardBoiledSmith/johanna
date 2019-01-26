@@ -40,25 +40,25 @@ def _manual_backup():
     password = env['rds']['USER_PASSWORD']
     user = env['rds']['USER_NAME']
 
-    name = env['rds']['NAME']
-    filename_path = 'template/%s/%s/rds/mysql_data.sql' % (name, name)
-
     print_message('git clone')
 
     git_url = env['rds']['GIT_URL']
-    name = env['rds']['NAME']
-    template_path = 'template/%s' % name
+    mm = re.match(r'^.+/(.+)\.git$', git_url)
+    if not mm:
+        raise Exception()
 
+    git_folder_name = mm.group(1)
+    template_path = 'template/%s' % git_folder_name
     subprocess.Popen(['rm', '-rf', template_path]).communicate()
     subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
     git_command = ['git', 'clone', '--depth=1', git_url]
 
-    subprocess.Popen(git_command, cwd=template_path).communicate()
-    if not os.path.exists('%s/%s' % (template_path, name)):
+    subprocess.Popen(git_command, cwd='./template').communicate()
+    if not os.path.exists(template_path):
         raise Exception()
 
-    _mysql_dump(host, user, password, database, filename_path)
+    _mysql_dump(host, user, password, database, '%s/rds/mysql_schema.sql' % template_path)
 
 
 def _mysql_dump(host, user, password, database, filename_path):

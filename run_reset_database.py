@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import subprocess
+import re
 from datetime import datetime
 
 from env import env
@@ -47,8 +48,13 @@ template_name = env['template']['NAME']
 print_message('git clone')
 
 git_url = env['rds']['GIT_URL']
-name = env['rds']['NAME']
-template_path = 'template/%s' % name
+mm = re.match(r'^.+/(.+)\.git$', git_url)
+if not mm:
+    raise Exception()
+
+git_folder_name = mm.group(1)
+
+template_path = 'template/%s' % git_folder_name
 
 subprocess.Popen(['rm', '-rf', template_path]).communicate()
 subprocess.Popen(['mkdir', '-p', template_path]).communicate()
@@ -56,7 +62,7 @@ subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 git_command = ['git', 'clone', '--depth=1', git_url]
 
 subprocess.Popen(git_command, cwd=template_path).communicate()
-if not os.path.exists('%s/%s' % (template_path, name)):
+if not os.path.exists(template_path):
     raise Exception()
 
 print_message('reset database')
@@ -77,17 +83,13 @@ subprocess.Popen(cmd).communicate()
 
 cmd = cmd_common + ['--comments']
 
-filename = '%s/%s/rds/mysql_schema.sql' % (template_path, name)
+filename = '%s/rds/mysql_schema.sql' % template_path
 with open(filename, 'r') as f:
     subprocess.Popen(cmd, stdin=f).communicate()
 
-filename = '%s/%s/rds/mysql_data.sql' % (template_path, name)
+filename = '%s/rds/mysql_data.sql' % template_path
 with open(filename, 'r') as f:
     subprocess.Popen(cmd, stdin=f).communicate()
 
 finish_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 print(' '.join(['Finished at:', finish_time]))
-
-print_message('delete template')
-
-subprocess.Popen(['rm', '-rf', './%s' % name], cwd=template_path).communicate()
