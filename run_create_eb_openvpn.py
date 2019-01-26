@@ -140,7 +140,7 @@ def run_create_eb_openvpn(name, settings):
     ################################################################################
     print_message('configuration %s' % name)
 
-    with open('%s/%s/_provisioning/configuration/accounts'  % (template_path, name), 'w') as f:
+    with open('%s/%s/_provisioning/configuration/accounts' % (template_path, name), 'w') as f:
         for aa in accounts:
             f.write(aa + '\n')
         f.close()
@@ -157,10 +157,10 @@ def run_create_eb_openvpn(name, settings):
     lines = re_sub_lines(lines, 'OPENVPN_SUBNET_IP', openvpn_subnet_ip)
     write_file('%s/%s/_provisioning/configuration/etc/openvpn/server.conf' % (template_path, name), lines)
 
-    lines = read_file('%s/%s/_provisioning/configuration/etc/sysconfig/iptables_sample' %  (template_path, name))
+    lines = read_file('%s/%s/_provisioning/configuration/etc/sysconfig/iptables_sample' % (template_path, name))
     lines = re_sub_lines(lines, 'AWS_VPC_EB', cidr_vpc['eb'])
     lines = re_sub_lines(lines, 'OPENVPN_SUBNET_IP', openvpn_subnet_ip)
-    write_file('%s/%s/_provisioning/configuration/etc/sysconfig/iptables' %  (template_path, name), lines)
+    write_file('%s/%s/_provisioning/configuration/etc/sysconfig/iptables' % (template_path, name), lines)
 
     lines = read_file(('%s/%s/_provisioning/configuration/etc/%s/settings_local_sample.py'
                        % (template_path, name, name)))
@@ -172,8 +172,7 @@ def run_create_eb_openvpn(name, settings):
         option_list.append([key, value])
     for oo in option_list:
         lines = re_sub_lines(lines, '^(%s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
-    write_file(('%s/%s/_provisioning/configuration/etc/%s/settings_local.py' % (template_path, name, name))
-               , lines)
+    write_file(('%s/%s/_provisioning/configuration/etc/%s/settings_local.py' % (template_path, name, name)), lines)
 
     ################################################################################
     print_message('check previous version')
