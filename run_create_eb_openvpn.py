@@ -45,10 +45,6 @@ def run_create_eb_openvpn(name, settings):
     eb_environment_name_old = None
 
     template_path = 'template/%s' % name
-    provisioning_path = '%s/%s/_provisioning' % (template_path, name)
-    etc_config_path = '%s/configuration/etc' % provisioning_path
-    app_config_path = '%s/%s' % (etc_config_path, name)
-
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
 
@@ -119,7 +115,7 @@ def run_create_eb_openvpn(name, settings):
     ################################################################################
     print_message('configuration openvpn')
 
-    path = '%s/configuration/etc/openvpn' % provisioning_path
+    path = '%s/%s/_provisioning/configuration/etc/openvpn' % (template_path, name)
 
     with open('%s/ca.crt' % path, 'w') as f:
         f.write(openvpn_ca_crt)
@@ -144,29 +140,30 @@ def run_create_eb_openvpn(name, settings):
     ################################################################################
     print_message('configuration %s' % name)
 
-    with open('%s/configuration/accounts' % provisioning_path, 'w') as f:
+    with open('%s/%s/_provisioning/configuration/accounts'  % (template_path, name), 'w') as f:
         for aa in accounts:
             f.write(aa + '\n')
         f.close()
 
-    with open('%s/configuration/phase' % provisioning_path, 'w') as f:
+    with open('%s/%s/_provisioning/configuration/phase' % (template_path, name), 'w') as f:
         f.write(phase)
         f.close()
 
-    lines = read_file('%s/.ebextensions/%s.config.sample' % (provisioning_path, name))
+    lines = read_file('%s/%s/_provisioning/.ebextensions/%s.config.sample' % (template_path, name, name))
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
-    write_file('%s/.ebextensions/%s.config' % (provisioning_path, name), lines)
+    write_file('%s/%s/_provisioning/.ebextensions/%s.config' % (template_path, name, name), lines)
 
-    lines = read_file('%s/openvpn/server_sample.conf' % etc_config_path)
+    lines = read_file('%s/%s/_provisioning/configuration/etc/openvpn/server_sample.conf' % (template_path, name))
     lines = re_sub_lines(lines, 'OPENVPN_SUBNET_IP', openvpn_subnet_ip)
-    write_file('%s/openvpn/server.conf' % etc_config_path, lines)
+    write_file('%s/%s/_provisioning/configuration/etc/openvpn/server.conf' % (template_path, name), lines)
 
-    lines = read_file('%s/sysconfig/iptables_sample' % etc_config_path)
+    lines = read_file('%s/%s/_provisioning/configuration/etc/sysconfig/iptables_sample' %  (template_path, name))
     lines = re_sub_lines(lines, 'AWS_VPC_EB', cidr_vpc['eb'])
     lines = re_sub_lines(lines, 'OPENVPN_SUBNET_IP', openvpn_subnet_ip)
-    write_file('%s/sysconfig/iptables' % etc_config_path, lines)
+    write_file('%s/%s/_provisioning/configuration/etc/sysconfig/iptables' %  (template_path, name), lines)
 
-    lines = read_file('%s/settings_local_sample.py' % app_config_path)
+    lines = read_file(('%s/%s/_provisioning/configuration/etc/%s/settings_local_sample.py'
+                       % (template_path, name, name)))
     lines = re_sub_lines(lines, '^(DEBUG).*', '\\1 = %s' % debug)
     option_list = list()
     option_list.append(['PHASE', phase])
@@ -175,7 +172,8 @@ def run_create_eb_openvpn(name, settings):
         option_list.append([key, value])
     for oo in option_list:
         lines = re_sub_lines(lines, '^(%s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
-    write_file('%s/settings_local.py' % app_config_path, lines)
+    write_file(('%s/%s/_provisioning/configuration/etc/%s/settings_local.py' % (template_path, name, name))
+               , lines)
 
     ################################################################################
     print_message('check previous version')
