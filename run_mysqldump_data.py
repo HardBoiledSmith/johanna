@@ -74,6 +74,7 @@ def _mysql_dump(host, user, password, database, filename_path):
     with open(filename_path_raw, 'r') as ff_raw, open(filename_path, 'w') as ff:
         case_alarm_insert_count = 0
         scenario_alarm_insert_count = 0
+        report_insert_count = 0
         while True:
             line = ff_raw.readline()
             if not line:
@@ -115,6 +116,10 @@ def _mysql_dump(host, user, password, database, filename_path):
             elif 'INSERT INTO `hbsmith_scenario_alarm` VALUES (' in line:
                 scenario_alarm_insert_count += 1
                 if scenario_alarm_insert_count >= 1000:
+                    continue
+            elif 'INSERT INTO `hbsmith_report` VALUES (' in line:
+                report_insert_count += 1
+                if report_insert_count >= 1000:
                     continue
             elif 'INSERT INTO `hbsmith_bounced_email` VALUES (' in line:
                 ss = line.split(',')
