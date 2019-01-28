@@ -64,7 +64,7 @@ if phase == 'dv':
 else:
     git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
 
-subprocess.Popen(git_command, cwd=template_path).communicate()
+subprocess.Popen(git_command, cwd='./template').communicate()
 if not os.path.exists(template_path):
     raise Exception()
 

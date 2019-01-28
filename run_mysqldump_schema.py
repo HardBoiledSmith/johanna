@@ -53,7 +53,10 @@ def _manual_backup():
     subprocess.Popen(['rm', '-rf', template_path]).communicate()
     subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
-    git_command = ['git', 'clone', '--depth=1', git_url]
+    if phase == 'dv':
+        git_command = ['git', 'clone', '--depth=1', git_url]
+    else:
+        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
 
     subprocess.Popen(git_command, cwd='./template').communicate()
     if not os.path.exists(template_path):
