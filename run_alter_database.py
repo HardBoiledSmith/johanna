@@ -18,13 +18,15 @@ print_session('alter database')
 check_template_availability()
 
 engine = env['rds']['ENGINE']
+
 if engine not in ('aurora', 'aurora-mysql', 'aurora-postgresql'):
     print('not supported:', engine)
     raise Exception()
 
 print_message('get database address')
 
-if env['common']['PHASE'] != 'dv':
+phase = env['common']['PHASE']
+if phase != 'dv':
     db_host = aws_cli.get_rds_address()
 else:
     while True:
@@ -53,7 +55,10 @@ template_path = 'template/%s' % git_folder_name
 subprocess.Popen(['rm', '-rf', template_path]).communicate()
 subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
-git_command = ['git', 'clone', '--depth=1', git_url]
+if phase == 'dv':
+    git_command = ['git', 'clone', '--depth=1', git_url]
+else:
+    git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
 
 subprocess.Popen(git_command, cwd='./template').communicate()
 if not os.path.exists(template_path):
@@ -79,7 +84,7 @@ cmd_common += ['-p' + db_password]
 
 cmd = cmd_common + ['--comments']
 
-filename = '%s/rds/history/%s/mysql_schema_alter.sql' % (template_path, yyyymmdd)
+filename = '%s/history/%s/mysql_schema_alter.sql' % (template_path, yyyymmdd)
 if not os.path.exists(filename):
     print('file \'%s\' does not exists.' % filename)
     sys.exit(0)

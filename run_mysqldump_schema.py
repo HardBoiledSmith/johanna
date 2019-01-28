@@ -24,7 +24,8 @@ def _manual_backup():
     ################################################################################
     print_message('get database address')
 
-    if env['common']['PHASE'] != 'dv':
+    phase = env['common']['PHASE']
+    if phase != 'dv':
         host = aws_cli.get_rds_address(read_replica=True)
     else:
         while True:
@@ -58,7 +59,7 @@ def _manual_backup():
     if not os.path.exists(template_path):
         raise Exception()
 
-    _mysql_dump(host, user, password, database, '%s/rds/mysql_schema.sql' % template_path)
+    _mysql_dump(host, user, password, database, '%s/mysql_schema.sql' % template_path)
 
 
 def _mysql_dump(host, user, password, database, filename_path):

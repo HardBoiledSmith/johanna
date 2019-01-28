@@ -17,6 +17,7 @@ def _manual_backup():
     print_session('dump mysql data')
 
     engine = env['rds']['ENGINE']
+
     if engine not in ('aurora', 'aurora-mysql', 'aurora-postgresql'):
         print('not supported:', engine)
         raise Exception()
@@ -24,7 +25,8 @@ def _manual_backup():
     ################################################################################
     print_message('get database address')
 
-    if env['common']['PHASE'] != 'dv':
+    phase = env['common']['PHASE']
+    if phase != 'dv':
         host = aws_cli.get_rds_address(read_replica=True)
     else:
         while True:
@@ -52,13 +54,16 @@ def _manual_backup():
     subprocess.Popen(['rm', '-rf', template_path]).communicate()
     subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
-    git_command = ['git', 'clone', '--depth=1', git_url]
+    if phase == 'dv':
+        git_command = ['git', 'clone', '--depth=1', git_url]
+    else:
+        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
 
     subprocess.Popen(git_command, cwd='./template').communicate()
     if not os.path.exists(template_path):
         raise Exception()
 
-    _mysql_dump(host, user, password, database, '%s/rds/mysql_data.sql' % template_path)
+    _mysql_dump(host, user, password, database, '%s/mysql_data.sql' % template_path)
 
 
 def _mysql_dump(host, user, password, database, filename_path):

@@ -59,7 +59,10 @@ template_path = 'template/%s' % git_folder_name
 subprocess.Popen(['rm', '-rf', template_path]).communicate()
 subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
-git_command = ['git', 'clone', '--depth=1', git_url]
+if phase == 'dv':
+    git_command = ['git', 'clone', '--depth=1', git_url]
+else:
+    git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
 
 subprocess.Popen(git_command, cwd=template_path).communicate()
 if not os.path.exists(template_path):
@@ -83,11 +86,11 @@ subprocess.Popen(cmd).communicate()
 
 cmd = cmd_common + ['--comments']
 
-filename = '%s/rds/mysql_schema.sql' % template_path
+filename = '%s/mysql_schema.sql' % template_path
 with open(filename, 'r') as f:
     subprocess.Popen(cmd, stdin=f).communicate()
 
-filename = '%s/rds/mysql_data.sql' % template_path
+filename = '%s/mysql_data.sql' % template_path
 with open(filename, 'r') as f:
     subprocess.Popen(cmd, stdin=f).communicate()
 
