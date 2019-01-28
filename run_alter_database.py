@@ -3,6 +3,7 @@ import datetime
 import os.path
 import subprocess
 import sys
+import re
 
 from env import env
 from run_common import AWSCli
@@ -17,13 +18,15 @@ print_session('alter database')
 check_template_availability()
 
 engine = env['rds']['ENGINE']
+
 if engine not in ('aurora', 'aurora-mysql', 'aurora-postgresql'):
     print('not supported:', engine)
     raise Exception()
 
 print_message('get database address')
 
-if env['common']['PHASE'] != 'dv':
+phase = env['common']['PHASE']
+if phase != 'dv':
     db_host = aws_cli.get_rds_address()
 else:
     while True:
@@ -39,8 +42,30 @@ db_password = env['rds']['USER_PASSWORD']
 db_user = env['rds']['USER_NAME']
 template_name = env['template']['NAME']
 
+print_message('git clone')
+
+git_url = env['rds']['GIT_URL']
+mm = re.match(r'^.+/(.+)\.git$', git_url)
+if not mm:
+    raise Exception()
+
+git_folder_name = mm.group(1)
+template_path = 'template/%s' % git_folder_name
+
+subprocess.Popen(['rm', '-rf', template_path]).communicate()
+subprocess.Popen(['mkdir', '-p', './template']).communicate()
+
+if phase == 'dv':
+    git_command = ['git', 'clone', '--depth=1', git_url]
+else:
+    git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+
+subprocess.Popen(git_command, cwd='./template').communicate()
+if not os.path.exists(template_path):
+    raise Exception()
+
 print('/* YYYYMMDD list */')
-list_dir = os.listdir('template/%s/rds/history' % template_name)
+list_dir = os.listdir('%s/history' % template_path)
 list_dir.sort()
 print('\n'.join(list_dir))
 yyyymmdd = str(input('\nplease input YYYYMMDD: '))
@@ -59,7 +84,7 @@ cmd_common += ['-p' + db_password]
 
 cmd = cmd_common + ['--comments']
 
-filename = 'template/%s/rds/history/%s/mysql_schema_alter.sql' % (template_name, yyyymmdd)
+filename = '%s/history/%s/mysql_schema_alter.sql' % (template_path, yyyymmdd)
 if not os.path.exists(filename):
     print('file \'%s\' does not exists.' % filename)
     sys.exit(0)

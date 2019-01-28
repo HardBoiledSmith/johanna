@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import os
 import subprocess
+import re
 from datetime import datetime
 
 from env import env
@@ -12,7 +14,8 @@ aws_cli = AWSCli()
 
 print_session('reset database')
 
-if env['common']['PHASE'] == 'op':
+phase = env['common']['PHASE']
+if phase == 'op':
     print('\'OP\' phase does not allow this operation.')
     raise Exception()
 
@@ -25,7 +28,7 @@ if engine not in ('aurora', 'aurora-mysql', 'aurora-postgresql'):
 
 print_message('get database address')
 
-if env['common']['PHASE'] != 'dv':
+if phase != 'dv':
     db_host = aws_cli.get_rds_address()
 else:
     while True:
@@ -41,6 +44,29 @@ db_password = env['rds']['USER_PASSWORD']
 db_user = env['rds']['USER_NAME']
 database = env['rds']['DATABASE']
 template_name = env['template']['NAME']
+
+print_message('git clone')
+
+git_url = env['rds']['GIT_URL']
+mm = re.match(r'^.+/(.+)\.git$', git_url)
+if not mm:
+    raise Exception()
+
+git_folder_name = mm.group(1)
+
+template_path = 'template/%s' % git_folder_name
+
+subprocess.Popen(['rm', '-rf', template_path]).communicate()
+subprocess.Popen(['mkdir', '-p', './template']).communicate()
+
+if phase == 'dv':
+    git_command = ['git', 'clone', '--depth=1', git_url]
+else:
+    git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+
+subprocess.Popen(git_command, cwd='./template').communicate()
+if not os.path.exists(template_path):
+    raise Exception()
 
 print_message('reset database')
 
@@ -60,11 +86,11 @@ subprocess.Popen(cmd).communicate()
 
 cmd = cmd_common + ['--comments']
 
-filename = 'template/%s/rds/mysql_schema.sql' % template_name
+filename = '%s/mysql_schema.sql' % template_path
 with open(filename, 'r') as f:
     subprocess.Popen(cmd, stdin=f).communicate()
 
-filename = 'template/%s/rds/mysql_data.sql' % template_name
+filename = '%s/mysql_data.sql' % template_path
 with open(filename, 'r') as f:
     subprocess.Popen(cmd, stdin=f).communicate()
 

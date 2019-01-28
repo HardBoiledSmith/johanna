@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+import os
 import subprocess
 from subprocess import PIPE
+import re
 
 from env import env
 from run_common import AWSCli
@@ -15,6 +17,7 @@ def _manual_backup():
     print_session('dump mysql data')
 
     engine = env['rds']['ENGINE']
+
     if engine not in ('aurora', 'aurora-mysql', 'aurora-postgresql'):
         print('not supported:', engine)
         raise Exception()
@@ -22,7 +25,8 @@ def _manual_backup():
     ################################################################################
     print_message('get database address')
 
-    if env['common']['PHASE'] != 'dv':
+    phase = env['common']['PHASE']
+    if phase != 'dv':
         host = aws_cli.get_rds_address(read_replica=True)
     else:
         while True:
@@ -38,10 +42,28 @@ def _manual_backup():
     password = env['rds']['USER_PASSWORD']
     user = env['rds']['USER_NAME']
 
-    template_name = env['template']['NAME']
-    filename_path = 'template/%s/rds/mysql_data.sql' % template_name
+    print_message('git clone')
 
-    _mysql_dump(host, user, password, database, filename_path)
+    git_url = env['rds']['GIT_URL']
+    mm = re.match(r'^.+/(.+)\.git$', git_url)
+    if not mm:
+        raise Exception()
+
+    git_folder_name = mm.group(1)
+    template_path = 'template/%s' % git_folder_name
+    subprocess.Popen(['rm', '-rf', template_path]).communicate()
+    subprocess.Popen(['mkdir', '-p', './template']).communicate()
+
+    if phase == 'dv':
+        git_command = ['git', 'clone', '--depth=1', git_url]
+    else:
+        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+
+    subprocess.Popen(git_command, cwd='./template').communicate()
+    if not os.path.exists(template_path):
+        raise Exception()
+
+    _mysql_dump(host, user, password, database, '%s/mysql_data.sql' % template_path)
 
 
 def _mysql_dump(host, user, password, database, filename_path):
@@ -74,6 +96,7 @@ def _mysql_dump(host, user, password, database, filename_path):
     with open(filename_path_raw, 'r') as ff_raw, open(filename_path, 'w') as ff:
         case_alarm_insert_count = 0
         scenario_alarm_insert_count = 0
+        report_insert_count = 0
         while True:
             line = ff_raw.readline()
             if not line:
@@ -115,6 +138,10 @@ def _mysql_dump(host, user, password, database, filename_path):
             elif 'INSERT INTO `hbsmith_scenario_alarm` VALUES (' in line:
                 scenario_alarm_insert_count += 1
                 if scenario_alarm_insert_count >= 1000:
+                    continue
+            elif 'INSERT INTO `hbsmith_report` VALUES (' in line:
+                report_insert_count += 1
+                if report_insert_count >= 1000:
                     continue
             elif 'INSERT INTO `hbsmith_bounced_email` VALUES (' in line:
                 ss = line.split(',')
