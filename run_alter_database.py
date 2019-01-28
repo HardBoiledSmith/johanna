@@ -53,7 +53,7 @@ git_folder_name = mm.group(1)
 template_path = 'template/%s' % git_folder_name
 
 subprocess.Popen(['rm', '-rf', template_path]).communicate()
-subprocess.Popen(['mkdir', '-p', template_path]).communicate()
+subprocess.Popen(['mkdir', '-p', './template']).communicate()
 
 if phase == 'dv':
     git_command = ['git', 'clone', '--depth=1', git_url]
