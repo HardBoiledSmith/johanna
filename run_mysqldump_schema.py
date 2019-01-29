@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import re
 import subprocess
 from subprocess import PIPE
@@ -23,7 +24,8 @@ def _manual_backup():
     ################################################################################
     print_message('get database address')
 
-    if env['common']['PHASE'] != 'dv':
+    phase = env['common']['PHASE']
+    if phase != 'dv':
         host = aws_cli.get_rds_address(read_replica=True)
     else:
         while True:
@@ -39,10 +41,28 @@ def _manual_backup():
     password = env['rds']['USER_PASSWORD']
     user = env['rds']['USER_NAME']
 
-    template_name = env['template']['NAME']
-    filename_path = 'template/%s/rds/mysql_schema.sql' % template_name
+    print_message('git clone')
 
-    _mysql_dump(host, user, password, database, filename_path)
+    git_url = env['rds']['GIT_URL']
+    mm = re.match(r'^.+/(.+)\.git$', git_url)
+    if not mm:
+        raise Exception()
+
+    git_folder_name = mm.group(1)
+    template_path = 'template/%s' % git_folder_name
+    subprocess.Popen(['rm', '-rf', template_path]).communicate()
+    subprocess.Popen(['mkdir', '-p', './template']).communicate()
+
+    if phase == 'dv':
+        git_command = ['git', 'clone', '--depth=1', git_url]
+    else:
+        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+
+    subprocess.Popen(git_command, cwd='./template').communicate()
+    if not os.path.exists(template_path):
+        raise Exception()
+
+    _mysql_dump(host, user, password, database, '%s/mysql_schema.sql' % template_path)
 
 
 def _mysql_dump(host, user, password, database, filename_path):

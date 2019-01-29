@@ -48,10 +48,12 @@
     "DB_SUBNET_NAME": "db-subnet",
     "ENGINE": "aurora-mysql",
     "ENGINE_VERSION": "5.7.12",
+    "GIT_URL": "...",
     "IOPS": "0",
     "LICENSE_MODEL": "general-public-license",
     "MONITORING_INTERVAL": "60",
     "MULTI_AZ": "--no-multi-az",
+    "NAME": "db-test",
     "STORAGE_TYPE": "gp2",
     "USER_NAME": "...",
     "USER_PASSWORD": "..."
