@@ -45,11 +45,7 @@ command_list.append('describe_rds')
 command_list.append('describe_sns')
 command_list.append('describe_vpc')
 
-command_list.append('alter_database')
 command_list.append('export_cloudwatch_dashboard')
-command_list.append('mysqldump_data')
-command_list.append('mysqldump_schema')
-command_list.append('reset_database')
 command_list.append('reset_template')
 
 
