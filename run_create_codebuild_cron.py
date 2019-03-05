@@ -31,7 +31,7 @@ def run_create_codebuild_cron(name, settings):
         "name": name,
         "description": description,
         "source": {
-            "type": "GITHUB_ENTERPRISE",
+            "type": "GITHUB",
             "location": git_repo,
             "gitCloneDepth": 0,
             "buildspec": build_spec,
