@@ -269,13 +269,7 @@ def run_create_eb_windows(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:elasticbeanstalk:environment'
     oo['OptionName'] = 'EnvironmentType'
-    oo['Value'] = 'LoadBalanced'
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:elasticbeanstalk:environment'
-    oo['OptionName'] = 'LoadBalancerType'
-    oo['Value'] = 'application'
+    oo['Value'] = 'SingleInstance'
     option_settings.append(oo)
 
     oo = dict()
@@ -287,29 +281,7 @@ def run_create_eb_windows(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:elasticbeanstalk:healthreporting:system'
     oo['OptionName'] = 'SystemType'
-    oo['Value'] = 'enhanced'
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:elasticbeanstalk:healthreporting:system'
-    oo['OptionName'] = 'ConfigDocument'
-    cw_env = dict()
-    cw_env['ApplicationRequestsTotal'] = 60
-    cw_env['ApplicationRequests2xx'] = 60
-    cw_env['ApplicationRequests3xx'] = 60
-    cw_env['ApplicationRequests4xx'] = 60
-    cw_env['ApplicationRequests5xx'] = 60
-    cw_instance = dict()
-    cw_instance['RootFilesystemUtil'] = 60
-    cw_instance['InstanceHealth'] = 60
-    cw_instance['CPUIdle'] = 60
-    cw = dict()
-    cw['Environment'] = cw_env
-    cw['Instance'] = cw_instance
-    cfg_doc = dict()
-    cfg_doc['CloudWatchMetrics'] = cw
-    cfg_doc['Version'] = 1
-    oo['Value'] = json.dumps(cfg_doc)
+    oo['Value'] = 'basic'
     option_settings.append(oo)
 
     oo = dict()
