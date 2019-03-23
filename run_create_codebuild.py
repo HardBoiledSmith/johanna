@@ -86,9 +86,9 @@ check_template_availability()
 
 default_role_created = create_iam_for_codebuild('default')
 cron_role_created = create_iam_for_codebuild('cron')
-scure_parameter_role_created = create_iam_for_codebuild('secure-parameter')
+secure_parameter_role_created = create_iam_for_codebuild('secure-parameter')
 events_role_created = create_iam_for_events()
-if default_role_created or (cron_role_created or events_role_created):
+if default_role_created or (cron_role_created or events_role_created or secure_parameter_role_created):
     print_message('wait two minutes to let iam role and policy propagated to all regions...')
     time.sleep(120)
 
