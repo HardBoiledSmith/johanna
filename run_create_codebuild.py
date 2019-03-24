@@ -8,6 +8,7 @@ from run_common import print_message
 from run_common import print_session
 from run_create_codebuild_cron import run_create_codebuild_cron
 from run_create_codebuild_default import run_create_codebuild_default
+from run_create_codebuild_github import run_create_codebuild_github
 
 args = []
 
@@ -85,8 +86,9 @@ check_template_availability()
 
 default_role_created = create_iam_for_codebuild('default')
 cron_role_created = create_iam_for_codebuild('cron')
+secure_parameter_role_created = create_iam_for_codebuild('secure-parameter')
 events_role_created = create_iam_for_events()
-if default_role_created or (cron_role_created or events_role_created):
+if default_role_created or (cron_role_created or events_role_created or secure_parameter_role_created):
     print_message('wait two minutes to let iam role and policy propagated to all regions...')
     time.sleep(120)
 
@@ -103,6 +105,9 @@ if len(args) == 2:
             if codebuild_env['TYPE'] == 'cron':
                 run_create_codebuild_cron(codebuild_env['NAME'], codebuild_env)
                 break
+            if codebuild_env['TYPE'] == 'github':
+                run_create_codebuild_github(codebuild_env['NAME'], codebuild_env)
+                break
             print('"%s" is not supported' % codebuild_env['TYPE'])
             raise Exception()
     if not target_codebuild_name_exists:
@@ -114,6 +119,9 @@ else:
             continue
         if codebuild_env['TYPE'] == 'cron':
             run_create_codebuild_cron(codebuild_env['NAME'], codebuild_env)
+            continue
+        if codebuild_env['TYPE'] == 'github':
+            run_create_codebuild_github(codebuild_env['NAME'], codebuild_env)
             continue
         print('"%s" is not supported' % codebuild_env['TYPE'])
         raise Exception()
