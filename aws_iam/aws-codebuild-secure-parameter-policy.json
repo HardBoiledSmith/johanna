@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*"
+    },
+    {
+        "Action": "ssm:GetParameters",
+        "Effect": "Allow",
+        "Resource": "arn:aws:ssm:ap-northeast-2:*:parameter/CodeBuild/*"
+    }
+  ]
+}
