@@ -1,0 +1,10 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - yum -y install python36
+      - python3 -m pip install flake8
+  build:
+    commands:
+      - flake8 --config=flake8 .
