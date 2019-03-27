@@ -58,6 +58,34 @@ def run_terminate_default_codebuild(name):
     aws_cli.run(cmd, ignore_error=True)
 
 
+def run_terminate_github_codebuild(name):
+    print_message('delete github codebuild %s' % name)
+
+    print_message('delete github codebuild(webhook) %s' % name)
+
+    cmd = ['codebuild', 'delete-webhook']
+    cmd += ['--project-name', name]
+    aws_cli.run(cmd, ignore_error=True)
+
+    print_message('delete github codebuild(project) %s' % name)
+
+    cmd = ['codebuild', 'delete-project']
+    cmd += ['--name', name]
+    aws_cli.run(cmd, ignore_error=True)
+
+    print_message('delete github codebuild(environment variable) %s' % name)
+
+    cmd = ['ssm', 'get-parameters-by-path']
+    cmd += ['--path', '/CodeBuild/%s' % name]
+
+    result = aws_cli.run(cmd)
+    if 'Parameters' in result:
+        for rr in result['Parameters']:
+            cmd = ['ssm', 'delete-parameter']
+            cmd += ['--name', rr['Name']]
+            aws_cli.run(cmd, ignore_error=True)
+
+
 def run_terminate_cron_codebuild(name):
     print_message('delete cron codebuild %s' % name)
 
@@ -98,6 +126,9 @@ if len(args) == 2:
             if codebuild_env['TYPE'] == 'cron':
                 run_terminate_cron_codebuild(codebuild_env['NAME'])
                 break
+            if codebuild_env['TYPE'] == 'github':
+                run_terminate_github_codebuild(codebuild_env['NAME'])
+                break
             print('"%s" is not supported' % codebuild_env['TYPE'])
             raise Exception()
     if not target_codebuild_name_exists:
@@ -109,6 +140,9 @@ else:
             continue
         if codebuild_env['TYPE'] == 'cron':
             run_terminate_cron_codebuild(codebuild_env['NAME'])
+            continue
+        if codebuild_env['TYPE'] == 'github':
+            run_terminate_github_codebuild(codebuild_env['NAME'])
             continue
         print('"%s" is not supported' % codebuild_env['TYPE'])
         raise Exception()
