@@ -33,14 +33,7 @@ def run_create_codebuild_github(name, settings):
 
     for pp in settings['ENV_VARIABLES']:
         if 'PARAMETER_STORE' == pp['type']:
-            nn = '/CodeBuild/%s/%s' % (name, pp['name'])
-            cmd = ['ssm', 'put-parameter']
-            cmd += ['--name', nn]
-            cmd += ['--value', pp['value']]
-            cmd += ['--type', 'SecureString']
-            aws_cli.run(cmd)
-
-            pp['value'] = nn
+            pp['value'] = '/CodeBuild/%s/%s' % (name, pp['name'])
 
         env_list.append(pp)
 
