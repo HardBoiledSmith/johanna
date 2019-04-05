@@ -269,7 +269,19 @@ def run_create_eb_windows(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:elasticbeanstalk:environment'
     oo['OptionName'] = 'EnvironmentType'
-    oo['Value'] = 'SingleInstance'
+    oo['Value'] = 'LoadBalanced'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:environment'
+    oo['OptionName'] = 'LoadBalancerType'
+    oo['Value'] = 'application'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:environment:process:default'
+    oo['OptionName'] = 'MatcherHTTPCode'
+    oo['Value'] = '403'
     option_settings.append(oo)
 
     oo = dict()
