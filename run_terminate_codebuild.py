@@ -105,6 +105,16 @@ def run_terminate_cron_codebuild(name):
     cmd += ['--name', rule_name]
     aws_cli.run(cmd, ignore_error=True)
 
+    cmd = ['ssm', 'get-parameters-by-path']
+    cmd += ['--path', '/CodeBuild/%s' % name]
+
+    result = aws_cli.run(cmd)
+    if 'Parameters' in result:
+        for rr in result['Parameters']:
+            cmd = ['ssm', 'delete-parameter']
+            cmd += ['--name', rr['Name']]
+            aws_cli.run(cmd, ignore_error=True)
+
 
 ################################################################################
 #
