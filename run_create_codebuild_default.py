@@ -13,7 +13,6 @@ def run_create_codebuild_default(name, settings):
     build_timeout = settings['BUILD_TIMEOUT']
     compute_type = settings['ENV_COMPUTE_TYPE']
     description = settings['DESCRIPTION']
-    env_list = settings['ENV_VARIABLES']
     git_repo = settings['GITHUB_REPO']
     github_token = settings['GITHUB_TOKEN']
     image = settings['IMAGE']
@@ -25,8 +24,27 @@ def run_create_codebuild_default(name, settings):
     result = aws_cli.run(cmd)
     need_update = name in result['projects']
     ################################################################################
-    role_arn = aws_cli.get_role_arn('aws-codebuild-default-role')
+    print_message('set environment variable')
 
+    env_list = []
+    is_exist_parameter_store = False
+
+    for pp in settings['ENV_VARIABLES']:
+        if 'PARAMETER_STORE' == pp['type']:
+            is_exist_parameter_store = True
+            nn = '/CodeBuild/%s/%s' % (name, pp['name'])
+            cmd = ['ssm', 'get-parameter', '--name', nn]
+            aws_cli.run(cmd)
+
+            pp['value'] = nn
+
+        env_list.append(pp)
+
+    role_arn = aws_cli.get_role_arn('aws-codebuild-default-role')
+    if is_exist_parameter_store:
+        role_arn = aws_cli.get_role_arn('aws-codebuild-secure-parameter-role')
+
+    ################################################################################
     config = {
         "name": name,
         "description": description,

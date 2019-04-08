@@ -269,7 +269,19 @@ def run_create_eb_windows(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:elasticbeanstalk:environment'
     oo['OptionName'] = 'EnvironmentType'
-    oo['Value'] = 'SingleInstance'
+    oo['Value'] = 'LoadBalanced'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:environment'
+    oo['OptionName'] = 'LoadBalancerType'
+    oo['Value'] = 'application'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:environment:process:default'
+    oo['OptionName'] = 'MatcherHTTPCode'
+    oo['Value'] = '403'
     option_settings.append(oo)
 
     oo = dict()
@@ -312,7 +324,7 @@ def run_create_eb_windows(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.0.1 running IIS 10.0']
+    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.0.2 running IIS 10.0']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
