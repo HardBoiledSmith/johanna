@@ -16,6 +16,14 @@ def run_create_codebuild_github(name, settings):
     git_repo = settings['GITHUB_REPO']
     github_token = settings['GITHUB_TOKEN']
     image = settings['IMAGE']
+    container_type = 'LINUX_CONTAINER'
+    if 'window' in image:
+        container_type = 'WINDOWS_CONTAINER'
+
+    artifacts = { "type": "NO_ARTIFACTS" }
+    if 'ARTIFACTS' in settings:
+        artifacts = settings['ARTIFACTS']
+
 
     ################################################################################
     print_message('check previous version')
@@ -58,14 +66,12 @@ def run_create_codebuild_github(name, settings):
             "insecureSsl": True,
             "sourceIdentifier": git_branch
         },
-        "artifacts": {
-            "type": "NO_ARTIFACTS"
-        },
+        "artifacts": artifacts,
         "cache": {
             "type": "NO_CACHE"
         },
         "environment": {
-            "type": "LINUX_CONTAINER",
+            "type": container_type,
             "image": image,
             "computeType": compute_type,
             "environmentVariables": env_list
@@ -74,6 +80,7 @@ def run_create_codebuild_github(name, settings):
         "timeoutInMinutes": build_timeout,
         "badgeEnabled": True
     }
+
     config = json.dumps(config)
 
     if need_update:
