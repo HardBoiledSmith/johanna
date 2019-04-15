@@ -20,10 +20,9 @@ def run_create_codebuild_github(name, settings):
     if 'window' in image:
         container_type = 'WINDOWS_CONTAINER'
 
-    artifacts = { "type": "NO_ARTIFACTS" }
+    artifacts = {"type": "NO_ARTIFACTS"}
     if 'ARTIFACTS' in settings:
         artifacts = settings['ARTIFACTS']
-
 
     ################################################################################
     print_message('check previous version')
