@@ -6,7 +6,8 @@ from run_common import print_message
 
 
 def run_create_codebuild_github(name, settings):
-    aws_cli = AWSCli()
+    aws_cli = AWSCli() if 'AWS_DEFAULT_REGION' not in settings \
+        else AWSCli(aws_default_region=settings['AWS_DEFAULT_REGION'])
 
     git_branch = settings['BRANCH']
     build_spec = settings['BUILD_SPEC']
