@@ -184,9 +184,7 @@ def run_create_alarm_widget_in_dashboard(name, settings):
         cmd = ['cloudwatch', 'get-dashboard']
         cmd += ['--dashboard-name', dashboard_name]
         rr = aws_cli.run(cmd)
-        print(rr)
         widgets = json.loads(rr['DashboardBody'])['widgets']
-        print(widgets)
         is_exist_dashboard = True
 
         cmd = ['cloudwatch', 'delete-dashboards']
