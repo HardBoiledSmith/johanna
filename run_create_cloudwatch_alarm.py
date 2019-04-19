@@ -192,7 +192,7 @@ def run_create_alarm_widget_in_dashboard(name, settings):
         cmd = ['cloudwatch', 'delete-dashboards']
         cmd += ['--dashboard-name', dashboard_name]
         aws_cli.run(cmd)
-    except:
+    except Exception:
         pass
 
     for ww in widgets:
