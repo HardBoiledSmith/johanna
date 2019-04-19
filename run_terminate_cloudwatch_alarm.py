@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
+import json
+
 from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
-import json
-
 
 args = []
 
@@ -13,6 +13,7 @@ if __name__ == "__main__":
     from run_common import parse_args
 
     args = parse_args()
+
 
 def run_terminate_alarm_widget_in_dashboard(name, settings):
     phase = env['common']['PHASE']
