@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import json
-
 from env import env
 from run_common import AWSCli
 from run_common import print_message
@@ -171,70 +169,6 @@ def run_create_cloudwatch_alarm_sqs(name, settings):
     aws_cli.run(cmd)
 
 
-def run_create_alarm_widget_in_dashboard(name, settings):
-    phase = env['common']['PHASE']
-    alarm_region = settings['AWS_DEFAULT_REGION']
-    aws_cli = AWSCli(alarm_region)
-    dashboard_name = '%s_%s' % (name, alarm_region)
-    alarm_name = '%s-%s_%s_%s' % (phase, name, alarm_region, settings['METRIC_NAME'])
-
-    is_exist_dashboard = False
-    widgets = list()
-    try:
-        cmd = ['cloudwatch', 'get-dashboard']
-        cmd += ['--dashboard-name', dashboard_name]
-        rr = aws_cli.run(cmd)
-        widgets = json.loads(rr['DashboardBody'])['widgets']
-        is_exist_dashboard = True
-
-        cmd = ['cloudwatch', 'delete-dashboards']
-        cmd += ['--dashboard-name', dashboard_name]
-        aws_cli.run(cmd)
-    except Exception:
-        pass
-
-    for ww in widgets:
-        if ww['properties']['title'] == alarm_name:
-            return
-
-    cmd = ['cloudwatch', 'describe-alarms']
-    cmd += ['--alarm-names', alarm_name]
-    rr = aws_cli.run(cmd)
-    alarm_arn = rr['MetricAlarms'][0]['AlarmArn']
-
-    x = 0
-    y = 0
-    if is_exist_dashboard:
-        new_wi = len(widgets)
-        y = new_wi // 3 * 6
-        x = new_wi % 3 * 6
-
-    widgets.append({
-        "height": 6,
-        "properties": {
-            "title": alarm_name,
-            "annotations": {
-                "alarms": [
-                    alarm_arn
-                ]
-            },
-            "view": "timeSeries",
-            "stacked": False
-        },
-        "type": "metric",
-        "width": 6,
-        "x": x,
-        "y": y
-    })
-
-    cmd = ['cloudwatch', 'put-dashboard']
-    cmd += ['--dashboard-name', dashboard_name]
-    cmd += ['--dashboard-body', json.dumps({
-        'widgets': widgets
-    })]
-    aws_cli.run(cmd)
-
-
 ################################################################################
 #
 # start
@@ -265,13 +199,10 @@ for cw_alarm_env in cw.get('ALARMS', list()):
 
     if cw_alarm_env['TYPE'] == 'elasticbeanstalk':
         run_create_cloudwatch_alarm_elasticbeanstalk(cw_alarm_env['NAME'], cw_alarm_env)
-        run_create_alarm_widget_in_dashboard(cw_alarm_env['NAME'], cw_alarm_env)
     elif cw_alarm_env['TYPE'] == 'rds':
         run_create_cloudwatch_alarm_rds(cw_alarm_env['NAME'], cw_alarm_env)
-        run_create_alarm_widget_in_dashboard(cw_alarm_env['NAME'], cw_alarm_env)
     elif cw_alarm_env['TYPE'] == 'sqs':
         run_create_cloudwatch_alarm_sqs(cw_alarm_env['NAME'], cw_alarm_env)
-        run_create_alarm_widget_in_dashboard(cw_alarm_env['NAME'], cw_alarm_env)
     else:
         print('"%s" is not supported' % cw_alarm_env['TYPE'])
         raise Exception()
