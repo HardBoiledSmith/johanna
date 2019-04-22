@@ -6,8 +6,8 @@ from run_common import print_message
 
 
 def run_create_codebuild_github(name, settings):
-    aws_cli = AWSCli() if 'AWS_DEFAULT_REGION' not in settings \
-        else AWSCli(aws_default_region=settings['AWS_DEFAULT_REGION'])
+    aws_default_region = settings.get('AWS_DEFAULT_REGION')
+    aws_cli = AWSCli(aws_default_region)
 
     git_branch = settings['BRANCH']
     build_spec = settings['BUILD_SPEC']
@@ -17,13 +17,8 @@ def run_create_codebuild_github(name, settings):
     git_repo = settings['GITHUB_REPO']
     github_token = settings['GITHUB_TOKEN']
     image = settings['IMAGE']
-    container_type = 'LINUX_CONTAINER'
-    if 'window' in image:
-        container_type = 'WINDOWS_CONTAINER'
-
-    artifacts = {"type": "NO_ARTIFACTS"}
-    if 'ARTIFACTS' in settings:
-        artifacts = settings['ARTIFACTS']
+    container_type = settings.get('CONTAINER_TYPE', 'LINUX_CONTAINER')
+    artifacts = settings.get('ARTIFACTS', {"type": "NO_ARTIFACTS"})
 
     ################################################################################
     print_message('check previous version')
