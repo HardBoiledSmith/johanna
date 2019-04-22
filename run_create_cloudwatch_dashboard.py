@@ -241,17 +241,6 @@ def run_create_cw_dashboard_alarm(name, settings):
 
     dashboard_name = '%s_%s' % (name, alarm_region)
 
-    try:
-        cmd = ['cloudwatch', 'get-dashboard']
-        cmd += ['--dashboard-name', dashboard_name]
-        aws_cli.run(cmd)
-
-        cmd = ['cloudwatch', 'delete-dashboards']
-        cmd += ['--dashboard-name', dashboard_name]
-        aws_cli.run(cmd)
-    except Exception:
-        pass
-
     widgets = list()
     cmd = ['cloudwatch', 'describe-alarms']
     cmd += ['--alarm-name-prefix', '%s_' % phase]
