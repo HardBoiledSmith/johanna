@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/HardBoiledSmith/johanna.svg?branch=master)](https://travis-ci.org/HardBoiledSmith/johanna)
+[![Build Status](https://codebuild.ap-northeast-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiQWJKb1lUc0tkNnlEVWZPMldDa3FoQncrOEdKS2M1emM2eG9pNmR4UW9aWVJmZXl3c0xUVU4wR2tmVDcySHpSRm1hTHBNSTE0V0RUU1lYV29YdmpVMS9nPSIsIml2UGFyYW1ldGVyU3BlYyI6IjI3TU5qY0hZRGFTL29EbEMiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)](https://ap-northeast-2.console.aws.amazon.com/codesuite/codebuild/projects/build_test_johanna/history)
 
 # Introduction
 

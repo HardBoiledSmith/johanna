@@ -234,6 +234,47 @@ def run_create_cw_dashboard_sqs_lambda(name, settings):
     aws_cli.run(cmd)
 
 
+def run_create_cw_dashboard_alarm(name, settings):
+    phase = env['common']['PHASE']
+    alarm_region = settings['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(alarm_region)
+
+    dashboard_name = '%s_%s' % (name, alarm_region)
+
+    widgets = list()
+    cmd = ['cloudwatch', 'describe-alarms']
+    cmd += ['--alarm-name-prefix', '%s_' % phase]
+    rr = aws_cli.run(cmd)
+
+    for (ii, aa) in enumerate(rr['MetricAlarms']):
+        y = ii // 3 * 6
+        x = ii % 3 * 6
+        widgets.append({
+            "height": 6,
+            "properties": {
+                "title": aa['AlarmName'],
+                "annotations": {
+                    "alarms": [
+                        aa['AlarmArn']
+                    ]
+                },
+                "view": "timeSeries",
+                "stacked": False
+            },
+            "type": "metric",
+            "width": 6,
+            "x": x,
+            "y": y
+        })
+
+    cmd = ['cloudwatch', 'put-dashboard']
+    cmd += ['--dashboard-name', dashboard_name]
+    cmd += ['--dashboard-body', json.dumps({
+        'widgets': widgets
+    })]
+    aws_cli.run(cmd)
+
+
 ################################################################################
 #
 # start
@@ -270,6 +311,8 @@ for cw_dashboard_env in cw.get('DASHBOARDS', list()):
         run_create_cw_dashboard_rds_aurora(cw_dashboard_env['NAME'], cw_dashboard_env)
     elif cw_dashboard_env['TYPE'] == 'sqs,lambda':
         run_create_cw_dashboard_sqs_lambda(cw_dashboard_env['NAME'], cw_dashboard_env)
+    elif cw_dashboard_env['TYPE'] == 'alarm':
+        run_create_cw_dashboard_alarm(cw_dashboard_env['NAME'], cw_dashboard_env)
     else:
         print('"%s" is not supported' % cw_dashboard_env['TYPE'])
         raise Exception()
