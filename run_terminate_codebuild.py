@@ -160,3 +160,5 @@ else:
     terminate_iam_for_events()
     terminate_iam_for_codebuild('cron')
     terminate_iam_for_codebuild('default')
+    terminate_iam_for_codebuild('secure-parameter')
+    terminate_iam_for_codebuild('upload-bucket')

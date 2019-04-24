@@ -18,7 +18,7 @@ def run_create_codebuild_github(name, settings):
     github_token = settings['GITHUB_TOKEN']
     image = settings['IMAGE']
     container_type = settings.get('CONTAINER_TYPE', 'LINUX_CONTAINER')
-    artifacts = settings.get('ARTIFACTS', {"type": "NO_ARTIFACTS"})
+    artifacts = settings.get('ARTIFACTS', {'type': 'NO_ARTIFACTS'})
 
     ################################################################################
     print_message('check previous version')
@@ -27,7 +27,10 @@ def run_create_codebuild_github(name, settings):
     result = aws_cli.run(cmd)
     need_update = name in result['projects']
     ################################################################################
-    role_arn = aws_cli.get_role_arn('aws-codebuild-secure-parameter-role')
+    role_name = 'aws-codebuild-secure-parameter-role' if artifacts['type'] != 'S3' \
+        else 'aws-codebuild-upload-bucket-role'
+
+    role_arn = aws_cli.get_role_arn(role_name)
 
     ################################################################################
     print_message('set environment variable')
