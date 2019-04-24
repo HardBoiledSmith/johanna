@@ -14,6 +14,25 @@ if __name__ == "__main__":
 aws_cli = AWSCli()
 
 
+def terminate_source_credential(codebuild_settings):
+    region_set = set()
+
+    for ss in codebuild_settings:
+        region = ss.get('AWS_DEFAULT_REGION', 'ap-northeast-2')
+        region_set.add(region)
+
+    for rr in list(region_set):
+        _aws_cli = AWSCli(rr)
+
+        cmd = ['codebuild', 'list-source-credentials']
+        result = _aws_cli.run(cmd)
+
+        for cc in result['sourceCredentialsInfos']:
+            cmd = ['codebuild', 'delete-source-credentials']
+            cmd += ['--arn', cc['arn']]
+            _aws_cli.run(cmd, ignore_error=True)
+
+
 def terminate_iam_for_codebuild(codebuild_type):
     role_name = 'aws-codebuild-%s-role' % codebuild_type
     policy_name = 'aws-codebuild-%s-policy' % codebuild_type
@@ -164,4 +183,4 @@ else:
     terminate_iam_for_codebuild('cron')
     terminate_iam_for_codebuild('default')
     terminate_iam_for_codebuild('secure-parameter')
-    terminate_iam_for_codebuild('upload-bucket')
+    terminate_source_credential(codebuild_list)

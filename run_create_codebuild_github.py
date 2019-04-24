@@ -111,6 +111,15 @@ def run_create_codebuild_github(name, settings):
     role_arn = aws_cli.get_role_arn(role_name)
 
     ################################################################################
+    print_message('import source credentials')
+
+    cmd = ['codebuild', 'import-source-credentials']
+    cmd += ['--token', github_token]
+    cmd += ['--server-type', 'GITHUB']
+    cmd += ['--auth-type', 'PERSONAL_ACCESS_TOKEN']
+    aws_cli.run(cmd)
+
+    ################################################################################
     print_message('set environment variable')
 
     env_list = []
