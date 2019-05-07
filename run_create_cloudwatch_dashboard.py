@@ -247,8 +247,8 @@ def run_create_cw_dashboard_alarm(name, settings):
     rr = aws_cli.run(cmd)
 
     for (ii, aa) in enumerate(rr['MetricAlarms']):
-        y = ii // 3 * 6
-        x = ii % 3 * 6
+        y = ii // 4 * 6
+        x = ii % 4 * 6
         widgets.append({
             "height": 6,
             "properties": {
