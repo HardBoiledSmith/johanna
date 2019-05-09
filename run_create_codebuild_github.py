@@ -1,8 +1,88 @@
 #!/usr/bin/env python3
 import json
+import time
 
 from run_common import AWSCli
 from run_common import print_message
+
+
+def have_parameter_store(settings):
+    for pp in settings['ENV_VARIABLES']:
+        if 'PARAMETER_STORE' == pp['type']:
+            return True
+
+    return False
+
+
+def create_iam_for_codebuild(name, settings):
+    aws_cli = AWSCli()
+
+    nn = name.replace('_', '-')
+    role_name = 'aws-codebuild-%s-role' % nn
+    if not aws_cli.get_iam_role(role_name):
+        print_message('create iam role: %s' % role_name)
+
+        dd = {
+            'Version': '2012-10-17',
+            'Statement': [
+                {
+                    'Effect': 'Allow',
+                    'Principal': {
+                        'Service': 'codebuild.amazonaws.com'
+                    },
+                    'Action': 'sts:AssumeRole'
+                }
+            ]
+        }
+        cmd = ['iam', 'create-role']
+        cmd += ['--role-name', role_name]
+        cmd += ['--assume-role-policy-document', json.dumps(dd)]
+        aws_cli.run(cmd)
+
+    policy_name = 'aws-codebuild-%s-policy' % nn
+    if not aws_cli.get_iam_role_policy(role_name, policy_name):
+        print_message('create iam role policy: %s' % policy_name)
+
+        dd = {
+            'Version': '2012-10-17',
+            'Statement': [
+                {
+                    'Effect': 'Allow',
+                    'Action': [
+                        'logs:CreateLogGroup',
+                        'logs:CreateLogStream',
+                        'logs:PutLogEvents'
+                    ],
+                    'Resource': '*'
+                }
+            ]
+        }
+
+        if 'ARTIFACTS' in settings \
+                and settings['ARTIFACTS']['type'] == 'S3':
+            pp = {
+                'Effect': 'Allow',
+                'Action': ['s3:PutObject'],
+                'Resource': 'arn:aws:s3:::%s/*' % settings['ARTIFACTS']['location']
+            }
+            dd['Statement'].append(pp)
+
+        if have_parameter_store(settings):
+            pp = {
+                'Action': 'ssm:GetParameters',
+                'Effect': 'Allow',
+                'Resource': 'arn:aws:ssm:ap-northeast-2:*:parameter/CodeBuild/*'
+            }
+            dd['Statement'].append(pp)
+
+        cmd = ['iam', 'put-role-policy']
+        cmd += ['--role-name', role_name]
+        cmd += ['--policy-name', policy_name]
+        cmd += ['--policy-document', json.dumps(dd)]
+        aws_cli.run(cmd)
+        time.sleep(120)
+
+    return role_name
 
 
 def run_create_codebuild_github(name, settings):
@@ -18,7 +98,7 @@ def run_create_codebuild_github(name, settings):
     github_token = settings['GITHUB_TOKEN']
     image = settings['IMAGE']
     container_type = settings.get('CONTAINER_TYPE', 'LINUX_CONTAINER')
-    artifacts = settings.get('ARTIFACTS', {"type": "NO_ARTIFACTS"})
+    artifacts = settings.get('ARTIFACTS', {'type': 'NO_ARTIFACTS'})
 
     ################################################################################
     print_message('check previous version')
@@ -27,7 +107,17 @@ def run_create_codebuild_github(name, settings):
     result = aws_cli.run(cmd)
     need_update = name in result['projects']
     ################################################################################
-    role_arn = aws_cli.get_role_arn('aws-codebuild-secure-parameter-role')
+    role_name = create_iam_for_codebuild(name, settings)
+    role_arn = aws_cli.get_role_arn(role_name)
+
+    ################################################################################
+    print_message('import source credentials')
+
+    cmd = ['codebuild', 'import-source-credentials']
+    cmd += ['--token', github_token]
+    cmd += ['--server-type', 'GITHUB']
+    cmd += ['--auth-type', 'PERSONAL_ACCESS_TOKEN']
+    aws_cli.run(cmd)
 
     ################################################################################
     print_message('set environment variable')
@@ -47,33 +137,33 @@ def run_create_codebuild_github(name, settings):
     ################################################################################
 
     config = {
-        "name": name,
-        "description": description,
-        "source": {
-            "type": "GITHUB",
-            "location": git_repo,
-            "gitCloneDepth": 0,
-            "buildspec": build_spec,
-            "auth": {
-                "type": "OAUTH",
-                "resource": github_token
+        'name': name,
+        'description': description,
+        'source': {
+            'type': 'GITHUB',
+            'location': git_repo,
+            'gitCloneDepth': 0,
+            'buildspec': build_spec,
+            'auth': {
+                'type': 'OAUTH',
+                'resource': github_token
             },
-            "insecureSsl": True,
-            "sourceIdentifier": git_branch
+            'insecureSsl': True,
+            'sourceIdentifier': git_branch
         },
-        "artifacts": artifacts,
-        "cache": {
-            "type": "NO_CACHE"
+        'artifacts': artifacts,
+        'cache': {
+            'type': 'NO_CACHE'
         },
-        "environment": {
-            "type": container_type,
-            "image": image,
-            "computeType": compute_type,
-            "environmentVariables": env_list
+        'environment': {
+            'type': container_type,
+            'image': image,
+            'computeType': compute_type,
+            'environmentVariables': env_list
         },
-        "serviceRole": role_arn,
-        "timeoutInMinutes": build_timeout,
-        "badgeEnabled": True
+        'serviceRole': role_arn,
+        'timeoutInMinutes': build_timeout,
+        'badgeEnabled': True
     }
 
     config = json.dumps(config)
@@ -91,13 +181,13 @@ def run_create_codebuild_github(name, settings):
     aws_cli.run(cmd)
 
     config = {
-        "projectName": name,
-        "filterGroups": [
+        'projectName': name,
+        'filterGroups': [
             [
                 {
-                    "excludeMatchedPattern": False,
-                    "pattern": "PUSH, PULL_REQUEST_CREATED",
-                    "type": "EVENT"
+                    'excludeMatchedPattern': False,
+                    'pattern': 'PUSH, PULL_REQUEST_CREATED',
+                    'type': 'EVENT'
                 }
             ]
         ]
