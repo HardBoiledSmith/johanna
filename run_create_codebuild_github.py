@@ -165,6 +165,8 @@ def run_create_codebuild_github(name, settings):
         'timeoutInMinutes': build_timeout,
         'badgeEnabled': True
     }
+    if 'SECONDARY_ARTIFACTS' in settings:
+        config['secondaryArtifacts'] = settings['SECONDARY_ARTIFACTS']
 
     config = json.dumps(config)
 

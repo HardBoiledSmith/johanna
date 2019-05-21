@@ -141,3 +141,16 @@ def run_create_lambda_default(function_name, settings):
            '--tags', ','.join(tags),
            '--timeout', '480']
     aws_cli.run(cmd, cwd=deploy_folder)
+
+    if 'AWS_CONNECT_ARN' in settings:
+        cmd = ['sts', 'get-caller-identity']
+        result = aws_cli.run(cmd)
+        account_id = result['Account']
+        cmd = ['lambda', 'add-permission',
+               '--function-name', function_name,
+               '--statement-id', function_name + 'StatementId',
+               '--principal', 'connect.amazonaws.com',
+               '--action', 'lambda:InvokeFunction',
+               '--source-account', account_id,
+               '--source-arn', settings['AWS_CONNECT_ARN']]
+        aws_cli.run(cmd)
