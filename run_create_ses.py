@@ -92,6 +92,102 @@ def create_config_set():
                 aws_cli.run(cmd)
 
 
+def verify_ses_domain():
+    for ii in ses['DOMAIN_IDENTITIES']:
+        cmd = ['ses', 'get-identity-mail-from-domain-attributes',
+               '--identities', ii['domain']]
+        rr = dict(aws_cli.run(cmd))
+        if rr['MailFromDomainAttributes']:
+            continue
+
+        cmd = ['ses', 'verify-domain-identity',
+               '--domain', ii['domain']]
+        aws_cli.run(cmd)
+
+
+def create_rule_set():
+    for ii in ses['DOMAIN_IDENTITIES']:
+        cmd = ['ses', 'describe-receipt-rule-set',
+               '--rule-set-name', ii['RULE_SET_NAME']]
+        rr = aws_cli.run(cmd, ignore_error=True)
+        if rr:
+            continue
+
+        cmd = ['ses', 'create-receipt-rule-set',
+               '--rule-set-name', ii['RULE_SET_NAME']]
+        aws_cli.run(cmd)
+
+        cmd = ['ses', 'set-active-receipt-rule-set',
+               '--rule-set-name', ii['RULE_SET_NAME']]
+        aws_cli.run(cmd)
+
+        for rule in ii['RULES']:
+            cmd = ['sns', 'list-topics']
+            rr = dict(aws_cli.run(cmd))
+            sns_topic = __find_sns_topic(rr, rule)
+            bucket_name = __find_s3_bucket(rule)
+
+            rule_action = {
+                'Name': rule['NAME'],
+                'Enabled': True,
+                'Actions': [{
+                    'S3Action': {
+                        'BucketName': bucket_name,
+                        'ObjectKeyPrefix': env['common']['PHASE'],
+                        'TopicArn': sns_topic
+                    }
+                }]
+            }
+
+            cmd = ['ses', 'create-receipt-rule',
+                   '--rule-set-name', ii['RULE_SET_NAME'],
+                   '--rule', json.dumps(rule_action)]
+            aws_cli.run(cmd)
+
+
+def __find_s3_bucket(rule):
+    bucket_name = None
+    cmd = ['s3api', 'list-buckets']
+    rr = dict(aws_cli.run(cmd))
+    for bb in rr['Buckets']:
+        if rule['BUCKET_NAME'] == bb['Name']:
+            bucket_name = rule['BUCKET_NAME']
+            break
+    if not bucket_name:
+        cmd = ['s3api', 'create-bucket',
+               '--bucket', rule['BUCKET_NAME']]
+        bucket_name = rule['BUCKET_NAME']
+        aws_cli.run(cmd)
+
+        s3_policy = {
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "ses.amazonaws.com"
+                    },
+                    "Action": "s3:PutObject",
+                    "Resource": "arn:aws:s3:::%s/*" % bucket_name
+                }
+            ]
+        }
+        cmd = ['s3api', 'put-bucket-policy',
+               '--bucket', bucket_name,
+               '--policy', json.dumps(s3_policy)]
+        aws_cli.run(cmd)
+
+    return bucket_name
+
+
+def __find_sns_topic(rr, rule):
+    sns_topic = None
+    for tt in rr['Topics']:
+        if rule['SNS_NAME'] in tt['TopicArn']:
+            sns_topic = tt['TopicArn']
+            break
+    return sns_topic
+
+
 args = []
 
 if __name__ == "__main__":
@@ -111,3 +207,5 @@ check_template_availability()
 
 create_email_identity()
 create_config_set()
+verify_ses_domain()
+create_rule_set()
