@@ -176,6 +176,23 @@ def __find_s3_bucket(rule):
                '--policy', json.dumps(s3_policy)]
         aws_cli.run(cmd)
 
+        s3_lifecycle_rule = {
+            "Rules": [
+                {
+                    "ID": "%s-lifecycle" % bucket_name,
+                    "Prefix": env['common']['PHASE'],
+                    "Status": "Enabled",
+                    "Expiration": {
+                        "Days": rule['BUCKET_LIFECYCLE_EXPIRATION']
+                    }
+                }
+            ]
+        }
+        cmd = ['s3api', 'put-bucket-lifecycle-configuration',
+               '--bucket', bucket_name,
+               '--lifecycle-configuration', json.dumps(s3_lifecycle_rule)]
+        aws_cli.run(cmd)
+
     return bucket_name
 
 
