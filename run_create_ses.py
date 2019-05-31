@@ -95,13 +95,13 @@ def create_config_set():
 def verify_ses_domain():
     for ii in ses['DOMAIN_IDENTITIES']:
         cmd = ['ses', 'get-identity-mail-from-domain-attributes',
-               '--identities', ii['domain']]
+               '--identities', ii['DOMAIN']]
         rr = dict(aws_cli.run(cmd))
         if rr['MailFromDomainAttributes']:
             continue
 
         cmd = ['ses', 'verify-domain-identity',
-               '--domain', ii['domain']]
+               '--domain', ii['DOMAIN']]
         aws_cli.run(cmd)
 
 
