@@ -23,6 +23,26 @@ def terminate_email_identity():
         aws_cli.run(cmd, ignore_error=True)
 
 
+def terminate_domain_identity():
+    for ii in ses['DOMAIN_IDENTITIES']:
+        cmd = ['ses', 'delete-identity',
+               '--identity', ii['DOMAIN']]
+        aws_cli.run(cmd, ignore_error=True)
+
+
+def terminate_receipt_rule_set():
+    cmd = ['ses', 'set-active-receipt-rule-set']
+    aws_cli.run(cmd)
+
+    for ii in ses['DOMAIN_IDENTITIES']:
+        cmd = ['ses', 'delete-receipt-rule-set',
+               '--rule-set-name', ii['RULE_SET_NAME']]
+        aws_cli.run(cmd, ignore_error=True)
+        for rr in ii['RULES']:
+            cmd = ['s3', 'rm', 's3://%s/%s' % (rr['BUCKET_NAME'], env['common']['PHASE']), '--recursive']
+        aws_cli.run(cmd, ignore_error=True)
+
+
 args = []
 
 if __name__ == "__main__":
@@ -40,3 +60,5 @@ print_session('terminate ses')
 ################################################################################
 terminate_config_set()
 terminate_email_identity()
+terminate_domain_identity()
+terminate_receipt_rule_set()
