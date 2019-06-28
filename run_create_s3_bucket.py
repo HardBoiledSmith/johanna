@@ -13,6 +13,7 @@ def run_create_s3_bucket(name, settings):
     expire_days = settings.get('EXPIRE_FILES_DAYS', 0)
     is_web_hosting = settings["WEB_HOSTING"]
     region = settings['REGION']
+    is_public_access_block = settings['PUBLIC_ACCESS_BLOCK']
 
     ################################################################################
     print_session('create %s' % name)
@@ -39,6 +40,20 @@ def run_create_s3_bucket(name, settings):
     ################################################################################
     print_message('set policy')
 
+    pp = {
+        "BlockPublicAcls": False,
+        "IgnorePublicAcls": False,
+        "BlockPublicPolicy": False,
+        "RestrictPublicBuckets": False
+    }
+    cmd = ['s3api', 'put-public-access-block', '--bucket', bucket_name]
+    cmd += ['--public-access-block-configuration', json.dumps(pp)]
+    aws_cli.run(cmd)
+
+
+    cmd = ['s3api', 'get-bucket-acl', '--bucket', bucket_name]
+    aws_cli.run(cmd, ignore_error=True)
+
     lines = read_file('aws_s3/aws-s3-bucket-policy-sample.json')
     lines = re_sub_lines(lines, 'BUCKET_NAME', bucket_name)
     pp = ' '.join(lines)
@@ -46,6 +61,34 @@ def run_create_s3_bucket(name, settings):
     cmd = ['s3api', 'put-bucket-policy', '--bucket', bucket_name]
     cmd += ['--policy', pp]
     aws_cli.run(cmd)
+
+    ################################################################################
+    print_message('set public access block')
+
+    pp = {
+        "BlockPublicAcls": is_public_access_block,
+        "IgnorePublicAcls": is_public_access_block,
+        "BlockPublicPolicy": is_public_access_block,
+        "RestrictPublicBuckets": is_public_access_block
+    }
+    cmd = ['s3api', 'put-public-access-block', '--bucket', bucket_name]
+    cmd += ['--public-access-block-configuration', json.dumps(pp)]
+    aws_cli.run(cmd)
+
+    ################################################################################
+    print_message('set life cycle')
+
+    pp = {
+        "BlockPublicAcls": False,
+        "IgnorePublicAcls": False,
+        "BlockPublicPolicy": False,
+        "RestrictPublicBuckets": False
+    }
+    cmd = ['s3api', 'put-public-access-block', '--bucket', bucket_name]
+    cmd += ['--public-access-block-configuration', json.dumps(pp)]
+    aws_cli.run(cmd)
+
+
 
     ################################################################################
     print_message('set life cycle')
