@@ -19,18 +19,9 @@ def run_create_s3_bucket(name, settings):
 
     ################################################################################
 
-    is_exist_bucket = False
-    rr = aws_cli.run(['s3api', 'list-buckets'])
-    buckets = rr.get('Buckets', [])
-    for bb in buckets:
-        if bb['Name'] == bucket_name:
-            is_exist_bucket = True
-            break
-
-    if not is_exist_bucket:
-        cmd = ['s3api', 'create-bucket', '--bucket', bucket_name, '--create-bucket-configuration',
-               'LocationConstraint=%s' % region]
-        aws_cli.run(cmd)
+    cmd = ['s3api', 'create-bucket', '--bucket', bucket_name, '--create-bucket-configuration',
+           'LocationConstraint=%s' % region]
+    aws_cli.run(cmd, ignore_error=True)
 
     ################################################################################
     print_message('set website configuration')
