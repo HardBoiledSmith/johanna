@@ -50,7 +50,6 @@ def run_create_s3_bucket(name, settings):
     cmd += ['--public-access-block-configuration', json.dumps(pp)]
     aws_cli.run(cmd)
 
-
     cmd = ['s3api', 'get-bucket-acl', '--bucket', bucket_name]
     aws_cli.run(cmd, ignore_error=True)
 
@@ -87,8 +86,6 @@ def run_create_s3_bucket(name, settings):
     cmd = ['s3api', 'put-public-access-block', '--bucket', bucket_name]
     cmd += ['--public-access-block-configuration', json.dumps(pp)]
     aws_cli.run(cmd)
-
-
 
     ################################################################################
     print_message('set life cycle')

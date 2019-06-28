@@ -14,11 +14,13 @@ def run_terminate_s3_bucket(name, settings):
     print_session('terminate %s' % name)
 
     ################################################################################
+    print_message('delete public access block')
+
+    cmd = ['s3api', 'delete-public-access-block', '--bucket', bucket_name]
+    aws_cli.run(cmd)
 
     ################################################################################
     print_message('delete web hosting')
-
-    ################################################################################
 
     if is_web_hosting:
         cmd = ['s3api', 'delete-bucket-website', '--bucket', bucket_name]
@@ -27,15 +29,11 @@ def run_terminate_s3_bucket(name, settings):
     ################################################################################
     print_message('delete policy')
 
-    ################################################################################
-
     cmd = ['s3api', 'delete-bucket-policy', '--bucket', bucket_name]
     aws_cli.run(cmd, ignore_error=True)
 
     ################################################################################
     print_message('delete life cycle')
-
-    ################################################################################
 
     if expire_days > 0:
         cmd = ['s3api', 'delete-bucket-lifecycle', '--bucket', bucket_name]
