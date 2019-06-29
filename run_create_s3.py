@@ -3,6 +3,7 @@
 from env import env
 from run_common import check_template_availability
 from run_common import print_session
+from run_create_s3_bucket import run_create_s3_bucket
 from run_create_s3_vue import run_create_s3_vue
 
 args = []
@@ -36,7 +37,9 @@ for s3_env in s3_list:
     if target_s3_name:
         check_exists = True
 
-    if s3_env['TYPE'] == 'vue-app':
+    if s3_env['TYPE'] == 'bucket':
+        run_create_s3_bucket(s3_env['NAME'], s3_env)
+    elif s3_env['TYPE'] == 'vue-app':
         run_create_s3_vue(s3_env['NAME'], s3_env)
     else:
         print('"%s" is not supported' % s3_env['TYPE'])
