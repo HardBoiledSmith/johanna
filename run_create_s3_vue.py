@@ -110,29 +110,34 @@ def run_create_s3_vue(name, settings):
     aws_cli.run(cmd, ignore_error=True)
 
     ################################################################################
+    print_message('delete public access block')
+
+    cmd = ['s3api', 'delete-public-access-block']
+    cmd += ['--bucket', deploy_bucket_name]
+    aws_cli.run(cmd)
+
+    print_message('wait public access block has deleted...')
+    time.sleep(10)
+
+    ################################################################################
     print_message('set bucket policy')
 
-    lines = read_file('aws_s3/aws-s3-bucket-policy-sample.json')
+    lines = read_file('aws_s3/aws-s3-bucket-policy-for-website.json')
     lines = re_sub_lines(lines, 'BUCKET_NAME', deploy_bucket_name)
-    write_file('template/%s/%s/aws-s3-bucket-policy.json' % (git_folder_name, name), lines)
+    pp = ' '.join(lines)
 
     cmd = ['s3api', 'put-bucket-policy']
     cmd += ['--bucket', deploy_bucket_name]
-    cmd += ['--policy', 'file://template/%s/%s/aws-s3-bucket-policy.json' % (git_folder_name, name)]
+    cmd += ['--policy', pp]
     aws_cli.run(cmd)
 
     ################################################################################
     print_message('set website configuration')
 
-    lines = read_file('aws_s3/aws-s3-website-configuration-sample.json')
-    lines = re_sub_lines(lines, 'BUCKET_NAME', deploy_bucket_name)
-    lines = re_sub_lines(lines, 'PROTOCOL', settings.get('PROTOCOL', 'http'))
-    write_file('template/%s/%s/aws-s3-website-configuration.json' % (git_folder_name, name), lines)
-
     cmd = ['s3api', 'put-bucket-website']
     cmd += ['--bucket', deploy_bucket_name]
     cmd += ['--website-configuration',
-            'file://template/%s/%s/aws-s3-website-configuration.json' % (git_folder_name, name)]
+            'file://aws_s3/aws-s3-website-configuration.json']
     aws_cli.run(cmd)
 
     ################################################################################

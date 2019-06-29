@@ -1,4 +1,5 @@
 import json
+import time
 
 from run_common import AWSCli
 from run_common import print_message
@@ -13,84 +14,48 @@ def run_create_s3_bucket(name, settings):
     expire_days = settings.get('EXPIRE_FILES_DAYS', 0)
     is_web_hosting = settings["WEB_HOSTING"]
     region = settings['REGION']
-    is_public_access_block = settings['PUBLIC_ACCESS_BLOCK']
 
     ################################################################################
     print_session('create %s' % name)
-
-    ################################################################################
 
     cmd = ['s3api', 'create-bucket', '--bucket', bucket_name, '--create-bucket-configuration',
            'LocationConstraint=%s' % region]
     aws_cli.run(cmd, ignore_error=True)
 
     ################################################################################
-    print_message('set website configuration')
-
     if is_web_hosting:
+        print_message('delete public access block')
+
+        cmd = ['s3api', 'delete-public-access-block']
+        cmd += ['--bucket', bucket_name]
+        aws_cli.run(cmd)
+
+        print_message('wait public access block has deleted...')
+        time.sleep(10)
+
+        print_message('set bucket policy')
+
+        lines = read_file('aws_s3/aws-s3-bucket-policy-for-website.json')
+        lines = re_sub_lines(lines, 'BUCKET_NAME', bucket_name)
+        pp = ' '.join(lines)
+
+        cmd = ['s3api', 'put-bucket-policy']
+        cmd += ['--bucket', bucket_name]
+        cmd += ['--policy', pp]
+        aws_cli.run(cmd)
+
+        print_message('set website configuration')
+
         cmd = ['s3api', 'put-bucket-website']
         cmd += ['--bucket', bucket_name]
         cmd += ['--website-configuration',
-                'file://aws_s3/aws-s3-website-configuration-sample.json']
+                'file://aws_s3/aws-s3-website-configuration.json']
         aws_cli.run(cmd)
-    else:
-        cmd = ['s3api', 'delete-bucket-website', '--bucket', bucket_name]
-        aws_cli.run(cmd, ignore_error=True)
 
     ################################################################################
-    print_message('set policy')
-
-    pp = {
-        "BlockPublicAcls": False,
-        "IgnorePublicAcls": False,
-        "BlockPublicPolicy": False,
-        "RestrictPublicBuckets": False
-    }
-    cmd = ['s3api', 'put-public-access-block', '--bucket', bucket_name]
-    cmd += ['--public-access-block-configuration', json.dumps(pp)]
-    aws_cli.run(cmd)
-
-    cmd = ['s3api', 'get-bucket-acl', '--bucket', bucket_name]
-    aws_cli.run(cmd, ignore_error=True)
-
-    lines = read_file('aws_s3/aws-s3-bucket-policy-sample.json')
-    lines = re_sub_lines(lines, 'BUCKET_NAME', bucket_name)
-    pp = ' '.join(lines)
-
-    cmd = ['s3api', 'put-bucket-policy', '--bucket', bucket_name]
-    cmd += ['--policy', pp]
-    aws_cli.run(cmd)
-
-    ################################################################################
-    print_message('set public access block')
-
-    pp = {
-        "BlockPublicAcls": is_public_access_block,
-        "IgnorePublicAcls": is_public_access_block,
-        "BlockPublicPolicy": is_public_access_block,
-        "RestrictPublicBuckets": is_public_access_block
-    }
-    cmd = ['s3api', 'put-public-access-block', '--bucket', bucket_name]
-    cmd += ['--public-access-block-configuration', json.dumps(pp)]
-    aws_cli.run(cmd)
-
-    ################################################################################
-    print_message('set life cycle')
-
-    pp = {
-        "BlockPublicAcls": False,
-        "IgnorePublicAcls": False,
-        "BlockPublicPolicy": False,
-        "RestrictPublicBuckets": False
-    }
-    cmd = ['s3api', 'put-public-access-block', '--bucket', bucket_name]
-    cmd += ['--public-access-block-configuration', json.dumps(pp)]
-    aws_cli.run(cmd)
-
-    ################################################################################
-    print_message('set life cycle')
-
     if expire_days > 0:
+        print_message('set life cycle rule')
+
         cc = {
             "Rules": [
                 {
@@ -115,6 +80,3 @@ def run_create_s3_bucket(name, settings):
         cmd = ['s3api', 'put-bucket-lifecycle-configuration', '--bucket', bucket_name]
         cmd += ['--lifecycle-configuration', json.dumps(cc)]
         aws_cli.run(cmd)
-    else:
-        cmd = ['s3api', 'delete-bucket-lifecycle', '--bucket', bucket_name]
-        aws_cli.run(cmd, ignore_error=True)
