@@ -324,7 +324,7 @@ def run_create_eb_windows(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.0.4 running IIS 10.0']
+    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.1.0 running IIS 10.0']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
