@@ -48,6 +48,15 @@ You can use this on web GUI
 
 	![alt text](https://github.com/HardBoiledSmith/johanna/raw/master/docs/images/iam_user_permissions.png "IAM user permissions")
 
+# Vagrant
+
+- set config.json below root of johanna
+- move to provisioning folder using `johanna $ cd _provisioning`
+- create or run vagrant using `johanna/_provisioning $ vagrant up`
+- connect to vagrant using `$ ssh root@dv-johanna.hbsmith.io` or `$ ssh root@192.168.124.5` 
+- move to johanna folder using  `$ cd /opt/johanna`
+- run provisioning script using `/opt/johanna $ ./run.py`
+
 # Links
 
 * [PyCon APAC 2016](https://www.pycon.kr/2016apac/program/15)
