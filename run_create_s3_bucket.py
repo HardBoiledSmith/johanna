@@ -14,6 +14,7 @@ def run_create_s3_bucket(name, settings):
     expire_days = settings.get('EXPIRE_FILES_DAYS', 0)
     is_web_hosting = settings['WEB_HOSTING']
     region = settings['REGION']
+    policy = settings.get('POLICY', '')
 
     ################################################################################
     print_session('create %s' % name)
@@ -24,9 +25,7 @@ def run_create_s3_bucket(name, settings):
 
     ################################################################################
 
-    if 'POLICY' in settings and \
-            settings['POLICY'] in ['website', 'email']:
-
+    if policy in ['website', 'email']:
         print_message('delete public access block')
 
         cmd = ['s3api', 'delete-public-access-block']
@@ -38,7 +37,7 @@ def run_create_s3_bucket(name, settings):
 
         print_message('set bucket policy')
 
-        lines = read_file('aws_s3/aws-s3-bucket-policy-for-%s.json' % settings['POLICY'])
+        lines = read_file('aws_s3/aws-s3-bucket-policy-for-%s.json' % policy)
         lines = re_sub_lines(lines, 'BUCKET_NAME', bucket_name)
         pp = ' '.join(lines)
 
