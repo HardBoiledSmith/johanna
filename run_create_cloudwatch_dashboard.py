@@ -243,7 +243,7 @@ def run_create_cw_dashboard_alarm(name, settings):
 
     widgets = list()
     cmd = ['cloudwatch', 'describe-alarms']
-    cmd += ['--alarm-name-prefix', '%s_' % phase]
+    cmd += ['--alarm-name-prefix', '%s-' % phase]
     rr = aws_cli.run(cmd)
 
     for (ii, aa) in enumerate(rr['MetricAlarms']):
