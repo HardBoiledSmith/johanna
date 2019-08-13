@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import json
 import os
+import re
 import subprocess
 import time
+
+import requests
 
 from env import env
 from run_common import AWSCli
@@ -11,6 +14,40 @@ from run_common import print_session
 from run_common import re_sub_lines
 from run_common import read_file
 from run_common import write_file
+
+url = "https://publicwww.com/websites/%22google.com%22/?export=csv"
+
+
+def download_build_file(template_path, name, url):
+    branch = subprocess.Popen(['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+                              stdout=subprocess.PIPE,
+                              cwd='%s/%s' % (template_path, name)).communicate()[0]
+    if branch != 'qa':
+        branch = 'op'
+
+    rr = subprocess.Popen(['git', 'ls-remote', 'git@github.com:HardBoiledSmith/gendo.git'],
+                          stdout=subprocess.PIPE,
+                          cwd='%s/%s' % (template_path, name)).communicate()[0].decode('utf-8')
+    rr = rr.split('\n')
+    aa = ''
+    for r in rr:
+        if 'refs/heads/%s' % branch in r:
+            aa = re.compile("\s+").split(r)
+            break
+
+    if aa == '':
+        Exception('git hash(%s) not exist' % branch)
+
+    file_name = '%s-gendo-%s.zip' % (branch, aa[0])
+    uu = url + '/%s' % file_name
+    print_message("Download build file(%s)" % uu)
+    response = requests.get(uu)
+
+    if response.status_code != 200:
+        raise Exception('file is not exist ')
+
+    with open('%s/%s/op-gendo.zip' % (template_path, name), 'wb') as out_file:
+        out_file.write(response.content)
 
 
 def run_create_eb_windows(name, settings):
@@ -30,6 +67,7 @@ def run_create_eb_windows(name, settings):
     subnet_type = settings['SUBNET_TYPE']
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = '%s_' % service_name if service_name else ''
+    url = settings['BUILD_FOLDER_URL']
 
     cidr_subnet = aws_cli.cidr_subnet
 
@@ -115,7 +153,7 @@ def run_create_eb_windows(name, settings):
     subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
     if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', git_url]
+        git_command = ['git', 'clone', '--depth=1', '-b', 'GEN-5598', git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
     subprocess.Popen(git_command, cwd=template_path).communicate()
@@ -149,6 +187,8 @@ def run_create_eb_windows(name, settings):
         lines = re_sub_lines(lines, '^(%s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
     write_file('%s/%s/_provisioning/configuration/User/vagrant/Desktop/%s/settings_local.py'
                % (template_path, name, name), lines)
+
+    download_build_file(template_path, name, url)
 
     ################################################################################
     print_message('check previous version')
@@ -348,7 +388,7 @@ def run_create_eb_windows(name, settings):
         if elapsed_time > 60 * 30:
             raise Exception()
 
-    subprocess.Popen(['rm', '-rf', './%s' % name], cwd=template_path).communicate()
+    # subprocess.Popen(['rm', '-rf', './%s' % name], cwd=template_path).communicate()
 
     ################################################################################
     print_message('revoke security group ingress')
