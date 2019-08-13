@@ -32,7 +32,7 @@ def download_build_file(template_path, name, url):
     aa = ''
     for r in rr:
         if 'refs/heads/%s' % branch in r:
-            aa = re.compile("\s+").split(r)
+            aa = re.compile('\\s+').split(r)
             break
 
     if aa == '':
