@@ -158,7 +158,7 @@ def run_create_eb_windows(name, settings):
     file_name = '%s-gendo-%s.zip' % (branch, git_hash_app.decode('utf-8').strip())
     artifact_url = url + '/%s' % file_name
 
-    cmd = ['s3', 'cp', artifact_url, '%s/%s/gendo-artifact.zip' % (template_path, name)]
+    cmd = ['s3', 'cp', artifact_url, '%s/gendo-artifact.zip' % name]
     aws_cli.run(cmd, cwd=template_path)
 
     ################################################################################
