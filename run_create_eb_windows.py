@@ -154,7 +154,8 @@ def run_create_eb_windows(name, settings):
     ################################################################################
     print_message('download artifact')
 
-    file_name = '%s-gendo-%s.zip' % (phase, git_hash_app.decode('utf-8').strip())
+    branch = 'master' if phase == 'dv' else phase
+    file_name = '%s-gendo-%s.zip' % (branch, git_hash_app.decode('utf-8').strip())
     artifact_url = url + '/%s' % file_name
 
     cmd = ['s3', 'cp', artifact_url, '%s/%s/gendo-artifact.zip' % (template_path, name)]
