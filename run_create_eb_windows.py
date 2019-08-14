@@ -30,6 +30,7 @@ def run_create_eb_windows(name, settings):
     subnet_type = settings['SUBNET_TYPE']
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = '%s_' % service_name if service_name else ''
+    url = settings['ARTIFACT_URL']
 
     cidr_subnet = aws_cli.cidr_subnet
 
@@ -149,6 +150,15 @@ def run_create_eb_windows(name, settings):
         lines = re_sub_lines(lines, '^(%s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
     write_file('%s/%s/_provisioning/configuration/User/vagrant/Desktop/%s/settings_local.py'
                % (template_path, name, name), lines)
+
+    ################################################################################
+    print_message('download artifact')
+
+    file_name = '%s-gendo-%s.zip' % (phase, git_hash_app)
+    artifact_url = url + '/%s' % file_name
+
+    cmd = ['s3', 'cp', artifact_url, '%s/%s/op-gendo.zip' % (template_path, name)]
+    aws_cli.run(cmd, cwd=template_path)
 
     ################################################################################
     print_message('check previous version')
