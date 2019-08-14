@@ -116,7 +116,7 @@ def run_create_eb_windows(name, settings):
     subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
     if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', '-b', git_url]
+        git_command = ['git', 'clone', '--depth=1', git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
     subprocess.Popen(git_command, cwd=template_path).communicate()
@@ -152,11 +152,10 @@ def run_create_eb_windows(name, settings):
                % (template_path, name, name), lines)
 
     ################################################################################
-    print_message('download gendo')
+    print_message('download artifact')
 
     file_name = '%s-gendo-%s.zip' % (phase, git_hash_app)
     artifact_url = url + '/%s' % file_name
-    print_message("Download build file(%s)" % artifact_url)
 
     cmd = ['s3', 'cp', artifact_url, '%s/%s/op-gendo.zip' % (template_path, name)]
     aws_cli.run(cmd, cwd=template_path)
