@@ -172,15 +172,12 @@ def run_create_codebuild_github(name, settings):
 
     if need_update:
         print_message('update project: %s' % name)
-
         cmd = ['codebuild', 'update-project', '--cli-input-json', config]
         aws_cli.run(cmd)
-        return
-
-    print_message('create project: %s' % name)
-
-    cmd = ['codebuild', 'create-project', '--cli-input-json', config]
-    aws_cli.run(cmd)
+    else:
+        print_message('create project: %s' % name)
+        cmd = ['codebuild', 'create-project', '--cli-input-json', config]
+        aws_cli.run(cmd)
 
     config = {
         'projectName': name,
@@ -195,5 +192,10 @@ def run_create_codebuild_github(name, settings):
         ]
     }
     config = json.dumps(config)
-    cmd = ['codebuild', 'create-webhook', '--cli-input-json', config]
-    aws_cli.run(cmd)
+
+    if need_update:
+        cmd = ['codebuild', 'update-webhook', '--cli-input-json', config]
+        aws_cli.run(cmd)
+    else:
+        cmd = ['codebuild', 'create-webhook', '--cli-input-json', config]
+        aws_cli.run(cmd)
