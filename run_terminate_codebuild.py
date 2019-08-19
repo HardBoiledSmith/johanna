@@ -81,10 +81,23 @@ def run_terminate_github_codebuild(name, settings):
     print_message('delete github codebuild %s' % name)
 
     print_message('delete github codebuild(webhook) %s' % name)
+
     aws_default_region = settings.get('AWS_DEFAULT_REGION')
     _aws_cli = AWSCli(aws_default_region)
     cmd = ['codebuild', 'delete-webhook']
     cmd += ['--project-name', name]
+    _aws_cli.run(cmd, ignore_error=True)
+
+    rule_name = name + 'CronRule'
+    print_message('delete events rule %s' % rule_name)
+
+    cmd = ['events', 'remove-targets']
+    cmd += ['--rule', rule_name]
+    cmd += ['--ids', '1']
+    _aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['events', 'delete-rule']
+    cmd += ['--name', rule_name]
     _aws_cli.run(cmd, ignore_error=True)
 
     print_message('delete github codebuild(project) %s' % name)
