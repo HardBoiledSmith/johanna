@@ -85,12 +85,13 @@ def create_iam_for_codebuild(name, settings):
     return role_name
 
 
-def create_cron(aws_cli, name, settings, project_arn, git_branch):
+def create_cron(aws_cli, name, project_arn, schedule_expression, git_branch):
     print_message('create cron event')
 
     cmd = ['events', 'put-rule']
-    cmd += ['--name', name + 'CronRule']
-    cmd += ['--schedule-expression', settings['SCHEDULE_EXPRESSION']]
+    rule_name = '%sCronRuleSourceBy%s' % (name, git_branch.title())
+    cmd += ['--name', rule_name]
+    cmd += ['--schedule-expression', schedule_expression]
     aws_cli.run(cmd)
 
     print_message('link event and codebuild project')
@@ -112,7 +113,7 @@ def create_cron(aws_cli, name, settings, project_arn, git_branch):
     target = json.dumps(target)
 
     cmd = ['events', 'put-targets']
-    cmd += ['--rule', name + 'CronRule']
+    cmd += ['--rule', rule_name]
     cmd += ['--targets', target]
     aws_cli.run(cmd)
 
@@ -207,13 +208,14 @@ def run_create_codebuild_github(name, settings):
         cmd = ['codebuild', 'update-project', '--cli-input-json', config]
         aws_cli.run(cmd)
     else:
-        print_message('create project: %s' % name)
+        print_message('create project: {}'.format(name))
         cmd = ['codebuild', 'create-project', '--cli-input-json', config]
         result = aws_cli.run(cmd)
 
         project_arn = result['project']['arn']
-        if 'SCHEDULE_EXPRESSION' in settings:
-            create_cron(aws_cli, name, settings, project_arn, git_branch)
+        if 'CRON' in settings:
+            for cc in settings['CRON']:
+                create_cron(aws_cli, name, project_arn, cc['SCHEDULE_EXPRESSION'], cc['SOURCE_VERSION'])
 
     config = {
         'projectName': name,

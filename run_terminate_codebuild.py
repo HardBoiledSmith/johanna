@@ -88,17 +88,10 @@ def run_terminate_github_codebuild(name, settings):
     cmd += ['--project-name', name]
     _aws_cli.run(cmd, ignore_error=True)
 
-    rule_name = name + 'CronRule'
-    print_message('delete events rule %s' % rule_name)
-
-    cmd = ['events', 'remove-targets']
-    cmd += ['--rule', rule_name]
-    cmd += ['--ids', '1']
-    _aws_cli.run(cmd, ignore_error=True)
-
-    cmd = ['events', 'delete-rule']
-    cmd += ['--name', rule_name]
-    _aws_cli.run(cmd, ignore_error=True)
+    if 'CRON' in settings:
+        for cc in settings['CRON']:
+            rule_name = '%sCronRuleSourceBy%s' % (name, cc['SOURCE_VERSION'].title())
+            deleteCronRule(_aws_cli, rule_name)
 
     print_message('delete github codebuild(project) %s' % name)
 
@@ -121,6 +114,19 @@ def run_terminate_github_codebuild(name, settings):
     terminate_iam_for_codebuild(name.replace('_', '-'))
 
 
+def deleteCronRule(_aws_cli, rule_name):
+    print_message('delete events rule %s' % rule_name)
+
+    cmd = ['events', 'remove-targets']
+    cmd += ['--rule', rule_name]
+    cmd += ['--ids', '1']
+    _aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['events', 'delete-rule']
+    cmd += ['--name', rule_name]
+    _aws_cli.run(cmd, ignore_error=True)
+
+
 def run_terminate_cron_codebuild(name):
     print_message('delete cron codebuild %s' % name)
 
@@ -129,16 +135,7 @@ def run_terminate_cron_codebuild(name):
     aws_cli.run(cmd, ignore_error=True)
 
     rule_name = name + 'CronRule'
-    print_message('delete events rule %s' % rule_name)
-
-    cmd = ['events', 'remove-targets']
-    cmd += ['--rule', rule_name]
-    cmd += ['--ids', '1']
-    aws_cli.run(cmd, ignore_error=True)
-
-    cmd = ['events', 'delete-rule']
-    cmd += ['--name', rule_name]
-    aws_cli.run(cmd, ignore_error=True)
+    deleteCronRule(aws_cli, rule_name)
 
     cmd = ['ssm', 'get-parameters-by-path']
     cmd += ['--path', '/CodeBuild/%s' % name]
