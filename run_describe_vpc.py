@@ -72,7 +72,7 @@ def describe_eb_route_tables(vpc_id=None):
 
 def describe_eb_security_groups(vpc_id=None):
     if not vpc_id:
-        vpc_id = 'vpc-test-1234'
+        return False
 
     cmd = ['ec2', 'describe-security-groups']
     cmd += ['--filters=Name=vpc-id,Values=%s' % vpc_id]
@@ -116,7 +116,7 @@ def describe_rds_route_tables(vpc_id=None):
 
 def describe_rds_security_groups(vpc_id=None):
     if not vpc_id:
-        vpc_id = 'vpc-test-1234'
+        return False
 
     cmd = ['ec2', 'describe-security-groups']
     cmd += ['--filters=Name=vpc-id,Values=%s' % vpc_id]
