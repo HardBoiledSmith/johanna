@@ -70,7 +70,7 @@ def describe_eb_route_tables(vpc_id=None):
         return True
 
 
-def describe_eb_security_groups(vpc_id=None):
+def describe_eb_security_groups(vpc_id):
     if not vpc_id:
         return False
 
@@ -114,7 +114,7 @@ def describe_rds_route_tables(vpc_id=None):
         return True
 
 
-def describe_rds_security_groups(vpc_id=None):
+def describe_rds_security_groups(vpc_id):
     if not vpc_id:
         return False
 
