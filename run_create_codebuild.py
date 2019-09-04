@@ -3,7 +3,7 @@ import time
 
 from env import env
 from run_common import AWSCli
-from run_common import check_template_availability
+from run_common import reset_template_dir
 from run_common import print_message
 from run_common import print_session
 from run_create_codebuild_cron import run_create_codebuild_cron
@@ -82,7 +82,7 @@ def create_iam_for_events():
 print_session('create codebuild')
 
 ################################################################################
-check_template_availability()
+reset_template_dir()
 
 default_role_created = create_iam_for_codebuild('default')
 cron_role_created = create_iam_for_codebuild('cron')
