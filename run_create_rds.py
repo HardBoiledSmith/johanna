@@ -45,8 +45,8 @@ db_instance_id = env['rds']['DB_INSTANCE_ID']
 db_iops = env['rds']['IOPS']
 db_multi_az = env['rds']['MULTI_AZ']
 db_subnet_group_name = env['rds']['DB_SUBNET_NAME']
-engine = env['rds']['ENGINE']
-engine_version = env['rds']['ENGINE_VERSION']
+engine = 'auroa-mysql'
+engine_version = '5.7.mysql_aurora.2.04.6'
 license_model = env['rds']['LICENSE_MODEL']
 logs_export_to_cloudwatch = json.dumps(['error', 'general', 'audit', 'slowquery'])
 master_user_name = env['rds']['USER_NAME']
@@ -97,15 +97,14 @@ monitoring_role_arn = aws_cli.get_role_arn('rds-monitoring-role')
 ################################################################################
 print_message('create rds')
 
-if engine not in ('aurora', 'aurora-mysql', 'aurora-postgresql'):
+if engine != 'aurora-mysql':
     raise Exception()
 
 cmd = ['rds', 'create-db-cluster']
 cmd += ['--backup-retention-period', db_backup_retention_period]
 cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
 cmd += ['--db-subnet-group-name', db_subnet_group_name]
-if engine != 'aurora-postgresql':
-    cmd += ['--enable-cloudwatch-logs-exports', logs_export_to_cloudwatch]
+cmd += ['--enable-cloudwatch-logs-exports', logs_export_to_cloudwatch]
 cmd += ['--engine', engine]
 cmd += ['--engine-version', engine_version]
 cmd += ['--master-user-password', master_user_password]
