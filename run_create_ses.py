@@ -3,7 +3,6 @@ import json
 
 from env import env
 from run_common import AWSCli
-from run_common import check_template_availability
 from run_common import print_message
 from run_common import print_session
 
@@ -220,7 +219,6 @@ if __name__ == "__main__":
 print_session('create ses')
 
 ################################################################################
-check_template_availability()
 
 create_email_identity()
 create_config_set()

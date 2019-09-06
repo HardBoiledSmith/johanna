@@ -3,7 +3,6 @@ import json
 import sys
 
 from run_common import AWSCli
-from run_common import check_template_availability
 
 command_list = list()
 command_list.append('create')
@@ -100,7 +99,6 @@ if __name__ == "__main__":
 
     command = 'run_%s' % command
     if command == 'run_create':
-        check_template_availability()
         __import__('run_create_iam')
         __import__('run_create_vpc')
         __import__('run_create_rds')
@@ -113,7 +111,6 @@ if __name__ == "__main__":
         __import__('run_create_cloudwatch_alarm')
         __import__('run_create_cloudwatch_dashboard')
     elif command == 'run_terminate':
-        check_template_availability()
         __import__('run_terminate_cloudwatch_dashboard')
         __import__('run_terminate_cloudwatch_alarm')
         __import__('run_terminate_ses')

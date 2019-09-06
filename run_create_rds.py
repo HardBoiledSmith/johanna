@@ -5,7 +5,6 @@ import time
 
 from env import env
 from run_common import AWSCli
-from run_common import check_template_availability
 from run_common import print_message
 from run_common import print_session
 
@@ -62,8 +61,6 @@ cidr_subnet = aws_cli.cidr_subnet
 #
 ################################################################################
 print_session('create rds')
-
-check_template_availability()
 
 create_iam_for_rds()
 

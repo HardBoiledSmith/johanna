@@ -4,7 +4,7 @@ import re
 
 from env import env
 from run_common import AWSCli
-from run_common import check_template_availability
+from run_common import reset_template_dir
 from run_common import print_message
 from run_common import print_session
 
@@ -282,7 +282,7 @@ def run_create_cw_dashboard_alarm(name, settings):
 ################################################################################
 print_session('create cloudwatch dashboard')
 
-check_template_availability()
+reset_template_dir()
 
 cw = env.get('cloudwatch', dict())
 target_cw_dashboard_name = None
