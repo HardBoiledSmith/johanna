@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from env import env
-from run_common import check_template_availability
 from run_common import print_session
 from run_create_eb_django import run_create_eb_django
 from run_create_eb_openvpn import run_create_eb_openvpn
@@ -48,7 +47,6 @@ for eb_env in eb['ENVIRONMENTS']:
     if eb_env['TYPE'] == 'django':
         run_create_eb_django(eb_env['NAME'], eb_env)
     elif eb_env['TYPE'] == 'openvpn':
-        check_template_availability()
         run_create_eb_openvpn(eb_env['NAME'], eb_env)
     elif eb_env['TYPE'] == 'spring':
         run_create_eb_spring(eb_env['NAME'], eb_env)

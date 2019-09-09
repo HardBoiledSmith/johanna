@@ -27,7 +27,9 @@ def run_export_cloudwatch_dashboard(name, settings):
     dashboard_body = json.loads(result['DashboardBody'])
 
     for dw in dashboard_body['widgets']:
-        pm = dw['properties']['metrics']
+        pm = dw['properties'].get('metrics')
+        if not pm:
+            return
         pm = pm[:1]
         prev = ''
         current_index = 0

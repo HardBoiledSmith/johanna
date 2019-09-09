@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 from env import env
-from run_common import check_template_availability
 from run_common import print_session
-from run_create_s3_bucket import run_create_s3_bucket
 from run_create_s3_vue import run_create_s3_vue
+from run_create_s3_bucket import run_create_s3_bucket
 
 args = []
 
@@ -21,7 +20,6 @@ if __name__ == "__main__":
 print_session('create s3')
 
 ################################################################################
-check_template_availability()
 
 s3_list = env.get('s3', list())
 target_s3_name = None
