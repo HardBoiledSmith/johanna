@@ -122,7 +122,7 @@ def run_create_s3_vue(name, settings):
     ################################################################################
     print_message('set bucket policy')
 
-    lines = read_file('aws_s3/aws-s3-bucket-policy-for-website.json')
+    lines = read_file('aws_iam/aws-s3-bucket-policy-for-website.json')
     lines = re_sub_lines(lines, 'BUCKET_NAME', deploy_bucket_name)
     pp = ' '.join(lines)
 
@@ -137,7 +137,7 @@ def run_create_s3_vue(name, settings):
     cmd = ['s3api', 'put-bucket-website']
     cmd += ['--bucket', deploy_bucket_name]
     cmd += ['--website-configuration',
-            'file://aws_s3/aws-s3-website-configuration.json']
+            'file://aws_iam/aws-s3-website-configuration.json']
     aws_cli.run(cmd)
 
     ################################################################################
