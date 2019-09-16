@@ -37,7 +37,7 @@ def run_create_s3_bucket(name, settings):
 
         print_message('set bucket policy')
 
-        lines = read_file('aws_s3/aws-s3-bucket-policy-for-%s.json' % policy)
+        lines = read_file('aws_iam/aws-s3-bucket-policy-for-%s.json' % policy)
         lines = re_sub_lines(lines, 'BUCKET_NAME', bucket_name)
         pp = ' '.join(lines)
 
@@ -52,7 +52,7 @@ def run_create_s3_bucket(name, settings):
         cmd = ['s3api', 'put-bucket-website']
         cmd += ['--bucket', bucket_name]
         cmd += ['--website-configuration',
-                'file://aws_s3/aws-s3-website-configuration.json']
+                'file://aws_iam/aws-s3-website-configuration.json']
         aws_cli.run(cmd)
 
     ################################################################################
