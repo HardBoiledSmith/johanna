@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
 
 def create_sms_log():
-    aws_cli = AWSCli('us-east-1')
+    aws_cli = AWSCli('ap-northeast-1')
 
     role_name = 'aws-sns-sms-log-role'
     policy_name = 'aws-sns-sms-log-policy'
@@ -244,8 +244,6 @@ def run_create_cw_dashboard_sqs_lambda_sms(name, settings):
     with open(filename_path, 'r') as ff:
         dashboard_body = json.load(ff)
 
-    print(dashboard_body['widgets'])
-
     for dw in dashboard_body['widgets']:
         pm = dw['properties']['metrics']
 
@@ -320,7 +318,7 @@ def run_create_cw_dashboard_alarm(name, settings):
 ################################################################################
 print_session('create cloudwatch dashboard')
 
-reset_template_dir()
+# reset_template_dir()
 
 cw = env.get('cloudwatch', dict())
 target_cw_dashboard_name = None

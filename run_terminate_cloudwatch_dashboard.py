@@ -28,7 +28,7 @@ def run_terminate_cw_dashboard(name, settings):
 
 
 def delete_role_for_sms():
-    aws_cli = AWSCli('us-east-1')
+    aws_cli = AWSCli('ap-northeast-1')
 
     role_name = 'aws-sns-sms-log-role'
     policy_name = 'aws-sns-sms-log-policy'
@@ -68,15 +68,10 @@ if len(args) == 2:
         if cw_dashboard_env['NAME'] == target_cw_dashboard_name:
             target_cw_dashboard_name_exists = True
             run_terminate_cw_dashboard(cw_dashboard_env['NAME'], cw_dashboard_env)
-
-            if cw_dashboard_env['TYPE'] == 'sqs,lambda,sms':
-                delete_role_for_sms()
-
     if not target_cw_dashboard_name_exists:
         print('"%s" is not exists in config.json' % target_cw_dashboard_name)
 else:
     for cw_dashboard_env in cw.get('DASHBOARDS', list()):
         run_terminate_cw_dashboard(cw_dashboard_env['NAME'], cw_dashboard_env)
 
-        if cw_dashboard_env['TYPE'] == 'sqs,lambda,sms':
-            delete_role_for_sms()
+delete_role_for_sms()
