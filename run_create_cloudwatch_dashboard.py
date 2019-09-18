@@ -318,7 +318,7 @@ def run_create_cw_dashboard_alarm(name, settings):
 ################################################################################
 print_session('create cloudwatch dashboard')
 
-# reset_template_dir()
+reset_template_dir()
 
 cw = env.get('cloudwatch', dict())
 target_cw_dashboard_name = None
