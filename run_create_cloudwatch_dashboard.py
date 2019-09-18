@@ -4,9 +4,9 @@ import re
 
 from env import env
 from run_common import AWSCli
-from run_common import reset_template_dir
 from run_common import print_message
 from run_common import print_session
+from run_common import reset_template_dir
 
 args = []
 
@@ -14,6 +14,39 @@ if __name__ == "__main__":
     from run_common import parse_args
 
     args = parse_args()
+
+
+def create_sms_log():
+    aws_cli = AWSCli('us-east-1')
+
+    role_name = 'aws-sns-sms-log-role'
+    policy_name = 'aws-sns-sms-log-policy'
+
+    print_message('create role: %s' % role_name)
+
+    role = aws_cli.get_iam_role(role_name)
+
+    if not role:
+        cmd = ['iam', 'create-role']
+        cmd += ['--role-name', role_name]
+        cmd += ['--assume-role-policy-document', 'file://aws_iam/%s.json' % role_name]
+        role = aws_cli.run(cmd)
+
+        cmd = ['iam', 'put-role-policy']
+        cmd += ['--role-name', role_name]
+        cmd += ['--policy-name', policy_name]
+        cmd += ['--policy-document', 'file://aws_iam/%s.json' % policy_name]
+        aws_cli.run(cmd)
+
+    role_arn = role['Role']['Arn']
+
+    print_message('start sms log')
+
+    dd = {'attributes': {'DeliveryStatusSuccessSamplingRate': '100',
+                         'DeliveryStatusIAMRole': role_arn}}
+    cmd = ['sns', 'set-sms-attributes']
+    cmd += ['--cli-input-json', json.dumps(dd)]
+    aws_cli.run(cmd)
 
 
 def run_create_cw_dashboard_elasticbeanstalk(name, settings):
@@ -194,7 +227,10 @@ def run_create_cw_dashboard_rds_aurora(name, settings):
     aws_cli.run(cmd)
 
 
-def run_create_cw_dashboard_sqs_lambda(name, settings):
+def run_create_cw_dashboard_sqs_lambda_sms(name, settings):
+    print_message('create sms log')
+    create_sms_log()
+
     phase = env['common']['PHASE']
     dashboard_region = settings['AWS_DEFAULT_REGION']
     aws_cli = AWSCli(dashboard_region)
@@ -207,6 +243,8 @@ def run_create_cw_dashboard_sqs_lambda(name, settings):
     filename_path = 'template/%s/cloudwatch/%s.json' % (template_name, dashboard_name)
     with open(filename_path, 'r') as ff:
         dashboard_body = json.load(ff)
+
+    print(dashboard_body['widgets'])
 
     for dw in dashboard_body['widgets']:
         pm = dw['properties']['metrics']
@@ -309,8 +347,8 @@ for cw_dashboard_env in cw.get('DASHBOARDS', list()):
         run_create_cw_dashboard_elasticbeanstalk(cw_dashboard_env['NAME'], cw_dashboard_env)
     elif cw_dashboard_env['TYPE'] == 'rds/aurora':
         run_create_cw_dashboard_rds_aurora(cw_dashboard_env['NAME'], cw_dashboard_env)
-    elif cw_dashboard_env['TYPE'] == 'sqs,lambda':
-        run_create_cw_dashboard_sqs_lambda(cw_dashboard_env['NAME'], cw_dashboard_env)
+    elif cw_dashboard_env['TYPE'] == 'sqs,lambda,sms':
+        run_create_cw_dashboard_sqs_lambda_sms(cw_dashboard_env['NAME'], cw_dashboard_env)
     elif cw_dashboard_env['TYPE'] == 'alarm':
         run_create_cw_dashboard_alarm(cw_dashboard_env['NAME'], cw_dashboard_env)
     else:
