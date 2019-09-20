@@ -25,7 +25,7 @@ def terminate_iam_for_rds():
     aws_cli.run(cc, ignore_error=True)
 
 
-engine = env['rds']['ENGINE']
+engine = 'aurora-mysql'
 
 ################################################################################
 #
@@ -37,7 +37,7 @@ print_session('terminate rds')
 ################################################################################
 print_message('delete rds')
 
-if engine not in ('aurora', 'aurora-mysql', 'aurora-postgresql'):
+if engine != 'aurora-mysql':
     raise Exception()
 
 cmd = ['rds', 'describe-db-clusters']

@@ -202,7 +202,7 @@ class AWSCli:
                     raise Exception()
 
     def get_rds_address(self, read_replica=None):
-        engine = env['rds']['ENGINE']
+        engine = 'aurora-mysql'
         if engine not in ('aurora', 'aurora-mysql', 'aurora-postgresql'):
             raise Exception()
 
