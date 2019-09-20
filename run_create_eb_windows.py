@@ -356,7 +356,7 @@ def run_create_eb_windows(name, settings):
         time.sleep(5)
         elapsed_time += 5
 
-        if elapsed_time > 60 * 30:
+        if elapsed_time > 60 * 60:
             raise Exception()
 
     subprocess.Popen(['rm', '-rf', './%s' % name], cwd=template_path).communicate()
