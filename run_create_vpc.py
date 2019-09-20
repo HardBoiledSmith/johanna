@@ -163,10 +163,7 @@ def main(settings):
     cmd = ['ec2', 'authorize-security-group-ingress']
     cmd += ['--group-id', rds_security_group_id['private']]
     cmd += ['--protocol', 'tcp']
-    if rds_engine == 'aurora-postgresql':
-        cmd += ['--port', '5432']
-    else:
-        cmd += ['--port', '3306']
+    cmd += ['--port', '3306']
     cmd += ['--cidr', cidr_vpc['eb']]
     aws_cli.run(cmd)
 
