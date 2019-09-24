@@ -109,7 +109,7 @@ def run_create_eb_windows(name, settings):
             print('ERROR!!! Unknown subnet type:', subnet_type)
             raise Exception()
 
-    # ################################################################################
+    #################################################################################
     print_message('git clone')
 
     subprocess.Popen(['rm', '-rf', template_path]).communicate()
@@ -150,6 +150,18 @@ def run_create_eb_windows(name, settings):
         lines = re_sub_lines(lines, '^(%s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
     write_file('%s/%s/_provisioning/configuration/User/vagrant/Desktop/%s/settings_local.py'
                % (template_path, name, name), lines)
+
+    lines = read_file('%s/%s/_provisioning/configuration/User/vagrant/Desktop/%s/%s_cli/%s_cli.exe_sample.config'
+                      % (template_path, name, name, name, name))
+    option_list = list()
+    option_list.append(['PHASE', phase])
+    for key in settings:
+        value = settings[key]
+        option_list.append([key, value])
+    for oo in option_list:
+        lines = re_sub_lines(lines, '^.+add key=\"(%s)\" value=.+$' % oo[0], '<add key="\\1" value="%s" />' % oo[1])
+    write_file('%s/%s/_provisioning/configuration/User/vagrant/Desktop/%s/%s_cli/%s_cli.exe.config'
+               % (template_path, name, name, name, name), lines)
 
     ################################################################################
     print_message('download artifact')

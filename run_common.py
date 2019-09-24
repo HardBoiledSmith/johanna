@@ -202,10 +202,6 @@ class AWSCli:
                     raise Exception()
 
     def get_rds_address(self, read_replica=None):
-        engine = env['rds']['ENGINE']
-        if engine not in ('aurora', 'aurora-mysql', 'aurora-postgresql'):
-            raise Exception()
-
         cluster_id = env['rds']['DB_CLUSTER_ID']
         cmd = ['rds', 'describe-db-clusters']
 

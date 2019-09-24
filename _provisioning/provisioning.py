@@ -130,7 +130,7 @@ def _preprocess(hostname):
             for ll in lines:
                 _run(['pip3', 'install', ll.strip()])
 
-    node_version = 'v8.11.3'
+    node_version = 'v10.16.0'
     _run(['wget', 'https://raw.githubusercontent.com/creationix/nvm/v0.33.6/install.sh'], cwd='/root')
     _run(['chmod', '+x', 'install.sh'], cwd='/root')
     _run(['./install.sh'], cwd='/root')
