@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import json
+
 from env import env
 from run_common import AWSCli
 from run_common import print_message
@@ -11,6 +13,72 @@ if __name__ == "__main__":
     from run_common import parse_args
 
     args = parse_args()
+
+
+def run_create_cloudwatch_alarm_lambda(name, settings):
+    phase = env['common']['PHASE']
+    alarm_region = settings['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(alarm_region)
+
+    alarm_name = '%s-%s_%s_%s' % (phase, name, alarm_region, 'NotSuccessIn5Min')
+
+    topic_arn = aws_cli.get_topic_arn(settings['SNS_TOPIC_NAME'])
+    if not topic_arn:
+        print('sns topic: "%s" is not exists in %s' % (settings['SNS_TOPIC_NAME'], alarm_region))
+        raise Exception()
+
+    metrics = create_lambda_metrics(name)
+
+    cmd = ['cloudwatch', 'put-metric-alarm']
+    cmd += ['--alarm-actions', topic_arn]
+    cmd += ['--alarm-description', settings['DESCRIPTION']]
+    cmd += ['--alarm-name', alarm_name]
+    cmd += ['--comparison-operator', settings['COMPARISON_OPERATOR']]
+    cmd += ['--datapoints-to-alarm', settings['DATAPOINTS_TO_ALARM']]
+    cmd += ['--evaluation-periods', settings['EVALUATION_PERIODS']]
+    cmd += ['--metrics', json.dumps(metrics)]
+    cmd += ['--threshold', settings['THRESHOLD']]
+    aws_cli.run(cmd)
+
+
+def create_lambda_metrics(lambda_name):
+    dimensions = list()
+    dimensions.append({"Name": "FunctionName", "Value": lambda_name})
+    dimensions.append({"Name": "Resource", "Value": lambda_name})
+
+    metrics = list()
+    dd = dict()
+    dd['Id'] = 'availability'
+    dd['Expression'] = '100 - 100 * errors / invocations'
+    dd['Label'] = 'Success rate (%)'
+    dd['ReturnData'] = True
+    metrics.append(dd)
+
+    dd = dict()
+    dd['Id'] = 'errors'
+    dd['MetricStat'] = dict()
+    dd['MetricStat']['Metric'] = dict()
+    dd['MetricStat']['Metric']['Dimensions'] = dimensions
+    dd['MetricStat']['Metric']['MetricName'] = 'Errors'
+    dd['MetricStat']['Metric']['Namespace'] = 'AWS/Lambda'
+    dd['MetricStat']['Period'] = 300
+    dd['MetricStat']['Stat'] = 'Sum'
+    dd['ReturnData'] = False
+    metrics.append(dd)
+
+    dd = dict()
+    dd['Id'] = 'invocations'
+    dd['MetricStat'] = dict()
+    dd['MetricStat']['Metric'] = dict()
+    dd['MetricStat']['Metric']['Dimensions'] = dimensions
+    dd['MetricStat']['Metric']['MetricName'] = 'Invocations'
+    dd['MetricStat']['Metric']['Namespace'] = 'AWS/Lambda'
+    dd['MetricStat']['Period'] = 300
+    dd['MetricStat']['Stat'] = 'Sum'
+    dd['ReturnData'] = False
+    metrics.append(dd)
+
+    return metrics
 
 
 def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
@@ -203,6 +271,8 @@ for cw_alarm_env in cw.get('ALARMS', list()):
         run_create_cloudwatch_alarm_rds(cw_alarm_env['NAME'], cw_alarm_env)
     elif cw_alarm_env['TYPE'] == 'sqs':
         run_create_cloudwatch_alarm_sqs(cw_alarm_env['NAME'], cw_alarm_env)
+    elif cw_alarm_env['TYPE'] == 'lambda':
+        run_create_cloudwatch_alarm_lambda(cw_alarm_env['NAME'], cw_alarm_env)
     else:
         print('"%s" is not supported' % cw_alarm_env['TYPE'])
         raise Exception()
