@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import json
+import re
 
 from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
+from run_common import reset_template_dir
 
 if __name__ == "__main__":
     from run_common import parse_args
@@ -36,20 +38,31 @@ def run_export_cloudwatch_dashboard(name, settings):
         if len(pm) < 1:
             return
         for dimension in pm[0]:
-            if prev == 'InstanceId' and service_type == 'elasticbeanstalk':
-                pm[0][current_index] = 'INSTANCE_ID'
-            if prev == 'AutoScalingGroupName' and service_type == 'elasticbeanstalk':
-                pm[0][current_index] = 'AUTO_SCALING_GROUP_NAME'
-            if prev == 'LoadBalancerName' and service_type == 'elasticbeanstalk':
-                pm[0][current_index] = 'LOAD_BALANCER_NAME'
-            if prev == 'EnvironmentName' and service_type == 'elasticbeanstalk':
-                pm[0][current_index] = 'ENVIRONMENT_NAME'
-            if prev == 'Role' and service_type == 'rds/aurora':
-                pm[0][current_index] = 'ROLE'
-            if prev == 'DBClusterIdentifier' and service_type == 'rds/aurora':
-                pm[0][current_index] = 'DB_CLUSTER_IDENTIFIER'
-            if prev == 'DbClusterIdentifier' and service_type == 'rds/aurora':
-                pm[0][current_index] = 'DB_CLUSTER_IDENTIFIER'
+            if service_type == 'elasticbeanstalk':
+                if prev == 'AutoScalingGroupName':
+                    pm[0][current_index] = 'AUTO_SCALING_GROUP_NAME'
+                if prev == 'EnvironmentName':
+                    pm[0][current_index] = 'ENVIRONMENT_NAME'
+                if prev == 'InstanceId':
+                    pm[0][current_index] = 'INSTANCE_ID'
+                if prev == 'LoadBalancerName':
+                    pm[0][current_index] = 'LOAD_BALANCER_NAME'
+                if prev == 'LoadBalancer':
+                    pm[0][current_index] = 'LOAD_BALANCER'
+                if prev == 'TargetGroup':
+                    pm[0][current_index] = 'TARGET_GROUP'
+                if type(dimension) == dict and 'label' in dimension \
+                        and re.match(r'^%s-[0-9]{10}$' % name, dimension['label']):
+                    dimension['label'] = 'ENVIRONMENT_NAME'
+
+            if service_type == 'rds/aurora':
+                if prev == 'Role':
+                    pm[0][current_index] = 'ROLE'
+                if prev == 'DBClusterIdentifier':
+                    pm[0][current_index] = 'DB_CLUSTER_IDENTIFIER'
+                if prev == 'DbClusterIdentifier':
+                    pm[0][current_index] = 'DB_CLUSTER_IDENTIFIER'
+
             prev = dimension
             current_index += 1
         dw['properties']['metrics'] = pm
@@ -116,10 +129,12 @@ def run_export_cloudwatch_dashboard_sqs_lambda(name, settings):
 ################################################################################
 print_session('export cloudwatch dashboard')
 
+reset_template_dir()
+
 cw = env['cloudwatch']
 cw_dashboards = cw['DASHBOARDS']
 for cd in cw_dashboards:
-    if cd['TYPE'] == 'sqs,lambda':
+    if cd['TYPE'] == 'sqs,lambda,sms':
         run_export_cloudwatch_dashboard_sqs_lambda(cd['NAME'], cd)
     else:
         run_export_cloudwatch_dashboard(cd['NAME'], cd)
