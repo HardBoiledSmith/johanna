@@ -19,7 +19,8 @@ def run_terminate_cw_alarm(name, settings):
     aws_cli = AWSCli(region)
 
     ################################################################################
-    alarm_name = '%s-%s_%s_%s' % (phase, name, region, settings['METRIC_NAME'])
+    metric_name = settings.get('METRIC_NAME', 'NotSuccessIn5Min')
+    alarm_name = '%s-%s_%s_%s' % (phase, name, region, metric_name)
 
     if settings['TYPE'] == 'sqs':
         sqs_name = settings['QUEUE_NAME']
