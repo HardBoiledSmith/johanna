@@ -15,11 +15,13 @@ aws_cli = AWSCli()
 def terminate_iam_for_rds():
     print_message('delete iam role')
 
+    # noinspection PyShadowingNames
     cc = ['iam', 'detach-role-policy']
     cc += ['--role-name', 'rds-monitoring-role']
     cc += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole']
     aws_cli.run(cc, ignore_error=True)
 
+    # noinspection PyShadowingNames
     cc = ['iam', 'delete-role']
     cc += ['--role-name', 'rds-monitoring-role']
     aws_cli.run(cc, ignore_error=True)
