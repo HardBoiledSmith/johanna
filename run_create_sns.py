@@ -23,6 +23,15 @@ def run_create_sns_topic(name, settings):
     result = aws_cli.run(cmd)
     print('created:', result['TopicArn'])
 
+    if 'EMAIL' in settings:
+        print_message('create sns topic(%s) email subscribe' % name)
+        cmd = ['sns', 'subscribe']
+        cmd += ['--topic-arn', result['TopicArn']]
+        cmd += ['--protocol', 'email']
+        cmd += ['--notification-endpoint', settings['EMAIL']]
+        aws_cli.run(cmd)
+
+
 
 ################################################################################
 #
