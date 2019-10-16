@@ -40,7 +40,6 @@ def run_terminate_sns_tpoic(name, settings):
     aws_cli.run(cmd)
 
 
-
 ################################################################################
 #
 # start

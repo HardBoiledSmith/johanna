@@ -94,9 +94,7 @@ def create_config_set():
                     }
                 })
 
-
         config['EVENT_DESTINATIONS'] = ll
-
 
         if config_set['NAME'] not in exist_config_names:
             cmd = ['ses', 'create-configuration-set',

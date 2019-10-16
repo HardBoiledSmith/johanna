@@ -32,7 +32,6 @@ def run_create_sns_topic(name, settings):
         aws_cli.run(cmd)
 
 
-
 ################################################################################
 #
 # start
