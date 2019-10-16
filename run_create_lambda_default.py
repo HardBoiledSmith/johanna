@@ -31,6 +31,8 @@ def run_create_lambda_default(function_name, settings):
     ################################################################################
     print_message('download template: %s' % git_folder_name)
 
+    subprocess.Popen(['mkdir', '-p', './template']).communicate()
+
     if not os.path.exists('template/%s' % git_folder_name):
         if phase == 'dv':
             git_command = ['git', 'clone', '--depth=1', git_url]
