@@ -24,7 +24,7 @@ def run_create_sns_topic(name, settings):
     print('created:', result['TopicArn'])
 
     if 'EMAIL' in settings:
-        print_message('create sns topic(%s) email subscribe' % name)
+        print_message('create an email subscription for sns topic: %s' % name)
         cmd = ['sns', 'subscribe']
         cmd += ['--topic-arn', result['TopicArn']]
         cmd += ['--protocol', 'email']
