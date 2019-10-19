@@ -61,23 +61,40 @@ def create_config_set():
 
     exist_config_names = [exist_config_set['Name'] for exist_config_set in exist_config_sets]
     for config_set in ses['CONFIGURATION_SETS']:
-        config = {
-            "NAME": config_set['NAME'],
-            "EVENT_DESTINATIONS": [{
-                "Name": config_set['EVENT_DESTINATIONS_NAME'],
-                "Enabled": config_set['EVENT_DESTINATIONS_Enabled'],
-                "MatchingEventTypes": config_set['MATCHING_TYPE'],
-                "CloudWatchDestination": {
-                    "DimensionConfigurations": [
-                        {
-                            "DimensionName": config_set['DIMENSION_CONFIG_NAME'],
-                            "DimensionValueSource": config_set['DIMENSION_CONFIG_VALUE_SOURCE'],
-                            "DefaultDimensionValue": config_set['DIMENSION_CONFIG_VALUE']
-                        }
-                    ]
-                }
-            }]
-        }
+        config = dict()
+        config['NAME'] = config_set['NAME']
+        ll = list()
+        for event_destination in config_set['EVENT_DESTINATIONS']:
+            if event_destination['TYPE'] == 'cloudwatch':
+                ll.append({
+                    "Name": event_destination['NAME'],
+                    "Enabled": event_destination['ENABLED'],
+                    "MatchingEventTypes": event_destination['MATCHING_TYPE'],
+                    "CloudWatchDestination": {
+                        "DimensionConfigurations": [
+                            {
+                                "DimensionName": event_destination['DIMENSION_CONFIG_NAME'],
+                                "DimensionValueSource": event_destination['DIMENSION_CONFIG_VALUE_SOURCE'],
+                                "DefaultDimensionValue": event_destination['DIMENSION_CONFIG_VALUE']
+                            }
+                        ]
+                    }
+                })
+            elif event_destination['TYPE'] == 'sns':
+                sns_topic_name = event_destination['SNS_TOPICS_NAME']
+                region, topic_name = sns_topic_name.split('/')
+                topic_arn = AWSCli(region).get_topic_arn(topic_name)
+
+                ll.append({
+                    "Name": event_destination['NAME'],
+                    "Enabled": event_destination['ENABLED'],
+                    "MatchingEventTypes": event_destination['MATCHING_TYPE'],
+                    "SNSDestination": {
+                        "TopicARN": topic_arn
+                    }
+                })
+
+        config['EVENT_DESTINATIONS'] = ll
 
         if config_set['NAME'] not in exist_config_names:
             cmd = ['ses', 'create-configuration-set',
