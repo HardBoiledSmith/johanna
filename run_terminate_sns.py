@@ -18,12 +18,23 @@ def run_terminate_sns_tpoic(name, settings):
     aws_cli = AWSCli(region)
 
     ################################################################################
-    print_message('terminate sns topic: "%s" in %s' % (name, region))
+    print_message('terminate sns topic subscriptions')
 
     topic_arn = aws_cli.get_topic_arn(name)
 
     if not topic_arn:
         return
+
+    cmd = ['sns', 'list-subscriptions-by-topic']
+    cmd += ['--topic-arn', topic_arn]
+    rr = aws_cli.run(cmd)
+
+    for ss in rr['Subscriptions']:
+        cmd = ['sns', 'unsubscribe']
+        cmd += ['--subscription-arn', ss['SubscriptionArn']]
+        aws_cli.run(cmd)
+
+    print_message('terminate sns topic: "%s" in %s' % (name, region))
 
     cmd = ['sns', 'delete-topic']
     cmd += ['--topic-arn', topic_arn]
@@ -38,6 +49,7 @@ def run_terminate_sns_tpoic(name, settings):
 print_session('terminate sns')
 
 sns_list = env.get('sns', list())
+
 for sns_env in sns_list:
     if sns_env['TYPE'] == 'topic':
         run_terminate_sns_tpoic(sns_env['NAME'], sns_env)
