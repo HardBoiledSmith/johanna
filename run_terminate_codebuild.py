@@ -101,7 +101,7 @@ def run_terminate_github_codebuild(name, settings):
     cmd += ['--project-name', name]
     _aws_cli.run(cmd, ignore_error=True)
 
-    for cc in settings('CRON', list()):
+    for cc in settings.get('CRON', list()):
         rule_name = '%sCronRuleSourceBy%s' % (name, cc['SOURCE_VERSION'].title())
         terminate_cron_event(_aws_cli, rule_name)
 
