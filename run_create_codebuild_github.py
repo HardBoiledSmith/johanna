@@ -15,6 +15,7 @@ def have_parameter_store(settings):
 
 
 def create_iam_for_codebuild(name, settings):
+    aws_default_region = settings.get('AWS_DEFAULT_REGION')
     aws_cli = AWSCli()
 
     nn = name.replace('_', '-')
@@ -71,7 +72,7 @@ def create_iam_for_codebuild(name, settings):
             pp = {
                 'Action': 'ssm:GetParameters',
                 'Effect': 'Allow',
-                'Resource': 'arn:aws:ssm:ap-northeast-2:*:parameter/CodeBuild/*'
+                'Resource': 'arn:aws:ssm:%s:*:parameter/CodeBuild/*' % aws_default_region
             }
             dd['Statement'].append(pp)
 
