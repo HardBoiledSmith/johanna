@@ -111,12 +111,12 @@ def delete_image_builder(image_build_name):
 def wait_state(service, name, state):
     services = {
         'image-builder': {
-            'cmd' : 'describe-image-builders',
-            'name' : 'ImageBuilders'
+            'cmd': 'describe-image-builders',
+            'name': 'ImageBuilders'
         },
         'fleet': {
-            'cmd' : 'describe-fleets',
-            'name' : 'Fleets'
+            'cmd': 'describe-fleets',
+            'name': 'Fleets'
         }
     }
 
