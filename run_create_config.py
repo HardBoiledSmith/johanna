@@ -8,7 +8,6 @@ from os import path
 from shutil import copyfile
 from shutil import rmtree
 from string import Template
-from run_common import check_template_availability
 
 from run_common import AWSCli
 
