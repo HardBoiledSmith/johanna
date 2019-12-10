@@ -517,13 +517,16 @@ def check_template_availability():
         raise Exception()
 
 
-def reset_template_dir():
+def reset_template_dir(git_url=None, name=None, phase=None):
     template_name = env['template']['NAME']
     print_session('reset template: %s' % template_name)
 
-    git_url = env['template']['GIT_URL']
-    name = env['template']['NAME']
-    phase = env['common']['PHASE']
+    if git_url is None:
+        git_url = env['template']['GIT_URL']
+    if name is None:
+        name = env['template']['NAME']
+    if phase is None:
+        phase = env['common']['PHASE']
 
     print_message('cleanup existing template')
 
