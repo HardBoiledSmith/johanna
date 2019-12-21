@@ -27,24 +27,9 @@ def run_create_cloudwatch_alarm_lambda(name, settings):
         print('sns topic: "%s" is not exists in %s' % (settings['SNS_TOPIC_NAME'], alarm_region))
         raise Exception()
 
-    metrics = create_lambda_metrics(name)
-
-    cmd = ['cloudwatch', 'put-metric-alarm']
-    cmd += ['--alarm-actions', topic_arn]
-    cmd += ['--alarm-description', settings['DESCRIPTION']]
-    cmd += ['--alarm-name', alarm_name]
-    cmd += ['--comparison-operator', settings['COMPARISON_OPERATOR']]
-    cmd += ['--datapoints-to-alarm', settings['DATAPOINTS_TO_ALARM']]
-    cmd += ['--evaluation-periods', settings['EVALUATION_PERIODS']]
-    cmd += ['--metrics', json.dumps(metrics)]
-    cmd += ['--threshold', settings['THRESHOLD']]
-    aws_cli.run(cmd)
-
-
-def create_lambda_metrics(lambda_name):
     dimensions = list()
-    dimensions.append({"Name": "FunctionName", "Value": lambda_name})
-    dimensions.append({"Name": "Resource", "Value": lambda_name})
+    dimensions.append({"Name": "FunctionName", "Value": name})
+    dimensions.append({"Name": "Resource", "Value": name})
 
     metrics = list()
     dd = dict()
@@ -61,7 +46,7 @@ def create_lambda_metrics(lambda_name):
     dd['MetricStat']['Metric']['Dimensions'] = dimensions
     dd['MetricStat']['Metric']['MetricName'] = 'Errors'
     dd['MetricStat']['Metric']['Namespace'] = 'AWS/Lambda'
-    dd['MetricStat']['Period'] = 300
+    dd['MetricStat']['Period'] = 60 * 15
     dd['MetricStat']['Stat'] = 'Sum'
     dd['ReturnData'] = False
     metrics.append(dd)
@@ -73,12 +58,21 @@ def create_lambda_metrics(lambda_name):
     dd['MetricStat']['Metric']['Dimensions'] = dimensions
     dd['MetricStat']['Metric']['MetricName'] = 'Invocations'
     dd['MetricStat']['Metric']['Namespace'] = 'AWS/Lambda'
-    dd['MetricStat']['Period'] = 300
+    dd['MetricStat']['Period'] = 60 * 15
     dd['MetricStat']['Stat'] = 'Sum'
     dd['ReturnData'] = False
     metrics.append(dd)
 
-    return metrics
+    cmd = ['cloudwatch', 'put-metric-alarm']
+    cmd += ['--alarm-actions', topic_arn]
+    cmd += ['--alarm-description', settings['DESCRIPTION']]
+    cmd += ['--alarm-name', alarm_name]
+    cmd += ['--comparison-operator', settings['COMPARISON_OPERATOR']]
+    cmd += ['--datapoints-to-alarm', settings['DATAPOINTS_TO_ALARM']]
+    cmd += ['--evaluation-periods', settings['EVALUATION_PERIODS']]
+    cmd += ['--metrics', json.dumps(metrics)]
+    cmd += ['--threshold', settings['THRESHOLD']]
+    aws_cli.run(cmd)
 
 
 def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
