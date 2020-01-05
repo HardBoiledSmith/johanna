@@ -10,35 +10,35 @@ def delete_fleet(fleet_name):
     aws_cli = AWSCli()
     cmd = ['appstream', 'delete-fleet']
     cmd += ['--name', fleet_name]
-    return aws_cli.run(cmd)
+    return aws_cli.run(cmd, ignore_error=True)
 
 
 def stop_fleet(fleet_name):
     aws_cli = AWSCli()
     cmd = ['appstream', 'stop-fleet']
     cmd += ['--name', fleet_name]
-    aws_cli.run(cmd)
+    aws_cli.run(cmd, ignore_error=True)
 
 
 def delete_stack(stack_name):
     aws_cli = AWSCli()
     cmd = ['appstream', 'delete-stack']
     cmd += ['--name', stack_name]
-    return aws_cli.run(cmd)
+    return aws_cli.run(cmd, ignore_error=True)
 
 
 def delete_image(image_name):
     aws_cli = AWSCli()
     cmd = ['appstream', 'delete-image']
     cmd += ['--name', image_name]
-    aws_cli.run(cmd)
+    aws_cli.run(cmd, ignore_error=True)
 
 
 def delete_image_builder(image_build_name):
     aws_cli = AWSCli()
     cmd = ['appstream', 'delete-image-builder']
     cmd += ['--name', image_build_name]
-    aws_cli.run(cmd)
+    aws_cli.run(cmd, ignore_error=True)
 
 
 def stop_image_builder(name):
