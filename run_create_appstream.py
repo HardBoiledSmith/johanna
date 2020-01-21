@@ -48,7 +48,7 @@ def create_fleet(name, image_name, subnet_id, security_group_id):
     aws_cli.run(cmd)
 
 
-def create_stack(stack_name):
+def create_stack(stack_name, redirect_url):
     name = stack_name
 
     storage_connectors = 'ConnectorType=HOMEFOLDERS,'
@@ -67,6 +67,7 @@ def create_stack(stack_name):
     # cmd += ['--storage-connectors', storage_connectors]
     cmd += ['--user-settings', user_settings]
     cmd += ['--application-settings', application_settings]
+    cmd += ['--redirect-url', redirect_url]
     aws_cli.run(cmd)
 
 
@@ -199,11 +200,12 @@ if __name__ == "__main__":
 
         print_session('create appstream image builder')
 
-        stack_name = env_s['NAME']
         fleet_name = env_s['FLEET_NAME']
         image_name = env_s['IMAGE_NAME']
+        redirect_url = env_s['REDIRECT_URL']
+        stack_name = env_s['NAME']
 
         create_fleet(fleet_name, image_name, subnet_id, security_group_id)
-        create_stack(stack_name)
+        create_stack(stack_name, redirect_url)
         wait_state('fleet', fleet_name, 'RUNNING')
         associate_fleet(stack_name, fleet_name)

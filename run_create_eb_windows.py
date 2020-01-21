@@ -347,7 +347,7 @@ def run_create_eb_windows(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.3.1 running IIS 10.0']
+    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.4.0 running IIS 10.0']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
@@ -357,7 +357,7 @@ def run_create_eb_windows(name, settings):
         cmd = ['elasticbeanstalk', 'describe-environments']
         cmd += ['--application-name', eb_application_name]
         cmd += ['--environment-name', eb_environment_name]
-        result = aws_cli.run(cmd)
+        result = aws_cli.run(cmd)\
 
         ee = result['Environments'][0]
         print(json.dumps(ee, sort_keys=True, indent=4))
