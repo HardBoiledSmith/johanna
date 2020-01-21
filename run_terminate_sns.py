@@ -32,7 +32,7 @@ def run_terminate_sns_tpoic(name, settings):
     for ss in rr['Subscriptions']:
         cmd = ['sns', 'unsubscribe']
         cmd += ['--subscription-arn', ss['SubscriptionArn']]
-        aws_cli.run(cmd)
+        aws_cli.run(cmd, ignore_error=True)
 
     print_message('terminate sns topic: "%s" in %s' % (name, region))
 
