@@ -253,20 +253,3 @@ if __name__ == "__main__":
         create_stack(stack_name, redirect_url)
         wait_state('fleet', fleet_name, 'RUNNING')
         associate_fleet(stack_name, fleet_name)
-        role_name = 'AWSApplicationAutoscalingAppStreamFleetPolicy'
-
-        aws_cli = AWSCli()
-        if not aws_cli.get_iam_role(role_name):
-            print_message('create iam role')
-
-            cc = ['iam', 'create-role']
-            cc += ['--role-name', role_name]
-            cc += ['--assume-role-policy-document', 'file://aws_iam/aws-appstream-role.json']
-            aws_cli.run(cc)
-
-            cc = ['iam', 'attach-role-policy']
-            cc += ['--role-name', role_name]
-            cc += ['--policy-arn',
-                   'arn:aws:iam::aws:policy/aws-service-role/AWSApplicationAutoscalingAppStreamFleetPolicy']
-            aws_cli.run(cc)
-            sleep_required = True
