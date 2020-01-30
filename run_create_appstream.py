@@ -204,7 +204,7 @@ if __name__ == "__main__":
 
         fleet_name = env_s['FLEET_NAME']
         image_name = env_s['IMAGE_NAME']
-        redirect_url = env_s['REDIRECT_URL']
+        redirect_url = env_s.get('REDIRECT_URL', None)
         stack_name = env_s['NAME']
         embed_host_domains = env_s['EMBED_HOST_DOMAINS']
 
