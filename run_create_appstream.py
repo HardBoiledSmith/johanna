@@ -91,7 +91,7 @@ def create_fleet(name, image_name, subnet_id, security_group_id):
     aws_cli.run(cmd)
 
 
-def create_stack(stack_name, redirect_url):
+def create_stack(stack_name, redirect_url, embed_host_domains):
     name = stack_name
 
     storage_connectors = 'ConnectorType=HOMEFOLDERS,'
@@ -110,7 +110,9 @@ def create_stack(stack_name, redirect_url):
     # cmd += ['--storage-connectors', storage_connectors]
     cmd += ['--user-settings', user_settings]
     cmd += ['--application-settings', application_settings]
-    cmd += ['--redirect-url', redirect_url]
+    if redirect_url:
+        cmd += ['--redirect-url', redirect_url]
+    cmd += ['--embed-host-domains', embed_host_domains]
     aws_cli.run(cmd)
 
 
@@ -246,10 +248,11 @@ if __name__ == "__main__":
 
         fleet_name = env_s['FLEET_NAME']
         image_name = env_s['IMAGE_NAME']
-        redirect_url = env_s['REDIRECT_URL']
+        redirect_url = env_s.get('REDIRECT_URL', None)
         stack_name = env_s['NAME']
+        embed_host_domains = env_s['EMBED_HOST_DOMAINS']
 
         create_fleet(fleet_name, image_name, subnet_id, security_group_id)
-        create_stack(stack_name, redirect_url)
+        create_stack(stack_name, redirect_url, embed_host_domains)
         wait_state('fleet', fleet_name, 'RUNNING')
         associate_fleet(stack_name, fleet_name)
