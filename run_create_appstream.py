@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
+import time
 from time import sleep
 
 from env import env
 from run_common import AWSCli
+from run_common import print_message
 from run_common import print_session
 
 
@@ -12,6 +14,47 @@ from run_common import print_session
 # start
 #
 ################################################################################
+def create_iam_for_appstream():
+    aws_cli = AWSCli()
+    sleep_required = False
+
+    role_name = 'AmazonAppStreamServiceAccess'
+    if not aws_cli.get_iam_role(role_name):
+        print_message('create iam role')
+
+        cc = ['iam', 'create-role']
+        cc += ['--role-name', role_name]
+        cc += ['--path', '/service-role/']
+        cc += ['--assume-role-policy-document', 'file://aws_iam/aws-appstream-role.json']
+        aws_cli.run(cc)
+
+        cc = ['iam', 'attach-role-policy']
+        cc += ['--role-name', role_name]
+        cc += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AmazonAppStreamServiceAccess']
+        aws_cli.run(cc)
+
+        sleep_required = True
+
+    role_name = 'ApplicationAutoScalingForAmazonAppStreamAccess'
+    if not aws_cli.get_iam_role(role_name):
+        print_message('create iam role')
+
+        cc = ['iam', 'create-role']
+        cc += ['--role-name', role_name]
+        cc += ['--assume-role-policy-document', 'file://aws_iam/aws-appstream-role.json']
+        aws_cli.run(cc)
+
+        cc = ['iam', 'attach-role-policy']
+        cc += ['--role-name', role_name]
+        cc += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/ApplicationAutoScalingForAmazonAppStreamAccess']
+        aws_cli.run(cc)
+        sleep_required = True
+
+    if sleep_required:
+        print_message('wait 30 seconds to let iam role and policy propagated to all regions...')
+        time.sleep(30)
+
+
 def create_image_builder(name, subnet_id, security_group_id, image_name):
     vpc_config = 'SubnetIds=%s,SecurityGroupIds=%s' % (subnet_id, security_group_id)
 
@@ -182,6 +225,7 @@ if __name__ == "__main__":
     if len(args) > 1:
         target_name = args[1]
 
+    create_iam_for_appstream()
     for env_ib in env['appstream']['IMAGE_BUILDS']:
         if target_name and env_ib['NAME'] != target_name:
             continue
