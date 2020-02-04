@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
+import time
 from time import sleep
 
 from env import env
 from run_common import AWSCli
+from run_common import print_message
 from run_common import print_session
 
 
@@ -12,6 +14,47 @@ from run_common import print_session
 # start
 #
 ################################################################################
+def create_iam_for_appstream():
+    aws_cli = AWSCli()
+    sleep_required = False
+
+    role_name = 'AmazonAppStreamServiceAccess'
+    if not aws_cli.get_iam_role(role_name):
+        print_message('create iam role')
+
+        cc = ['iam', 'create-role']
+        cc += ['--role-name', role_name]
+        cc += ['--path', '/service-role/']
+        cc += ['--assume-role-policy-document', 'file://aws_iam/aws-appstream-role.json']
+        aws_cli.run(cc)
+
+        cc = ['iam', 'attach-role-policy']
+        cc += ['--role-name', role_name]
+        cc += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AmazonAppStreamServiceAccess']
+        aws_cli.run(cc)
+
+        sleep_required = True
+
+    role_name = 'ApplicationAutoScalingForAmazonAppStreamAccess'
+    if not aws_cli.get_iam_role(role_name):
+        print_message('create iam role')
+
+        cc = ['iam', 'create-role']
+        cc += ['--role-name', role_name]
+        cc += ['--assume-role-policy-document', 'file://aws_iam/aws-appstream-role.json']
+        aws_cli.run(cc)
+
+        cc = ['iam', 'attach-role-policy']
+        cc += ['--role-name', role_name]
+        cc += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/ApplicationAutoScalingForAmazonAppStreamAccess']
+        aws_cli.run(cc)
+        sleep_required = True
+
+    if sleep_required:
+        print_message('wait 30 seconds to let iam role and policy propagated to all regions...')
+        time.sleep(30)
+
+
 def create_image_builder(name, subnet_id, security_group_id, image_name):
     vpc_config = 'SubnetIds=%s,SecurityGroupIds=%s' % (subnet_id, security_group_id)
 
@@ -48,7 +91,7 @@ def create_fleet(name, image_name, subnet_id, security_group_id):
     aws_cli.run(cmd)
 
 
-def create_stack(stack_name, redirect_url):
+def create_stack(stack_name, redirect_url, embed_host_domains):
     name = stack_name
 
     storage_connectors = 'ConnectorType=HOMEFOLDERS,'
@@ -67,7 +110,9 @@ def create_stack(stack_name, redirect_url):
     # cmd += ['--storage-connectors', storage_connectors]
     cmd += ['--user-settings', user_settings]
     cmd += ['--application-settings', application_settings]
-    cmd += ['--redirect-url', redirect_url]
+    if redirect_url:
+        cmd += ['--redirect-url', redirect_url]
+    cmd += ['--embed-host-domains', embed_host_domains]
     aws_cli.run(cmd)
 
 
@@ -182,6 +227,7 @@ if __name__ == "__main__":
     if len(args) > 1:
         target_name = args[1]
 
+    create_iam_for_appstream()
     for env_ib in env['appstream']['IMAGE_BUILDS']:
         if target_name and env_ib['NAME'] != target_name:
             continue
@@ -202,10 +248,11 @@ if __name__ == "__main__":
 
         fleet_name = env_s['FLEET_NAME']
         image_name = env_s['IMAGE_NAME']
-        redirect_url = env_s['REDIRECT_URL']
+        redirect_url = env_s.get('REDIRECT_URL', None)
         stack_name = env_s['NAME']
+        embed_host_domains = env_s['EMBED_HOST_DOMAINS']
 
         create_fleet(fleet_name, image_name, subnet_id, security_group_id)
-        create_stack(stack_name, redirect_url)
+        create_stack(stack_name, redirect_url, embed_host_domains)
         wait_state('fleet', fleet_name, 'RUNNING')
         associate_fleet(stack_name, fleet_name)
