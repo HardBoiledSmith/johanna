@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
+import time
 from time import sleep
 
 from env import env
 from run_common import AWSCli
+from run_common import print_message
 from run_common import print_session
 
 
@@ -12,8 +14,49 @@ from run_common import print_session
 # start
 #
 ################################################################################
-def create_image_builder(name, subnet_id, security_group_id, image_name):
-    vpc_config = 'SubnetIds=%s,SecurityGroupIds=%s' % (subnet_id, security_group_id)
+def create_iam_for_appstream():
+    aws_cli = AWSCli()
+    sleep_required = False
+
+    role_name = 'AmazonAppStreamServiceAccess'
+    if not aws_cli.get_iam_role(role_name):
+        print_message('create iam role: %s' % role_name)
+
+        cc = ['iam', 'create-role']
+        cc += ['--role-name', role_name]
+        cc += ['--path', '/service-role/']
+        cc += ['--assume-role-policy-document', 'file://aws_iam/aws-appstream-role.json']
+        aws_cli.run(cc)
+
+        cc = ['iam', 'attach-role-policy']
+        cc += ['--role-name', role_name]
+        cc += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AmazonAppStreamServiceAccess']
+        aws_cli.run(cc)
+
+        sleep_required = True
+
+    role_name = 'ApplicationAutoScalingForAmazonAppStreamAccess'
+    if not aws_cli.get_iam_role(role_name):
+        print_message('create iam role: %s' % role_name)
+
+        cc = ['iam', 'create-role']
+        cc += ['--role-name', role_name]
+        cc += ['--assume-role-policy-document', 'file://aws_iam/aws-appstream-role.json']
+        aws_cli.run(cc)
+
+        cc = ['iam', 'attach-role-policy']
+        cc += ['--role-name', role_name]
+        cc += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/ApplicationAutoScalingForAmazonAppStreamAccess']
+        aws_cli.run(cc)
+        sleep_required = True
+
+    if sleep_required:
+        print_message('wait 30 seconds to let iam role and policy propagated to all regions...')
+        time.sleep(30)
+
+
+def create_image_builder(name, subnet_ids, security_group_id, image_name):
+    vpc_config = 'SubnetIds=%s,SecurityGroupIds=%s' % (subnet_ids, security_group_id)
 
     aws_cli = AWSCli()
     cmd = ['appstream', 'create-image-builder']
@@ -26,15 +69,15 @@ def create_image_builder(name, subnet_id, security_group_id, image_name):
     aws_cli.run(cmd)
 
 
-def create_fleet(name, image_name, subnet_id, security_group_id):
-    vpc_config = 'SubnetIds=%s,SecurityGroupIds=%s' % (subnet_id, security_group_id)
+def create_fleet(name, image_name, subnet_ids, security_group_id):
+    vpc_config = 'SubnetIds=%s,SecurityGroupIds=%s' % (subnet_ids, security_group_id)
 
     aws_cli = AWSCli()
     cmd = ['appstream', 'create-fleet']
     cmd += ['--name', name]
     cmd += ['--instance-type', 'stream.standard.medium']
     cmd += ['--fleet-type', 'ON_DEMAND']
-    cmd += ['--compute-capacity', 'DesiredInstances=1']
+    cmd += ['--compute-capacity', 'DesiredInstances=3']
     cmd += ['--image-name', image_name]
     cmd += ['--vpc-config', vpc_config]
     cmd += ['--enable-default-internet-acces']
@@ -48,7 +91,7 @@ def create_fleet(name, image_name, subnet_id, security_group_id):
     aws_cli.run(cmd)
 
 
-def create_stack(stack_name, redirect_url):
+def create_stack(stack_name, redirect_url, embed_host_domains):
     name = stack_name
 
     storage_connectors = 'ConnectorType=HOMEFOLDERS,'
@@ -67,7 +110,9 @@ def create_stack(stack_name, redirect_url):
     # cmd += ['--storage-connectors', storage_connectors]
     cmd += ['--user-settings', user_settings]
     cmd += ['--application-settings', application_settings]
-    cmd += ['--redirect-url', redirect_url]
+    if redirect_url:
+        cmd += ['--redirect-url', redirect_url]
+    cmd += ['--embed-host-domains', embed_host_domains]
     aws_cli.run(cmd)
 
 
@@ -150,23 +195,41 @@ def get_subnet_and_security_group_id():
     aws_cli = AWSCli()
     cidr_subnet = aws_cli.cidr_subnet
 
-    subnet_id = None
+    print_message('get vpc id')
+
+    rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
+
+    if not eb_vpc_id:
+        print('ERROR!!! No VPC found')
+        raise Exception()
+
+    print_message('get subnet id')
+
+    subnet_id_1 = None
+    subnet_id_2 = None
     cmd = ['ec2', 'describe-subnets']
     rr = aws_cli.run(cmd)
     for r in rr['Subnets']:
+        if r['VpcId'] != eb_vpc_id:
+            continue
         if r['CidrBlock'] == cidr_subnet['eb']['public_1']:
-            subnet_id = r['SubnetId']
-            break
+            subnet_id_1 = r['SubnetId']
+        if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
+            subnet_id_2 = r['SubnetId']
+
+    print_message('get security group id')
 
     security_group_id = None
     cmd = ['ec2', 'describe-security-groups']
     rr = aws_cli.run(cmd)
     for r in rr['SecurityGroups']:
-        if r['GroupName'] == '%seb_private' % name_prefix:
+        if r['VpcId'] != eb_vpc_id:
+            continue
+        if r['GroupName'] == '%seb_public' % name_prefix:
             security_group_id = r['GroupId']
             break
 
-    return subnet_id, security_group_id
+    return [subnet_id_1, subnet_id_2], security_group_id
 
 
 if __name__ == "__main__":
@@ -177,11 +240,12 @@ if __name__ == "__main__":
     target_name = None
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = '%s_' % service_name if service_name else ''
-    subnet_id, security_group_id = get_subnet_and_security_group_id()
+    subnet_ids, security_group_id = get_subnet_and_security_group_id()
 
     if len(args) > 1:
         target_name = args[1]
 
+    create_iam_for_appstream()
     for env_ib in env['appstream']['IMAGE_BUILDS']:
         if target_name and env_ib['NAME'] != target_name:
             continue
@@ -191,7 +255,7 @@ if __name__ == "__main__":
         name = env_ib['NAME']
         image_name = env_ib['IMAGE_NAME']
 
-        create_image_builder(name, subnet_id, security_group_id, image_name)
+        create_image_builder(name, subnet_ids[0], security_group_id, image_name)
         wait_state('image-builder', name, 'RUNNING')
 
     for env_s in env['appstream']['STACK']:
@@ -202,10 +266,11 @@ if __name__ == "__main__":
 
         fleet_name = env_s['FLEET_NAME']
         image_name = env_s['IMAGE_NAME']
-        redirect_url = env_s['REDIRECT_URL']
+        redirect_url = env_s.get('REDIRECT_URL', None)
         stack_name = env_s['NAME']
+        embed_host_domains = env_s['EMBED_HOST_DOMAINS']
 
-        create_fleet(fleet_name, image_name, subnet_id, security_group_id)
-        create_stack(stack_name, redirect_url)
+        create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id)
+        create_stack(stack_name, redirect_url, embed_host_domains)
         wait_state('fleet', fleet_name, 'RUNNING')
         associate_fleet(stack_name, fleet_name)
