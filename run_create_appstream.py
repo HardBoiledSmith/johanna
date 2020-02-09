@@ -112,7 +112,7 @@ def create_stack(stack_name, redirect_url, embed_host_domains):
     cmd += ['--application-settings', application_settings]
     if redirect_url:
         cmd += ['--redirect-url', redirect_url]
-    #cmd += ['--embed-host-domains', embed_host_domains]
+    cmd += ['--embed-host-domains', embed_host_domains]
     aws_cli.run(cmd)
 
 
