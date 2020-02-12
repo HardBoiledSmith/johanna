@@ -52,7 +52,7 @@ def disable_cloudfront(id):
     rr = aws_cli.run(cmd)
     e_tag = rr['ETag']
 
-    if rr['Distribution']['DistributionConfig']['Enabled'] == False:
+    if not rr['Distribution']['DistributionConfig']['Enabled']:
         return
 
     aws_cli = AWSCli()
@@ -106,8 +106,8 @@ if __name__ == "__main__":
     args = parse_args()
     domain_name = args.cname
 
-    cc = re.split('-|\.', domain_name)
-    if not 'dv' in cc:
+    cc = re.split('[-.]', domain_name)
+    if 'dv' not in cc:
         print('only can delete dv')
         exit(1)
 

@@ -76,8 +76,8 @@ if __name__ == "__main__":
     hosted_zone_name = args.hosted_zone_name
     name = args.name
 
-    cc = re.split('-|\.', name)
-    if not 'dv' in cc:
+    cc = re.split('[-.]', name)
+    if 'dv' not in cc:
         print('only can delete dv')
         exit(1)
 
