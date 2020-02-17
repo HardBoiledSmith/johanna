@@ -69,7 +69,7 @@ def create_image_builder(name, subnet_ids, security_group_id, image_name):
     aws_cli.run(cmd)
 
 
-def create_fleet(name, image_name, subnet_ids, security_group_id):
+def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instances):
     vpc_config = 'SubnetIds=%s,SecurityGroupIds=%s' % (subnet_ids, security_group_id)
 
     aws_cli = AWSCli()
@@ -77,7 +77,7 @@ def create_fleet(name, image_name, subnet_ids, security_group_id):
     cmd += ['--name', name]
     cmd += ['--instance-type', 'stream.standard.medium']
     cmd += ['--fleet-type', 'ON_DEMAND']
-    cmd += ['--compute-capacity', 'DesiredInstances=3']
+    cmd += ['--compute-capacity', 'DesiredInstances=%d' % desired_instances]
     cmd += ['--image-name', image_name]
     cmd += ['--vpc-config', vpc_config]
     cmd += ['--enable-default-internet-acces']
@@ -269,8 +269,9 @@ if __name__ == "__main__":
         redirect_url = env_s.get('REDIRECT_URL', None)
         stack_name = env_s['NAME']
         embed_host_domains = env_s['EMBED_HOST_DOMAINS']
+        desired_instances = env_s.get('DESIRED_INSTANCES', 1)
 
-        create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id)
+        create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances)
         create_stack(stack_name, redirect_url, embed_host_domains)
         wait_state('fleet', fleet_name, 'RUNNING')
         associate_fleet(stack_name, fleet_name)
