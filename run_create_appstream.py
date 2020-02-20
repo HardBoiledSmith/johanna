@@ -64,7 +64,7 @@ def create_image_builder(name, subnet_ids, security_group_id, image_name):
     cmd += ['--instance-type', 'stream.standard.medium']
     cmd += ['--image-name', image_name]
     cmd += ['--vpc-config', vpc_config]
-    cmd += ['--enable-default-internet-acces']
+    cmd += ['--no-enable-default-internet-access']
 
     aws_cli.run(cmd)
 
@@ -80,7 +80,7 @@ def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instan
     cmd += ['--compute-capacity', 'DesiredInstances=%d' % desired_instances]
     cmd += ['--image-name', image_name]
     cmd += ['--vpc-config', vpc_config]
-    cmd += ['--enable-default-internet-acces']
+    cmd += ['--no-enable-default-internet-access']
 
     aws_cli.run(cmd)
 
@@ -212,9 +212,9 @@ def get_subnet_and_security_group_id():
     for r in rr['Subnets']:
         if r['VpcId'] != eb_vpc_id:
             continue
-        if r['CidrBlock'] == cidr_subnet['eb']['public_1']:
+        if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
             subnet_id_1 = r['SubnetId']
-        if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
+        if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
             subnet_id_2 = r['SubnetId']
 
     print_message('get security group id')
@@ -225,7 +225,7 @@ def get_subnet_and_security_group_id():
     for r in rr['SecurityGroups']:
         if r['VpcId'] != eb_vpc_id:
             continue
-        if r['GroupName'] == '%seb_public' % name_prefix:
+        if r['GroupName'] == '%seb_private' % name_prefix:
             security_group_id = r['GroupId']
             break
 
