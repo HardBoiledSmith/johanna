@@ -7,13 +7,6 @@ from run_common import AWSCli
 from run_common import print_message
 
 
-def delete_fleet(fleet_name):
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'delete-fleet']
-    cmd += ['--name', fleet_name]
-    return aws_cli.run(cmd, ignore_error=True)
-
-
 def terminate_iam_for_appstream():
     aws_cli = AWSCli()
     role_name = 'AmazonAppStreamServiceAccess'
@@ -50,41 +43,18 @@ def stop_fleet(fleet_name):
     aws_cli.run(cmd, ignore_error=True)
 
 
+def delete_fleet(fleet_name):
+    aws_cli = AWSCli()
+    cmd = ['appstream', 'delete-fleet']
+    cmd += ['--name', fleet_name]
+    return aws_cli.run(cmd, ignore_error=True)
+
+
 def delete_stack(stack_name):
     aws_cli = AWSCli()
     cmd = ['appstream', 'delete-stack']
     cmd += ['--name', stack_name]
     return aws_cli.run(cmd, ignore_error=True)
-
-
-def delete_image(image_name):
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'delete-image']
-    cmd += ['--name', image_name]
-    aws_cli.run(cmd, ignore_error=True)
-
-
-def delete_image_builder(image_build_name):
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'delete-image-builder']
-    cmd += ['--name', image_build_name]
-    aws_cli.run(cmd, ignore_error=True)
-
-
-def stop_image_builder(name):
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'stop-image-builder']
-    cmd += ['--name', name]
-    aws_cli.run(cmd, ignore_error=True)
-
-
-def exist_image_builder(name):
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'describe-image-builders']
-    cmd += ['--name', name]
-
-    rr = aws_cli.run(cmd, ignore_error=True)
-    return bool(rr)
 
 
 def disassociate_fleet(fleet_name, stack_name):
@@ -150,18 +120,6 @@ if __name__ == "__main__":
 
     if len(args) > 1:
         target_name = args[1]
-
-    for env_ib in env['appstream']['IMAGE_BUILDS']:
-        image_builder_name = env_ib['NAME']
-        if target_name and image_builder_name != target_name:
-            continue
-
-        if not exist_image_builder(image_builder_name):
-            continue
-
-        stop_image_builder(image_builder_name)
-        wait_state('image-builder', image_builder_name, 'STOPPED')
-        delete_image_builder(image_builder_name)
 
     for env_s in env['appstream']['STACK']:
         if target_name and env_s['NAME'] != target_name:
