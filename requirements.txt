@@ -1,2 +1,2 @@
-awscli==1.16.290
-colorama==0.4.1
+awscli==1.18.13
+colorama==0.4.3
