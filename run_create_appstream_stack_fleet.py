@@ -55,20 +55,6 @@ def create_iam_for_appstream():
         time.sleep(30)
 
 
-def create_image_builder(name, subnet_ids, security_group_id, image_name):
-    vpc_config = 'SubnetIds=%s,SecurityGroupIds=%s' % (subnet_ids, security_group_id)
-
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'create-image-builder']
-    cmd += ['--name', name]
-    cmd += ['--instance-type', 'stream.standard.medium']
-    cmd += ['--image-name', image_name]
-    cmd += ['--vpc-config', vpc_config]
-    cmd += ['--enable-default-internet-acces']
-
-    aws_cli.run(cmd)
-
-
 def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instances):
     vpc_config = 'SubnetIds=%s,SecurityGroupIds=%s' % (subnet_ids, security_group_id)
 
@@ -80,7 +66,7 @@ def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instan
     cmd += ['--compute-capacity', 'DesiredInstances=%d' % desired_instances]
     cmd += ['--image-name', image_name]
     cmd += ['--vpc-config', vpc_config]
-    cmd += ['--enable-default-internet-acces']
+    cmd += ['--no-enable-default-internet-access']
 
     aws_cli.run(cmd)
 
@@ -122,36 +108,6 @@ def associate_fleet(stack_name, fleet_name):
     cmd += ['--fleet-name', fleet_name]
     cmd += ['--stack-name', stack_name]
     return aws_cli.run(cmd)
-
-
-def delete_fleet(fleet_name):
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'describe-fleets']
-    cmd += ['--names', fleet_name]
-    rr = aws_cli.run(cmd)
-
-    while (rr['Fleets'][0]['State'] != 'STOPPED'):
-        print(rr['Fleets'][0]['State'])
-        rr = aws_cli.run(cmd)
-        sleep(30)
-
-    cmd = ['appstream', 'delete-fleet']
-    cmd += ['--name', fleet_name]
-    return aws_cli.run(cmd)
-
-
-def delete_image(image_name):
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'delete-image']
-    cmd += ['--name', image_name]
-    aws_cli.run(cmd)
-
-
-def delete_image_builder(image_build_name):
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'delete-image-builder']
-    cmd += ['--name', image_build_name]
-    aws_cli.run(cmd)
 
 
 def wait_state(service, name, state):
@@ -212,9 +168,9 @@ def get_subnet_and_security_group_id():
     for r in rr['Subnets']:
         if r['VpcId'] != eb_vpc_id:
             continue
-        if r['CidrBlock'] == cidr_subnet['eb']['public_1']:
+        if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
             subnet_id_1 = r['SubnetId']
-        if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
+        if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
             subnet_id_2 = r['SubnetId']
 
     print_message('get security group id')
@@ -225,7 +181,7 @@ def get_subnet_and_security_group_id():
     for r in rr['SecurityGroups']:
         if r['VpcId'] != eb_vpc_id:
             continue
-        if r['GroupName'] == '%seb_public' % name_prefix:
+        if r['GroupName'] == '%seb_private' % name_prefix:
             security_group_id = r['GroupId']
             break
 
@@ -246,18 +202,6 @@ if __name__ == "__main__":
         target_name = args[1]
 
     create_iam_for_appstream()
-    for env_ib in env['appstream']['IMAGE_BUILDS']:
-        if target_name and env_ib['NAME'] != target_name:
-            continue
-
-        print_session('create appstream image builder')
-
-        name = env_ib['NAME']
-        image_name = env_ib['IMAGE_NAME']
-
-        create_image_builder(name, subnet_ids[0], security_group_id, image_name)
-        wait_state('image-builder', name, 'RUNNING')
-
     for env_s in env['appstream']['STACK']:
         if target_name and env_s['NAME'] != target_name:
             continue
