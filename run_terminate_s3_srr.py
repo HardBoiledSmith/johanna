@@ -1,47 +1,41 @@
+#!/usr/bin/env python3
+from argparse import ArgumentParser
+
 from run_common import AWSCli
+from run_common import _confirm_phase
 from run_common import print_message
 
 
-def run_terminate_s3_replication():
-    aws_cli = AWSCli()  # 파라메터 방법에 대해 설명 요청 후 해당 세팅으로 변경.
+def parse_args():
+    parser = ArgumentParser()
+    parser.add_argument('-i', '--origin_bucket_account_id', type=str, required=True, help='origin bucket account id')
+    parser.add_argument('-o', '--origin_bucket_name', type=str, required=True, help='origin bucket name')
+    parser.add_argument('-r', '--replication_bucket_name', type=str, required=True, help='replication bucket name')
+    parser.add_argument('-a', '--replication_aws_access_key', type=str, required=True,
+                        help='Replication bucket AWS ACCESS KEY ID')
+    parser.add_argument('-s', '--replication_aws_secret_key', type=str, required=True,
+                        help='Replication bucket AWS SECRET ACCESS KEY')
+    parser.add_argument('-p', '--srr_policy_name', type=str, required=True, help='AWS_SECRET_ACCESS_KEY')
+    parser.add_argument('-n', '--srr_role_name', type=str, required=True, help='AWS_SECRET_ACCESS_KEY')
 
-    replication_bucket_name = ''  # please input replication bucket name
+    args = parser.parse_args()
 
-    cmd = ['s3api', 'put-bucket-versioning']
-    cmd += ['--bucket', replication_bucket_name]
-    cmd += ['--versioning-configuration', 'Status=Suspended']
-    aws_cli.run(cmd, ignore_error=False)
+    _confirm_phase()
 
-    cmd = ['s3api', 'list-object-versions']
-    cmd += ['--bucket', replication_bucket_name]
-    rr = aws_cli.run(cmd, ignore_error=False)
-
-    delete_list = dict()
-    for r in rr['Versions']:
-        delete_list[r['Key']] = r['VersionId']
-
-    for ll in delete_list:
-        cmd = ['s3api', 'delete-object']
-        cmd += ['--bucket', replication_bucket_name]
-        cmd += ['--key', ll]
-        cmd += ['--version-id', delete_list[ll]]
-        aws_cli.run(cmd, ignore_error=False)
-
-    cmd = ['s3api', 'delete-bucket']
-    cmd += ['--bucket', replication_bucket_name]
-    aws_cli.run(cmd, ignore_error=False)
+    return args
 
 
-def run_terminate_s3_origin_srr():
+def run_terminate_s3_origin_srr(args):
     aws_cli = AWSCli()
 
     ################################################################################
     print_message('origin buket delete policy')
 
-    srr_policy_name = ''  # please input you want policy name
-    srr_role_name = ''  # please input you want role name
-    origin_bucket_name = ''  # please input origin bucket name
-    origin_bucket_account_id = ''  # please input origin bucket account id
+    origin_bucket_account_id = args.origin_bucket_account_id
+    origin_bucket_name = args.origin_bucket_name
+    replication_bucket_name = args.replication_bucket_name
+    srr_policy_name = args.srr_policy_name
+    srr_role_name = args.srr_role_name
 
     cmd = ['iam', 'detach-role-policy']
     cmd += ['--role-name', srr_role_name]
@@ -65,25 +59,15 @@ def run_terminate_s3_origin_srr():
     cmd += ['--versioning-configuration', 'Status=Suspended']
     aws_cli.run(cmd, ignore_error=False)
 
-    cmd = ['s3api', 'list-object-versions']
-    cmd += ['--bucket', origin_bucket_name]
-    rr = aws_cli.run(cmd, ignore_error=False)
+    aws_cli = AWSCli(aws_access_key=args.replication_aws_access_key,
+                     aws_secret_access_key=args.replication_aws_secret_key)
 
-    delete_list = dict()
-    for r in rr['Versions']:
-        delete_list[r['Key']] = r['VersionId']
-
-    for ll in delete_list:
-        cmd = ['s3api', 'delete-object']
-        cmd += ['--bucket', origin_bucket_name]
-        cmd += ['--key', ll]
-        cmd += ['--version-id', delete_list[ll]]
-        aws_cli.run(cmd, ignore_error=False)
-
-    cmd = ['s3api', 'delete-bucket']
-    cmd += ['--bucket', origin_bucket_name]
+    cmd = ['s3api', 'delete-bucket-policy']
+    cmd += ['--bucket', replication_bucket_name]
     aws_cli.run(cmd, ignore_error=False)
 
 
-run_terminate_s3_origin_srr()
-run_terminate_s3_replication()
+if __name__ == "__main__":
+    args = parse_args()
+
+    run_terminate_s3_origin_srr(args)

@@ -55,15 +55,19 @@ class AWSCli:
     cidr_subnet['eb']['public_1'] = env['common']['AWS_SUBNET_EB_PUBLIC_1']
     cidr_subnet['eb']['public_2'] = env['common']['AWS_SUBNET_EB_PUBLIC_2']
 
-    def __init__(self, aws_default_region=None):
+    def __init__(self, aws_default_region=None, aws_access_key=None, aws_secret_access_key=None):
         if not env['aws'].get('AWS_ACCESS_KEY_ID') or \
                 not env['aws'].get('AWS_SECRET_ACCESS_KEY') or \
                 not env['aws'].get('AWS_DEFAULT_REGION'):
             raise Exception()
 
         self.env = dict(os.environ)
-        self.env['AWS_ACCESS_KEY_ID'] = env['aws']['AWS_ACCESS_KEY_ID']
-        self.env['AWS_SECRET_ACCESS_KEY'] = env['aws']['AWS_SECRET_ACCESS_KEY']
+        self.env['AWS_ACCESS_KEY_ID'] = env['aws']['AWS_ACCESS_KEY_ID'] \
+            if not aws_access_key \
+            else aws_access_key
+        self.env['AWS_SECRET_ACCESS_KEY'] = env['aws']['AWS_SECRET_ACCESS_KEY'] \
+            if not aws_secret_access_key \
+            else aws_secret_access_key
         self.env['AWS_DEFAULT_REGION'] = env['aws']['AWS_DEFAULT_REGION'] \
             if not aws_default_region \
             else aws_default_region

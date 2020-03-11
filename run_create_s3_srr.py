@@ -1,24 +1,46 @@
+#!/usr/bin/env python3
 import json
+from argparse import ArgumentParser
 
 from run_common import AWSCli
+from run_common import _confirm_phase
 
 
-def create_replication_bucket(aws_access_key, aws_secretkey, origin_bucket_account_id, replication_bucket_name):
-    # 복제 대상 iam 키값으로 실행
-    aws_cli = AWSCli()  # 변경 필요 awsCli() 부분은 access key, secretkey로 변경할 수 있도록.
+def parse_args():
+    parser = ArgumentParser()
+    parser.add_argument('-i', '--origin_bucket_account_id', type=str, required=True, help='origin bucket account id')
+    parser.add_argument('-o', '--origin_bucket_name', type=str, required=True, help='origin bucket name')
+    parser.add_argument('-r', '--replication_bucket_name', type=str, required=True, help='replication bucket name')
+    parser.add_argument('-a', '--replication_aws_access_key', type=str, required=True,
+                        help='Replication bucket AWS ACCESS KEY ID')
+    parser.add_argument('-s', '--replication_aws_secret_key', type=str, required=True,
+                        help='Replication bucket AWS SECRET ACCESS KEY')
+    parser.add_argument('-p', '--srr_policy_name', type=str, required=True, help='AWS_SECRET_ACCESS_KEY')
+    parser.add_argument('-n', '--srr_role_name', type=str, required=True, help='AWS_SECRET_ACCESS_KEY')
 
-    cmd = ['s3api', 'create-bucket', '--bucket', replication_bucket_name, '--create-bucket-configuration',
-           'LocationConstraint=%s' % 'ap-northeast-2']
+    args = parser.parse_args()
+
+    _confirm_phase()
+
+    return args
+
+
+def create_replication_bucket(args):
+    aws_cli = AWSCli(aws_access_key=args.replication_aws_access_key,
+                     aws_secret_access_key=args.replication_aws_secret_key)
+
+    replication_bucket_name = args.replication_bucket_name
+    origin_bucket_account_id = args.origin_bucket_account_id
+
+    pp = {
+        "BlockPublicAcls": True,
+        "IgnorePublicAcls": True,
+        "BlockPublicPolicy": True,
+        "RestrictPublicBuckets": True
+    }
+    cmd = ['s3api', 'put-public-access-block', '--bucket', replication_bucket_name]
+    cmd += ['--public-access-block-configuration', json.dumps(pp)]
     aws_cli.run(cmd, ignore_error=True)
-
-    cmd = ['s3api', 'delete-public-access-block']
-    cmd += ['--bucket', replication_bucket_name]
-    aws_cli.run(cmd)
-
-    cmd = ['s3api', 'put-bucket-versioning']
-    cmd += ['--bucket', replication_bucket_name]
-    cmd += ['--versioning-configuration', 'Status=Enabled']
-    aws_cli.run(cmd)
 
     s3_policy = {
         "Version": "2008-10-17",
@@ -47,29 +69,27 @@ def create_replication_bucket(aws_access_key, aws_secretkey, origin_bucket_accou
     aws_cli.run(cmd)
 
 
-def run_create_s3_srr_bucket():
+def run_create_s3_srr_bucket(args):
     aws_cli = AWSCli()
 
-    origin_bucket_name = ''  # please input origin bucket name
-    replication_bucket_name = ''  # please input replication bucket name
-    origin_bucket_account_id = ''  # please input origin bucket account id
+    origin_bucket_name = args.origin_bucket_name
+    replication_bucket_name = args.replication_bucket_name
+    origin_bucket_account_id = args.origin_bucket_account_id
+    srr_policy_name = args.srr_policy_name
+    srr_role_name = args.srr_role_name
 
-    cmd = ['s3api', 'create-bucket', '--bucket', origin_bucket_name, '--create-bucket-configuration',
-           'LocationConstraint=%s' % 'ap-northeast-2']
+    pp = {
+        "BlockPublicAcls": True,
+        "IgnorePublicAcls": True,
+        "BlockPublicPolicy": True,
+        "RestrictPublicBuckets": True
+    }
+    cmd = ['s3api', 'put-public-access-block', '--bucket', origin_bucket_name]
+    cmd += ['--public-access-block-configuration', json.dumps(pp)]
     aws_cli.run(cmd, ignore_error=True)
 
-    cmd = ['s3api', 'delete-public-access-block']
-    cmd += ['--bucket', origin_bucket_name]
-    aws_cli.run(cmd)
+    create_replication_bucket(args)
 
-    cmd = ['s3api', 'put-bucket-versioning']
-    cmd += ['--bucket', origin_bucket_name]
-    cmd += ['--versioning-configuration', 'Status=Enabled']
-    aws_cli.run(cmd)
-
-    create_replication_bucket('', '', origin_bucket_account_id, replication_bucket_name)
-
-    # ### 원본 iam 키값으로 실행
     s3_policy = {
         "Version": "2012-10-17",
         "Statement": [
@@ -97,8 +117,6 @@ def run_create_s3_srr_bucket():
         ]
     }
 
-    srr_policy_name = ''  # please input you want policy name
-    srr_role_name = ''  # please input you want role name
     cmd = ['iam', 'create-policy']
     cmd += ['--policy-name', srr_policy_name]
     cmd += ['--policy-document', json.dumps(s3_policy)]
@@ -136,4 +154,7 @@ def run_create_s3_srr_bucket():
     aws_cli.run(cc)
 
 
-run_create_s3_srr_bucket()
+if __name__ == "__main__":
+    args = parse_args()
+
+    run_create_s3_srr_bucket(args)
