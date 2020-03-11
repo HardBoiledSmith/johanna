@@ -15,8 +15,8 @@ def parse_args():
                         help='Replication bucket AWS ACCESS KEY ID')
     parser.add_argument('-s', '--replication_aws_secret_key', type=str, required=True,
                         help='Replication bucket AWS SECRET ACCESS KEY')
-    parser.add_argument('-p', '--srr_policy_name', type=str, required=True, help='AWS_SECRET_ACCESS_KEY')
-    parser.add_argument('-n', '--srr_role_name', type=str, required=True, help='AWS_SECRET_ACCESS_KEY')
+    parser.add_argument('-p', '--srr_policy_name', type=str, required=True, help='write down the policy name you want')
+    parser.add_argument('-n', '--srr_role_name', type=str, required=True, help='write down the role name you want')
 
     args = parser.parse_args()
 
