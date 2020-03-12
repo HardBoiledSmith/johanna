@@ -6,7 +6,7 @@ from run_common import AWSCli
 from run_common import _confirm_phase
 
 
-def parse_args():
+def _parse_args():
     parser = ArgumentParser()
     parser.add_argument('-i', '--origin_bucket_account_id', type=str, required=True, help='origin bucket account id')
     parser.add_argument('-o', '--origin_bucket_name', type=str, required=True, help='origin bucket name')
@@ -152,6 +152,6 @@ def run_create_s3_srr_bucket(args):
 
 
 if __name__ == "__main__":
-    args = parse_args()
+    args = _parse_args()
 
     run_create_s3_srr_bucket(args)
