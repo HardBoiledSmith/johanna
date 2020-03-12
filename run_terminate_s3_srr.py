@@ -26,7 +26,7 @@ def parse_args():
     return args
 
 
-def run_terminate_s3_origin_srr(args):
+def run_terminate_s3_srr(args):
     aws_cli = AWSCli()
 
     ################################################################################
@@ -66,4 +66,4 @@ def run_terminate_s3_origin_srr(args):
 if __name__ == "__main__":
     args = parse_args()
 
-    run_terminate_s3_origin_srr(args)
+    run_terminate_s3_srr(args)

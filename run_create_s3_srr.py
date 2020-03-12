@@ -25,7 +25,7 @@ def parse_args():
     return args
 
 
-def _run_create_srr_replication_bucket(replication_bucket_name, origin_bucket_account_id):
+def _put_policy_replication_bucket(replication_bucket_name, origin_bucket_account_id):
     aws_cli = AWSCli(aws_access_key=args.replication_aws_access_key,
                      aws_secret_access_key=args.replication_aws_secret_key)
 
@@ -85,7 +85,7 @@ def run_create_s3_srr_bucket(args):
     cmd += ['--public-access-block-configuration', json.dumps(pp)]
     aws_cli.run(cmd, ignore_error=True)
 
-    _run_create_srr_replication_bucket(replication_bucket_name, origin_bucket_account_id)
+    _put_policy_replication_bucket(replication_bucket_name, origin_bucket_account_id)
 
     s3_policy = {
         "Version": "2012-10-17",
