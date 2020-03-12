@@ -55,11 +55,6 @@ def run_terminate_s3_origin_srr(args):
     cmd += ['--bucket', origin_bucket_name]
     aws_cli.run(cmd, ignore_error=False)
 
-    cmd = ['s3api', 'put-bucket-versioning']
-    cmd += ['--bucket', origin_bucket_name]
-    cmd += ['--versioning-configuration', 'Status=Suspended']
-    aws_cli.run(cmd, ignore_error=False)
-
     aws_cli = AWSCli(aws_access_key=args.replication_aws_access_key,
                      aws_secret_access_key=args.replication_aws_secret_key)
 
