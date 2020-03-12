@@ -16,7 +16,7 @@ from run_common import print_message
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument('-f', '--force', action='store_true', help='pass confirm')
-    parser.add_argument('-b', '--backet', type=str, required=True, help='static web bucket name')
+    parser.add_argument('-b', '--bucket', type=str, required=True, help='s3 bucket name')
     parser.add_argument('-e', '--endpoint', type=str, required=True, help='s3 bucket end point')
     parser.add_argument('-a', '--acm-arn', dest='acm_arn', type=str, required=True, help='acm arn')
     parser.add_argument('-c', '--cname', type=str, required=True, nargs='+', help='cname')
@@ -168,7 +168,7 @@ def create_route53(name, type, dns_name, alias_hostzon_id):
 
 if __name__ == '__main__':
     args = parse_args()
-    bucket_name = args.backet
+    bucket_name = args.bucket
     origin_domain_name = args.endpoint
     certificate_arn = args.acm_arn
     cname_list = args.cname
