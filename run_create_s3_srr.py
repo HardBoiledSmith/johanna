@@ -29,16 +29,6 @@ def _put_policy_replication_bucket(replication_bucket_name, origin_bucket_accoun
     aws_cli = AWSCli(aws_access_key=args.replication_aws_access_key,
                      aws_secret_access_key=args.replication_aws_secret_key)
 
-    pp = {
-        "BlockPublicAcls": True,
-        "IgnorePublicAcls": True,
-        "BlockPublicPolicy": True,
-        "RestrictPublicBuckets": True
-    }
-    cmd = ['s3api', 'put-public-access-block', '--bucket', replication_bucket_name]
-    cmd += ['--public-access-block-configuration', json.dumps(pp)]
-    aws_cli.run(cmd, ignore_error=True)
-
     s3_policy = {
         "Version": "2008-10-17",
         "Statement": [
@@ -74,16 +64,6 @@ def run_create_s3_srr_bucket(args):
     origin_bucket_account_id = args.origin_bucket_account_id
     srr_policy_name = args.srr_policy_name
     srr_role_name = args.srr_role_name
-
-    pp = {
-        "BlockPublicAcls": True,
-        "IgnorePublicAcls": True,
-        "BlockPublicPolicy": True,
-        "RestrictPublicBuckets": True
-    }
-    cmd = ['s3api', 'put-public-access-block', '--bucket', origin_bucket_name]
-    cmd += ['--public-access-block-configuration', json.dumps(pp)]
-    aws_cli.run(cmd, ignore_error=True)
 
     _put_policy_replication_bucket(replication_bucket_name, origin_bucket_account_id)
 
