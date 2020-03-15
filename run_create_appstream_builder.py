@@ -64,93 +64,8 @@ def create_image_builder(name, subnet_ids, security_group_id, image_name):
     cmd += ['--instance-type', 'stream.standard.medium']
     cmd += ['--image-name', image_name]
     cmd += ['--vpc-config', vpc_config]
-    cmd += ['--enable-default-internet-acces']
+    cmd += ['--no-enable-default-internet-access']
 
-    aws_cli.run(cmd)
-
-
-def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instances):
-    vpc_config = 'SubnetIds=%s,SecurityGroupIds=%s' % (subnet_ids, security_group_id)
-
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'create-fleet']
-    cmd += ['--name', name]
-    cmd += ['--instance-type', 'stream.standard.medium']
-    cmd += ['--fleet-type', 'ON_DEMAND']
-    cmd += ['--compute-capacity', 'DesiredInstances=%d' % desired_instances]
-    cmd += ['--image-name', image_name]
-    cmd += ['--vpc-config', vpc_config]
-    cmd += ['--enable-default-internet-acces']
-
-    aws_cli.run(cmd)
-
-    sleep(10)
-
-    cmd = ['appstream', 'start-fleet']
-    cmd += ['--name', name]
-    aws_cli.run(cmd)
-
-
-def create_stack(stack_name, redirect_url, embed_host_domains):
-    name = stack_name
-
-    storage_connectors = 'ConnectorType=HOMEFOLDERS,'
-    storage_connectors += 'ResourceIdentifier=appstream2-36fb080bb8-ap-northeast-2-041220267268'
-
-    user_settings = 'Action=CLIPBOARD_COPY_FROM_LOCAL_DEVICE,Permission=ENABLED,'
-    user_settings += 'Action=CLIPBOARD_COPY_TO_LOCAL_DEVICE,Permission=ENABLED,'
-    user_settings += 'Action=FILE_UPLOAD,Permission=ENABLED,'
-    user_settings += 'Action=FILE_DOWNLOAD,Permission=ENABLED'
-
-    application_settings = 'Enabled=true,SettingsGroup=stack'
-
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'create-stack']
-    cmd += ['--name', name]
-    # cmd += ['--storage-connectors', storage_connectors]
-    cmd += ['--user-settings', user_settings]
-    cmd += ['--application-settings', application_settings]
-    if redirect_url:
-        cmd += ['--redirect-url', redirect_url]
-    cmd += ['--embed-host-domains', embed_host_domains]
-    aws_cli.run(cmd)
-
-
-def associate_fleet(stack_name, fleet_name):
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'associate-fleet']
-    cmd += ['--fleet-name', fleet_name]
-    cmd += ['--stack-name', stack_name]
-    return aws_cli.run(cmd)
-
-
-def delete_fleet(fleet_name):
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'describe-fleets']
-    cmd += ['--names', fleet_name]
-    rr = aws_cli.run(cmd)
-
-    while (rr['Fleets'][0]['State'] != 'STOPPED'):
-        print(rr['Fleets'][0]['State'])
-        rr = aws_cli.run(cmd)
-        sleep(30)
-
-    cmd = ['appstream', 'delete-fleet']
-    cmd += ['--name', fleet_name]
-    return aws_cli.run(cmd)
-
-
-def delete_image(image_name):
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'delete-image']
-    cmd += ['--name', image_name]
-    aws_cli.run(cmd)
-
-
-def delete_image_builder(image_build_name):
-    aws_cli = AWSCli()
-    cmd = ['appstream', 'delete-image-builder']
-    cmd += ['--name', image_build_name]
     aws_cli.run(cmd)
 
 
@@ -212,9 +127,9 @@ def get_subnet_and_security_group_id():
     for r in rr['Subnets']:
         if r['VpcId'] != eb_vpc_id:
             continue
-        if r['CidrBlock'] == cidr_subnet['eb']['public_1']:
+        if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
             subnet_id_1 = r['SubnetId']
-        if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
+        if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
             subnet_id_2 = r['SubnetId']
 
     print_message('get security group id')
@@ -225,7 +140,7 @@ def get_subnet_and_security_group_id():
     for r in rr['SecurityGroups']:
         if r['VpcId'] != eb_vpc_id:
             continue
-        if r['GroupName'] == '%seb_public' % name_prefix:
+        if r['GroupName'] == '%seb_private' % name_prefix:
             security_group_id = r['GroupId']
             break
 
@@ -257,21 +172,3 @@ if __name__ == "__main__":
 
         create_image_builder(name, subnet_ids[0], security_group_id, image_name)
         wait_state('image-builder', name, 'RUNNING')
-
-    for env_s in env['appstream']['STACK']:
-        if target_name and env_s['NAME'] != target_name:
-            continue
-
-        print_session('create appstream image builder')
-
-        fleet_name = env_s['FLEET_NAME']
-        image_name = env_s['IMAGE_NAME']
-        redirect_url = env_s.get('REDIRECT_URL', None)
-        stack_name = env_s['NAME']
-        embed_host_domains = env_s['EMBED_HOST_DOMAINS']
-        desired_instances = env_s.get('DESIRED_INSTANCES', 1)
-
-        create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances)
-        create_stack(stack_name, redirect_url, embed_host_domains)
-        wait_state('fleet', fleet_name, 'RUNNING')
-        associate_fleet(stack_name, fleet_name)
