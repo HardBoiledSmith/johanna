@@ -77,7 +77,7 @@ def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instan
     aws_cli.run(cmd)
 
 
-def create_stack(stack_name, redirect_url, embed_host_domains):
+def create_stack(stack_name, embed_host_domains):
     name = stack_name
 
     storage_connectors = 'ConnectorType=HOMEFOLDERS,'
@@ -96,8 +96,6 @@ def create_stack(stack_name, redirect_url, embed_host_domains):
     # cmd += ['--storage-connectors', storage_connectors]
     cmd += ['--user-settings', user_settings]
     cmd += ['--application-settings', application_settings]
-    if redirect_url:
-        cmd += ['--redirect-url', redirect_url]
     cmd += ['--embed-host-domains', embed_host_domains]
     aws_cli.run(cmd)
 
@@ -210,12 +208,11 @@ if __name__ == "__main__":
 
         fleet_name = env_s['FLEET_NAME']
         image_name = env_s['IMAGE_NAME']
-        redirect_url = env_s.get('REDIRECT_URL', None)
         stack_name = env_s['NAME']
         embed_host_domains = env_s['EMBED_HOST_DOMAINS']
         desired_instances = env_s.get('DESIRED_INSTANCES', 1)
 
         create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances)
-        create_stack(stack_name, redirect_url, embed_host_domains)
+        create_stack(stack_name, embed_host_domains)
         wait_state('fleet', fleet_name, 'RUNNING')
         associate_fleet(stack_name, fleet_name)
