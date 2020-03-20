@@ -15,7 +15,7 @@ def describe_cloudwatch_dashboard():
     d_set = set()
     dashboards_list = env['cloudwatch']['DASHBOARDS']
     for dl in dashboards_list:
-        d_name = f"{dl['NAME']}_{dl['AWS_DEFAULT_REFION']}"
+        d_name = f"{dl['NAME']}_{dl['AWS_DEFAULT_REGION']}"
         d_set.add(d_name)
 
     cmd = ['cloudwatch', 'list-dashboards']
