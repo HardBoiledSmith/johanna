@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
 
 def run_terminate_environment(name):
-    print_message('terminate %s' % name)
+    print_message(f'terminate {name}')
 
     elapsed_time = 0
     while True:
@@ -69,7 +69,7 @@ for vpc_env in env['vpc']:
                 run_terminate_environment(eb_env['NAME'])
                 break
         if not target_eb_name_exists:
-            print('"%s" is not exists in config.json' % target_eb_name)
+            print(f'"{target_eb_name}" is not exists in config.json')
     else:
         for eb_env in eb['ENVIRONMENTS']:
             run_terminate_environment(eb_env['NAME'])

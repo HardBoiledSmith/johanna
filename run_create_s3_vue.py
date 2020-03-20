@@ -166,14 +166,13 @@ def run_create_s3_vue(name, settings):
 
     tag_dict['phase'] = phase
     tag_dict['git_hash_johanna'] = git_hash_johanna.decode('utf-8')
-    tag_dict['git_hash_%s/%s' % (git_folder_name, name)] = git_hash_app.decode('utf-8')
-    tag_dict['timestamp_%s' % name] = timestamp
+    tag_dict[f'git_hash_{git_folder_name}/{name}'] = git_hash_app.decode('utf-8')
+    tag_dict[f'timestamp_{name}'] = timestamp
 
-    tag_format = '{Key=%s, Value=%s}'
     tag_list = list()
     for key in tag_dict:
         value = tag_dict[key]
-        tag_list.append(tag_format % (key, value))
+        tag_list.append(f'{{Key={key}, Value={value}}}')
 
     cmd = ['s3api', 'put-bucket-tagging', '--bucket', deploy_bucket_name, '--tagging',
            'TagSet=[%s]' % ','.join(tag_list)]
