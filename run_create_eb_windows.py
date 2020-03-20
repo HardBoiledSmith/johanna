@@ -29,7 +29,7 @@ def run_create_eb_windows(name, settings):
     phase = env['common']['PHASE']
     subnet_type = settings['SUBNET_TYPE']
     service_name = env['common'].get('SERVICE_NAME', '')
-    name_prefix = f'{service_name}' if service_name else ''
+    name_prefix = f'{service_name}_' if service_name else ''
     url = settings['ARTIFACT_URL']
 
     cidr_subnet = aws_cli.cidr_subnet
