@@ -355,22 +355,22 @@ if __name__ == "__main__":
     if len(args) > 1:
         target_name = args[1]
 
-    # create_iam_for_appstream()
-    # for env_s in env['appstream']['STACK']:
-    #     if target_name and env_s['NAME'] != target_name:
-    #         continue
-    #
-    #     print_session('create appstream image builder')
-    #
-    #     fleet_name = env_s['FLEET_NAME']
-    #     image_name = env_s['IMAGE_NAME']
-    #     stack_name = env_s['NAME']
-    #     embed_host_domains = env_s['EMBED_HOST_DOMAINS']
-    #     desired_instances = env_s.get('DESIRED_INSTANCES', 4)
-    #
-    #     create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances)
-    #     create_stack(stack_name, embed_host_domains)
-    #     wait_state('fleet', fleet_name, 'RUNNING')
-    #     associate_fleet(stack_name, fleet_name)
-    apply_fleet_auto_scale_policy()
+    create_iam_for_appstream()
+    for env_s in env['appstream']['STACK']:
+        if target_name and env_s['NAME'] != target_name:
+            continue
+
+        print_session('create appstream image builder')
+
+        fleet_name = env_s['FLEET_NAME']
+        image_name = env_s['IMAGE_NAME']
+        stack_name = env_s['NAME']
+        embed_host_domains = env_s['EMBED_HOST_DOMAINS']
+        desired_instances = env_s.get('DESIRED_INSTANCES', 4)
+
+        create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances)
+        create_stack(stack_name, embed_host_domains)
+        wait_state('fleet', fleet_name, 'RUNNING')
+        associate_fleet(stack_name, fleet_name)
+    # apply_fleet_auto_scale_policy()
     # delete_fleet_auto_scale_policy()
