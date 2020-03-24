@@ -29,7 +29,6 @@ if __name__ == "__main__":
     cc = ['application-autoscaling', 'describe-scalable-targets']
     cc += ['--service-namespace', 'appstream']
     cc += ['--resource-ids', fleet_name]
-
     rr = aws_cli.run(cc)
     if rr['ScalableTargets']:
         cc = ['application-autoscaling', 'deregister-scalable-target']
