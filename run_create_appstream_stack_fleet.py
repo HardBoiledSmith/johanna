@@ -214,7 +214,7 @@ if __name__ == "__main__":
         image_name = env_s['IMAGE_NAME']
         stack_name = env_s['NAME']
         embed_host_domains = env_s['EMBED_HOST_DOMAINS']
-        desired_instances = env_s.get('DESIRED_INSTANCES', 2)
+        desired_instances = env_s.get('DESIRED_INSTANCES', 1)
 
         create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances)
         create_stack(stack_name, embed_host_domains)
