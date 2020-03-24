@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import json
 import time
 from time import sleep
 
@@ -68,8 +67,8 @@ def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instan
     cmd += ['--image-name', image_name]
     cmd += ['--vpc-config', vpc_config]
     cmd += ['--no-enable-default-internet-access']
-    cmd += ["--disconnect-timeout-in-seconds", '60']
     cmd += ["--idle-disconnect-timeout-in-seconds", '180']
+    # cmd += ["--disconnect-timeout-in-seconds", '60']
     # cmd += ["--max-user-duration-in-seconds", '60~360000']
 
     aws_cli.run(cmd)
@@ -191,157 +190,6 @@ def get_subnet_and_security_group_id():
     return [subnet_id_1, subnet_id_2], security_group_id
 
 
-def apply_fleet_auto_scale_policy():
-    aws_cli = AWSCli()
-    ### tartget
-    cc = ['application-autoscaling', 'register-scalable-target']
-    cc += ['--service-namespace', 'appstream']
-    cc += ['--scalable-dimension', 'appstream:fleet:DesiredCapacity']
-    cc += ['--resource-id', 'fleet/naoko-fleet']
-    cc += ['--min-capacity', '1']
-    cc += ['--max-capacity', '5']
-    aws_cli.run(cc)
-
-
-
-    # 예제 1
-    # appstream_policy = {
-    #     "PolicyName": "scale-out-utilization",
-    #     "ServiceNamespace": "appstream",
-    #     "ResourceId": "fleet/naoko-fleet",
-    #     "ScalableDimension": "appstream:fleet:DesiredCapacity",
-    #     "PolicyType": "StepScaling",
-    #     "StepScalingPolicyConfiguration": {
-    #         "AdjustmentType": "PercentChangeInCapacity",
-    #         "StepAdjustments": [
-    #             {
-    #                 "MetricIntervalLowerBound": 0,
-    #                 "ScalingAdjustment": 25
-    #             }
-    #         ],
-    #         "Cooldown": 120
-    #     }
-    # }
-    #
-    # cc = ['application-autoscaling', 'put-scaling-policy']
-    # cc += ['--cli-input-json', json.dumps(appstream_policy)]
-    # rr = aws_cli.run(cc)
-    # print(rr['PolicyARN'])
-    #
-    # cc = ['cloudwatch', 'put-metric-alarm']
-    # cc += ['--alarm-name', 'appstream-scale-out']
-    # cc += ['--alarm-description', 'Alarm when Capacity Utilization exceeds 75 percent']
-    # cc += ['--metric-name', 'CapacityUtilizaion']
-    # cc += ['--namespace', 'AWS/AppStream']
-    # cc += ['--statistic', 'Average']
-    # cc += ['--period', '60']
-    # cc += ['--threshold', '75']
-    # cc += ['--comparison-operator', 'GreaterThanThreshold']
-    # cc += ['--dimensions', 'Name=fleetName,Value=%s' % "naoko-fleet"]
-    # cc += ['--evaluation-periods', '1']
-    # cc += ['--unit', 'Percent']
-    # cc += ['--alarm-actions', rr['PolicyARN']]
-    # aws_cli.run(cc)
-
-
-    ### Case 2 // 용량 부족 오류를 기반으로 조정 정책 적용용량 부족 오류를 기반으로 조정 정책 적용
-    appstream_policy = {
-        "PolicyName": "scale-out-utilization",
-        "ServiceNamespace": "appstream",
-        "ResourceId": "fleet/naoko-fleet",
-        "ScalableDimension": "appstream:fleet:DesiredCapacity",
-        "PolicyType": "StepScaling",
-        "StepScalingPolicyConfiguration": {
-            "AdjustmentType": "ChangeInCapacity",
-            "StepAdjustments": [
-                {
-                    "MetricIntervalLowerBound": 0,
-                    "ScalingAdjustment": 1
-                }
-            ],
-            "Cooldown": 0
-        }
-    }
-
-    cc = ['application-autoscaling', 'put-scaling-policy']
-    cc += ['--cli-input-json', json.dumps(appstream_policy)]
-    rr = aws_cli.run(cc)
-    print(rr['PolicyARN'])
-
-    cc = ['cloudwatch', 'put-metric-alarm']
-    cc += ['--alarm-name', 'appstream-scale-out']
-    cc += ['--alarm-description', 'Alarm when out of capacity is > 0']
-    cc += ['--metric-name', 'InsufficientCapacityError']
-    cc += ['--namespace', 'AWS/AppStream']
-    cc += ['--statistic', 'Maximum']
-    cc += ['--period', '60']
-    cc += ['--threshold', '0']
-    cc += ['--comparison-operator', 'GreaterThanThreshold']
-    cc += ['--dimensions', 'Name=FleetName,Value=%s' % "naoko-fleet"]
-    cc += ['--evaluation-periods', '1']
-    cc += ['--unit', 'Count']
-    cc += ['--alarm-actions', rr['PolicyARN']]
-    rr = aws_cli.run(cc)
-    print('###################')
-    print(rr)
-    print('finish')
-
-    ### Case 5 // 목표 추적 조정 정책
-    # appstream_policy = {
-    #     "PolicyName": "target-tracking-scaling-policy",
-    #     "ServiceNamespace": "appstream",
-    #     "ResourceId": "fleet/naoko-fleet",
-    #     "ScalableDimension": "appstream:fleet:DesiredCapacity",
-    #     "PolicyType": "TargetTrackingScaling",
-    #     "TargetTrackingScalingPolicyConfiguration": {
-    #         "TargetValue": 75.0,
-    #         "PredefinedMetricSpecification": {
-    #             "PredefinedMetricType": "AppStreamAverageCapacityUtilization"
-    #         },
-    #         "ScaleOutCooldown": 30,
-    #         "ScaleInCooldown": 300
-    #     }
-    # }
-
-    # cc = ['application-autoscaling', 'put-scaling-policy']
-    # cc += ['--cli-input-json', json.dumps(appstream_policy)]
-    # aws_cli.run(cc)
-
-
-def delete_fleet_auto_scale_policy():
-    aws_cli = AWSCli()
-    ###
-    # delete policy 예 5
-    # cc = ['application-autoscaling', 'delete-scaling-policy']
-    # cc += ['--policy-name', 'target-tracking-scaling-policy']
-    # cc += ['--service-namespace', 'appstream']
-    # cc += ['--resource-id', 'fleet/naoko-fleet']
-    # cc += ['--scalable-dimension', 'appstream:fleet:DesiredCapacity']
-    # aws_cli.run(cc)
-
-    ####
-
-    # delete policy 예 1
-    # cc = ['application-autoscaling', 'delete-scaling-policy']
-    # cc += ['--policy-name', 'scale-out-utilization']
-    # cc += ['--service-namespace', 'appstream']
-    # cc += ['--resource-id', 'fleet/naoko-fleet']
-    # cc += ['--scalable-dimension', 'appstream:fleet:DesiredCapacity']
-    # aws_cli.run(cc)
-    #
-    # cc = ['cloudwatch', 'delete-alarms']
-    # cc += ['--alarm-names', 'appstream-scale-out']
-    # aws_cli.run(cc)
-
-    cc = ['application-autoscaling', 'deregister-scalable-target']
-    cc += ['--service-namespace', 'appstream']
-    cc += ['--resource-id', 'fleet/naoko-fleet']
-    cc += ['--scalable-dimension', 'appstream:fleet:DesiredCapacity']
-    aws_cli.run(cc)
-
-###
-
-
 if __name__ == "__main__":
     from run_common import parse_args
 
@@ -366,11 +214,9 @@ if __name__ == "__main__":
         image_name = env_s['IMAGE_NAME']
         stack_name = env_s['NAME']
         embed_host_domains = env_s['EMBED_HOST_DOMAINS']
-        desired_instances = env_s.get('DESIRED_INSTANCES', 4)
+        desired_instances = env_s.get('DESIRED_INSTANCES', 2)
 
         create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances)
         create_stack(stack_name, embed_host_domains)
         wait_state('fleet', fleet_name, 'RUNNING')
         associate_fleet(stack_name, fleet_name)
-    # apply_fleet_auto_scale_policy()
-    # delete_fleet_auto_scale_policy()
