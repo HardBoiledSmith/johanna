@@ -15,8 +15,8 @@ if __name__ == "__main__":
 
     env = env['appstream']['STACK'][0]
     fleet_name = f'fleet/{env["FLEET_NAME"]}'
-    max_capacity = f'{env["MIN_CAPACITY"]}'
-    min_capacity = f'{env["MAX_CAPACITY"]}'
+    max_capacity = env["MAX_CAPACITY"]
+    min_capacity = env["MIN_CAPACITY"]
     appstream_policy_name = env["APPSTREAM_SCALING_POLICY"]
     scale_target_value = env['SCALE_TARGET_VALUE']
 
@@ -43,8 +43,8 @@ if __name__ == "__main__":
     cc += ['--service-namespace', 'appstream']
     cc += ['--scalable-dimension', 'appstream:fleet:DesiredCapacity']
     cc += ['--resource-id', fleet_name]
-    cc += ['--min-capacity', max_capacity]
-    cc += ['--max-capacity', min_capacity]
+    cc += ['--min-capacity', min_capacity]
+    cc += ['--max-capacity', max_capacity]
     aws_cli.run(cc)
 
     appstream_policy = {
