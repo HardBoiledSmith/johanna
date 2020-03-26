@@ -69,40 +69,25 @@ def create_image_builder(name, subnet_ids, security_group_id, image_name):
     aws_cli.run(cmd)
 
 
-def wait_state(service, name, state):
-    services = {
-        'image-builder': {
-            'cmd': 'describe-image-builders',
-            'name': 'ImageBuilders'
-        },
-        'fleet': {
-            'cmd': 'describe-fleets',
-            'name': 'Fleets'
-        }
-    }
-
-    if service not in services:
-        raise Exception('only allow services(%s)' % ', '.join(services.keys()))
-
+def wait_state(name):
     aws_cli = AWSCli()
     elapsed_time = 0
-    is_not_terminate = True
-    ss = services[service]
+    is_waiting = True
 
-    while is_not_terminate:
-        cmd = ['appstream', ss['cmd']]
+    while is_waiting:
+        cmd = ['appstream', 'describe-image-builders']
         cmd += ['--name', name]
         rr = aws_cli.run(cmd)
 
-        for r in rr[ss['name']]:
-            if state == r['State']:
-                is_not_terminate = False
+        for r in rr['ImageBuilders']:
+            if 'RUNNING' == r['State']:
+                is_waiting = False
 
         if elapsed_time > 1200:
-            raise Exception('timeout: stop appstream image builder(%s)' % name)
+            raise Exception('timeout: creating image builder (%s)' % name)
 
         sleep(5)
-        print('wait image builder state(%s) (elapsed time: \'%d\' seconds)' % (state, elapsed_time))
+        print('wait image builder ready... (elapsed time: \'%d\' seconds)' % elapsed_time)
         elapsed_time += 5
 
 
@@ -160,15 +145,15 @@ if __name__ == "__main__":
     if len(args) > 1:
         target_name = args[1]
 
+    print_session('create appstream image builder')
+
     create_iam_for_appstream()
     for env_ib in env['appstream']['IMAGE_BUILDS']:
         if target_name and env_ib['NAME'] != target_name:
             continue
 
-        print_session('create appstream image builder')
-
         name = env_ib['NAME']
         image_name = env_ib['IMAGE_NAME']
 
         create_image_builder(name, subnet_ids[0], security_group_id, image_name)
-        wait_state('image-builder', name, 'RUNNING')
+        wait_state(name)
