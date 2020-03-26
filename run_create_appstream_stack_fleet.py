@@ -86,7 +86,7 @@ def create_stack(stack_name, embed_host_domains):
     user_settings += 'Action=FILE_DOWNLOAD,Permission=ENABLED'
 
     # TODO: Remove after AWS Support has done
-    application_settings = 'Enabled=true,SettingsGroup=stack' 
+    application_settings = 'Enabled=true,SettingsGroup=stack'
     aws_cli = AWSCli()
     cmd = ['appstream', 'create-stack']
     cmd += ['--name', name]
