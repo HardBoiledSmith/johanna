@@ -42,6 +42,17 @@ You can use this on web GUI
 
 * [raynor](https://github.com/HardBoiledSmith/raynor) is web based GUI for johanna
 
+# Script to create cloudfront and route 53
+- Execute `run_create_cloudfront.py` to create cloud front
+```bash
+./run_create_cloudfront.py -b <s3 bucket name> -e <s3 bucket end point> -a <acm-arn> -c <cname> -f
+```
+- Execute `run_create_cloudfront.py` to create route53
+- reference HOSTED_ZONE_ID : https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html#Route53-Type-AliasTarget-HostedZoneIdx
+```bash
+./run_create_route53.py -ah Z2FDTNDATAQYW2 -at cloudfront -d <cloudfront domain name> -hn hbsmith.io -n <domain> -r A -f
+```
+
 # Notes
 
 * If you use AWS IAM user credential instead of master account, it must have IAMFullAccess, AWSElasticBeanstalkFullAccess and PowerUserAccess permissions.
