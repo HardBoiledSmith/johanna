@@ -67,6 +67,9 @@ def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instan
     cmd += ['--image-name', image_name]
     cmd += ['--vpc-config', vpc_config]
     cmd += ['--no-enable-default-internet-access']
+    cmd += ["--idle-disconnect-timeout-in-seconds", '600']
+    # cmd += ["--disconnect-timeout-in-seconds", '60']
+    # cmd += ["--max-user-duration-in-seconds", '60~360000']
 
     aws_cli.run(cmd)
 
@@ -101,6 +104,7 @@ def associate_fleet(stack_name, fleet_name):
     cmd = ['appstream', 'associate-fleet']
     cmd += ['--fleet-name', fleet_name]
     cmd += ['--stack-name', stack_name]
+
     return aws_cli.run(cmd)
 
 
