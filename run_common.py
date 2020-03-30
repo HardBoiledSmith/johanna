@@ -110,14 +110,14 @@ class AWSCli:
     def get_vpc_id(self):
         rds_vpc_id = None
         cmd = ['ec2', 'describe-vpcs']
-        cmd += ['--filters=Name=cidr,Values=%s' % self.cidr_vpc['rds']]
+        cmd += [f"--filters=Name=cidr,Values={self.cidr_vpc['rds']}"]
         result = self.run(cmd)
         if len(result['Vpcs']) == 1:
             rds_vpc_id = dict(result['Vpcs'][0])['VpcId']
 
         eb_vpc_id = None
         cmd = ['ec2', 'describe-vpcs']
-        cmd += ['--filters=Name=cidr,Values=%s' % self.cidr_vpc['eb']]
+        cmd += [f"--filters=Name=cidr,Values={self.cidr_vpc['eb']}"]
         result = self.run(cmd)
         if len(result['Vpcs']) == 1:
             eb_vpc_id = dict(result['Vpcs'][0])['VpcId']
@@ -316,7 +316,7 @@ class AWSCli:
     def set_name_tag(self, resource_id, name):
         cmd = ['ec2', 'create-tags']
         cmd += ['--resources', resource_id]
-        cmd += ['--tags', 'Key=Name,Value=%s' % name]
+        cmd += ['--tags', f'Key=Name,Value={name}']
         self.run(cmd)
 
     def wait_terminate_lambda(self):

@@ -373,7 +373,7 @@ def run_create_eb_spring(name, settings):
     print_message('revoke security group ingress')
 
     cmd = ['ec2', 'describe-security-groups']
-    cmd += ['--filters', 'Name=tag-key,Values=Name', 'Name=tag-value,Values=%s' % eb_environment_name]
+    cmd += ['--filters', 'Name=tag-key,Values=Name', f'Name=tag-value,Values={eb_environment_name}']
     result = aws_cli.run(cmd)
 
     for ss in result['SecurityGroups']:
