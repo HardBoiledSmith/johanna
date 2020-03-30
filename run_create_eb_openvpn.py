@@ -384,7 +384,7 @@ def run_create_eb_openvpn(name, settings):
     print_message('revoke security group ingress')
 
     cmd = ['ec2', 'describe-security-groups']
-    cmd += ['--filters', 'Name=tag-key,Values=Name', 'Name=tag-value,Values=%s' % eb_environment_name]
+    cmd += ['--filters', 'Name=tag-key,Values=Name', f'Name=tag-value,Values={eb_environment_name}']
     result = aws_cli.run(cmd)
 
     for ss in result['SecurityGroups']:
@@ -406,7 +406,7 @@ def run_create_eb_openvpn(name, settings):
     ip_address = result['Environments'][0]['EndpointURL']
 
     cmd = ['ec2', 'describe-instances']
-    cmd += ['--filter=Name=ip-address,Values=%s' % ip_address]
+    cmd += [f'--filter=Name=ip-address,Values={ip_address}']
     result = aws_cli.run(cmd)
 
     instance_id = result['Reservations'][0]['Instances'][0]['InstanceId']
