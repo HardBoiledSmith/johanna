@@ -14,7 +14,7 @@ def describe_eb_vpc():
 
 def describe_eb_subnets(vpc_id=None):
     cmd = ['ec2', 'describe-subnets']
-    cmd += ['--filters=Name=vpc-id,Values=%s' % vpc_id]
+    cmd += [f'--filters=Name=vpc-id,Values={vpc_id}']
     result = aws_cli.run(cmd, ignore_error=True)
 
     if not result['Subnets']:
@@ -25,7 +25,7 @@ def describe_eb_subnets(vpc_id=None):
 
 def describe_internet_gateways(vpc_id=None):
     cmd = ['ec2', 'describe-internet-gateways']
-    cmd += ['--filters=Name=attachment.vpc-id,Values=%s' % vpc_id]
+    cmd += [f'--filters=Name=attachment.vpc-id,Values={vpc_id}']
     result = aws_cli.run(cmd, ignore_error=True)
 
     if not result['InternetGateways']:
@@ -46,7 +46,7 @@ def describe_addressed():
 
 def describe_nat_gateways(vpc_id=None):
     cmd = ['ec2', 'describe-nat-gateways']
-    cmd += ['--filter=Name=vpc-id,Values=%s' % vpc_id]
+    cmd += [f'--filter=Name=vpc-id,Values={vpc_id}']
 
     # noinspection PyBroadException
     try:
@@ -61,7 +61,7 @@ def describe_nat_gateways(vpc_id=None):
 
 def describe_eb_route_tables(vpc_id=None):
     cmd = ['ec2', 'describe-route-tables']
-    cmd += ['--filters=Name=vpc-id,Values=%s' % vpc_id]
+    cmd += [f'--filters=Name=vpc-id,Values={vpc_id}']
     result = aws_cli.run(cmd, ignore_error=True)
 
     if not result['RouteTables']:
@@ -75,7 +75,7 @@ def describe_eb_security_groups(vpc_id):
         return False
 
     cmd = ['ec2', 'describe-security-groups']
-    cmd += ['--filters=Name=vpc-id,Values=%s' % vpc_id]
+    cmd += [f'--filters=Name=vpc-id,Values={vpc_id}']
     result = aws_cli.run(cmd, ignore_error=True)
 
     if not result['SecurityGroups']:
@@ -105,7 +105,7 @@ def describe_rds_subnets(vpc_id=None):
 
 def describe_rds_route_tables(vpc_id=None):
     cmd = ['ec2', 'describe-route-tables']
-    cmd += ['--filters=Name=vpc-id,Values=%s' % vpc_id]
+    cmd += [f'--filters=Name=vpc-id,Values={vpc_id}']
     result = aws_cli.run(cmd, ignore_error=True)
 
     if not result['RouteTables']:
@@ -119,7 +119,7 @@ def describe_rds_security_groups(vpc_id):
         return False
 
     cmd = ['ec2', 'describe-security-groups']
-    cmd += ['--filters=Name=vpc-id,Values=%s' % vpc_id]
+    cmd += [f'--filters=Name=vpc-id,Values={vpc_id}']
     result = aws_cli.run(cmd, ignore_error=True)
 
     if not result['SecurityGroups']:
@@ -129,10 +129,10 @@ def describe_rds_security_groups(vpc_id):
 
 
 def describe_vpc_peering_connection(vpc_id_1, vpc_id_2):
-    filter_1 = 'Name=accepter-vpc-info.vpc-id,Values=%s' % vpc_id_1
-    filter_2 = 'Name=requester-vpc-info.vpc-id,Values=%s' % vpc_id_2
+    filter_1 = f'Name=accepter-vpc-info.vpc-id,Values={vpc_id_1}'
+    filter_2 = f'Name=requester-vpc-info.vpc-id,Values={vpc_id_2}'
     cmd = ['ec2', 'describe-vpc-peering-connections']
-    cmd += ['--filters=%s,%s' % (filter_1, filter_2)]
+    cmd += [f'--filters={filter_1},{filter_2}']
     result = aws_cli.run(cmd, ignore_error=True)
 
     if not result['VpcPeeringConnections']:
@@ -188,7 +188,7 @@ else:
 print('#' * 80)
 
 for r in results:
-    print('%-25s -------------- %s' % (r[0], r[1]))
+    print(f'{r[0]:25} -------------- {r[1]}')
 
 print('#' * 80)
 
@@ -225,6 +225,6 @@ else:
 print('#' * 80)
 
 for r in results:
-    print('%-25s -------------- %s' % (r[0], r[1]))
+    print(f'{r[0]:25} -------------- {r[1]}')
 
 print('#' * 80)

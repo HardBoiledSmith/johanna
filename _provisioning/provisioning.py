@@ -133,8 +133,8 @@ def _preprocess(hostname):
 
     _run(['pip3', 'install', '--upgrade', 'awscli'])
 
-    node_version = 'v10.16.0'
-    _run(['wget', 'https://raw.githubusercontent.com/creationix/nvm/v0.33.6/install.sh'], cwd='/root')
+    node_version = 'v12.16.1'
+    _run(['wget', 'https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh'], cwd='/root')
     _run(['chmod', '+x', 'install.sh'], cwd='/root')
     _run(['./install.sh'], cwd='/root')
 

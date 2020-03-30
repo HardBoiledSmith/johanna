@@ -5,6 +5,7 @@ from time import sleep
 from env import env
 from run_common import AWSCli
 from run_common import print_message
+from run_common import print_session
 
 
 def terminate_iam_for_appstream():
@@ -66,40 +67,25 @@ def exist_image_builder(name):
     return bool(rr)
 
 
-def wait_state(service, name, state):
-    services = {
-        'image-builder': {
-            'cmd': 'describe-image-builders',
-            'name': 'ImageBuilders'
-        },
-        'fleet': {
-            'cmd': 'describe-fleets',
-            'name': 'Fleets'
-        }
-    }
-
-    if service not in services:
-        raise Exception('only allow services(%s)' % ', '.join(services.keys()))
-
+def wait_state(name):
     aws_cli = AWSCli()
     elapsed_time = 0
-    is_not_terminate = True
-    ss = services[service]
+    is_waiting = True
 
-    while is_not_terminate:
-        cmd = ['appstream', ss['cmd']]
+    while is_waiting:
+        cmd = ['appstream', 'describe-image-builders']
         cmd += ['--name', name]
         rr = aws_cli.run(cmd)
 
-        for r in rr[ss['name']]:
-            if state == r['State']:
-                is_not_terminate = False
+        for r in rr['ImageBuilders']:
+            if 'STOPPED' == r['State']:
+                is_waiting = False
 
         if elapsed_time > 1200:
-            raise Exception('timeout: stop appstream image builder(%s)' % name)
+            raise Exception('timeout: terminating image builder (%s)' % name)
 
         sleep(5)
-        print('wait image builder state(%s) (elapsed time: \'%d\' seconds)' % (state, elapsed_time))
+        print('wait image builder stopped... (elapsed time: \'%d\' seconds)' % elapsed_time)
         elapsed_time += 5
 
 
@@ -120,6 +106,8 @@ if __name__ == "__main__":
     if len(args) > 1:
         target_name = args[1]
 
+    print_session('terminate appstream image builder')
+
     for env_ib in env['appstream']['IMAGE_BUILDS']:
         image_builder_name = env_ib['NAME']
         if target_name and image_builder_name != target_name:
@@ -129,7 +117,7 @@ if __name__ == "__main__":
             continue
 
         stop_image_builder(image_builder_name)
-        wait_state('image-builder', image_builder_name, 'STOPPED')
+        wait_state(image_builder_name)
         delete_image_builder(image_builder_name)
 
     terminate_iam_for_appstream()

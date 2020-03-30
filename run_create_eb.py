@@ -53,11 +53,11 @@ for eb_env in eb['ENVIRONMENTS']:
     elif eb_env['TYPE'] == 'windows':
         run_create_eb_windows(eb_env['NAME'], eb_env)
     else:
-        print('"%s" is not supported' % eb_env['TYPE'])
+        print(f"\"{eb_env['TYPE']}\" is not supported")
         raise Exception()
 
 if not check_exists and target_eb_name and not region:
-    print('"%s" is not exists in config.json' % target_eb_name)
+    print(f'{target_eb_name} is not exists in config.json')
 
 if not check_exists and target_eb_name and region:
-    print('"%s, %s" is not exists in config.json' % (target_eb_name, region))
+    print(f'"{target_eb_name}, {region}" is not exists in config.json')

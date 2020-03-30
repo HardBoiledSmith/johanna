@@ -20,14 +20,14 @@ def terminate_iam_for_lambda(lambda_type):
     print_message('delete iam role policy')
 
     cmd = ['iam', 'delete-role-policy']
-    cmd += ['--role-name', 'aws-lambda-%s-role' % lambda_type]
-    cmd += ['--policy-name', 'aws-lambda-%s-policy' % lambda_type]
+    cmd += ['--role-name', f'aws-lambda-{lambda_type}-role']
+    cmd += ['--policy-name', f'aws-lambda-{lambda_type}-policy']
     aws_cli.run(cmd, ignore_error=True)
 
     print_message('delete iam role')
 
     cmd = ['iam', 'delete-role']
-    cmd += ['--role-name', 'aws-lambda-%s-role' % lambda_type]
+    cmd += ['--role-name', f'aws-lambda-{lambda_type}-role']
     aws_cli.run(cmd, ignore_error=True)
 
 
@@ -35,7 +35,7 @@ def run_terminate_default_lambda(function_name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     ################################################################################
-    print_session('terminate lambda: %s' % function_name)
+    print_session(f'terminate lambda: {function_name}')
 
     print_message('delete lambda function')
 
@@ -48,7 +48,7 @@ def run_terminate_cron_lambda(function_name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     ################################################################################
-    print_session('terminate lambda: %s' % function_name)
+    print_session(f'terminate lambda: {function_name}')
 
     print_message('unlink event and lambda')
 
@@ -62,9 +62,9 @@ def run_terminate_cron_lambda(function_name, settings):
 
     ids_list = []
     for target in target_list:
-        target_id = '"%s"' % target['Id']
+        target_id = f"\"{target['Id']}\""
         ids_list.append(target_id)
-    ids_list = '[%s]' % ','.join(ids_list)
+    ids_list = f"[{','.join(ids_list)}]"
 
     cmd = ['events', 'remove-targets',
            '--rule', function_name + 'CronRule',
@@ -95,7 +95,7 @@ def run_terminate_sns_lambda(function_name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     ################################################################################
-    print_session('terminate lambda: %s' % function_name)
+    print_session(f'terminate lambda: {function_name}')
 
     cmd = ['lambda', 'get-policy',
            '--function-name', function_name]
@@ -142,9 +142,9 @@ def run_terminate_sqs_lambda(function_name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     ################################################################################
-    print_session('terminate lambda: %s' % function_name)
+    print_session(f'terminate lambda: {function_name}')
 
-    print_message('delete event sources for %s' % function_name)
+    print_message(f'delete event sources for {function_name}')
     cmd = ['lambda', 'list-event-source-mappings',
            '--function-name', function_name]
     mappings = aws_cli.run(cmd)['EventSourceMappings']
@@ -163,7 +163,7 @@ def run_terminate_event_lambda(function_name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     ################################################################################
-    print_session('terminate lambda: %s' % function_name)
+    print_session(f'terminate lambda: {function_name}')
 
     print_message('unlink event and lambda')
 
@@ -212,10 +212,10 @@ if len(args) == 2:
             if lambda_env['TYPE'] == 'event':
                 run_terminate_event_lambda(lambda_env['NAME'], lambda_env)
                 continue
-            print('"%s" is not supported' % lambda_env['TYPE'])
+            print(f"\"{lambda_env['TYPE']}\" is not supported")
             raise Exception()
     if not target_lambda_name_exists:
-        print('"%s" is not exists in config.json' % target_lambda_name)
+        print(f'"{target_lambda_name}" is not exists in config.json')
 else:
     for lambda_env in lambdas_list:
         if lambda_env['TYPE'] == 'default':
@@ -233,7 +233,7 @@ else:
         if lambda_env['TYPE'] == 'event':
             run_terminate_event_lambda(lambda_env['NAME'], lambda_env)
             continue
-        print('"%s" is not supported' % lambda_env['TYPE'])
+        print(f"\"{lambda_env['TYPE']}\" is not supported")
         raise Exception()
     terminate_iam_for_lambda('sqs')
     terminate_iam_for_lambda('default')

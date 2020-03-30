@@ -19,9 +19,9 @@ def create_iam_for_codebuild(name, settings):
     aws_cli = AWSCli()
 
     nn = name.replace('_', '-')
-    role_name = 'aws-codebuild-%s-role' % nn
+    role_name = f'aws-codebuild-{nn}-role'
     if not aws_cli.get_iam_role(role_name):
-        print_message('create iam role: %s' % role_name)
+        print_message(f'create iam role: {role_name}')
 
         dd = {
             'Version': '2012-10-17',
@@ -40,9 +40,9 @@ def create_iam_for_codebuild(name, settings):
         cmd += ['--assume-role-policy-document', json.dumps(dd)]
         aws_cli.run(cmd)
 
-    policy_name = 'aws-codebuild-%s-policy' % nn
+    policy_name = f'aws-codebuild-{nn}-policy'
     if not aws_cli.get_iam_role_policy(role_name, policy_name):
-        print_message('create iam role policy: %s' % policy_name)
+        print_message(f'create iam role policy: {policy_name}')
 
         dd = {
             'Version': '2012-10-17',
@@ -64,7 +64,7 @@ def create_iam_for_codebuild(name, settings):
             pp = {
                 'Effect': 'Allow',
                 'Action': ['s3:PutObject'],
-                'Resource': 'arn:aws:s3:::%s/*' % settings['ARTIFACTS']['location']
+                'Resource': f"arn:aws:s3:::{settings['ARTIFACTS']['location']}/*"
             }
             dd['Statement'].append(pp)
 
@@ -72,7 +72,7 @@ def create_iam_for_codebuild(name, settings):
             pp = {
                 'Action': 'ssm:GetParameters',
                 'Effect': 'Allow',
-                'Resource': 'arn:aws:ssm:%s:*:parameter/CodeBuild/*' % aws_default_region
+                'Resource': f'arn:aws:ssm:{aws_default_region}:*:parameter/CodeBuild/*'
             }
             dd['Statement'].append(pp)
 
@@ -90,7 +90,7 @@ def create_cron_event(aws_cli, name, project_arn, schedule_expression, git_branc
     print_message('create cron event')
 
     cmd = ['events', 'put-rule']
-    rule_name = '%sCronRuleSourceBy%s' % (name, git_branch.title())
+    rule_name = f'{name}CronRuleSourceBy{git_branch.title()}'
     cmd += ['--name', rule_name]
     cmd += ['--schedule-expression', schedule_expression]
     aws_cli.run(cmd)
@@ -160,7 +160,7 @@ def run_create_codebuild_github(name, settings):
 
     for pp in settings['ENV_VARIABLES']:
         if 'PARAMETER_STORE' == pp['type']:
-            nn = '/CodeBuild/%s/%s' % (name, pp['name'])
+            nn = f"/CodeBuild/{name}/{pp['name']}"
             cmd = ['ssm', 'get-parameter', '--name', nn]
             aws_cli.run(cmd)
 
@@ -205,11 +205,11 @@ def run_create_codebuild_github(name, settings):
     config = json.dumps(config)
 
     if need_update:
-        print_message('update project: %s' % name)
+        print_message(f'update project: {name}')
         cmd = ['codebuild', 'update-project', '--cli-input-json', config]
         result = aws_cli.run(cmd)
     else:
-        print_message('create project: %s' % name)
+        print_message(f'create project: {name}')
         cmd = ['codebuild', 'create-project', '--cli-input-json', config]
         result = aws_cli.run(cmd)
 

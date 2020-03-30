@@ -15,7 +15,7 @@ def describe_cloudwatch_dashboard():
     d_set = set()
     dashboards_list = env['cloudwatch']['DASHBOARDS']
     for dl in dashboards_list:
-        d_name = '%s_%s' % (dl['NAME'], dl['AWS_DEFAULT_REGION'])
+        d_name = f"{dl['NAME']}_{dl['AWS_DEFAULT_REGION']}"
         d_set.add(d_name)
 
     cmd = ['cloudwatch', 'list-dashboards']
@@ -38,8 +38,8 @@ def describe_cloudwatch_alarm():
     a_set = set()
     alarms_list = env['cloudwatch']['ALARMS']
     for al in alarms_list:
-        a_name = '%s_%s_%s' % (al['NAME'], al['AWS_DEFAULT_REGION'], al['METRIC_NAME'])
-        a_set.add('"%s"' % a_name)
+        a_name = f"{al['NAME']}_{al['AWS_DEFAULT_REGION']}_{al['METRIC_NAME']}"
+        a_set.add(f'"{a_name}"')
 
     cmd = ['cloudwatch', 'describe-alarms']
     cmd += ['--alarm-names']
