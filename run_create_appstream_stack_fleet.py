@@ -83,17 +83,18 @@ def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instan
 def create_stack(stack_name, embed_host_domains):
     name = stack_name
 
-    user_settings = 'Action=CLIPBOARD_COPY_FROM_LOCAL_DEVICE,Permission=ENABLED,'
-    user_settings += 'Action=CLIPBOARD_COPY_TO_LOCAL_DEVICE,Permission=ENABLED,'
-    user_settings += 'Action=FILE_UPLOAD,Permission=ENABLED,'
-    user_settings += 'Action=FILE_DOWNLOAD,Permission=ENABLED'
+    user_settings = list()
+    user_settings.append('Action=CLIPBOARD_COPY_FROM_LOCAL_DEVICE,Permission=ENABLED')
+    user_settings.append('Action=CLIPBOARD_COPY_TO_LOCAL_DEVICE,Permission=ENABLED')
+    user_settings.append('Action=FILE_UPLOAD,Permission=ENABLED')
+    user_settings.append('Action=FILE_DOWNLOAD,Permission=ENABLED')
 
     # TODO: Remove after AWS Support has done
-    application_settings = 'Enabled=true,SettingsGroup=stack'
+    application_settings = 'Enabled=false,SettingsGroup=stack'
     aws_cli = AWSCli()
     cmd = ['appstream', 'create-stack']
     cmd += ['--name', name]
-    cmd += ['--user-settings', user_settings]
+    cmd += ['--user-settings'] + user_settings
     cmd += ['--application-settings', application_settings]
     cmd += ['--embed-host-domains', embed_host_domains]
     aws_cli.run(cmd)
