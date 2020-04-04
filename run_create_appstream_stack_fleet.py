@@ -172,6 +172,24 @@ def get_subnet_and_security_group_id():
     return [subnet_id_1, subnet_id_2], security_group_id
 
 
+def get_latest_image():
+    aws_cli = AWSCli()
+
+    ll = list()
+
+    cmd = ['appstream', 'describe-images']
+    rr = aws_cli.run(cmd)
+    for r in rr['Images']:
+        if not r['Name'].startswith('naoko-windows'):
+            continue
+        ll.append(r['Name'])
+
+    if len(ll) < 1:
+        raise Exception('image not found: naoko-windows*')
+
+    return sorted(ll, reversed=True)[0]
+
+
 if __name__ == "__main__":
     from run_common import parse_args
 
@@ -187,13 +205,14 @@ if __name__ == "__main__":
 
     print_session('create appstream image stack & fleet')
 
+    image_name = get_latest_image()
+
     create_iam_for_appstream()
     for env_s in env['appstream']['STACK']:
         if target_name and env_s['NAME'] != target_name:
             continue
 
         fleet_name = env_s['FLEET_NAME']
-        image_name = env_s['IMAGE_NAME']
         stack_name = env_s['NAME']
         embed_host_domains = env_s['EMBED_HOST_DOMAINS']
         desired_instances = env_s.get('DESIRED_INSTANCES', 1)
