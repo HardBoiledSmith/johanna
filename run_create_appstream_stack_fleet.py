@@ -187,7 +187,7 @@ def get_latest_image():
     if len(ll) < 1:
         raise Exception('image not found: naoko-windows*')
 
-    return sorted(ll, reversed=True)[0]
+    return sorted(ll, reverse=True)[0]
 
 
 if __name__ == "__main__":
