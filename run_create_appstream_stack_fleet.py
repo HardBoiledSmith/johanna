@@ -67,6 +67,9 @@ def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instan
     cmd += ['--image-name', image_name]
     cmd += ['--vpc-config', vpc_config]
     cmd += ['--no-enable-default-internet-access']
+    cmd += ["--idle-disconnect-timeout-in-seconds", '600']
+    # cmd += ["--disconnect-timeout-in-seconds", '60']
+    # cmd += ["--max-user-duration-in-seconds", '60~360000']
 
     aws_cli.run(cmd)
 
@@ -80,21 +83,18 @@ def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instan
 def create_stack(stack_name, embed_host_domains):
     name = stack_name
 
-    storage_connectors = 'ConnectorType=HOMEFOLDERS,'
-    storage_connectors += 'ResourceIdentifier=appstream2-36fb080bb8-ap-northeast-2-041220267268'
+    user_settings = list()
+    user_settings.append('Action=CLIPBOARD_COPY_FROM_LOCAL_DEVICE,Permission=ENABLED')
+    user_settings.append('Action=CLIPBOARD_COPY_TO_LOCAL_DEVICE,Permission=ENABLED')
+    user_settings.append('Action=FILE_UPLOAD,Permission=ENABLED')
+    user_settings.append('Action=FILE_DOWNLOAD,Permission=ENABLED')
 
-    user_settings = 'Action=CLIPBOARD_COPY_FROM_LOCAL_DEVICE,Permission=ENABLED,'
-    user_settings += 'Action=CLIPBOARD_COPY_TO_LOCAL_DEVICE,Permission=ENABLED,'
-    user_settings += 'Action=FILE_UPLOAD,Permission=ENABLED,'
-    user_settings += 'Action=FILE_DOWNLOAD,Permission=ENABLED'
-
-    application_settings = 'Enabled=true,SettingsGroup=stack'
-
+    # TODO: Remove after AWS Support has done
+    application_settings = 'Enabled=true,SettingsGroup=naoko-stack'
     aws_cli = AWSCli()
     cmd = ['appstream', 'create-stack']
     cmd += ['--name', name]
-    # cmd += ['--storage-connectors', storage_connectors]
-    cmd += ['--user-settings', user_settings]
+    cmd += ['--user-settings'] + user_settings
     cmd += ['--application-settings', application_settings]
     cmd += ['--embed-host-domains', embed_host_domains]
     aws_cli.run(cmd)
@@ -105,43 +105,29 @@ def associate_fleet(stack_name, fleet_name):
     cmd = ['appstream', 'associate-fleet']
     cmd += ['--fleet-name', fleet_name]
     cmd += ['--stack-name', stack_name]
+
     return aws_cli.run(cmd)
 
 
-def wait_state(service, name, state):
-    services = {
-        'image-builder': {
-            'cmd': 'describe-image-builders',
-            'name': 'ImageBuilders'
-        },
-        'fleet': {
-            'cmd': 'describe-fleets',
-            'name': 'Fleets'
-        }
-    }
-
-    if service not in services:
-        raise Exception('only allow services(%s)' % ', '.join(services.keys()))
-
+def wait_state(name):
     aws_cli = AWSCli()
     elapsed_time = 0
-    is_not_terminate = True
-    ss = services[service]
+    is_waiting = True
 
-    while is_not_terminate:
-        cmd = ['appstream', ss['cmd']]
+    while is_waiting:
+        cmd = ['appstream', 'describe-fleets']
         cmd += ['--name', name]
         rr = aws_cli.run(cmd)
 
-        for r in rr[ss['name']]:
-            if state == r['State']:
-                is_not_terminate = False
+        for r in rr['Fleets']:
+            if 'RUNNING' == r['State']:
+                is_waiting = False
 
         if elapsed_time > 1200:
-            raise Exception('timeout: stop appstream image builder(%s)' % name)
+            raise Exception('timeout: creating fleet (%s)' % name)
 
         sleep(5)
-        print('wait image builder state(%s) (elapsed time: \'%d\' seconds)' % (state, elapsed_time))
+        print('waiting for fleet ready... (elapsed time: \'%d\' seconds)' % elapsed_time)
         elapsed_time += 5
 
 
@@ -186,6 +172,24 @@ def get_subnet_and_security_group_id():
     return [subnet_id_1, subnet_id_2], security_group_id
 
 
+def get_latest_image():
+    aws_cli = AWSCli()
+
+    ll = list()
+
+    cmd = ['appstream', 'describe-images']
+    rr = aws_cli.run(cmd)
+    for r in rr['Images']:
+        if not r['Name'].startswith('naoko-windows'):
+            continue
+        ll.append(r['Name'])
+
+    if len(ll) < 1:
+        raise Exception('image not found: naoko-windows*')
+
+    return sorted(ll, reverse=True)[0]
+
+
 if __name__ == "__main__":
     from run_common import parse_args
 
@@ -199,20 +203,21 @@ if __name__ == "__main__":
     if len(args) > 1:
         target_name = args[1]
 
+    print_session('create appstream image stack & fleet')
+
+    image_name = get_latest_image()
+
     create_iam_for_appstream()
     for env_s in env['appstream']['STACK']:
         if target_name and env_s['NAME'] != target_name:
             continue
 
-        print_session('create appstream image builder')
-
         fleet_name = env_s['FLEET_NAME']
-        image_name = env_s['IMAGE_NAME']
         stack_name = env_s['NAME']
         embed_host_domains = env_s['EMBED_HOST_DOMAINS']
         desired_instances = env_s.get('DESIRED_INSTANCES', 1)
 
         create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances)
         create_stack(stack_name, embed_host_domains)
-        wait_state('fleet', fleet_name, 'RUNNING')
+        wait_state(fleet_name)
         associate_fleet(stack_name, fleet_name)

@@ -55,15 +55,19 @@ class AWSCli:
     cidr_subnet['eb']['public_1'] = env['common']['AWS_SUBNET_EB_PUBLIC_1']
     cidr_subnet['eb']['public_2'] = env['common']['AWS_SUBNET_EB_PUBLIC_2']
 
-    def __init__(self, aws_default_region=None):
+    def __init__(self, aws_default_region=None, aws_access_key=None, aws_secret_access_key=None):
         if not env['aws'].get('AWS_ACCESS_KEY_ID') or \
                 not env['aws'].get('AWS_SECRET_ACCESS_KEY') or \
                 not env['aws'].get('AWS_DEFAULT_REGION'):
             raise Exception()
 
         self.env = dict(os.environ)
-        self.env['AWS_ACCESS_KEY_ID'] = env['aws']['AWS_ACCESS_KEY_ID']
-        self.env['AWS_SECRET_ACCESS_KEY'] = env['aws']['AWS_SECRET_ACCESS_KEY']
+        self.env['AWS_ACCESS_KEY_ID'] = env['aws']['AWS_ACCESS_KEY_ID'] \
+            if not aws_access_key \
+            else aws_access_key
+        self.env['AWS_SECRET_ACCESS_KEY'] = env['aws']['AWS_SECRET_ACCESS_KEY'] \
+            if not aws_secret_access_key \
+            else aws_secret_access_key
         self.env['AWS_DEFAULT_REGION'] = env['aws']['AWS_DEFAULT_REGION'] \
             if not aws_default_region \
             else aws_default_region
@@ -106,14 +110,14 @@ class AWSCli:
     def get_vpc_id(self):
         rds_vpc_id = None
         cmd = ['ec2', 'describe-vpcs']
-        cmd += ['--filters=Name=cidr,Values=%s' % self.cidr_vpc['rds']]
+        cmd += [f"--filters=Name=cidr,Values={self.cidr_vpc['rds']}"]
         result = self.run(cmd)
         if len(result['Vpcs']) == 1:
             rds_vpc_id = dict(result['Vpcs'][0])['VpcId']
 
         eb_vpc_id = None
         cmd = ['ec2', 'describe-vpcs']
-        cmd += ['--filters=Name=cidr,Values=%s' % self.cidr_vpc['eb']]
+        cmd += [f"--filters=Name=cidr,Values={self.cidr_vpc['eb']}"]
         result = self.run(cmd)
         if len(result['Vpcs']) == 1:
             eb_vpc_id = dict(result['Vpcs'][0])['VpcId']
@@ -312,7 +316,7 @@ class AWSCli:
     def set_name_tag(self, resource_id, name):
         cmd = ['ec2', 'create-tags']
         cmd += ['--resources', resource_id]
-        cmd += ['--tags', 'Key=Name,Value=%s' % name]
+        cmd += ['--tags', f'Key=Name,Value={name}']
         self.run(cmd)
 
     def wait_terminate_lambda(self):

@@ -40,21 +40,21 @@ def run(cmd, file_path_name=None, cwd=None):
 
 def run_create_ec2_keypair(key_name):
     cmd = ['rm', '-f']
-    cmd += ['%s.pem' % key_name]
-    cmd += ['%s.pub' % key_name]
+    cmd += [f'{key_name}.pem']
+    cmd += [f'{key_name}.pub']
     run(cmd)
 
     cmd = ['openssl', 'genrsa']
-    cmd += ['-out', '%s.pem' % key_name]
+    cmd += ['-out', f'{key_name}.pem']
     cmd += ['2048']
     run(cmd)
 
-    print('Private key file:', '%s.pem' % key_name, '\n')
+    print('Private key file:', f'{key_name}.pem', '\n')
 
-    run(['chmod', '400', '%s.pem' % key_name])
+    run(['chmod', '400', f'{key_name}.pem'])
 
     cmd = ['openssl', 'rsa']
-    cmd += ['-in', '%s.pem' % key_name]
+    cmd += ['-in', f'{key_name}.pem']
     cmd += ['-pubout']
     run(cmd, file_path_name='%s.pub' % key_name)
 

@@ -373,7 +373,7 @@ def run_create_eb_django(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.9.6 running Python 3.6']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.9.7 running Python 3.6']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
@@ -403,7 +403,7 @@ def run_create_eb_django(name, settings):
     print_message('revoke security group ingress')
 
     cmd = ['ec2', 'describe-security-groups']
-    cmd += ['--filters', 'Name=tag-key,Values=Name', 'Name=tag-value,Values=%s' % eb_environment_name]
+    cmd += ['--filters', 'Name=tag-key,Values=Name', f'Name=tag-value,Values={eb_environment_name}']
     result = aws_cli.run(cmd)
 
     for ss in result['SecurityGroups']:
