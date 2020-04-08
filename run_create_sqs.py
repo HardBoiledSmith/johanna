@@ -32,7 +32,7 @@ def run_create_queue(name, settings):
         attributes['MessageRetentionPeriod'] = retention
 
         cmd = ['sqs', 'create-queue']
-        cmd += ['--queue-name', '%s-dead-letter' % name]
+        cmd += ['--queue-name', f'{name}-dead-letter']
         cmd += ['--attributes', json.dumps(attributes)]
         result = aws_cli.run(cmd)
 

@@ -22,20 +22,20 @@ def create_sms_log():
     role_name = 'aws-sns-sms-log-role'
     policy_name = 'aws-sns-sms-log-policy'
 
-    print_message('create role: %s' % role_name)
+    print_message(f'create role: {role_name}')
 
     role = aws_cli.get_iam_role(role_name)
 
     if not role:
         cmd = ['iam', 'create-role']
         cmd += ['--role-name', role_name]
-        cmd += ['--assume-role-policy-document', 'file://aws_iam/%s.json' % role_name]
+        cmd += ['--assume-role-policy-document', f'file://aws_iam/{role_name}.json']
         role = aws_cli.run(cmd)
 
         cmd = ['iam', 'put-role-policy']
         cmd += ['--role-name', role_name]
         cmd += ['--policy-name', policy_name]
-        cmd += ['--policy-document', 'file://aws_iam/%s.json' % policy_name]
+        cmd += ['--policy-document', f'file://aws_iam/{policy_name}.json']
         aws_cli.run(cmd)
 
     role_arn = role['Role']['Arn']
@@ -53,7 +53,7 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
     dashboard_region = settings['AWS_DEFAULT_REGION']
     aws_cli = AWSCli(dashboard_region)
 
-    print_message('get elasticbeanstalk environment info: %s' % name)
+    print_message(f'get elasticbeanstalk environment info: {name}')
 
     cmd = ['elasticbeanstalk', 'describe-environments']
     cmd += ['--no-include-deleted']

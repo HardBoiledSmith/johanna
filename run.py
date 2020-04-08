@@ -54,7 +54,7 @@ def print_usage():
     print('')
     print('-' * 80)
     for cc in command_list:
-        print('    ./run.py [OPTIONS] %s' % cc)
+        print(f'    ./run.py [OPTIONS] {cc}')
     print('-' * 80)
     print('    ./run.py [OPTIONS] -- [AWS CLI COMMAND]\t\t' +
           '(ex: \'./run.py -- aws ec2 describe-instances\')')
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         print_usage()
         sys.exit(0)
 
-    command = 'run_%s' % command
+    command = f'run_{command}'
     if command == 'run_create':
         __import__('run_create_iam')
         __import__('run_create_vpc')

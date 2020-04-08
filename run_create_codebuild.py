@@ -23,9 +23,9 @@ aws_cli = AWSCli()
 def create_iam_for_codebuild(codebuild_type):
     sleep_required = False
 
-    role_name = 'aws-codebuild-%s-role' % codebuild_type
+    role_name = f'aws-codebuild-{codebuild_type}-role'
     if not aws_cli.get_iam_role(role_name):
-        print_message('create iam role: %s' % role_name)
+        print_message(f'create iam role: {role_name}')
 
         cmd = ['iam', 'create-role']
         cmd += ['--role-name', role_name]

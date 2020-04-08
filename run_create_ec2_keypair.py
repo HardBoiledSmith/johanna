@@ -56,13 +56,13 @@ def run_create_ec2_keypair(key_name):
     cmd = ['openssl', 'rsa']
     cmd += ['-in', f'{key_name}.pem']
     cmd += ['-pubout']
-    run(cmd, file_path_name='%s.pub' % key_name)
+    run(cmd, file_path_name=f'{key_name}.pub')
 
-    print('Public key file:', '%s.pub' % key_name, '\n')
+    print('Public key file:', f'{key_name}.pub', '\n')
 
     print('AWS_KEY_PAIR_NAME:', key_name, '\n')
 
-    pub_key = read_file('%s.pub' % key_name)
+    pub_key = read_file(f'{key_name}.pub')
     pub_key = pub_key[1:-1]
     pp_list = list()
     for pk in pub_key:
@@ -71,17 +71,17 @@ def run_create_ec2_keypair(key_name):
     pub_key = ''.join(pp_list)
     print('AWS_KEY_PAIR_MATERIAL:', pub_key, '\n')
 
-    run(['chmod', '400', '%s.pub' % key_name])
+    run(['chmod', '400', f'{key_name}.pub'])
 
     cmd = ['ssh-keygen', '-y']
-    cmd += ['-f', '%s.pem' % key_name]
+    cmd += ['-f', f'{key_name}.pem' % key_name]
     result, error = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE).communicate()
     # noinspection PyUnresolvedReferences
     result = result.decode('utf-8')
     print('OpenSSH public key:', result.strip(), '\n')
 
     cmd = ['openssl', 'pkey']
-    cmd += ['-in', '%s.pem' % key_name]
+    cmd += ['-in', f'{key_name}.pem']
     cmd += ['-pubout']
     cmd += ['-outform', 'DER']
     proc = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE)
