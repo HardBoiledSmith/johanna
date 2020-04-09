@@ -26,7 +26,6 @@ command_list.append('create_sns')
 command_list.append('create_sqs')
 command_list.append('create_vpc')
 
-
 command_list.append('terminate')
 command_list.append('terminate_appstream_builder')
 command_list.append('terminate_appstream_fleet_autoscale')
@@ -49,7 +48,6 @@ command_list.append('terminate_ses')
 command_list.append('terminate_sns')
 command_list.append('terminate_sqs')
 command_list.append('terminate_vpc')
-
 
 command_list.append('describe')
 command_list.append('describe_cloudwatch')
