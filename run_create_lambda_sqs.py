@@ -28,23 +28,23 @@ def run_create_lambda_sqs(function_name, settings):
     git_folder_name = mm.group(1)
 
     ################################################################################
-    print_session('create %s' % function_name)
+    print_session(f'create {function_name}')
 
     ################################################################################
-    print_message('download template: %s' % git_folder_name)
+    print_message(f'download template: {git_folder_name}')
 
     subprocess.Popen(['mkdir', '-p', './template']).communicate()
 
-    if not os.path.exists('template/%s' % git_folder_name):
+    if not os.path.exists(f'template/{git_folder_name}'):
         if phase == 'dv':
             git_command = ['git', 'clone', '--depth=1', git_url]
         else:
             git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
         subprocess.Popen(git_command, cwd='template').communicate()
-        if not os.path.exists('template/%s' % git_folder_name):
+        if not os.path.exists(f'template/{git_folder_name}'):
             raise Exception()
 
-    deploy_folder = 'template/%s/lambda/%s' % (git_folder_name, folder_name)
+    deploy_folder = f'template/{git_folder_name}/lambda/{folder_name}'
 
     ################################################################################
     cmd = ['sqs', 'get-queue-url']
@@ -57,19 +57,19 @@ def run_create_lambda_sqs(function_name, settings):
     queue_arn = aws_cli.run(cmd)['Attributes']['QueueArn']
 
     ################################################################################
-    print_message('packaging lambda: %s' % function_name)
+    print_message(f'packaging lambda: {function_name}')
 
     print_message('cleanup generated files')
     subprocess.Popen(['git', 'clean', '-d', '-f', '-x'], cwd=deploy_folder).communicate()
 
-    requirements_path = '%s/requirements.txt' % deploy_folder
+    requirements_path = f'{deploy_folder}/requirements.txt'
     if os.path.exists(requirements_path):
         print_message('install dependencies')
 
         cmd = ['pip3', 'install', '-r', requirements_path, '-t', deploy_folder]
         subprocess.Popen(cmd).communicate()
 
-    settings_path = '%s/settings_local_sample.py' % deploy_folder
+    settings_path = f'{deploy_folder}/settings_local_sample.py'
     if os.path.exists(settings_path):
         print_message('create environment values')
 
@@ -80,8 +80,8 @@ def run_create_lambda_sqs(function_name, settings):
             value = settings[key]
             option_list.append([key, value])
         for oo in option_list:
-            lines = re_sub_lines(lines, '^(%s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
-        write_file('%s/settings_local.py' % deploy_folder, lines)
+            lines = re_sub_lines(lines, f'^({oo[0]}) .*', f'\\1 = \'{oo[1]}\'')
+        write_file(f'{deploy_folder}/settings_local.py', lines)
 
     print_message('zip files')
 
@@ -95,13 +95,13 @@ def run_create_lambda_sqs(function_name, settings):
     git_hash_johanna = subprocess.Popen(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE).communicate()[0]
     git_hash_template = subprocess.Popen(['git', 'rev-parse', 'HEAD'],
                                          stdout=subprocess.PIPE,
-                                         cwd='template/%s' % git_folder_name).communicate()[0]
+                                         cwd=f'template/{git_folder_name}').communicate()[0]
 
     tags = list()
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_johanna=%s' % git_hash_johanna.decode('utf-8').strip())
+    tags.append(f"git_hash_johanna={git_hash_johanna.decode('utf-8').strip()}")
     # noinspection PyUnresolvedReferences
-    tags.append('git_hash_%s=%s' % (git_folder_name, git_hash_template.decode('utf-8').strip()))
+    tags.append(f"git_hash_{git_folder_name}={git_hash_template.decode('utf-8').strip()}")
 
     ################################################################################
     print_message('check previous version')
@@ -116,7 +116,7 @@ def run_create_lambda_sqs(function_name, settings):
 
     ################################################################################
     if need_update:
-        print_session('update lambda: %s' % function_name)
+        print_session(f'update lambda: {function_name}')
 
         cmd = ['lambda', 'update-function-code',
                '--function-name', function_name,
@@ -141,7 +141,7 @@ def run_create_lambda_sqs(function_name, settings):
                '--tags', ','.join(tags)]
         aws_cli.run(cmd, cwd=deploy_folder)
 
-        print_message('update sqs event source for %s' % function_name)
+        print_message(f'update sqs event source for {function_name}')
 
         cmd = ['lambda', 'list-event-source-mappings',
                '--function-name', function_name]
@@ -162,7 +162,7 @@ def run_create_lambda_sqs(function_name, settings):
         return
 
     ################################################################################
-    print_session('create lambda: %s' % function_name)
+    print_session(f'create lambda: {function_name}')
 
     cmd = ['lambda', 'create-function',
            '--function-name', function_name,
@@ -185,7 +185,7 @@ def run_create_lambda_sqs(function_name, settings):
            '--source-arn', queue_arn]
     aws_cli.run(cmd)
 
-    print_message('create sqs event source for %s' % function_name)
+    print_message(f'create sqs event source for {function_name}')
 
     cmd = ['lambda', 'create-event-source-mapping',
            '--event-source-arn', queue_arn,
