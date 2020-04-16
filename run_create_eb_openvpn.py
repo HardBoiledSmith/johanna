@@ -214,7 +214,7 @@ def run_create_eb_openvpn(name, settings):
     file_list.append('requirements.txt')
 
     for ff in file_list:
-        cmd = ['mv', f'{name}/_provisioning/{ff}' % (name, ff), '.']
+        cmd = ['mv', f'{name}/_provisioning/{ff}', '.']
         subprocess.Popen(cmd, cwd=template_path).communicate()
 
     cmd = ['rm', '-rf', f'{name}/_provisioning']
