@@ -32,19 +32,19 @@ def run_create_eb_openvpn(name, settings):
     openvpn_subnet_ip = settings['OPENVPN_SUBNET_IP']
     phase = env['common']['PHASE']
     service_name = env['common'].get('SERVICE_NAME', '')
-    name_prefix = '%s_' % service_name if service_name else ''
+    name_prefix = f'{service_name}_' if service_name else ''
 
     cidr_vpc = aws_cli.cidr_vpc
     cidr_subnet = aws_cli.cidr_subnet
 
     str_timestamp = str(int(time.time()))
 
-    zip_filename = '%s-%s.zip' % (name, str_timestamp)
+    zip_filename = f'{name}-{str_timestamp}.zip'
 
-    eb_environment_name = '%s-%s' % (name, str_timestamp)
+    eb_environment_name = f'{name}-{str_timestamp}'
     eb_environment_name_old = None
 
-    template_path = 'template/%s' % name
+    template_path = f'template/{name}'
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
 
@@ -53,7 +53,7 @@ def run_create_eb_openvpn(name, settings):
     # start
     #
     ################################################################################
-    print_session('create %s' % name)
+    print_session(f'create {name}')
 
     ################################################################################
     print_message('get vpc id')
@@ -88,7 +88,7 @@ def run_create_eb_openvpn(name, settings):
     for r in result['SecurityGroups']:
         if r['VpcId'] != eb_vpc_id:
             continue
-        if r['GroupName'] == '%seb_public' % name_prefix:
+        if r['GroupName'] == f'{name_prefix}eb_public':
             security_group_id = r['GroupId']
             break
 
@@ -102,77 +102,76 @@ def run_create_eb_openvpn(name, settings):
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
     subprocess.Popen(git_command, cwd=template_path).communicate()
-    if not os.path.exists('%s/%s' % (template_path, name)):
+    if not os.path.exists(f'{template_path}/{name}'):
         raise Exception()
 
     git_hash_app = subprocess.Popen(git_rev,
                                     stdout=subprocess.PIPE,
-                                    cwd='%s/%s' % (template_path, name)).communicate()[0]
+                                    cwd=f'{template_path}/{name}').communicate()[0]
 
-    subprocess.Popen(['rm', '-rf', './%s/.git' % name], cwd=template_path).communicate()
-    subprocess.Popen(['rm', '-rf', './%s/.gitignore' % name], cwd=template_path).communicate()
+    subprocess.Popen(['rm', '-rf', f'./{name}/.git'], cwd=template_path).communicate()
+    subprocess.Popen(['rm', '-rf', f'./{name}/.gitignore'], cwd=template_path).communicate()
 
     ################################################################################
     print_message('configuration openvpn')
 
-    path = '%s/%s/_provisioning/configuration/etc/openvpn' % (template_path, name)
+    path = f'{template_path}/{name}/_provisioning/configuration/etc/openvpn'
 
-    with open('%s/ca.crt' % path, 'w') as f:
+    with open(f'{path}/ca.crt', 'w') as f:
         f.write(openvpn_ca_crt)
         f.close()
 
-    with open('%s/ca.key' % path, 'w') as f:
+    with open(f'{path}/ca.key', 'w') as f:
         f.write(openvpn_ca_key)
         f.close()
 
-    with open('%s/dh2048.pem' % path, 'w') as f:
+    with open(f'{path}/dh2048.pem', 'w') as f:
         f.write(openvpn_dh2048_pem)
         f.close()
 
-    with open('%s/server.crt' % path, 'w') as f:
+    with open(f'{path}/server.crt', 'w') as f:
         f.write(openvpn_server_crt)
         f.close()
 
-    with open('%s/server.key' % path, 'w') as f:
+    with open(f'{path}/server.key', 'w') as f:
         f.write(openvpn_server_key)
         f.close()
 
     ################################################################################
-    print_message('configuration %s' % name)
+    print_message(f'configuration {name}')
 
-    with open('%s/%s/_provisioning/configuration/accounts' % (template_path, name), 'w') as f:
+    with open(f'{template_path}/{name}/_provisioning/configuration/accounts', 'w') as f:
         for aa in accounts:
             f.write(aa + '\n')
         f.close()
 
-    with open('%s/%s/_provisioning/configuration/phase' % (template_path, name), 'w') as f:
+    with open(f'{template_path}/{name}/_provisioning/configuration/phase', 'w') as f:
         f.write(phase)
         f.close()
 
-    lines = read_file('%s/%s/_provisioning/.ebextensions/%s.config.sample' % (template_path, name, name))
+    lines = read_file(f'{template_path}/{name}/_provisioning/.ebextensions/{name}.config.sample')
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
-    write_file('%s/%s/_provisioning/.ebextensions/%s.config' % (template_path, name, name), lines)
+    write_file(f'{template_path}/{name}/_provisioning/.ebextensions/{name}.config', lines)
 
-    lines = read_file('%s/%s/_provisioning/configuration/etc/openvpn/server_sample.conf' % (template_path, name))
+    lines = read_file(f'{template_path}/{name}/_provisioning/configuration/etc/openvpn/server_sample.conf')
     lines = re_sub_lines(lines, 'OPENVPN_SUBNET_IP', openvpn_subnet_ip)
-    write_file('%s/%s/_provisioning/configuration/etc/openvpn/server.conf' % (template_path, name), lines)
+    write_file(f'{template_path}/{name}/_provisioning/configuration/etc/openvpn/server.conf', lines)
 
-    lines = read_file('%s/%s/_provisioning/configuration/etc/sysconfig/iptables_sample' % (template_path, name))
+    lines = read_file(f'{template_path}/{name}/_provisioning/configuration/etc/sysconfig/iptables_sample')
     lines = re_sub_lines(lines, 'AWS_VPC_EB', cidr_vpc['eb'])
     lines = re_sub_lines(lines, 'OPENVPN_SUBNET_IP', openvpn_subnet_ip)
-    write_file('%s/%s/_provisioning/configuration/etc/sysconfig/iptables' % (template_path, name), lines)
+    write_file(f'{template_path}/{name}/_provisioning/configuration/etc/sysconfig/iptables', lines)
 
-    lines = read_file(('%s/%s/_provisioning/configuration/etc/%s/settings_local_sample.py'
-                       % (template_path, name, name)))
-    lines = re_sub_lines(lines, '^(DEBUG).*', '\\1 = %s' % debug)
+    lines = read_file(f'{template_path}/{name}/_provisioning/configuration/etc/{name}/settings_local_sample.py')
+    lines = re_sub_lines(lines, '^(DEBUG).*', f'\\1 = {debug}')
     option_list = list()
     option_list.append(['PHASE', phase])
     for key in settings:
         value = settings[key]
         option_list.append([key, value])
     for oo in option_list:
-        lines = re_sub_lines(lines, '^(%s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
-    write_file(('%s/%s/_provisioning/configuration/etc/%s/settings_local.py' % (template_path, name, name)), lines)
+        lines = re_sub_lines(lines, f'^({oo[0]}) .*', f'\\1 = \'{oo[1]}\'')
+    write_file(f'{template_path}/{name}/_provisioning/configuration/etc/{name}/settings_local.py', lines)
 
     ################################################################################
     print_message('check previous version')
@@ -185,7 +184,7 @@ def run_create_eb_openvpn(name, settings):
         if 'CNAME' not in r:
             continue
 
-        if r['CNAME'] == '%s.%s.elasticbeanstalk.com' % (cname, aws_default_region):
+        if r['CNAME'] == f'{cname}.{aws_default_region}.elasticbeanstalk.com':
             if r['Status'] == 'Terminated':
                 continue
             elif r['Status'] != 'Ready':
@@ -193,7 +192,7 @@ def run_create_eb_openvpn(name, settings):
                 raise Exception()
 
             eb_environment_name_old = r['EnvironmentName']
-            cname += '-%s' % str_timestamp
+            cname += f'-{str_timestamp}'
             break
 
     ################################################################################
@@ -215,10 +214,10 @@ def run_create_eb_openvpn(name, settings):
     file_list.append('requirements.txt')
 
     for ff in file_list:
-        cmd = ['mv', '%s/_provisioning/%s' % (name, ff), '.']
+        cmd = ['mv', f'{name}/_provisioning/{ff}' % (name, ff), '.']
         subprocess.Popen(cmd, cwd=template_path).communicate()
 
-    cmd = ['rm', '-rf', '%s/_provisioning' % name]
+    cmd = ['rm', '-rf', f'{name}/_provisioning']
     subprocess.Popen(cmd, cwd=template_path).communicate()
 
     cmd = ['zip', '-r', zip_filename, '.', '.ebextensions']
@@ -232,12 +231,12 @@ def run_create_eb_openvpn(name, settings):
 
     cmd = ['elasticbeanstalk', 'create-application-version']
     cmd += ['--application-name', eb_application_name]
-    cmd += ['--source-bundle', 'S3Bucket="%s",S3Key="%s/%s"' % (s3_bucket, eb_application_name, zip_filename)]
+    cmd += ['--source-bundle', f'S3Bucket="{s3_bucket}",S3Key="{eb_application_name}/{zip_filename}"']
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
 
     ################################################################################
-    print_message('create environment %s' % name)
+    print_message(f'create environment {name}')
 
     option_settings = list()
 
@@ -348,8 +347,8 @@ def run_create_eb_openvpn(name, settings):
 
     option_settings = json.dumps(option_settings)
 
-    tag0 = 'Key=git_hash_johanna,Value=%s' % git_hash_johanna.decode('utf-8').strip()
-    tag1 = 'Key=git_hash_%s,Value=%s' % (name, git_hash_app.decode('utf-8').strip())
+    tag0 = f"Key=git_hash_johanna,Value={git_hash_johanna.decode('utf-8').strip()}"
+    tag1 = f"Key=git_hash_{name},Value={git_hash_app.decode('utf-8').strip()}"
 
     cmd = ['elasticbeanstalk', 'create-environment']
     cmd += ['--application-name', eb_application_name]
