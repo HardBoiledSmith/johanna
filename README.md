@@ -69,6 +69,10 @@ You can use this on web GUI
 - move to johanna folder using  `$ cd /opt/johanna`
 - run provisioning script using `/opt/johanna $ ./run.py`
 
+# Command Completion
+
+You can use [AWS CLI Command Completion](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-completion.html)
+
 # S3 SRR(Same Region Replication)
 
 This script applies replication to different AWS accounts.

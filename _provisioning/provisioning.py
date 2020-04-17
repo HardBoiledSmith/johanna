@@ -162,6 +162,8 @@ def _preprocess(hostname):
 
     with open('/root/.bashrc', 'a') as f:
         f.write('export NODE_OPTIONS="--max-old-space-size=2048"')
+        f.write('export PATH=/usr/local/bin:$PATH')
+        f.write("complete -C '/usr/local/bin/aws_completer' aws")
 
 
 def main():
