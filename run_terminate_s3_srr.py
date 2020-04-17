@@ -8,7 +8,7 @@ from run_common import print_message
 
 def _parse_args():
     parser = ArgumentParser()
-    parser.add_argument('-i', '--origin_bucket_account_id', type=str, required=True, help='origin bucket account id')
+    parser.add_argument('-oa', '--origin_bucket_account_id', type=str, required=True, help='origin bucket account id')
     parser.add_argument('-o', '--origin_bucket_name', type=str, required=True, help='origin bucket name')
     parser.add_argument('-r', '--replication_bucket_name', type=str, required=True, help='replication bucket name')
     parser.add_argument('-a', '--replication_aws_access_key', type=str, required=True,
