@@ -136,7 +136,7 @@ def run_create_s3_srr_bucket(args):
                 "Filter": {"Prefix": ""},
                 "Destination": {
                     "Bucket": f"arn:aws:s3:::{replication_bucket_name}",
-                    "Account": replication_bucket_account_id",
+                    "Account": replication_bucket_account_id,
                     "AccessControlTranslation": {
                         "Owner": "Destination"
                     }
