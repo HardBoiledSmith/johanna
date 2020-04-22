@@ -38,7 +38,7 @@ def _put_policy_replication_bucket(replication_bucket_name, origin_bucket_accoun
                 "Sid": "1",
                 "Effect": "Allow",
                 "Principal": {
-                    "AWS": "arn:aws:iam::%s:root" % origin_bucket_account_id
+                    "AWS": f"arn:aws:iam::{origin_bucket_account_id}:root"
                 },
                 "Action": [
                     "s3:GetBucketVersioning",
@@ -48,8 +48,8 @@ def _put_policy_replication_bucket(replication_bucket_name, origin_bucket_accoun
                     "s3:ObjectOwnerOverrideToBucketOwner"
                 ],
                 "Resource": [
-                    "arn:aws:s3:::%s" % replication_bucket_name,
-                    "arn:aws:s3:::%s/*" % replication_bucket_name
+                    f"arn:aws:s3:::{replication_bucket_name}",
+                    f"arn:aws:s3:::{replication_bucket_name}/*"
                 ]
             }
         ]
@@ -83,7 +83,7 @@ def run_create_s3_srr_bucket(args):
                     "s3:GetObjectVersionAcl"
                 ],
                 "Resource": [
-                    "arn:aws:s3:::%s/*" % origin_bucket_name
+                    f"arn:aws:s3:::{origin_bucket_name}/*"
                 ]
             },
             {
@@ -93,7 +93,7 @@ def run_create_s3_srr_bucket(args):
                     "s3:GetReplicationConfiguration"
                 ],
                 "Resource": [
-                    "arn:aws:s3:::%s" % origin_bucket_name
+                    f"arn:aws:s3:::{origin_bucket_name}"
                 ]
             },
             {
@@ -105,7 +105,7 @@ def run_create_s3_srr_bucket(args):
                     "s3:ObjectOwnerOverrideToBucketOwner"
                 ],
                 "Effect": "Allow",
-                "Resource": "arn:aws:s3:::%s/*" % replication_bucket_name
+                "Resource": f"arn:aws:s3:::{replication_bucket_name}/*"
             }
         ]
     }
@@ -123,11 +123,11 @@ def run_create_s3_srr_bucket(args):
 
     cc = ['iam', 'attach-role-policy']
     cc += ['--role-name', srr_role_name]
-    cc += ['--policy-arn', 'arn:aws:iam::%s:policy/%s' % (origin_bucket_account_id, srr_policy_name)]
+    cc += ['--policy-arn', f'arn:aws:iam::{origin_bucket_account_id}:policy/{srr_policy_name}']
     aws_cli.run(cc)
 
     s3_policy = {
-        "Role": "arn:aws:iam::%s:role/%s" % (origin_bucket_account_id, srr_role_name),
+        "Role": f"arn:aws:iam::{origin_bucket_account_id}:role/{srr_role_name}",
         "Rules": [
             {
                 "Status": "Enabled",
@@ -135,8 +135,8 @@ def run_create_s3_srr_bucket(args):
                 "DeleteMarkerReplication": {"Status": "Disabled"},
                 "Filter": {"Prefix": ""},
                 "Destination": {
-                    "Bucket": "arn:aws:s3:::%s" % replication_bucket_name,
-                    "Account": "%s" % replication_bucket_account_id,
+                    "Bucket": f"arn:aws:s3:::{replication_bucket_name}",
+                    "Account": f"{replication_bucket_account_id}",
                     "AccessControlTranslation": {
                         "Owner": "Destination"
                     }

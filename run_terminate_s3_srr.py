@@ -40,11 +40,11 @@ def run_terminate_s3_srr(args):
 
     cmd = ['iam', 'detach-role-policy']
     cmd += ['--role-name', srr_role_name]
-    cmd += ['--policy-arn', 'arn:aws:iam::%s:policy/%s' % (origin_bucket_account_id, srr_policy_name)]
+    cmd += ['--policy-arn', f'arn:aws:iam::{origin_bucket_account_id}:policy/{srr_policy_name}']
     aws_cli.run(cmd, ignore_error=True)
 
     cmd = ['iam', 'delete-policy']
-    cmd += ['--policy-arn', 'arn:aws:iam::%s:policy/%s' % (origin_bucket_account_id, srr_policy_name)]
+    cmd += ['--policy-arn', f'arn:aws:iam::{origin_bucket_account_id}:policy/{srr_policy_name}']
     aws_cli.run(cmd, ignore_error=True)
 
     cmd = ['iam', 'delete-role']
