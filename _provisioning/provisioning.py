@@ -10,6 +10,7 @@ from multiprocessing import Process
 from subprocess import PIPE
 
 env = dict(os.environ)
+env['PATH'] = f"{env['PATH']}:/usr/local/bin"
 
 
 def _print_line_number(number_of_outer_frame=1):
