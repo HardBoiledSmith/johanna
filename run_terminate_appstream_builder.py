@@ -4,37 +4,7 @@ from time import sleep
 
 from env import env
 from run_common import AWSCli
-from run_common import print_message
 from run_common import print_session
-
-
-def terminate_iam_for_appstream():
-    aws_cli = AWSCli()
-    role_name = 'AmazonAppStreamServiceAccess'
-    print_message('delete iam role')
-
-    # noinspection PyShadowingNames
-    cc = ['iam', 'detach-role-policy']
-    cc += ['--role-name', role_name]
-    cc += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AmazonAppStreamServiceAccess']
-    aws_cli.run(cc, ignore_error=True)
-
-    # noinspection PyShadowingNames
-    cc = ['iam', 'delete-role']
-    cc += ['--role-name', role_name]
-    aws_cli.run(cc, ignore_error=True)
-
-    role_name = 'ApplicationAutoScalingForAmazonAppStreamAccess'
-    # noinspection PyShadowingNames
-    cc = ['iam', 'detach-role-policy']
-    cc += ['--role-name', role_name]
-    cc += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/ApplicationAutoScalingForAmazonAppStreamAccess']
-    aws_cli.run(cc, ignore_error=True)
-
-    # noinspection PyShadowingNames
-    cc = ['iam', 'delete-role']
-    cc += ['--role-name', role_name]
-    aws_cli.run(cc, ignore_error=True)
 
 
 def delete_image(image_name):
@@ -119,5 +89,3 @@ if __name__ == "__main__":
         stop_image_builder(image_builder_name)
         wait_state(image_builder_name)
         delete_image_builder(image_builder_name)
-
-    terminate_iam_for_appstream()
