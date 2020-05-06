@@ -8,7 +8,7 @@ from run_common import print_message
 
 def _parse_args():
     parser = ArgumentParser()
-    parser.add_argument('-i', '--origin_bucket_account_id', type=str, required=True, help='origin bucket account id')
+    parser.add_argument('-oa', '--origin_bucket_account_id', type=str, required=True, help='origin bucket account id')
     parser.add_argument('-o', '--origin_bucket_name', type=str, required=True, help='origin bucket name')
     parser.add_argument('-r', '--replication_bucket_name', type=str, required=True, help='replication bucket name')
     parser.add_argument('-a', '--replication_aws_access_key', type=str, required=True,
@@ -40,11 +40,11 @@ def run_terminate_s3_srr(args):
 
     cmd = ['iam', 'detach-role-policy']
     cmd += ['--role-name', srr_role_name]
-    cmd += ['--policy-arn', 'arn:aws:iam::%s:policy/%s' % (origin_bucket_account_id, srr_policy_name)]
+    cmd += ['--policy-arn', f'arn:aws:iam::{origin_bucket_account_id}:policy/{srr_policy_name}']
     aws_cli.run(cmd, ignore_error=True)
 
     cmd = ['iam', 'delete-policy']
-    cmd += ['--policy-arn', 'arn:aws:iam::%s:policy/%s' % (origin_bucket_account_id, srr_policy_name)]
+    cmd += ['--policy-arn', f'arn:aws:iam::{origin_bucket_account_id}:policy/{srr_policy_name}']
     aws_cli.run(cmd, ignore_error=True)
 
     cmd = ['iam', 'delete-role']

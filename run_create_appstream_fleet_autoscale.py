@@ -14,10 +14,12 @@ if __name__ == "__main__":
     aws_cli = AWSCli()
 
     env = env['appstream']['STACK'][0]
-    fleet_name = f'fleet/{env["FLEET_NAME"]}'
+    fleet_name = env["FLEET_NAME"]
+    fleet_path = f'fleet/{env["FLEET_NAME"]}'
     max_capacity = env["MAX_CAPACITY"]
     min_capacity = env["MIN_CAPACITY"]
-    appstream_policy_name = env["APPSTREAM_SCALING_POLICY"]
+    appstream_scale_out_policy_name = env["APPSTREAM_SCALING_OUT_POLICY"]
+    appstream_scale_in_policy_name = env["APPSTREAM_SCALING_IN_POLICY"]
     scale_target_value = env['SCALE_TARGET_VALUE']
 
     ################################################################################
@@ -28,41 +30,102 @@ if __name__ == "__main__":
 
     cc = ['application-autoscaling', 'describe-scalable-targets']
     cc += ['--service-namespace', 'appstream']
-    cc += ['--resource-ids', fleet_name]
+    cc += ['--resource-ids', fleet_path]
     rr = aws_cli.run(cc)
     if rr['ScalableTargets']:
         cc = ['application-autoscaling', 'deregister-scalable-target']
         cc += ['--service-namespace', 'appstream']
-        cc += ['--resource-id', fleet_name]
+        cc += ['--resource-id', fleet_path]
         cc += ['--scalable-dimension', 'appstream:fleet:DesiredCapacity']
         aws_cli.run(cc)
 
         time.sleep(30)
 
+    # register target auto-scale
     cc = ['application-autoscaling', 'register-scalable-target']
     cc += ['--service-namespace', 'appstream']
     cc += ['--scalable-dimension', 'appstream:fleet:DesiredCapacity']
-    cc += ['--resource-id', fleet_name]
+    cc += ['--resource-id', fleet_path]
     cc += ['--min-capacity', min_capacity]
     cc += ['--max-capacity', max_capacity]
     aws_cli.run(cc)
 
+    # Scale out
     appstream_policy = {
-        'PolicyName': appstream_policy_name,
+        'PolicyName': appstream_scale_out_policy_name,
         'ServiceNamespace': 'appstream',
-        'ResourceId': fleet_name,
+        'ResourceId': fleet_path,
         'ScalableDimension': 'appstream:fleet:DesiredCapacity',
-        'PolicyType': 'TargetTrackingScaling',
-        'TargetTrackingScalingPolicyConfiguration': {
-            'TargetValue': scale_target_value,
-            'PredefinedMetricSpecification': {
-                'PredefinedMetricType': 'AppStreamAverageCapacityUtilization'
-            },
-            'ScaleOutCooldown': 30,
-            'ScaleInCooldown': 300
+        'PolicyType': 'StepScaling',
+        "StepScalingPolicyConfiguration": {
+            "AdjustmentType": "PercentChangeInCapacity",
+            "StepAdjustments": [
+                {
+                    "MetricIntervalLowerBound": 0,
+                    "ScalingAdjustment": 25
+                }
+            ],
+            "Cooldown": 60
         }
     }
 
     cc = ['application-autoscaling', 'put-scaling-policy']
     cc += ['--cli-input-json', json.dumps(appstream_policy)]
+    rr = aws_cli.run(cc)
+
+    policy_arn = rr['PolicyARN']
+    cc = ['cloudwatch', 'put-metric-alarm']
+    cc += ['--alarm-name', appstream_scale_out_policy_name]
+    cc += ['--alarm-description', '"Alarm when Capacity Utilization exceeds 75 percent"']
+    cc += ['--metric-name', 'CapacityUtilization']
+    cc += ['--namespace', 'AWS/AppStream']
+    cc += ['--statistic', 'Average']
+    cc += ['--period', '120']
+    cc += ['--threshold', '75']
+    cc += ['--comparison-operator', 'GreaterThanThreshold']
+    cc += ['--dimensions', 'Name=Fleet,Value=naoko-fleet']
+    cc += ['--evaluation-periods', '1']
+    cc += ['--unit', 'Percent']
+    cc += ['--alarm-actions', policy_arn]
+
+    aws_cli.run(cc)
+
+    # Scale in
+    appstream_policy = {
+        "PolicyName": appstream_scale_in_policy_name,
+        "ServiceNamespace": "appstream",
+        "ResourceId": fleet_path,
+        "ScalableDimension": "appstream:fleet:DesiredCapacity",
+        "PolicyType": "StepScaling",
+        "StepScalingPolicyConfiguration": {
+            "AdjustmentType": "PercentChangeInCapacity",
+            "StepAdjustments": [
+                {
+                    "MetricIntervalUpperBound": 0,
+                    "ScalingAdjustment": -25
+                }
+            ],
+            "Cooldown": 360
+        }
+    }
+
+    cc = ['application-autoscaling', 'put-scaling-policy']
+    cc += ['--cli-input-json', json.dumps(appstream_policy)]
+    rr = aws_cli.run(cc)
+
+    policy_arn = rr['PolicyARN']
+    cc = ['cloudwatch', 'put-metric-alarm']
+    cc += ['--alarm-name', appstream_scale_in_policy_name]
+    cc += ['--alarm-description', '"Alarm when Capacity Utilization is less than or equal to 25 percent"']
+    cc += ['--metric-name', 'CapacityUtilization']
+    cc += ['--namespace', 'AWS/AppStream']
+    cc += ['--statistic', 'Average']
+    cc += ['--period', '120']
+    cc += ['--threshold', '25']
+    cc += ['--comparison-operator', 'LessThanOrEqualToThreshold']
+    cc += ['--dimensions', f'Name=Fleet,Value={fleet_name}']
+    cc += ['--evaluation-periods', '6']
+    cc += ['--unit', 'Percent']
+    cc += ['--alarm-actions', policy_arn]
+
     aws_cli.run(cc)
