@@ -69,6 +69,13 @@ You can use this on web GUI
 - move to johanna folder using  `$ cd /opt/johanna`
 - run provisioning script using `/opt/johanna $ ./run.py`
 
+# How to run Lint check (PEP8)
+
+1. Provisioning vagrant
+1. Connect `http://dv-johanna.hbsmith.io/`
+1. Go to `cd /opt/johanna`
+1. Run `flake8 --config=flake8 .`
+
 # Command Completion
 
 You can use [AWS CLI Command Completion](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-completion.html)
