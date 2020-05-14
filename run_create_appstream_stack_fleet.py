@@ -89,13 +89,10 @@ def create_stack(stack_name, embed_host_domains):
     user_settings.append('Action=FILE_UPLOAD,Permission=ENABLED')
     user_settings.append('Action=FILE_DOWNLOAD,Permission=ENABLED')
 
-    # TODO: Remove after AWS Support has done
-    application_settings = 'Enabled=true,SettingsGroup=naoko-stack'
     aws_cli = AWSCli()
     cmd = ['appstream', 'create-stack']
     cmd += ['--name', name]
     cmd += ['--user-settings'] + user_settings
-    cmd += ['--application-settings', application_settings]
     cmd += ['--embed-host-domains', embed_host_domains]
     aws_cli.run(cmd)
 
