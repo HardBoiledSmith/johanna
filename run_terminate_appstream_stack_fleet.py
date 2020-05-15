@@ -121,7 +121,6 @@ if __name__ == "__main__":
             continue
 
         fleet_name = settings['FLEET_NAME']
-        image_name = settings['IMAGE_NAME']
         region = settings['AWS_DEFAULT_REGION']
         stack_name = settings['NAME']
 
