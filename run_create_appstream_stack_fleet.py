@@ -9,11 +9,6 @@ from run_common import print_message
 from run_common import print_session
 
 
-################################################################################
-#
-# start
-#
-################################################################################
 def create_iam_for_appstream():
     aws_cli = AWSCli()
     sleep_required = False
@@ -55,10 +50,10 @@ def create_iam_for_appstream():
         time.sleep(30)
 
 
-def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instances):
+def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instances, fleet_region):
     vpc_config = 'SubnetIds=%s,SecurityGroupIds=%s' % (subnet_ids, security_group_id)
 
-    aws_cli = AWSCli()
+    aws_cli = AWSCli(fleet_region)
     cmd = ['appstream', 'create-fleet']
     cmd += ['--name', name]
     cmd += ['--instance-type', 'stream.standard.medium']
@@ -80,7 +75,7 @@ def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instan
     aws_cli.run(cmd)
 
 
-def create_stack(stack_name, embed_host_domains):
+def create_stack(stack_name, embed_host_domains, stack_region):
     name = stack_name
 
     user_settings = list()
@@ -89,7 +84,7 @@ def create_stack(stack_name, embed_host_domains):
     user_settings.append('Action=FILE_UPLOAD,Permission=ENABLED')
     user_settings.append('Action=FILE_DOWNLOAD,Permission=ENABLED')
 
-    aws_cli = AWSCli()
+    aws_cli = AWSCli(stack_region)
     cmd = ['appstream', 'create-stack']
     cmd += ['--name', name]
     cmd += ['--user-settings'] + user_settings
@@ -97,8 +92,8 @@ def create_stack(stack_name, embed_host_domains):
     aws_cli.run(cmd)
 
 
-def associate_fleet(stack_name, fleet_name):
-    aws_cli = AWSCli()
+def associate_fleet(stack_name, fleet_name, fleet_region):
+    aws_cli = AWSCli(fleet_region)
     cmd = ['appstream', 'associate-fleet']
     cmd += ['--fleet-name', fleet_name]
     cmd += ['--stack-name', stack_name]
@@ -106,8 +101,8 @@ def associate_fleet(stack_name, fleet_name):
     return aws_cli.run(cmd)
 
 
-def wait_state(name):
-    aws_cli = AWSCli()
+def wait_state(name, fleet_region):
+    aws_cli = AWSCli(fleet_region)
     elapsed_time = 0
     is_waiting = True
 
@@ -128,8 +123,11 @@ def wait_state(name):
         elapsed_time += 5
 
 
-def get_subnet_and_security_group_id():
-    aws_cli = AWSCli()
+def get_subnet_and_security_group_id(vpc_region):
+    service_name = env['common'].get('SERVICE_NAME', '')
+    name_prefix = '%s_' % service_name if service_name else ''
+
+    aws_cli = AWSCli(vpc_region)
     cidr_subnet = aws_cli.cidr_subnet
 
     print_message('get vpc id')
@@ -169,8 +167,8 @@ def get_subnet_and_security_group_id():
     return [subnet_id_1, subnet_id_2], security_group_id
 
 
-def get_latest_image():
-    aws_cli = AWSCli()
+def get_latest_image(image_region):
+    aws_cli = AWSCli(image_region)
 
     ll = list()
 
@@ -187,34 +185,41 @@ def get_latest_image():
     return sorted(ll, reverse=True)[0]
 
 
+################################################################################
+#
+# start
+#
+################################################################################
+
+
 if __name__ == "__main__":
     from run_common import parse_args
 
     args = parse_args()
 
     target_name = None
-    service_name = env['common'].get('SERVICE_NAME', '')
-    name_prefix = '%s_' % service_name if service_name else ''
-    subnet_ids, security_group_id = get_subnet_and_security_group_id()
 
     if len(args) > 1:
         target_name = args[1]
 
     print_session('create appstream image stack & fleet')
 
-    image_name = get_latest_image()
-
     create_iam_for_appstream()
+
     for env_s in env['appstream']['STACK']:
         if target_name and env_s['NAME'] != target_name:
             continue
 
-        fleet_name = env_s['FLEET_NAME']
-        stack_name = env_s['NAME']
-        embed_host_domains = env_s['EMBED_HOST_DOMAINS']
         desired_instances = env_s.get('DESIRED_INSTANCES', 1)
+        embed_host_domains = env_s['EMBED_HOST_DOMAINS']
+        fleet_name = env_s['FLEET_NAME']
+        region = env_s['AWS_DEFAULT_REGION']
+        stack_name = env_s['NAME']
 
-        create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances)
-        create_stack(stack_name, embed_host_domains)
-        wait_state(fleet_name)
-        associate_fleet(stack_name, fleet_name)
+        image_name = get_latest_image(region)
+        subnet_ids, security_group_id = get_subnet_and_security_group_id(region)
+
+        create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances, region)
+        create_stack(stack_name, embed_host_domains, region)
+        wait_state(fleet_name, region)
+        associate_fleet(stack_name, fleet_name, region)

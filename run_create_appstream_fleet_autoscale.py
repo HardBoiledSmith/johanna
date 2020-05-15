@@ -5,28 +5,22 @@ import time
 
 from env import env
 from run_common import AWSCli
+from run_common import print_message
+from run_common import print_session
 
-if __name__ == "__main__":
-    from run_common import parse_args
 
-    args = parse_args()
+def create_appstream_fleet_autoscale(settings):
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
-    aws_cli = AWSCli()
+    fleet_name = settings["FLEET_NAME"]
 
-    env = env['appstream']['STACK'][0]
-    fleet_name = env["FLEET_NAME"]
-    fleet_path = f'fleet/{env["FLEET_NAME"]}'
-    max_capacity = env["MAX_CAPACITY"]
-    min_capacity = env["MIN_CAPACITY"]
-    appstream_scale_out_policy_name = env["APPSTREAM_SCALING_OUT_POLICY"]
-    appstream_scale_in_policy_name = env["APPSTREAM_SCALING_IN_POLICY"]
-    scale_target_value = env['SCALE_TARGET_VALUE']
+    print_message(f'create fleet autoscale for: {fleet_name}')
 
-    ################################################################################
-    #
-    # start
-    #
-    ################################################################################
+    appstream_scale_in_policy_name = settings["APPSTREAM_SCALING_IN_POLICY"]
+    appstream_scale_out_policy_name = settings["APPSTREAM_SCALING_OUT_POLICY"]
+    fleet_path = f'fleet/{settings["FLEET_NAME"]}'
+    max_capacity = settings["MAX_CAPACITY"]
+    min_capacity = settings["MIN_CAPACITY"]
 
     cc = ['application-autoscaling', 'describe-scalable-targets']
     cc += ['--service-namespace', 'appstream']
@@ -129,3 +123,29 @@ if __name__ == "__main__":
     cc += ['--alarm-actions', policy_arn]
 
     aws_cli.run(cc)
+
+
+################################################################################
+#
+# start
+#
+################################################################################
+
+
+if __name__ == "__main__":
+    from run_common import parse_args
+
+    args = parse_args()
+
+    target_name = None
+
+    if len(args) > 1:
+        target_name = args[1]
+
+    print_session('create appstream autoscaling setting for stack & fleet')
+
+    for settings in env['appstream']['STACK']:
+        if target_name and settings['NAME'] != target_name:
+            continue
+
+        create_appstream_fleet_autoscale(settings)
