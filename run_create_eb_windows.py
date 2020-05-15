@@ -20,7 +20,7 @@ def run_create_eb_windows(name, settings):
     aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
     aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
-    ssl_certificate_id = settings['SSL_CERTIFICATE_ID']
+    ssl_certificate_id = aws_cli.get_acm_certificate_id('hbsmith.io')
     cname = settings['CNAME']
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
@@ -357,7 +357,7 @@ def run_create_eb_windows(name, settings):
         cmd = ['elasticbeanstalk', 'describe-environments']
         cmd += ['--application-name', eb_application_name]
         cmd += ['--environment-name', eb_environment_name]
-        result = aws_cli.run(cmd)\
+        result = aws_cli.run(cmd)
 
         ee = result['Environments'][0]
         print(json.dumps(ee, sort_keys=True, indent=4))

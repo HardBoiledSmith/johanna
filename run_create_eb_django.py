@@ -26,7 +26,7 @@ def run_create_eb_django(name, settings):
     git_url = settings['GIT_URL']
     key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
-    ssl_certificate_id = settings['SSL_CERTIFICATE_ID']
+    ssl_certificate_id = aws_cli.get_acm_certificate_id('hbsmith.io')
     subnet_type = settings['SUBNET_TYPE']
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = '%s_' % service_name if service_name else ''
