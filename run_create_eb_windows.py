@@ -14,11 +14,11 @@ from run_common import write_file
 
 
 def run_create_eb_windows(name, settings):
-    aws_cli = AWSCli()
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
     aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
-    aws_default_region = env['aws']['AWS_DEFAULT_REGION']
+    aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
     ssl_certificate_id = settings['SSL_CERTIFICATE_ID']
     cname = settings['CNAME']
