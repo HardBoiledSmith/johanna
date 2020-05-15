@@ -103,20 +103,27 @@ if __name__ == "__main__":
     args = parse_args()
 
     target_name = None
+    region = None
 
     if len(args) > 1:
         target_name = args[1]
 
+    if len(args) > 2:
+        region = args[2]
+
     print_session('terminate appstream stack & fleet')
 
-    for env_s in env['appstream']['STACK']:
-        if target_name and env_s['NAME'] != target_name:
+    for settings in env['appstream']['STACK']:
+        if target_name and settings['NAME'] != target_name:
             continue
 
-        fleet_name = env_s['FLEET_NAME']
-        image_name = env_s['IMAGE_NAME']
-        region = env_s['AWS_DEFAULT_REGION']
-        stack_name = env_s['NAME']
+        if region and settings.get('AWS_DEFAULT_REGION') != region:
+            continue
+
+        fleet_name = settings['FLEET_NAME']
+        image_name = settings['IMAGE_NAME']
+        region = settings['AWS_DEFAULT_REGION']
+        stack_name = settings['NAME']
 
         disassociate_fleet(fleet_name, stack_name, region)
         delete_stack(stack_name, region)

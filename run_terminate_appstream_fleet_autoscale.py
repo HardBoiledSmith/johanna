@@ -45,14 +45,21 @@ if __name__ == "__main__":
     args = parse_args()
 
     target_name = None
+    region = None
 
     if len(args) > 1:
         target_name = args[1]
+
+    if len(args) > 2:
+        region = args[2]
 
     print_session('terminate appstream autoscaling setting for stack & fleet')
 
     for settings in env['appstream']['STACK']:
         if target_name and settings['NAME'] != target_name:
+            continue
+
+        if region and settings.get('AWS_DEFAULT_REGION') != region:
             continue
 
         terminate_appstream_fleet_autoscale(settings)

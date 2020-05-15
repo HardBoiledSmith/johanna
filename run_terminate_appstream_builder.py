@@ -78,8 +78,8 @@ if __name__ == "__main__":
 
     print_session('terminate appstream image builder')
 
-    for env_ib in env['appstream']['IMAGE_BUILDS']:
-        image_builder_name = env_ib['NAME']
+    for settings in env['appstream']['IMAGE_BUILDS']:
+        image_builder_name = settings['NAME']
         if target_name and image_builder_name != target_name:
             continue
 

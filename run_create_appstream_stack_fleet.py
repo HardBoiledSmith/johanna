@@ -198,23 +198,30 @@ if __name__ == "__main__":
     args = parse_args()
 
     target_name = None
+    region = None
 
     if len(args) > 1:
         target_name = args[1]
+
+    if len(args) > 2:
+        region = args[2]
 
     print_session('create appstream image stack & fleet')
 
     create_iam_for_appstream()
 
-    for env_s in env['appstream']['STACK']:
-        if target_name and env_s['NAME'] != target_name:
+    for settings in env['appstream']['STACK']:
+        if target_name and settings['NAME'] != target_name:
             continue
 
-        desired_instances = env_s.get('DESIRED_INSTANCES', 1)
-        embed_host_domains = env_s['EMBED_HOST_DOMAINS']
-        fleet_name = env_s['FLEET_NAME']
-        region = env_s['AWS_DEFAULT_REGION']
-        stack_name = env_s['NAME']
+        if region and settings.get('AWS_DEFAULT_REGION') != region:
+            continue
+
+        desired_instances = settings.get('DESIRED_INSTANCES', 1)
+        embed_host_domains = settings['EMBED_HOST_DOMAINS']
+        fleet_name = settings['FLEET_NAME']
+        region = settings['AWS_DEFAULT_REGION']
+        stack_name = settings['NAME']
 
         image_name = get_latest_image(region)
         subnet_ids, security_group_id = get_subnet_and_security_group_id(region)
