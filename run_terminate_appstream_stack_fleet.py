@@ -37,29 +37,29 @@ def terminate_iam_for_appstream():
     aws_cli.run(cc, ignore_error=True)
 
 
-def stop_fleet(fleet_name):
-    aws_cli = AWSCli()
+def stop_fleet(fleet_name, fleet_region):
+    aws_cli = AWSCli(fleet_region)
     cmd = ['appstream', 'stop-fleet']
     cmd += ['--name', fleet_name]
     aws_cli.run(cmd, ignore_error=True)
 
 
-def delete_fleet(fleet_name):
-    aws_cli = AWSCli()
+def delete_fleet(fleet_name, fleet_region):
+    aws_cli = AWSCli(fleet_region)
     cmd = ['appstream', 'delete-fleet']
     cmd += ['--name', fleet_name]
     return aws_cli.run(cmd, ignore_error=True)
 
 
-def delete_stack(stack_name):
-    aws_cli = AWSCli()
+def delete_stack(stack_name, stack_region):
+    aws_cli = AWSCli(stack_region)
     cmd = ['appstream', 'delete-stack']
     cmd += ['--name', stack_name]
     return aws_cli.run(cmd, ignore_error=True)
 
 
-def disassociate_fleet(fleet_name, stack_name):
-    aws_cli = AWSCli()
+def disassociate_fleet(fleet_name, stack_name, fleet_region):
+    aws_cli = AWSCli(fleet_region)
     cmd = ['appstream', 'disassociate-fleet']
     cmd += ['--fleet-name', fleet_name]
     cmd += ['--stack-name', stack_name]
@@ -68,8 +68,8 @@ def disassociate_fleet(fleet_name, stack_name):
     return bool(rr)
 
 
-def wait_state(name):
-    aws_cli = AWSCli()
+def wait_state(name, fleet_region):
+    aws_cli = AWSCli(fleet_region)
     elapsed_time = 0
     is_waiting = True
 
@@ -103,24 +103,31 @@ if __name__ == "__main__":
     args = parse_args()
 
     target_name = None
+    region = None
 
     if len(args) > 1:
         target_name = args[1]
 
+    if len(args) > 2:
+        region = args[2]
+
     print_session('terminate appstream stack & fleet')
 
-    for env_s in env['appstream']['STACK']:
-        if target_name and env_s['NAME'] != target_name:
+    for settings in env['appstream']['STACK']:
+        if target_name and settings['NAME'] != target_name:
             continue
 
-        stack_name = env_s['NAME']
-        fleet_name = env_s['FLEET_NAME']
-        image_name = env_s['IMAGE_NAME']
+        if region and settings.get('AWS_DEFAULT_REGION') != region:
+            continue
 
-        disassociate_fleet(fleet_name, stack_name)
-        delete_stack(stack_name)
-        stop_fleet(fleet_name)
-        wait_state(fleet_name)
-        delete_fleet(fleet_name)
+        fleet_name = settings['FLEET_NAME']
+        region = settings['AWS_DEFAULT_REGION']
+        stack_name = settings['NAME']
+
+        disassociate_fleet(fleet_name, stack_name, region)
+        delete_stack(stack_name, region)
+        stop_fleet(fleet_name, region)
+        wait_state(fleet_name, region)
+        delete_fleet(fleet_name, region)
 
     terminate_iam_for_appstream()
