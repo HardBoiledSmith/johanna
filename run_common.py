@@ -313,6 +313,17 @@ class AWSCli:
         cmd += ['--policy-name', policy_name]
         return self.run(cmd, ignore_error=True)
 
+    def get_acm_certificate_id(self, domain):
+        cmd = ['acm', 'list-certificates']
+        cmd += ['--certificate-statuses', 'ISSUED']
+        result = self.run(cmd)
+
+        for cl in result['CertificateSummaryList']:
+            if cl['DomainName'] == domain:
+                return cl['CertificateArn']
+
+        raise Exception()
+
     def set_name_tag(self, resource_id, name):
         cmd = ['ec2', 'create-tags']
         cmd += ['--resources', resource_id]
