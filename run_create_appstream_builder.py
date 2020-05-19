@@ -148,12 +148,12 @@ if __name__ == "__main__":
     print_session('create appstream image builder')
 
     create_iam_for_appstream()
-    for env_ib in env['appstream']['IMAGE_BUILDS']:
-        if target_name and env_ib['NAME'] != target_name:
+    for settings in env['appstream']['IMAGE_BUILDS']:
+        if target_name and settings['NAME'] != target_name:
             continue
 
-        name = env_ib['NAME']
-        image_name = env_ib['IMAGE_NAME']
+        name = settings['NAME']
+        image_name = settings['IMAGE_NAME']
 
         create_image_builder(name, subnet_ids[0], security_group_id, image_name)
         wait_state(name)
