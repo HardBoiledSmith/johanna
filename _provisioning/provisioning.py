@@ -106,13 +106,6 @@ def _preprocess(hostname):
 
     _print_line_number()
 
-    _run(['yum', '-y', 'erase', 'ntp*'])
-    _run(['yum', '-y', 'install', 'chrony'])
-    _run(['service', 'chronyd', 'start'])
-    _run(['chkconfig', 'chronyd', 'on'])
-
-    _print_line_number()
-
     _run(['yum', '-y', 'update'])
     file_path_name = '/vagrant/requirements_rpm.txt'
     if os.path.exists(file_path_name):
