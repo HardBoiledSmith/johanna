@@ -119,7 +119,7 @@ def run_create_lambda_cron(function_name, settings):
                '--description', description,
                '--role', role_arn,
                '--handler', 'lambda.handler',
-               '--runtime', 'python3.6',
+               '--runtime', 'python3.7',
                '--timeout', '900']
         aws_cli.run(cmd, cwd=deploy_folder)
 
@@ -148,7 +148,7 @@ def run_create_lambda_cron(function_name, settings):
            '--zip-file', 'fileb://deploy.zip',
            '--role', role_arn,
            '--handler', 'lambda.handler',
-           '--runtime', 'python3.6',
+           '--runtime', 'python3.7',
            '--tags', ','.join(tags),
            '--timeout', '900']
     result = aws_cli.run(cmd, cwd=deploy_folder)
