@@ -114,6 +114,15 @@ def run_create_lambda_event(function_name, settings):
 
         function_arn = result['FunctionArn']
 
+        cmd = ['lambda', 'update-function-configuration',
+               '--function-name', function_name,
+               '--description', description,
+               '--role', role_arn,
+               '--handler', 'lambda.handler',
+               '--runtime', 'python3.7',
+               '--timeout', '120']
+        aws_cli.run(cmd, cwd=deploy_folder)
+
         print_message('update lambda tags')
 
         cmd = ['lambda', 'tag-resource',
@@ -129,7 +138,7 @@ def run_create_lambda_event(function_name, settings):
                '--zip-file', 'fileb://deploy.zip',
                '--role', role_arn,
                '--handler', 'lambda.handler',
-               '--runtime', 'python3.6',
+               '--runtime', 'python3.7',
                '--tags', ','.join(tags),
                '--timeout', '120']
         function_arn = aws_cli.run(cmd, cwd=deploy_folder)['FunctionArn']
