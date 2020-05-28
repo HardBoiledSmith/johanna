@@ -1,3 +1,3 @@
-git-2.14.6-1.61.amzn1
-python36-devel-3.6.10-1.16.amzn1
-python36-pip-9.0.3-1.27.amzn1
+git-2.23.1-1.amzn2.0.1
+python3-devel-3.7.6-1.amzn2.0.1
+python3-pip-9.0.3-1.amzn2.0.2

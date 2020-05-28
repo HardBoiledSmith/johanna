@@ -130,7 +130,7 @@ def run_create_lambda_sns(function_name, settings):
                '--description', description,
                '--role', role_arn,
                '--handler', 'lambda.handler',
-               '--runtime', 'python3.6',
+               '--runtime', 'python3.7',
                '--timeout', '120']
         aws_cli.run(cmd, cwd=deploy_folder)
 
@@ -151,7 +151,7 @@ def run_create_lambda_sns(function_name, settings):
            '--zip-file', 'fileb://deploy.zip',
            '--role', role_arn,
            '--handler', 'lambda.handler',
-           '--runtime', 'python3.6',
+           '--runtime', 'python3.7',
            '--tags', ','.join(tags),
            '--timeout', '120']
     result = aws_cli.run(cmd, cwd=deploy_folder)
