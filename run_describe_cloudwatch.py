@@ -38,7 +38,7 @@ def describe_cloudwatch_alarm():
     a_set = set()
     alarms_list = env['cloudwatch']['ALARMS']
     for al in alarms_list:
-        a_name = f"{al['NAME']}_{al['AWS_DEFAULT_REGION']}_{al['METRIC_NAME']}"
+        a_name = f"{al['NAME']}_{al['AWS_DEFAULT_REGION']}_{al.get('METRIC_NAME', '')}"
         a_set.add(f'"{a_name}"')
 
     cmd = ['cloudwatch', 'describe-alarms']

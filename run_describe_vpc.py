@@ -135,7 +135,7 @@ def describe_vpc_peering_connection(vpc_id_1, vpc_id_2):
     cmd += [f'--filters={filter_1},{filter_2}']
     result = aws_cli.run(cmd, ignore_error=True)
 
-    if not result['VpcPeeringConnections']:
+    if not result or not result['VpcPeeringConnections']:
         return False
     else:
         return True
