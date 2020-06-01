@@ -10,7 +10,7 @@ from run_common import print_message
 def _parse_args():
     parser = ArgumentParser()
     parser.add_argument('-b', '--bucket_name', type=str, required=True, help='Script bucket name')
-    parser.add_argument('-f', '--expire_days', type=int, required=True, help='File expiration date in the *-')
+    parser.add_argument('-f', '--expire_days', type=int, required=True, help='File expiration date in script bucket')
 
     args = parser.parse_args()
 
