@@ -95,9 +95,12 @@ def reset_database():
     if codebuild_env is None:
         print('reset_database env is not exist')
         sys.exit(1)
+
     run_create_codebuild_vpc('reset_database', codebuild_env)
-    run_codebuild_wait_done('reset_database', env['common']['PHASE'])
+    is_success = run_codebuild_wait_done('reset_database', env['common']['PHASE'])
     run_terminate_vpc_codebuild('reset_database')
+    if not is_success:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -71,9 +71,4 @@ def run_codebuild_wait_done(name, phase):
     ii = start_codebuild(name, phase=phase)
     wait_build_done(name, ii)
 
-    if is_success(ii):
-        print(f'{name} is done(SUCCEEDED)')
-        sys.exit(0)
-    else:
-        print(f'{name} is done(FAIL)')
-        sys.exit(1)
+    return is_success(ii)
