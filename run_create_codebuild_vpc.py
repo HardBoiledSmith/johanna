@@ -190,13 +190,10 @@ def run_create_codebuild_vpc(name, settings):
     print_message('set environment variable')
 
     env_list = []
-    is_exist_parameter_store = False
-
     end_point = get_rds_endpoint(aws_cli, env['rds']['DB_CLUSTER_ID'])
 
     for pp in settings['ENV_VARIABLES']:
         if 'PARAMETER_STORE' == pp['type']:
-            is_exist_parameter_store = True
             nn = '/CodeBuild/%s/%s' % (name, pp['name'])
             cmd = ['ssm', 'get-parameter', '--name', nn]
             aws_cli.run(cmd)
