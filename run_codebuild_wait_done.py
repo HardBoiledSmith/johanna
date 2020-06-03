@@ -48,7 +48,7 @@ def wait_rds_available():
             return
 
         if elapsed_time > 1200:
-            raise Exception(f'timeout: wait rds available')
+            raise Exception('timeout: wait rds available')
 
         sleep(5)
         print('wait rds available... (elapsed time: \'%d\' seconds)' % elapsed_time)
