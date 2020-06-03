@@ -139,6 +139,8 @@ if __name__ == "__main__":
         __import__('run_create_sqs')
         if env['common']['PHASE'] != 'op':
             reset_database()
+
+        raise Exception('stop')
         __import__('run_create_eb')
         __import__('run_create_sns')
         __import__('run_create_lambda')

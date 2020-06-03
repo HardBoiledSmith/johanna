@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import json
-import sys
 from time import sleep
 
 from run_common import AWSCli
@@ -26,7 +25,33 @@ def wait_build_done(name, build_id):
             raise Exception(f'timeout: wait build done ({name})')
 
         sleep(5)
-        print('wait wait build done... (elapsed time: \'%d\' seconds)' % elapsed_time)
+        print('wait build done... (elapsed time: \'%d\' seconds)' % elapsed_time)
+        elapsed_time += 5
+
+
+def wait_rds_available():
+    aws_cli = AWSCli()
+    elapsed_time = 0
+    is_waiting = True
+
+    while is_waiting:
+        cmd = ['rds', 'describe-db-instances']
+        rr = aws_cli.run(cmd)
+        is_available = True
+
+        for r in rr['DBInstances']:
+            if r['DBInstanceStatus'] != 'available':
+                is_available = False
+                break
+
+        if is_available:
+            return
+
+        if elapsed_time > 1200:
+            raise Exception(f'timeout: wait rds available')
+
+        sleep(5)
+        print('wait rds available... (elapsed time: \'%d\' seconds)' % elapsed_time)
         elapsed_time += 5
 
 
@@ -68,6 +93,7 @@ def start_codebuild(name, phase=None):
 
 
 def run_codebuild_wait_done(name, phase):
+    wait_rds_available()
     ii = start_codebuild(name, phase=phase)
     wait_build_done(name, ii)
 
