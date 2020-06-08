@@ -2,11 +2,7 @@
 import json
 import sys
 
-from env import env
-from run_codebuild_wait_done import run_codebuild_wait_done
 from run_common import AWSCli
-from run_create_codebuild_vpc import run_create_codebuild_vpc
-from run_terminate_codebuild_vpc import run_terminate_vpc_codebuild
 
 command_list = list()
 command_list.append('create')
@@ -87,22 +83,6 @@ def print_usage():
     print('#' * 80)
 
 
-def reset_database():
-    codebuild_env = None
-    for dd in env['codebuild']:
-        if dd['NAME'] == 'reset_database':
-            codebuild_env = dd
-    if codebuild_env is None:
-        print('reset_database env is not exist')
-        sys.exit(1)
-
-    run_create_codebuild_vpc('reset_database', codebuild_env)
-    is_success = run_codebuild_wait_done('reset_database', env['common']['PHASE'])
-    run_terminate_vpc_codebuild('reset_database')
-    if not is_success:
-        sys.exit(1)
-
-
 if __name__ == "__main__":
     from run_common import parse_args
 
@@ -137,10 +117,7 @@ if __name__ == "__main__":
         __import__('run_create_vpc')
         __import__('run_create_rds')
         __import__('run_create_sqs')
-        if env['common']['PHASE'] != 'op':
-            reset_database()
-
-        raise Exception('stop')
+        __import__('run_reset_database')
         __import__('run_create_eb')
         __import__('run_create_sns')
         __import__('run_create_lambda')
