@@ -20,6 +20,7 @@ def run_create_lambda_cron(function_name, settings):
     git_url = settings['GIT_URL']
     phase = env['common']['PHASE']
     schedule_expression = settings['SCHEDULE_EXPRESSION']
+    concurrency = settings.get('CONCURRENCY', None)
 
     mm = re.match(r'^.+/(.+)\.git$', git_url)
     if not mm:
@@ -181,3 +182,8 @@ def run_create_lambda_cron(function_name, settings):
            '--rule', function_name + 'CronRule',
            '--targets', '{"Id" : "1", "Arn": "%s"}' % function_arn]
     aws_cli.run(cmd)
+
+    if concurrency:
+        cmd = ['lambda', 'put-function-concurrency']
+        cmd += ['--function-name', function_name]
+        cmd += ['--reserved-concurrent-executions', concurrency]

@@ -3,6 +3,7 @@ from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
+from run_terminate_codebuild_vpc import run_terminate_vpc_codebuild
 
 args = []
 
@@ -34,8 +35,8 @@ def terminate_source_credential(codebuild_settings):
 
 
 def terminate_iam_for_codebuild(codebuild_type):
-    role_name = 'aws-codebuild-%s-role' % codebuild_type
-    policy_name = 'aws-codebuild-%s-policy' % codebuild_type
+    role_name = f'aws-codebuild-{codebuild_type}-role'
+    policy_name = f'aws-codebuild-{codebuild_type}-policy'
 
     print_message('delete iam role policy %s' % policy_name)
 
@@ -170,6 +171,9 @@ if len(args) == 2:
             if codebuild_env['TYPE'] == 'github':
                 run_terminate_github_codebuild(codebuild_env['NAME'], codebuild_env)
                 break
+            if codebuild_env['TYPE'] == 'vpc':
+                run_terminate_vpc_codebuild(codebuild_env['NAME'])
+                break
             print('"%s" is not supported' % codebuild_env['TYPE'])
             raise Exception()
     if not target_codebuild_name_exists:
@@ -184,6 +188,9 @@ else:
             continue
         if codebuild_env['TYPE'] == 'github':
             run_terminate_github_codebuild(codebuild_env['NAME'], codebuild_env)
+            continue
+        if codebuild_env['TYPE'] == 'vpc':
+            run_terminate_vpc_codebuild(codebuild_env['NAME'])
             continue
         print('"%s" is not supported' % codebuild_env['TYPE'])
         raise Exception()
