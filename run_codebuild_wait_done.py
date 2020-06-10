@@ -16,7 +16,7 @@ def wait_build_done(name, build_id):
         rr = aws_cli.run(cmd)
         rr = rr['builds'][0]
 
-        if rr['currentPhase'] == 'COMPLETED':
+        if rr['buildStatus'] != 'IN_PROGRESS':
             return
 
         print(json.dumps(rr['phases'][-1], indent=2))
