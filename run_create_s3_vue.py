@@ -43,6 +43,18 @@ def run_create_s3_vue(name, settings):
     git_hash_app = subprocess.Popen(['git', 'rev-parse', 'HEAD'],
                                     stdout=subprocess.PIPE,
                                     cwd='template/%s' % git_folder_name).communicate()[0]
+
+    ################################################################################
+    print_message('create release for sentry')
+
+    subprocess.Popen(['sentry-cli', 'releases', 'new', '-p', f'{git_folder_name}-{name}', git_hash_app],
+                     cwd=f'template/{git_folder_name}').communicate()
+    subprocess.Popen(['sentry-cli', 'releases', 'set-commits', git_hash_app, '--auto'],
+                     cwd=f'template/{git_folder_name}').communicate()
+
+    ################################################################################
+    print_message('remove useless files')
+
     subprocess.Popen(['rm', '-rf', './.git'], cwd='template/%s' % git_folder_name).communicate()
     subprocess.Popen(['rm', '-rf', './.gitignore'], cwd='template/%s' % git_folder_name).communicate()
 
@@ -65,6 +77,7 @@ def run_create_s3_vue(name, settings):
 
     lines = read_file('template/%s/%s/static/settings-local-sample.js' % (git_folder_name, name))
     option_list = list()
+    option_list.append(['appVersion', git_hash_app])
     option_list.append(['phase', phase])
     for key in settings:
         value = settings[key]
@@ -194,3 +207,9 @@ def run_create_s3_vue(name, settings):
         cmd = ['cloudfront', 'create-invalidation', '--distribution-id', cf_dist_id, '--paths', '/*']
         invalidate_result = aws_cli.run(cmd)
         print(invalidate_result)
+
+    ################################################################################
+    print_message('finalize release for sentry')
+
+    subprocess.Popen(['sentry-cli', 'releases', 'finalize', '-p', f'{git_folder_name}-{name}', git_hash_app],
+                     cwd=f'template/{git_folder_name}').communicate()
