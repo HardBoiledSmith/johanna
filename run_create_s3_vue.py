@@ -33,7 +33,7 @@ def run_create_s3_vue(name, settings):
 
     subprocess.Popen(['rm', '-rf', './%s' % git_folder_name], cwd='template').communicate()
     if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', git_url]
+        git_command = ['git', 'clone', '--depth=1', '-b', 'DEV-6500', git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
     subprocess.Popen(git_command, cwd='template').communicate()
@@ -43,6 +43,7 @@ def run_create_s3_vue(name, settings):
     git_hash_app = subprocess.Popen(['git', 'rev-parse', 'HEAD'],
                                     stdout=subprocess.PIPE,
                                     cwd='template/%s' % git_folder_name).communicate()[0]
+    git_hash_app = git_hash_app.decode('utf-8').strip()
 
     ################################################################################
     print_message('create release for sentry')
@@ -179,7 +180,7 @@ def run_create_s3_vue(name, settings):
 
     tag_dict['phase'] = phase
     tag_dict['git_hash_johanna'] = git_hash_johanna.decode('utf-8')
-    tag_dict[f'git_hash_{git_folder_name}/{name}'] = git_hash_app.decode('utf-8')
+    tag_dict[f'git_hash_{git_folder_name}/{name}'] = git_hash_app
     tag_dict[f'timestamp_{name}'] = timestamp
 
     tag_list = list()
