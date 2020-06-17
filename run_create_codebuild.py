@@ -3,12 +3,13 @@ import time
 
 from env import env
 from run_common import AWSCli
-from run_common import reset_template_dir
 from run_common import print_message
 from run_common import print_session
+from run_common import reset_template_dir
 from run_create_codebuild_cron import run_create_codebuild_cron
 from run_create_codebuild_default import run_create_codebuild_default
 from run_create_codebuild_github import run_create_codebuild_github
+from run_create_codebuild_vpc import run_create_codebuild_vpc
 
 args = []
 
@@ -108,6 +109,9 @@ if len(args) == 2:
             if codebuild_env['TYPE'] == 'github':
                 run_create_codebuild_github(codebuild_env['NAME'], codebuild_env)
                 break
+            if codebuild_env['TYPE'] == 'vpc':
+                run_create_codebuild_vpc(codebuild_env['NAME'], codebuild_env)
+                break
             print('"%s" is not supported' % codebuild_env['TYPE'])
             raise Exception()
     if not target_codebuild_name_exists:
@@ -122,6 +126,9 @@ else:
             continue
         if codebuild_env['TYPE'] == 'github':
             run_create_codebuild_github(codebuild_env['NAME'], codebuild_env)
+            continue
+        if codebuild_env['TYPE'] == 'vpc':
+            run_create_codebuild_vpc(codebuild_env['NAME'], codebuild_env)
             continue
         print('"%s" is not supported' % codebuild_env['TYPE'])
         raise Exception()

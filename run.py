@@ -117,6 +117,7 @@ if __name__ == "__main__":
         __import__('run_create_vpc')
         __import__('run_create_rds')
         __import__('run_create_sqs')
+        __import__('run_reset_database')
         __import__('run_create_eb')
         __import__('run_create_sns')
         __import__('run_create_lambda')

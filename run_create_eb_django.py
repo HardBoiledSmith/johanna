@@ -24,8 +24,10 @@ def run_create_eb_django(name, settings):
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
+    instance_type = settings.get('INSTANCE_TYPE', 't3.nano')
     key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
+    rds_required = settings.get('RDS_REQUIRED', True)
     ssl_certificate_id = aws_cli.get_acm_certificate_id('hbsmith.io')
     subnet_type = settings['SUBNET_TYPE']
     service_name = env['common'].get('SERVICE_NAME', '')
@@ -110,8 +112,13 @@ def run_create_eb_django(name, settings):
 
     ################################################################################
     print_message('get database address')
-    db_address = aws_cli.get_rds_address()
-    db_address_read_replica = aws_cli.get_rds_address(read_replica=True)
+
+    db_address = ''
+    db_address_read_replica = ''
+
+    if rds_required:
+        db_address = aws_cli.get_rds_address()
+        db_address_read_replica = aws_cli.get_rds_address(read_replica=True)
 
     ################################################################################
     print_message('git clone')
@@ -153,17 +160,19 @@ def run_create_eb_django(name, settings):
     lines = re_sub_lines(lines, 'SSL_CERTIFICATE_ID', ssl_certificate_id)
     write_file('%s/%s/_provisioning/.ebextensions/%s.config' % (template_path, name, name), lines)
 
-    lines = read_file('%s/%s/_provisioning/configuration/etc/%s/my_primary.cnf' % (template_path, name, name))
-    lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address)
-    lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
-    lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
-    write_file('%s/%s/_provisioning/configuration/etc/%s/my_primary.cnf' % (template_path, name, name), lines)
+    if db_address:
+        lines = read_file('%s/%s/_provisioning/configuration/etc/%s/my_primary.cnf' % (template_path, name, name))
+        lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address)
+        lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
+        lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
+        write_file('%s/%s/_provisioning/configuration/etc/%s/my_primary.cnf' % (template_path, name, name), lines)
 
-    lines = read_file('%s/%s/_provisioning/configuration/etc/%s/my_replica.cnf' % (template_path, name, name))
-    lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address_read_replica)
-    lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
-    lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
-    write_file('%s/%s/_provisioning/configuration/etc/%s/my_replica.cnf' % (template_path, name, name), lines)
+    if db_address_read_replica:
+        lines = read_file('%s/%s/_provisioning/configuration/etc/%s/my_replica.cnf' % (template_path, name, name))
+        lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address_read_replica)
+        lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
+        lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
+        write_file('%s/%s/_provisioning/configuration/etc/%s/my_replica.cnf' % (template_path, name, name), lines)
 
     lines = read_file('%s/%s/_provisioning/configuration/etc/%s/settings_local_sample.py' % (template_path, name, name))
     lines = re_sub_lines(lines, '^(DEBUG).*', '\\1 = %s' % debug)
@@ -252,7 +261,7 @@ def run_create_eb_django(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'InstanceType'
-    oo['Value'] = 't3.nano'
+    oo['Value'] = instance_type
     option_settings.append(oo)
 
     oo = dict()
@@ -373,7 +382,7 @@ def run_create_eb_django(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.9.10 running Python 3.6']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.9.11 running Python 3.6']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
