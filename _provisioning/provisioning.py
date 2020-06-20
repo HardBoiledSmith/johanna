@@ -125,7 +125,11 @@ def _preprocess(hostname):
             for ll in lines:
                 _run(['pip3', 'install', ll.strip()])
 
+    _print_line_number()
+
     _run(['pip3', 'install', '--upgrade', 'awscli'])
+
+    _print_line_number()
 
     node_version = 'v12.16.1'
     _run(['wget', 'https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh'], cwd='/root')
@@ -158,6 +162,12 @@ def _preprocess(hostname):
         f.write('export NODE_OPTIONS="--max-old-space-size=2048"\n')
         f.write('export PATH=$PATH:/usr/local/bin\n')
         f.write("complete -C '/usr/local/bin/aws_completer' aws\n")
+
+    _print_line_number()
+
+    _run(['wget', '-O', 'install.sh', 'https://sentry.io/get-cli/'], cwd='/root')
+    _run(['chmod', '+x', 'install.sh'], cwd='/root')
+    _run(['./install.sh'], cwd='/root')
 
 
 def main():
