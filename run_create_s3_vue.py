@@ -212,5 +212,5 @@ def run_create_s3_vue(name, settings):
     ################################################################################
     print_message('finalize release for sentry')
 
-    subprocess.Popen(['sentry-cli', 'releases', 'finalize', '-p', f'{git_folder_name}-{name}', git_hash_app],
+    subprocess.Popen(['sentry-cli', 'releases', 'finalize', git_hash_app],
                      cwd=f'template/{git_folder_name}').communicate()
