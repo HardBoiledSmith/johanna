@@ -31,6 +31,8 @@ def run_create_s3_vue(name, settings):
     ################################################################################
     print_message('git clone')
 
+    subprocess.Popen(['mkdir', '-p', './template']).communicate()
+
     subprocess.Popen(['rm', '-rf', './%s' % git_folder_name], cwd='template').communicate()
     if phase == 'dv':
         git_command = ['git', 'clone', '--depth=1', git_url]
