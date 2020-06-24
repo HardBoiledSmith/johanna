@@ -517,24 +517,12 @@ def re_sub_lines(lines, pattern, repl):
     return new_lines
 
 
-# TODO: This function must removed after resolve GEN-1863
-def check_template_availability():
-    if 'template' not in env:
-        print('template is not defined in config.json')
-        raise Exception()
-
-    if 'NAME' not in env['template']:
-        print('template.NAME is not defined in config.json')
-        raise Exception()
-
-    if not os.path.exists('template/%s' % env['template']['NAME']):
-        print('template: %s is not downloaded. please run: ./run.py reset_template.' % env['template']['NAME'])
-        raise Exception()
-
-
 def reset_template_dir():
     template_name = env['template']['NAME']
     print_session('reset template: %s' % template_name)
+
+    if not os.path.exists('template/'):
+        subprocess.Popen(['mkdir', '-p', './template']).communicate()
 
     git_url = env['template']['GIT_URL']
     name = env['template']['NAME']
@@ -542,7 +530,6 @@ def reset_template_dir():
 
     print_message('cleanup existing template')
 
-    subprocess.Popen(['mkdir', '-p', './template']).communicate()
     subprocess.Popen(['rm', '-rf', './%s' % name], cwd='template').communicate()
 
     print_message('download template from git repository')
