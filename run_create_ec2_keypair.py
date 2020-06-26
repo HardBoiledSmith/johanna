@@ -74,7 +74,7 @@ def run_create_ec2_keypair(key_name):
     run(['chmod', '400', f'{key_name}.pub'])
 
     cmd = ['ssh-keygen', '-y']
-    cmd += ['-f', f'{key_name}.pem' % key_name]
+    cmd += ['-f', f'{key_name}.pem']
     result, error = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE).communicate()
     # noinspection PyUnresolvedReferences
     result = result.decode('utf-8')
