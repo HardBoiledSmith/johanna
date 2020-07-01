@@ -12,8 +12,6 @@ if __name__ == "__main__":
 
     parse_args()
 
-aws_cli = AWSCli()
-
 
 def run_create_queue(name, settings):
     delay_seconds = settings['DELAY_SECONDS']
@@ -23,6 +21,8 @@ def run_create_queue(name, settings):
     timeout = settings['TIMEOUT']
     use_redrive_policy = settings['USE_REDRIVE_POLICY']
     dead_letter_queue_arn = None
+
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     if use_redrive_policy == "True":
         ################################################################################
