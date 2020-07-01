@@ -5,10 +5,10 @@ from run_common import print_session
 from env import env
 
 
-def run_create_acm_certificate(domain_name, additional_names, validation_method):
+def run_create_acm_certificate(domain_name, additional_names, validation_method, region):
     print_session('create acm certificate')
 
-    aws_cli = AWSCli()
+    aws_cli = AWSCli(region)
     cmd = ['acm', 'request-certificate']
     cmd += ['--domain-name', domain_name]
     if additional_names:
@@ -43,7 +43,7 @@ if __name__ == "__main__":
             check_exists = True
 
         run_create_acm_certificate(acm_env['DOMAIN_NAME'], acm_env['ADDITIONAL_NAMES'],
-                                   acm_env['VALIDATION_METHOD'])
+                                   acm_env['VALIDATION_METHOD'], acm_env['AWS_DEFAULT_REGION'])
 
     if not check_exists and target_name:
         print(f'{target_name} is not exists in config.json')
