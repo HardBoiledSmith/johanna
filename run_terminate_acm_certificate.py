@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     certificates_list = []
     for rr in list_region:
-        certificates_list += get_acm_certificates_list(rr)
+        certificates_list = get_acm_certificates_list(rr)
 
         if len(certificates_list) < 1:
             continue
