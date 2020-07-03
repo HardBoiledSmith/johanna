@@ -9,8 +9,8 @@ from run_common import print_message
 
 def _parse_args():
     parser = ArgumentParser()
-    parser.add_argument('-b', '--bucket_name', type=str, required=True, help='bucket name')
-    parser.add_argument('-f', '--expire_days', type=int, required=True, help='File expiration date in the _trash/')
+    parser.add_argument('-b', '--bucket_name', type=str, required=True, help='Script bucket name')
+    parser.add_argument('-f', '--expire_days', type=int, required=True, help='File expiration date in script bucket')
 
     args = parser.parse_args()
 
@@ -30,14 +30,10 @@ def run_create_s3_script_file_lifecycle(args):
     cc = {
         "Rules": [
             {
-                "Expiration": {
-                    "Days": expire_days
-                },
                 "ID": "script_file_manage_rule",
-                "Filter": {
-                    "Prefix": "_trash/"
-                },
                 "Status": "Enabled",
+                "Filter": {
+                },
                 "NoncurrentVersionExpiration": {
                     "NoncurrentDays": expire_days
                 },
