@@ -10,10 +10,10 @@ if __name__ == "__main__":
     parse_args()
 
 sqs = env['sqs']
-list_region = {}
+list_region = []
 for sqs_env in sqs:
     rr = sqs_env['AWS_DEFAULT_REGION']
-    list_region.add(rr)
+    list_region.append(rr)
 
 ################################################################################
 #
@@ -38,6 +38,6 @@ for rr in list_region:
         for sqs_env in sqs:
             cmd = ['sqs', 'delete-queue']
             cmd += ['--queue-url', sqs_env]
-            aws_cli.run(cmd)
+            aws_cli.run(cmd, ignore_error=True)
 
             print('delete :', sqs_env)
