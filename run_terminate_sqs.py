@@ -2,13 +2,18 @@
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
+from env import env
 
 if __name__ == "__main__":
     from run_common import parse_args
 
     parse_args()
 
-aws_cli = AWSCli()
+sqs = env['sqs']
+list_region = []
+for sqs_env in sqs:
+    rr = sqs_env['AWS_DEFAULT_REGION']
+    list_region.append(rr)
 
 ################################################################################
 #
@@ -18,18 +23,21 @@ aws_cli = AWSCli()
 print_session('terminate sqs')
 
 ################################################################################
-print_message('load queue lists')
+for rr in list_region:
+    aws_cli = AWSCli(rr)
 
-cmd = ['sqs', 'list-queues']
-command_result = aws_cli.run(cmd)
-if 'QueueUrls' in command_result:
-    sqs = command_result['QueueUrls']
+    print_message('load queue lists')
 
-    print_message('delete queues')
+    cmd = ['sqs', 'list-queues']
+    command_result = aws_cli.run(cmd)
+    if 'QueueUrls' in command_result:
+        sqs = command_result['QueueUrls']
 
-    for sqs_env in sqs:
-        cmd = ['sqs', 'delete-queue']
-        cmd += ['--queue-url', sqs_env]
-        aws_cli.run(cmd)
+        print_message('delete queues')
 
-        print('delete :', sqs_env)
+        for sqs_env in sqs:
+            cmd = ['sqs', 'delete-queue']
+            cmd += ['--queue-url', sqs_env]
+            aws_cli.run(cmd, ignore_error=True)
+
+            print('delete :', sqs_env)
