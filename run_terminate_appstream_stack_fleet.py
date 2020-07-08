@@ -36,6 +36,18 @@ def terminate_iam_for_appstream():
     cc += ['--role-name', role_name]
     aws_cli.run(cc, ignore_error=True)
 
+    role_name = 'AmazonAppStreamS3Permission'
+    # noinspection PyShadowingNames
+    cc = ['iam', 'detach-role-policy']
+    cc += ['--role-name', role_name]
+    cc += ['--policy-arn', 'arn:aws:iam::aws:policy/AmazonS3FullAccess']
+    aws_cli.run(cc, ignore_error=True)
+
+    # noinspection PyShadowingNames
+    cc = ['iam', 'delete-role']
+    cc += ['--role-name', role_name]
+    aws_cli.run(cc, ignore_error=True)
+
 
 def stop_fleet(fleet_name, fleet_region):
     aws_cli = AWSCli(fleet_region)

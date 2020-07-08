@@ -15,7 +15,7 @@ def create_iam_for_appstream():
 
     role_name = 'AmazonAppStreamServiceAccess'
     if not aws_cli.get_iam_role(role_name):
-        print_message('create iam role: %s' % role_name)
+        print_message(f'create iam role: {role_name}')
 
         cc = ['iam', 'create-role']
         cc += ['--role-name', role_name]
@@ -32,7 +32,7 @@ def create_iam_for_appstream():
 
     role_name = 'ApplicationAutoScalingForAmazonAppStreamAccess'
     if not aws_cli.get_iam_role(role_name):
-        print_message('create iam role: %s' % role_name)
+        print_message(f'create iam role: {role_name}')
 
         cc = ['iam', 'create-role']
         cc += ['--role-name', role_name]
@@ -45,24 +45,40 @@ def create_iam_for_appstream():
         aws_cli.run(cc)
         sleep_required = True
 
+    role_name = 'AmazonAppStreamS3Permission'
+    if not aws_cli.get_iam_role(role_name):
+        print_message(f'create iam role: {role_name}')
+
+        cc = ['iam', 'create-role']
+        cc += ['--role-name', role_name]
+        cc += ['--assume-role-policy-document', 'file://aws_iam/aws-appstream-role.json']
+        aws_cli.run(cc)
+
+        cc = ['iam', 'attach-role-policy']
+        cc += ['--role-name', role_name]
+        cc += ['--policy-arn', 'arn:aws:iam::aws:policy/AmazonS3FullAccess']
+        aws_cli.run(cc)
+        sleep_required = True
+
     if sleep_required:
         print_message('wait 30 seconds to let iam role and policy propagated to all regions...')
         time.sleep(30)
 
 
-def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instances, fleet_region):
-    vpc_config = 'SubnetIds=%s,SecurityGroupIds=%s' % (subnet_ids, security_group_id)
+def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instances, fleet_region, fleet_arn):
+    vpc_config = f'SubnetIds={subnet_ids},SecurityGroupIds={security_group_id}'
 
     aws_cli = AWSCli(fleet_region)
     cmd = ['appstream', 'create-fleet']
     cmd += ['--name', name]
     cmd += ['--instance-type', 'stream.standard.medium']
     cmd += ['--fleet-type', 'ON_DEMAND']
-    cmd += ['--compute-capacity', 'DesiredInstances=%d' % desired_instances]
+    cmd += ['--compute-capacity', f'DesiredInstances={desired_instances}']
     cmd += ['--image-name', image_name]
     cmd += ['--vpc-config', vpc_config]
     cmd += ['--no-enable-default-internet-access']
-    cmd += ["--idle-disconnect-timeout-in-seconds", '600']
+    cmd += ['--idle-disconnect-timeout-in-seconds', '600']
+    cmd += ['--iam-role-arn', fleet_arn]
     # cmd += ["--disconnect-timeout-in-seconds", '60']
     # cmd += ["--max-user-duration-in-seconds", '60~360000']
 
@@ -222,11 +238,13 @@ if __name__ == "__main__":
         fleet_name = settings['FLEET_NAME']
         region = settings['AWS_DEFAULT_REGION']
         stack_name = settings['NAME']
+        canonical_id = settings['CANONICAL_ID']
+        fleet_arn = f'arn:aws:iam::{canonical_id}:role/AmazonAppStreamS3Permission'
 
         image_name = get_latest_image(region)
         subnet_ids, security_group_id = get_subnet_and_security_group_id(region)
 
-        create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances, region)
+        create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances, region, fleet_arn)
         create_stack(stack_name, embed_host_domains, region)
         wait_state(fleet_name, region)
         associate_fleet(stack_name, fleet_name, region)
