@@ -244,7 +244,8 @@ if __name__ == "__main__":
         image_name = get_latest_image(region)
         subnet_ids, security_group_id = get_subnet_and_security_group_id(region)
 
-        create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances, region, fleet_arn)
+        create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances, region,
+                     fleet_arn)
         create_stack(stack_name, embed_host_domains, region)
         wait_state(fleet_name, region)
         associate_fleet(stack_name, fleet_name, region)
