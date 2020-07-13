@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import sys
 
 from env import env
@@ -20,7 +21,8 @@ if env['common']['PHASE'] != 'op':
         sys.exit(1)
 
     run_create_codebuild_vpc('reset_database', codebuild_env)
-    is_success = run_codebuild_wait_done('reset_database', env['common']['PHASE'])
+    branch = env['common']['PHASE'] if env['common']['PHASE'] != 'dv' else 'master'
+    is_success = run_codebuild_wait_done('reset_database', branch)
     run_terminate_vpc_codebuild('reset_database')
     if not is_success:
         print('fail reset database')
