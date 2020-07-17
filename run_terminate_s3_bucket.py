@@ -32,6 +32,12 @@ def run_terminate_s3_bucket(name, settings):
     aws_cli.run(cmd, ignore_error=True)
 
     ################################################################################
+    print_message('delete cors')
+
+    cmd = ['s3api', 'delete-bucket-cors', '--bucket', bucket_name]
+    aws_cli.run(cmd, ignore_error=True)
+
+    ################################################################################
     print_message('restore public access block')
 
     pp = {
