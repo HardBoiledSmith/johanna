@@ -159,7 +159,10 @@ def run_create_eb_windows(name, settings):
         value = settings[key]
         option_list.append([key, value])
     for oo in option_list:
-        lines = re_sub_lines(lines, f'^.+add key=\"({oo[0]})\" value=.+$', f'<add key="\\1" value="{oo[1]}" />')
+        if oo[0] == 'SENTRY_DSN':
+            lines = re_sub_lines(lines, '^.+Dsn value=.+$', f'<Dsn value="{oo[1]}" />')
+        else:
+            lines = re_sub_lines(lines, f'^.+add key=\"({oo[0]})\" value=.+$', f'<add key="\\1" value="{oo[1]}" />')
     write_file(f'{template_path}/{name}/_provisioning/configuration/'
                f'User/vagrant/Desktop/{name}/{name}_cli/{name}_cli.exe.config', lines)
 
