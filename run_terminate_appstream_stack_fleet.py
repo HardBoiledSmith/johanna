@@ -2,7 +2,6 @@
 
 from time import sleep
 
-from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
@@ -35,7 +34,6 @@ def terminate_iam_for_appstream():
     cc = ['iam', 'delete-role']
     cc += ['--role-name', role_name]
     aws_cli.run(cc, ignore_error=True)
-
 
     # noinspection PyShadowingNames
     cc = ['iam', 'list-policies']

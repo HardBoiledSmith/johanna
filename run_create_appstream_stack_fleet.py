@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
+import json
 import time
 from time import sleep
-import json
 
 from env import env
 from run_common import AWSCli
