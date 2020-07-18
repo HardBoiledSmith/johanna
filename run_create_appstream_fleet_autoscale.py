@@ -16,8 +16,8 @@ def create_appstream_fleet_autoscale(settings):
 
     print_message(f'create fleet autoscale for: {fleet_name}')
 
-    appstream_scale_in_policy_name = settings["APPSTREAM_SCALING_IN_POLICY"]
-    appstream_scale_out_policy_name = settings["APPSTREAM_SCALING_OUT_POLICY"]
+    scale_in_policy_name = settings["SCALE_IN_POLICY"]
+    scale_out_policy_name = settings["SCALE_OUT_POLICY"]
     fleet_path = f'fleet/{settings["FLEET_NAME"]}'
     max_capacity = settings["MAX_CAPACITY"]
     min_capacity = settings["MIN_CAPACITY"]
@@ -46,7 +46,7 @@ def create_appstream_fleet_autoscale(settings):
 
     # Scale out
     appstream_policy = {
-        'PolicyName': appstream_scale_out_policy_name,
+        'PolicyName': scale_out_policy_name,
         'ServiceNamespace': 'appstream',
         'ResourceId': fleet_path,
         'ScalableDimension': 'appstream:fleet:DesiredCapacity',
@@ -69,7 +69,7 @@ def create_appstream_fleet_autoscale(settings):
 
     policy_arn = rr['PolicyARN']
     cc = ['cloudwatch', 'put-metric-alarm']
-    cc += ['--alarm-name', appstream_scale_out_policy_name]
+    cc += ['--alarm-name', scale_out_policy_name]
     cc += ['--alarm-description', '"Alarm when Capacity Utilization exceeds 75 percent"']
     cc += ['--metric-name', 'CapacityUtilization']
     cc += ['--namespace', 'AWS/AppStream']
@@ -86,7 +86,7 @@ def create_appstream_fleet_autoscale(settings):
 
     # Scale in
     appstream_policy = {
-        "PolicyName": appstream_scale_in_policy_name,
+        "PolicyName": scale_in_policy_name,
         "ServiceNamespace": "appstream",
         "ResourceId": fleet_path,
         "ScalableDimension": "appstream:fleet:DesiredCapacity",
@@ -109,7 +109,7 @@ def create_appstream_fleet_autoscale(settings):
 
     policy_arn = rr['PolicyARN']
     cc = ['cloudwatch', 'put-metric-alarm']
-    cc += ['--alarm-name', appstream_scale_in_policy_name]
+    cc += ['--alarm-name', scale_in_policy_name]
     cc += ['--alarm-description', '"Alarm when Capacity Utilization is less than or equal to 25 percent"']
     cc += ['--metric-name', 'CapacityUtilization']
     cc += ['--namespace', 'AWS/AppStream']

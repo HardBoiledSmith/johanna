@@ -13,16 +13,16 @@ def terminate_appstream_fleet_autoscale(settings):
 
     print_message(f'terminate fleet autoscale for: {fleet_name}')
 
-    appstream_scaling_in_policy = settings["APPSTREAM_SCALING_IN_POLICY"]
-    appstream_scaling_out_policy = settings["APPSTREAM_SCALING_OUT_POLICY"]
+    scale_in_policy_name = settings["SCALE_IN_POLICY"]
+    scale_out_policy_name = settings["SCALE_OUT_POLICY"]
     fleet_path = f'fleet/{settings["FLEET_NAME"]}'
 
     cc = ['cloudwatch', 'delete-alarms']
-    cc += ['--alarm-names', appstream_scaling_out_policy]
+    cc += ['--alarm-names', scale_out_policy_name]
     aws_cli.run(cc, ignore_error=True)
 
     cc = ['cloudwatch', 'delete-alarms']
-    cc += ['--alarm-names', appstream_scaling_in_policy]
+    cc += ['--alarm-names', scale_in_policy_name]
     aws_cli.run(cc, ignore_error=True)
 
     cc = ['application-autoscaling', 'deregister-scalable-target']
