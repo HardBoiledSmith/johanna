@@ -36,16 +36,26 @@ def terminate_iam_for_appstream():
     cc += ['--role-name', role_name]
     aws_cli.run(cc, ignore_error=True)
 
-    role_name = 'AmazonAppStreamS3Permission'
+
     # noinspection PyShadowingNames
+    cc = ['iam', 'list-policies']
+    cc += ['--query', 'Policies[?PolicyName==`S3ScriptBucketUploadPermission`]']
+    rr = aws_cli.run(cc, ignore_error=False)
+    fleet_role_policy_arn = rr[0]['Arn']
+
+    role_name = 'AmazonAppStreamS3Permission'
     cc = ['iam', 'detach-role-policy']
     cc += ['--role-name', role_name]
-    cc += ['--policy-arn', 'arn:aws:iam::aws:policy/AmazonS3FullAccess']
+    cc += ['--policy-arn', fleet_role_policy_arn]
     aws_cli.run(cc, ignore_error=True)
 
     # noinspection PyShadowingNames
     cc = ['iam', 'delete-role']
     cc += ['--role-name', role_name]
+    aws_cli.run(cc, ignore_error=True)
+
+    cc = ['iam', 'delete-policy']
+    cc += ['--policy-arn', fleet_role_policy_arn]
     aws_cli.run(cc, ignore_error=True)
 
 
@@ -125,21 +135,21 @@ if __name__ == "__main__":
 
     print_session('terminate appstream stack & fleet')
 
-    for settings in env['appstream']['STACK']:
-        if target_name and settings['NAME'] != target_name:
-            continue
-
-        if region and settings.get('AWS_DEFAULT_REGION') != region:
-            continue
-
-        fleet_name = settings['FLEET_NAME']
-        region = settings['AWS_DEFAULT_REGION']
-        stack_name = settings['NAME']
-
-        disassociate_fleet(fleet_name, stack_name, region)
-        delete_stack(stack_name, region)
-        stop_fleet(fleet_name, region)
-        wait_state(fleet_name, region)
-        delete_fleet(fleet_name, region)
+    # for settings in env['appstream']['STACK']:
+    #     if target_name and settings['NAME'] != target_name:
+    #         continue
+    #
+    #     if region and settings.get('AWS_DEFAULT_REGION') != region:
+    #         continue
+    #
+    #     fleet_name = settings['FLEET_NAME']
+    #     region = settings['AWS_DEFAULT_REGION']
+    #     stack_name = settings['NAME']
+    #
+    #     disassociate_fleet(fleet_name, stack_name, region)
+    #     delete_stack(stack_name, region)
+    #     stop_fleet(fleet_name, region)
+    #     wait_state(fleet_name, region)
+    #     delete_fleet(fleet_name, region)
 
     terminate_iam_for_appstream()

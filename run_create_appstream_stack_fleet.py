@@ -2,6 +2,7 @@
 
 import time
 from time import sleep
+import json
 
 from env import env
 from run_common import AWSCli
@@ -9,7 +10,7 @@ from run_common import print_message
 from run_common import print_session
 
 
-def create_iam_for_appstream():
+def create_iam_for_appstream(settings):
     aws_cli = AWSCli()
     sleep_required = False
 
@@ -54,9 +55,37 @@ def create_iam_for_appstream():
         cc += ['--assume-role-policy-document', 'file://aws_iam/aws-appstream-role.json']
         aws_cli.run(cc)
 
+        s3_upload_policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "ListObjectsInBucket",
+                    "Effect": "Allow",
+                    "Action": "s3:ListBucket",
+                    "Resource": f"arn:aws:s3:::{settings['AWS_S3_SCRIPT_BUCKET']}"
+                },
+                {
+                    "Sid": "PutAndGetObjectActions",
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:PutObject",
+                        "s3:GetObject"
+                    ],
+                    "Resource": f"arn:aws:s3:::{settings['AWS_S3_SCRIPT_BUCKET']}/*"
+                }
+            ]
+        }
+
+        cc = ['iam', 'create-policy']
+        cc += ['--policy-name', 'S3ScriptBucketUploadPermission']
+        cc += ['--policy-document', json.dumps(s3_upload_policy)]
+        rr = aws_cli.run(cc)
+
+        sleep(5)
+
         cc = ['iam', 'attach-role-policy']
         cc += ['--role-name', role_name]
-        cc += ['--policy-arn', 'arn:aws:iam::aws:policy/AmazonS3FullAccess']
+        cc += ['--policy-arn', rr['Policy']['Arn']]
         aws_cli.run(cc)
         sleep_required = True
 
@@ -65,10 +94,12 @@ def create_iam_for_appstream():
         time.sleep(30)
 
 
-def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instances, fleet_region, fleet_arn):
+def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instances, fleet_region):
     vpc_config = f'SubnetIds={subnet_ids},SecurityGroupIds={security_group_id}'
 
     aws_cli = AWSCli(fleet_region)
+    fleet_role_arn = aws_cli.get_role_arn('AmazonAppStreamS3Permission')
+
     cmd = ['appstream', 'create-fleet']
     cmd += ['--name', name]
     cmd += ['--instance-type', 'stream.standard.medium']
@@ -78,7 +109,7 @@ def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instan
     cmd += ['--vpc-config', vpc_config]
     cmd += ['--no-enable-default-internet-access']
     cmd += ['--idle-disconnect-timeout-in-seconds', '600']
-    cmd += ['--iam-role-arn', fleet_arn]
+    cmd += ['--iam-role-arn', fleet_role_arn]
     # cmd += ["--disconnect-timeout-in-seconds", '60']
     # cmd += ["--max-user-duration-in-seconds", '60~360000']
 
@@ -224,8 +255,6 @@ if __name__ == "__main__":
 
     print_session('create appstream image stack & fleet')
 
-    create_iam_for_appstream()
-
     for settings in env['appstream']['STACK']:
         if target_name and settings['NAME'] != target_name:
             continue
@@ -233,19 +262,18 @@ if __name__ == "__main__":
         if region and settings.get('AWS_DEFAULT_REGION') != region:
             continue
 
+        create_iam_for_appstream(settings)
+
         desired_instances = settings.get('DESIRED_INSTANCES', 1)
         embed_host_domains = settings['EMBED_HOST_DOMAINS']
         fleet_name = settings['FLEET_NAME']
         region = settings['AWS_DEFAULT_REGION']
         stack_name = settings['NAME']
-        canonical_id = settings['CANONICAL_ID']
-        fleet_arn = f'arn:aws:iam::{canonical_id}:role/AmazonAppStreamS3Permission'
 
         image_name = get_latest_image(region)
         subnet_ids, security_group_id = get_subnet_and_security_group_id(region)
 
-        create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances, region,
-                     fleet_arn)
+        create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances, region)
         create_stack(stack_name, embed_host_domains, region)
         wait_state(fleet_name, region)
         associate_fleet(stack_name, fleet_name, region)
