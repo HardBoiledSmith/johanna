@@ -2,6 +2,7 @@
 
 from time import sleep
 
+from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
@@ -133,21 +134,21 @@ if __name__ == "__main__":
 
     print_session('terminate appstream stack & fleet')
 
-    # for settings in env['appstream']['STACK']:
-    #     if target_name and settings['NAME'] != target_name:
-    #         continue
-    #
-    #     if region and settings.get('AWS_DEFAULT_REGION') != region:
-    #         continue
-    #
-    #     fleet_name = settings['FLEET_NAME']
-    #     region = settings['AWS_DEFAULT_REGION']
-    #     stack_name = settings['NAME']
-    #
-    #     disassociate_fleet(fleet_name, stack_name, region)
-    #     delete_stack(stack_name, region)
-    #     stop_fleet(fleet_name, region)
-    #     wait_state(fleet_name, region)
-    #     delete_fleet(fleet_name, region)
+    for settings in env['appstream']['STACK']:
+        if target_name and settings['NAME'] != target_name:
+            continue
+
+        if region and settings.get('AWS_DEFAULT_REGION') != region:
+            continue
+
+        fleet_name = settings['FLEET_NAME']
+        region = settings['AWS_DEFAULT_REGION']
+        stack_name = settings['NAME']
+
+        disassociate_fleet(fleet_name, stack_name, region)
+        delete_stack(stack_name, region)
+        stop_fleet(fleet_name, region)
+        wait_state(fleet_name, region)
+        delete_fleet(fleet_name, region)
 
     terminate_iam_for_appstream()
