@@ -9,20 +9,18 @@ from run_common import print_session
 def terminate_appstream_fleet_autoscale(settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
-    fleet_name = settings["FLEET_NAME"]
+    fleet_name = settings['FLEET_NAME']
 
     print_message(f'terminate fleet autoscale for: {fleet_name}')
 
-    scale_in_policy_name = settings["SCALE_IN_POLICY"]
-    scale_out_policy_name = settings["SCALE_OUT_POLICY"]
-    fleet_path = f'fleet/{settings["FLEET_NAME"]}'
+    fleet_path = f"fleet/{settings['FLEET_NAME']}"
 
     cc = ['cloudwatch', 'delete-alarms']
-    cc += ['--alarm-names', scale_out_policy_name]
+    cc += ['--alarm-names', 'scale-out-utilization-policy']
     aws_cli.run(cc, ignore_error=True)
 
     cc = ['cloudwatch', 'delete-alarms']
-    cc += ['--alarm-names', scale_in_policy_name]
+    cc += ['--alarm-names', 'scale-in-utilization-policy']
     aws_cli.run(cc, ignore_error=True)
 
     cc = ['application-autoscaling', 'deregister-scalable-target']
