@@ -69,7 +69,8 @@ def create_iam_for_appstream(settings):
                     "Effect": "Allow",
                     "Action": [
                         "s3:PutObject",
-                        "s3:GetObject"
+                        "s3:GetObject",
+                        "s3:DeleteObject"
                     ],
                     "Resource": f"arn:aws:s3:::{settings['AWS_S3_SCRIPT_BUCKET']}/*"
                 }
