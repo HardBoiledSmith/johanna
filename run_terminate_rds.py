@@ -30,7 +30,6 @@ def terminate_iam_for_rds():
 
     rr = aws_cli.get_iam_user()
     user_name = rr['User']['UserName']
-    ua = re.match(r'^arn:aws:iam::([0-9]+):user.+$', rr['User']['Arn'])
 
     # noinspection PyShadowingNames
     cc = ['iam', 'delete-user-policy']
