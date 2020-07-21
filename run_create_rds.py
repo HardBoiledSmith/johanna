@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import datetime
 import json
+import re
 import time
 
 from env import env
@@ -18,6 +19,32 @@ aws_cli = AWSCli()
 
 def create_iam_for_rds():
     sleep_required = False
+
+    rr = aws_cli.get_iam_user()
+    user_name = rr['User']['UserName']
+    ua = re.match(r'^arn:aws:iam::([0-9]+):user.+$', rr['User']['Arn'])
+
+    policy_name = 'aws-rds-monitoring-role-allow-policy'
+    if not aws_cli.get_iam_user_policy(user_name, policy_name):
+        rds_policy = {
+            'Version': '2012-10-17',
+            'Statement': [
+                {
+                    'Effect': 'Allow',
+                    'Action': [
+                        'iam:PassRole'
+                    ],
+                    'Resource': f'arn:aws:iam::{ua[1]}:role/rds-monitoring-role'
+                }
+            ]
+        }
+
+        cc = ['iam', 'put-user-policy']
+        cc += ['--user-name', user_name]
+        cc += ['--policy-name', policy_name]
+        cc += ['--policy-document', json.dumps(rds_policy)]
+        aws_cli.run(cc)
+        sleep_required = True
 
     role_name = 'rds-monitoring-role'
     if not aws_cli.get_iam_role(role_name):
