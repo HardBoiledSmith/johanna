@@ -55,6 +55,23 @@ def run_create_s3_bucket(name, settings):
                 'file://aws_iam/aws-s3-website-configuration.json']
         aws_cli.run(cmd)
 
+        print_message('set cors')
+        cc = {
+            "CORSRules": [
+                {
+                    "AllowedOrigins": ["*"],
+                    "AllowedMethods": ["GET"],
+                    "MaxAgeSeconds": 3000,
+                    "AllowedHeaders": ["Authorization"]
+                }
+            ]
+        }
+
+        cmd = ['s3api', 'put-bucket-cors']
+        cmd += ['--bucket', bucket_name]
+        cmd += ['--cors-configuration', json.dumps(cc)]
+        aws_cli.run(cmd)
+
     ################################################################################
     if expire_days > 0:
         print_message('set life cycle rule')

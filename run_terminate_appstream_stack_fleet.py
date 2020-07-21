@@ -36,6 +36,27 @@ def terminate_iam_for_appstream():
     cc += ['--role-name', role_name]
     aws_cli.run(cc, ignore_error=True)
 
+    # noinspection PyShadowingNames
+    cc = ['iam', 'list-policies']
+    cc += ['--query', 'Policies[?PolicyName==`S3ScriptBucketUploadPermission`]']
+    rr = aws_cli.run(cc, ignore_error=False)
+    fleet_role_policy_arn = rr[0]['Arn']
+
+    role_name = 'AmazonAppStreamS3Permission'
+    cc = ['iam', 'detach-role-policy']
+    cc += ['--role-name', role_name]
+    cc += ['--policy-arn', fleet_role_policy_arn]
+    aws_cli.run(cc, ignore_error=True)
+
+    # noinspection PyShadowingNames
+    cc = ['iam', 'delete-role']
+    cc += ['--role-name', role_name]
+    aws_cli.run(cc, ignore_error=True)
+
+    cc = ['iam', 'delete-policy']
+    cc += ['--policy-arn', fleet_role_policy_arn]
+    aws_cli.run(cc, ignore_error=True)
+
 
 def stop_fleet(fleet_name, fleet_region):
     aws_cli = AWSCli(fleet_region)
