@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import re
+
 from env import env
 from run_common import AWSCli
 from run_common import print_message
@@ -24,6 +26,15 @@ def terminate_iam_for_rds():
     # noinspection PyShadowingNames
     cc = ['iam', 'delete-role']
     cc += ['--role-name', 'rds-monitoring-role']
+    aws_cli.run(cc, ignore_error=True)
+
+    rr = aws_cli.get_iam_user()
+    user_name = rr['User']['UserName']
+
+    # noinspection PyShadowingNames
+    cc = ['iam', 'delete-user-policy']
+    cc += ['--user-name', user_name]
+    cc += ['--policy-name', 'aws-rds-monitoring-role-allow-policy']
     aws_cli.run(cc, ignore_error=True)
 
 
