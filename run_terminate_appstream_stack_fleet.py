@@ -139,7 +139,7 @@ if __name__ == "__main__":
         disassociate_fleet(fleet_name, stack_name, region)
         delete_stack(stack_name, region)
         stop_fleet(fleet_name, region)
-        # wait_state(fleet_name, region)
-        # delete_fleet(fleet_name, region)
+        wait_state(fleet_name, region)
+        delete_fleet(fleet_name, region)
 
     terminate_iam_for_appstream()
