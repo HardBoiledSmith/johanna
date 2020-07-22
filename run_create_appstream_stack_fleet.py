@@ -46,7 +46,7 @@ def create_iam_for_appstream(settings):
         aws_cli.run(cc)
         sleep_required = True
 
-    role_name = 'AmazonAppStreamS3Permission'
+    role_name = 'aws-appstream-naoko-fleet-role'
     if not aws_cli.get_iam_role(role_name):
         print_message(f'create iam role: {role_name}')
 
@@ -55,7 +55,9 @@ def create_iam_for_appstream(settings):
         cc += ['--assume-role-policy-document', 'file://aws_iam/aws-appstream-role.json']
         aws_cli.run(cc)
 
-        s3_upload_policy = {
+        sleep(5)
+
+        dd = {
             "Version": "2012-10-17",
             "Statement": [
                 {
@@ -77,17 +79,11 @@ def create_iam_for_appstream(settings):
             ]
         }
 
-        cc = ['iam', 'create-policy']
-        cc += ['--policy-name', 'S3ScriptBucketUploadPermission']
-        cc += ['--policy-document', json.dumps(s3_upload_policy)]
-        rr = aws_cli.run(cc)
-
-        sleep(5)
-
-        cc = ['iam', 'attach-role-policy']
-        cc += ['--role-name', role_name]
-        cc += ['--policy-arn', rr['Policy']['Arn']]
-        aws_cli.run(cc)
+        cmd = ['iam', 'put-role-policy']
+        cmd += ['--role-name', role_name]
+        cmd += ['--policy-name', 'aws-appstream-naoko-fleet-policy']
+        cmd += ['--policy-document', json.dumps(dd)]
+        aws_cli.run(cmd)
         sleep_required = True
 
     if sleep_required:
@@ -99,7 +95,7 @@ def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instan
     vpc_config = f'SubnetIds={subnet_ids},SecurityGroupIds={security_group_id}'
 
     aws_cli = AWSCli(fleet_region)
-    fleet_role_arn = aws_cli.get_role_arn('AmazonAppStreamS3Permission')
+    fleet_role_arn = aws_cli.get_role_arn('aws-appstream-naoko-fleet-role')
 
     cmd = ['appstream', 'create-fleet']
     cmd += ['--name', name]
