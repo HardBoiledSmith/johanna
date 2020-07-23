@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import time
 from time import sleep
 
@@ -9,13 +10,13 @@ from run_common import print_message
 from run_common import print_session
 
 
-def create_iam_for_appstream():
+def create_iam_for_appstream(settings):
     aws_cli = AWSCli()
     sleep_required = False
 
     role_name = 'AmazonAppStreamServiceAccess'
     if not aws_cli.get_iam_role(role_name):
-        print_message('create iam role: %s' % role_name)
+        print_message(f'create iam role: {role_name}')
 
         cc = ['iam', 'create-role']
         cc += ['--role-name', role_name]
@@ -32,7 +33,7 @@ def create_iam_for_appstream():
 
     role_name = 'ApplicationAutoScalingForAmazonAppStreamAccess'
     if not aws_cli.get_iam_role(role_name):
-        print_message('create iam role: %s' % role_name)
+        print_message(f'create iam role: {role_name}')
 
         cc = ['iam', 'create-role']
         cc += ['--role-name', role_name]
@@ -45,24 +46,67 @@ def create_iam_for_appstream():
         aws_cli.run(cc)
         sleep_required = True
 
+    role_name = 'aws-appstream-naoko-fleet-role'
+    if not aws_cli.get_iam_role(role_name):
+        print_message(f'create iam role: {role_name}')
+
+        cc = ['iam', 'create-role']
+        cc += ['--role-name', role_name]
+        cc += ['--assume-role-policy-document', 'file://aws_iam/aws-appstream-role.json']
+        aws_cli.run(cc)
+
+        sleep(5)
+
+        dd = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "ListObjectsInBucket",
+                    "Effect": "Allow",
+                    "Action": "s3:ListBucket",
+                    "Resource": f"arn:aws:s3:::{settings['AWS_S3_SCRIPT_BUCKET']}"
+                },
+                {
+                    "Sid": "PutAndGetObjectActions",
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:PutObject",
+                        "s3:GetObject",
+                        "s3:DeleteObject"
+                    ],
+                    "Resource": f"arn:aws:s3:::{settings['AWS_S3_SCRIPT_BUCKET']}/*"
+                }
+            ]
+        }
+
+        cmd = ['iam', 'put-role-policy']
+        cmd += ['--role-name', role_name]
+        cmd += ['--policy-name', 'aws-appstream-naoko-fleet-policy']
+        cmd += ['--policy-document', json.dumps(dd)]
+        aws_cli.run(cmd)
+        sleep_required = True
+
     if sleep_required:
         print_message('wait 30 seconds to let iam role and policy propagated to all regions...')
         time.sleep(30)
 
 
 def create_fleet(name, image_name, subnet_ids, security_group_id, desired_instances, fleet_region):
-    vpc_config = 'SubnetIds=%s,SecurityGroupIds=%s' % (subnet_ids, security_group_id)
+    vpc_config = f'SubnetIds={subnet_ids},SecurityGroupIds={security_group_id}'
 
     aws_cli = AWSCli(fleet_region)
+    fleet_role_arn = aws_cli.get_role_arn('aws-appstream-naoko-fleet-role')
+
     cmd = ['appstream', 'create-fleet']
     cmd += ['--name', name]
     cmd += ['--instance-type', 'stream.standard.medium']
     cmd += ['--fleet-type', 'ON_DEMAND']
-    cmd += ['--compute-capacity', 'DesiredInstances=%d' % desired_instances]
+    cmd += ['--compute-capacity', f'DesiredInstances={desired_instances}']
     cmd += ['--image-name', image_name]
     cmd += ['--vpc-config', vpc_config]
     cmd += ['--no-enable-default-internet-access']
-    cmd += ["--idle-disconnect-timeout-in-seconds", '600']
+    cmd += ['--idle-disconnect-timeout-in-seconds', '600']
+    cmd += ['--iam-role-arn', fleet_role_arn]
     # cmd += ["--disconnect-timeout-in-seconds", '60']
     # cmd += ["--max-user-duration-in-seconds", '60~360000']
 
@@ -208,14 +252,14 @@ if __name__ == "__main__":
 
     print_session('create appstream image stack & fleet')
 
-    create_iam_for_appstream()
-
     for settings in env['appstream']['STACK']:
         if target_name and settings['NAME'] != target_name:
             continue
 
         if region and settings.get('AWS_DEFAULT_REGION') != region:
             continue
+
+        create_iam_for_appstream(settings)
 
         desired_instances = settings.get('DESIRED_INSTANCES', 1)
         embed_host_domains = settings['EMBED_HOST_DOMAINS']

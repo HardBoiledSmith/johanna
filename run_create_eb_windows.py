@@ -159,7 +159,10 @@ def run_create_eb_windows(name, settings):
         value = settings[key]
         option_list.append([key, value])
     for oo in option_list:
-        lines = re_sub_lines(lines, f'^.+add key=\"({oo[0]})\" value=.+$', f'<add key="\\1" value="{oo[1]}" />')
+        if oo[0] == 'SENTRY_DSN':
+            lines = re_sub_lines(lines, '^.+Dsn value=.+$', f'<Dsn value="{oo[1]}" />')
+        else:
+            lines = re_sub_lines(lines, f'^.+add key=\"({oo[0]})\" value=.+$', f'<add key="\\1" value="{oo[1]}" />')
     write_file(f'{template_path}/{name}/_provisioning/configuration/'
                f'User/vagrant/Desktop/{name}/{name}_cli/{name}_cli.exe.config', lines)
 
@@ -347,7 +350,7 @@ def run_create_eb_windows(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.5.6 running IIS 10.0']
+    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.5.7 running IIS 10.0']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
