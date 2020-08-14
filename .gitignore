@@ -2,11 +2,10 @@
 *.pub
 *.pyc
 *.swp
+*config.json
 *~
 .DS_Store
-/*config.json
-/*config.yml
-/.idea
-template/
-id_rsa
 .vagrant
+/.idea
+id_rsa
+template/

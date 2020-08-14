@@ -15,25 +15,6 @@ if __name__ == "__main__":
 aws_cli = AWSCli()
 
 
-def terminate_source_credential(codebuild_settings):
-    region_set = set()
-
-    for ss in codebuild_settings:
-        region = ss.get('AWS_DEFAULT_REGION', 'ap-northeast-2')
-        region_set.add(region)
-
-    for rr in list(region_set):
-        _aws_cli = AWSCli(rr)
-
-        cmd = ['codebuild', 'list-source-credentials']
-        result = _aws_cli.run(cmd)
-
-        for cc in result['sourceCredentialsInfos']:
-            cmd = ['codebuild', 'delete-source-credentials']
-            cmd += ['--arn', cc['arn']]
-            _aws_cli.run(cmd, ignore_error=True)
-
-
 def terminate_iam_for_codebuild(codebuild_type):
     role_name = f'aws-codebuild-{codebuild_type}-role'
     policy_name = f'aws-codebuild-{codebuild_type}-policy'
@@ -112,18 +93,6 @@ def run_terminate_github_codebuild(name, settings):
     cmd += ['--name', name]
     _aws_cli.run(cmd, ignore_error=True)
 
-    print_message('delete github codebuild(environment variable) %s' % name)
-
-    cmd = ['ssm', 'get-parameters-by-path']
-    cmd += ['--path', '/CodeBuild/%s' % name]
-
-    result = _aws_cli.run(cmd)
-    if 'Parameters' in result:
-        for rr in result['Parameters']:
-            cmd = ['ssm', 'delete-parameter']
-            cmd += ['--name', rr['Name']]
-            _aws_cli.run(cmd, ignore_error=True)
-
     terminate_iam_for_codebuild(name.replace('_', '-'))
 
 
@@ -136,16 +105,6 @@ def run_terminate_cron_codebuild(name):
 
     rule_name = name + 'CronRule'
     terminate_cron_event(aws_cli, rule_name)
-
-    cmd = ['ssm', 'get-parameters-by-path']
-    cmd += ['--path', '/CodeBuild/%s' % name]
-
-    result = aws_cli.run(cmd)
-    if 'Parameters' in result:
-        for rr in result['Parameters']:
-            cmd = ['ssm', 'delete-parameter']
-            cmd += ['--name', rr['Name']]
-            aws_cli.run(cmd, ignore_error=True)
 
 
 ################################################################################
@@ -199,4 +158,3 @@ else:
     terminate_iam_for_codebuild('cron')
     terminate_iam_for_codebuild('default')
     terminate_iam_for_codebuild('secure-parameter')
-    terminate_source_credential(codebuild_list)
