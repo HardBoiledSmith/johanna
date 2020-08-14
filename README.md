@@ -82,7 +82,7 @@ You can use [AWS CLI Command Completion](https://docs.aws.amazon.com/cli/latest/
 
 # AWS Codebuild
 
-Before create codebuild projects, you must create these resources:
+Before create codebuild projects, you must create these resources manually using AWS Web console:
 
 - Environment Variables (Secure String) at Systems Manager > Parameter Store
 
