@@ -80,6 +80,19 @@ You can use this on web GUI
 
 You can use [AWS CLI Command Completion](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-completion.html)
 
+# AWS Codebuild
+
+Before create codebuild projects, you must create these resources manually using AWS Web console:
+
+- Environment Variables (Secure String) at Systems Manager > Parameter Store
+
+  https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-securestring.html
+
+- OAuth Connection to GitHub by follow instructions
+
+  > For source code in a GitHub repository, the HTTPS clone URL to the repository that contains the source and the buildspec file. You must connect your AWS account to your GitHub account. Use the AWS CodeBuild console to start creating a build project. When you use the console to connect (or reconnect) with GitHub, on the GitHub Authorize application page, for Organization access , choose Request access next to each repository you want to allow AWS CodeBuild to have access to, and then choose Authorize application . (After you have connected to your GitHub account, you do not need to finish creating the build project. You can leave the AWS CodeBuild console.)    
+  > https://docs.aws.amazon.com/cli/latest/reference/codebuild/create-project.html#options
+
 # S3 SRR(Same Region Replication)
 
 This script applies replication to different AWS accounts.

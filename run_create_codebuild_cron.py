@@ -14,7 +14,6 @@ def run_create_codebuild_cron(name, settings):
     compute_type = settings['ENV_COMPUTE_TYPE']
     description = settings['DESCRIPTION']
     git_repo = settings['GITHUB_REPO']
-    github_token = settings['GITHUB_TOKEN']
     image = settings['IMAGE']
 
     ################################################################################
@@ -55,8 +54,7 @@ def run_create_codebuild_cron(name, settings):
             "gitCloneDepth": 0,
             "buildspec": build_spec,
             "auth": {
-                "type": "OAUTH",
-                "resource": github_token
+                "type": "OAUTH"
             },
             "insecureSsl": True,
             "sourceIdentifier": git_branch

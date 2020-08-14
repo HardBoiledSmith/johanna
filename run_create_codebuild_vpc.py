@@ -167,7 +167,6 @@ def run_create_codebuild_vpc(name, settings):
     compute_type = settings['ENV_COMPUTE_TYPE']
     description = settings['DESCRIPTION']
     git_repo = settings['GITHUB_REPO']
-    github_token = settings['GITHUB_TOKEN']
     image = settings['IMAGE']
 
     ################################################################################
@@ -176,15 +175,6 @@ def run_create_codebuild_vpc(name, settings):
     cmd = ['codebuild', 'list-projects']
     result = aws_cli.run(cmd)
     need_update = name in result['projects']
-
-    ################################################################################
-    print_message('import source credentials')
-
-    cmd = ['codebuild', 'import-source-credentials']
-    cmd += ['--token', github_token]
-    cmd += ['--server-type', 'GITHUB']
-    cmd += ['--auth-type', 'PERSONAL_ACCESS_TOKEN']
-    aws_cli.run(cmd)
 
     ################################################################################
     print_message('set environment variable')
@@ -224,8 +214,7 @@ def run_create_codebuild_vpc(name, settings):
             "gitCloneDepth": 0,
             "buildspec": build_spec,
             "auth": {
-                "type": "OAUTH",
-                "resource": github_token
+                "type": "OAUTH"
             },
             "insecureSsl": True,
             "sourceIdentifier": git_branch
