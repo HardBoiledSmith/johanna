@@ -129,7 +129,6 @@ def run_create_codebuild_github(name, settings):
     compute_type = settings['ENV_COMPUTE_TYPE']
     description = settings['DESCRIPTION']
     git_repo = settings['GITHUB_REPO']
-    github_token = settings['GITHUB_TOKEN']
     image = settings['IMAGE']
     container_type = settings.get('CONTAINER_TYPE', 'LINUX_CONTAINER')
     artifacts = settings.get('ARTIFACTS', {'type': 'NO_ARTIFACTS'})
@@ -143,15 +142,6 @@ def run_create_codebuild_github(name, settings):
     ################################################################################
     role_name = create_iam_for_codebuild(name, settings)
     role_arn = aws_cli.get_role_arn(role_name)
-
-    ################################################################################
-    print_message('import source credentials')
-
-    cmd = ['codebuild', 'import-source-credentials']
-    cmd += ['--token', github_token]
-    cmd += ['--server-type', 'GITHUB']
-    cmd += ['--auth-type', 'PERSONAL_ACCESS_TOKEN']
-    aws_cli.run(cmd)
 
     ################################################################################
     print_message('set environment variable')
@@ -179,8 +169,7 @@ def run_create_codebuild_github(name, settings):
             'gitCloneDepth': 0,
             'buildspec': build_spec,
             'auth': {
-                'type': 'OAUTH',
-                'resource': github_token
+                'type': 'OAUTH'
             },
             'insecureSsl': True,
             'sourceIdentifier': git_branch
