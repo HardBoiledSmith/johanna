@@ -3,7 +3,6 @@
 *.pyc
 *.swp
 *config.json
-*config.yml
 *~
 .DS_Store
 .vagrant
