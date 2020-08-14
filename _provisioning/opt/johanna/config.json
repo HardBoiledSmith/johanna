@@ -1,0 +1,1765 @@
+{
+  "aws": {
+    "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+    "AWS_DEFAULT_REGION": "ap-northeast-2",
+    "AWS_SECRET_ACCESS_KEY": "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"
+  },
+  "common": {
+    "AWS_KEY_PAIR_MATERIAL": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuuNwx1yidcwxS0RVnacMmdXX1xKz0G4+7WFU652UF+rcNXD4bxZbYgQ2hjl8i6wsUO/CSc0dS2sfyPl2KEWKoZ/Mk/Gu88lJfm2rouY2tq+tSfRJr68NfjIZ/eNnzlJbEKs8Jw8OlQ8riSGPF2dExvdInEKOsVwHTwY04vPZk2xlncJhv7BnPnZKTHCDSuUepaabuYA840t9aIeAWjsrKpev71BNkBTs87UsAS3MnTFzRsTA19g8+P7AkJ2kEPEwYAKa1HyftB1SRmjbU0qFRpzn4A8urp5cJGnWCyouQRF891fXTUTj1Z0hSNYIBMTTaKW7NAQLXu3eeN9bdmJgQQIDAQAB",
+    "AWS_KEY_PAIR_NAME": "qa_20180312",
+    "AWS_SUBNET_EB_PRIVATE_1": "10.110.0.0/20",
+    "AWS_SUBNET_EB_PRIVATE_2": "10.110.16.0/20",
+    "AWS_SUBNET_EB_PUBLIC_1": "10.110.128.0/20",
+    "AWS_SUBNET_EB_PUBLIC_2": "10.110.144.0/20",
+    "AWS_SUBNET_RDS_PRIVATE_1": "10.100.0.0/20",
+    "AWS_SUBNET_RDS_PRIVATE_2": "10.100.16.0/20",
+    "AWS_VPC_EB": "10.110.0.0/16",
+    "AWS_VPC_RDS": "10.100.0.0/16",
+    "DEBUG": "True",
+    "PHASE": "qa"
+  },
+  "acm": [
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "NAME": "hbsmith.io",
+      "DOMAIN_NAME" : "hbsmith.io",
+      "ADDITIONAL_NAMES": [
+        "*.hbsmith.io"
+      ],
+      "VALIDATION_METHOD": "EMAIL"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-southeast-1",
+      "NAME": "hbsmith.io",
+      "DOMAIN_NAME" : "hbsmith.io",
+      "ADDITIONAL_NAMES": [
+        "*.hbsmith.io"
+      ],
+      "VALIDATION_METHOD": "EMAIL"
+    }
+  ],
+  "codebuild": [
+    {
+      "NAME": "reset_database",
+      "CANONICAL_ID" : "141312106417",
+      "DESCRIPTION": "reset_database",
+      "GITHUB_REPO": "https://github.com/HardBoiledSmith/hbsmith-database.git",
+      "GITHUB_TOKEN": "f0308ac5a121f179f79f696f03f6a29707081c00",
+      "BUILD_SPEC": "reset_database_buildspec.yml",
+      "BUILD_TIMEOUT": 90,
+      "ENV_COMPUTE_TYPE": "BUILD_GENERAL1_MEDIUM",
+      "TYPE": "vpc",
+      "ENV_VARIABLES": [
+        {
+          "name": "CANONICAL_ID",
+          "value": "141312106417",
+          "type": "PLAINTEXT"
+        },
+        {
+          "name": "DB_PHASE_PREFIX",
+          "value": "qa",
+          "type": "PLAINTEXT"
+        },
+        {
+          "name": "SES_EMAIL",
+          "value": "qa@hbsmith.io",
+          "type": "PLAINTEXT"
+        }
+      ],
+      "BRANCH": "qa",
+      "IMAGE": "aws/codebuild/amazonlinux2-x86_64-standard:2.0",
+      "AWS_VPC_REGION": "ap-northeast-2"
+    }
+  ],
+  "cloudwatch": {
+    "DASHBOARDS": [
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "NAME": "penpen",
+        "TYPE": "elasticbeanstalk"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "NAME": "nerv",
+        "TYPE": "elasticbeanstalk"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "NAME": "sachiel",
+        "TYPE": "elasticbeanstalk"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "NAME": "__database__",
+        "TYPE": "rds/aurora"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "NAME": "__global__",
+        "TYPE": "sqs,lambda,sms"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "NAME": "gendo",
+        "TYPE": "elasticbeanstalk"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-southeast-1",
+        "NAME": "gendo",
+        "TYPE": "elasticbeanstalk"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-1",
+        "NAME": "__alarm__",
+        "TYPE": "alarm"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "NAME": "__alarm__",
+        "TYPE": "alarm"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-southeast-1",
+        "NAME": "__alarm__",
+        "TYPE": "alarm"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-east-1",
+        "NAME": "__alarm__",
+        "TYPE": "alarm"
+      },
+      {
+        "AWS_DEFAULT_REGION": "us-east-1",
+        "NAME": "__alarm__",
+        "TYPE": "alarm"
+      }
+    ],
+    "ALARMS": [
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "GreaterThanThreshold",
+        "DATAPOINTS_TO_ALARM": "5",
+        "DESCRIPTION": "EnvironmentHealth of penpen (ap-northeast-2) is in DANGER",
+        "DIMENSIONS": "EnvironmentName",
+        "EVALUATION_PERIODS": "5",
+        "METRIC_NAME": "EnvironmentHealth",
+        "NAME": "penpen",
+        "NAMESPACE": "AWS/ElasticBeanstalk",
+        "PERIOD": "60",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Maximum",
+        "THRESHOLD": "15",
+        "TYPE": "elasticbeanstalk"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "GreaterThanOrEqualToThreshold",
+        "DATAPOINTS_TO_ALARM": "5",
+        "DESCRIPTION": "RootFilesystemUtil of penpen (ap-northeast-2) is in DANGER",
+        "DIMENSIONS": "EnvironmentName",
+        "EVALUATION_PERIODS": "5",
+        "METRIC_NAME": "RootFilesystemUtil",
+        "NAME": "penpen",
+        "NAMESPACE": "AWS/ElasticBeanstalk",
+        "PERIOD": "60",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Maximum",
+        "THRESHOLD": "80",
+        "TYPE": "elasticbeanstalk"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "GreaterThanThreshold",
+        "DATAPOINTS_TO_ALARM": "5",
+        "DESCRIPTION": "EnvironmentHealth of sachiel (ap-northeast-2) is in DANGER",
+        "DIMENSIONS": "EnvironmentName",
+        "EVALUATION_PERIODS": "5",
+        "METRIC_NAME": "EnvironmentHealth",
+        "NAME": "sachiel",
+        "NAMESPACE": "AWS/ElasticBeanstalk",
+        "PERIOD": "60",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Maximum",
+        "THRESHOLD": "15",
+        "TYPE": "elasticbeanstalk"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "GreaterThanOrEqualToThreshold",
+        "DATAPOINTS_TO_ALARM": "5",
+        "DESCRIPTION": "ApplicationRequests5xx of sachiel (ap-northeast-2) is in DANGER",
+        "DIMENSIONS": "EnvironmentName",
+        "EVALUATION_PERIODS": "5",
+        "METRIC_NAME": "ApplicationRequests5xx",
+        "NAME": "sachiel",
+        "NAMESPACE": "AWS/ElasticBeanstalk",
+        "PERIOD": "60",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Sum",
+        "THRESHOLD": "1",
+        "TYPE": "elasticbeanstalk"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "GreaterThanOrEqualToThreshold",
+        "DATAPOINTS_TO_ALARM": "5",
+        "DESCRIPTION": "RootFilesystemUtil of sachiel (ap-northeast-2) is in DANGER",
+        "DIMENSIONS": "EnvironmentName",
+        "EVALUATION_PERIODS": "5",
+        "METRIC_NAME": "RootFilesystemUtil",
+        "NAME": "sachiel",
+        "NAMESPACE": "AWS/ElasticBeanstalk",
+        "PERIOD": "60",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Maximum",
+        "THRESHOLD": "80",
+        "TYPE": "elasticbeanstalk"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "GreaterThanThreshold",
+        "DATAPOINTS_TO_ALARM": "5",
+        "DESCRIPTION": "EnvironmentHealth of nerv (ap-northeast-2) is in DANGER",
+        "DIMENSIONS": "EnvironmentName",
+        "EVALUATION_PERIODS": "5",
+        "METRIC_NAME": "EnvironmentHealth",
+        "NAME": "nerv",
+        "NAMESPACE": "AWS/ElasticBeanstalk",
+        "PERIOD": "60",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Maximum",
+        "THRESHOLD": "15",
+        "TYPE": "elasticbeanstalk"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "GreaterThanOrEqualToThreshold",
+        "DATAPOINTS_TO_ALARM": "5",
+        "DESCRIPTION": "ApplicationRequests5xx of nerv (ap-northeast-2) is in DANGER",
+        "DIMENSIONS": "EnvironmentName",
+        "EVALUATION_PERIODS": "5",
+        "METRIC_NAME": "ApplicationRequests5xx",
+        "NAME": "nerv",
+        "NAMESPACE": "AWS/ElasticBeanstalk",
+        "PERIOD": "60",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Sum",
+        "THRESHOLD": "1",
+        "TYPE": "elasticbeanstalk"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "GreaterThanOrEqualToThreshold",
+        "DATAPOINTS_TO_ALARM": "5",
+        "DESCRIPTION": "RootFilesystemUtil of nerv (ap-northeast-2) is in DANGER",
+        "DIMENSIONS": "EnvironmentName",
+        "EVALUATION_PERIODS": "5",
+        "METRIC_NAME": "RootFilesystemUtil",
+        "NAME": "nerv",
+        "NAMESPACE": "AWS/ElasticBeanstalk",
+        "PERIOD": "60",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Maximum",
+        "THRESHOLD": "80",
+        "TYPE": "elasticbeanstalk"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "GreaterThanOrEqualToThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Deadlocks of __database__ (ap-northeast-2) is in DANGER",
+        "DIMENSIONS": "DBClusterIdentifier",
+        "EVALUATION_PERIODS": "1",
+        "METRIC_NAME": "Deadlocks",
+        "NAME": "__database__",
+        "NAMESPACE": "AWS/RDS",
+        "PERIOD": "300",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Sum",
+        "THRESHOLD": "1",
+        "TYPE": "rds"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "GreaterThanOrEqualToThreshold",
+        "DATAPOINTS_TO_ALARM": "5",
+        "DESCRIPTION": "CPUUtilization of __database__ (ap-northeast-2) is in DANGER",
+        "DIMENSIONS": "DBClusterIdentifier",
+        "EVALUATION_PERIODS": "5",
+        "METRIC_NAME": "CPUUtilization",
+        "NAME": "__database__",
+        "NAMESPACE": "AWS/RDS",
+        "PERIOD": "300",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Maximum",
+        "THRESHOLD": "80",
+        "TYPE": "rds"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "GreaterThanOrEqualToThreshold",
+        "DATAPOINTS_TO_ALARM": "5",
+        "DESCRIPTION": "Number of failed email messages is in DANGER",
+        "DIMENSIONS": "QueueName",
+        "EVALUATION_PERIODS": "5",
+        "METRIC_NAME": "ApproximateNumberOfMessagesVisible",
+        "NAME": "__global__",
+        "NAMESPACE": "AWS/SQS",
+        "PERIOD": "300",
+        "QUEUE_NAME": "qa-hbsmith-email-dead-letter",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Maximum",
+        "THRESHOLD": "10",
+        "TYPE": "sqs"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "GreaterThanOrEqualToThreshold",
+        "DATAPOINTS_TO_ALARM": "3",
+        "DESCRIPTION": "Number of failed bizmessage is in DANGER",
+        "DIMENSIONS": "QueueName",
+        "EVALUATION_PERIODS": "5",
+        "METRIC_NAME": "ApproximateNumberOfMessagesVisible",
+        "NAME": "__global__",
+        "NAMESPACE": "AWS/SQS",
+        "PERIOD": "300",
+        "QUEUE_NAME": "qa-hbsmith-bizmessage-dead-letter",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Maximum",
+        "THRESHOLD": "10",
+        "TYPE": "sqs"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "GreaterThanOrEqualToThreshold",
+        "DATAPOINTS_TO_ALARM": "3",
+        "DESCRIPTION": "Number of failed sms is in DANGER",
+        "DIMENSIONS": "QueueName",
+        "EVALUATION_PERIODS": "5",
+        "METRIC_NAME": "ApproximateNumberOfMessagesVisible",
+        "NAME": "__global__",
+        "NAMESPACE": "AWS/SQS",
+        "PERIOD": "300",
+        "QUEUE_NAME": "qa-hbsmith-sms-dead-letter",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Maximum",
+        "THRESHOLD": "10",
+        "TYPE": "sqs"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "GreaterThanOrEqualToThreshold",
+        "DATAPOINTS_TO_ALARM": "3",
+        "DESCRIPTION": "Number of failed slack messages is in DANGER",
+        "DIMENSIONS": "QueueName",
+        "EVALUATION_PERIODS": "5",
+        "METRIC_NAME": "ApproximateNumberOfMessagesVisible",
+        "NAME": "__global__",
+        "NAMESPACE": "AWS/SQS",
+        "PERIOD": "300",
+        "QUEUE_NAME": "qa-hbsmith-slack-dead-letter",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Maximum",
+        "THRESHOLD": "10",
+        "TYPE": "sqs"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_send_email (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_send_email",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_send_sms (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_send_sms",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_send_slack (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_send_slack",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_bounced_email (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_bounced_email",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of cloudwatch_send_alarm (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "cloudwatch_send_alarm",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_report (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_report",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_alarm_old_delete (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_alarm_old_delete",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_all_version_old_delete (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_all_version_old_delete",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_1_ap-northeast-2 (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_1_ap-northeast-2",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_2_ap-northeast-2 (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_2_ap-northeast-2",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_3_ap-northeast-2 (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_3_ap-northeast-2",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_1_ap-northeast-1 (ap-northeast-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_1_ap-northeast-1",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_2_ap-northeast-1 (ap-northeast-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_2_ap-northeast-1",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_3_ap-northeast-1 (ap-northeast-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_3_ap-northeast-1",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "us-east-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_1_us-east-1 (us-east-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_1_us-east-1",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "us-east-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_2_us-east-1 (us-east-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_2_us-east-1",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "us-east-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_3_us-east-1 (us-east-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_3_us-east-1",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_old_delete (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_old_delete",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_cloudwatch_result (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_cloudwatch_result",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_visual_test_result_old_delete (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_visual_test_result_old_delete",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_visual_test_alarm_old_delete (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_visual_test_alarm_old_delete",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_cloudwatch_result_old_delete (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_cloudwatch_result_old_delete",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_cloudwatch_alarm_old_delete (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_cloudwatch_alarm_old_delete",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of connect_call (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "connect_call",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of connect_resolve (ap-northeast-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "connect_resolve",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of connect_error (ap-northeast-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "connect_error",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of connect_escalation (ap-northeast-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "connect_escalation",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of connect_recovery (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "connect_recovery",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of connect_snooze (ap-northeast-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "connect_snooze",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-southeast-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_1_ap-southeast-1 (ap-southeast-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_1_ap-southeast-1",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-southeast-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_2_ap-southeast-1 (ap-southeast-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_2_ap-southeast-1",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-southeast-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_3_ap-southeast-1 (ap-southeast-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_3_ap-southeast-1",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-east-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_1_ap-east-1 (ap-east-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_1_ap-east-1",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-east-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_2_ap-east-1 (ap-east-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_2_ap-east-1",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-east-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_scenario_result_3_ap-east-1 (ap-east-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_scenario_result_3_ap-east-1",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "us-east-1",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_fake_email_save (us-east-1) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_fake_email_save",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "COMPARISON_OPERATOR": "LessThanThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Success of sachiel_fake_email_delete (ap-northeast-2) is less than 100 in 5min",
+        "EVALUATION_PERIODS": "1",
+        "NAME": "sachiel_fake_email_delete",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "THRESHOLD": "100.0",
+        "TYPE": "lambda"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-1",
+        "COMPARISON_OPERATOR": "GreaterThanOrEqualToThreshold",
+        "DATAPOINTS_TO_ALARM": "1",
+        "DESCRIPTION": "Month to date spent reached quota",
+        "DIMENSIONS": [],
+        "EVALUATION_PERIODS": "1",
+        "METRIC_NAME": "SMSMonthToDateSpentUSD",
+        "NAME": "sms_quota_reached",
+        "NAMESPACE": "AWS/SNS",
+        "PERIOD": "60",
+        "SNS_TOPIC_NAME": "cloudwatch-alarm",
+        "STATISTIC": "Maximum",
+        "THRESHOLD": "10",
+        "TYPE": "sns"
+      }
+    ]
+  },
+  "elasticbeanstalk": {
+    "APPLICATION_NAME": "qa",
+    "ENVIRONMENTS": [
+      {
+        "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+        "AWS_ASG_MAX_VALUE": "1",
+        "AWS_ASG_MIN_VALUE": "1",
+        "AWS_EB_NOTIFICATION_EMAIL": "qa@hbsmith.io",
+        "AWS_REGION": "ap-northeast-2",
+        "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+        "AWS_SQS_EMAIL": "qa-hbsmith-email",
+        "CNAME": "qa-nerv",
+        "GIT_URL": "git@github.com:HardBoiledSmith/nerv.git",
+        "NAME": "nerv",
+        "SECRET_KEY": "j(gr$qvvv+)yq9tmz_6o03nlbvmn#r51m4d&lz^g11_9bptzsb",
+        "SUBNET_TYPE": "private",
+        "TYPE": "django",
+        "URL_SACHIEL": "https://qa-sachiel.hbsmith.io"
+      },
+      {
+        "ACCOUNTS": [
+          "hbsmith:1234qwer"
+        ],
+        "ADMIN_PASSWORD": "31hl92Ab",
+        "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "AWS_EB_NOTIFICATION_EMAIL": "qa@hbsmith.io",
+        "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+        "CA_CRT": "-----BEGIN CERTIFICATE-----\nMIIDNTCCAh2gAwIBAgIJAIORQcyEU6o2MA0GCSqGSIb3DQEBCwUAMBYxFDASBgNV\nBAMMC0Vhc3ktUlNBIENBMB4XDTE4MDIxOTE0MTQ0MVoXDTI4MDIxNzE0MTQ0MVow\nFjEUMBIGA1UEAwwLRWFzeS1SU0EgQ0EwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw\nggEKAoIBAQDW3lQZc7P1dq2fs0jN65UTsHrGG+U+db+8PK+s/fMgDIKtvyV1b1Y0\nNaMkos6uTHU0g43s5nahh71AjBNVgV7b+3MLNSaX8BpDF3JPeYaUi5/h7VZoE48Z\nbU68shCWOTdicC4NgODRIoRuNEzbBBgxm1Wv770vG1xbD3lFXPpdI56PgDROYxBf\nyhwuANdCWr0SErbHvSfLfBtxp3X4UrYY99JbdiCg/SuHl6dvBfEQ/rCNF6sfArH0\niIjth5Yo/xmw6lbxcnXwtWhs41q7ym+6vD3B3Yoj/K6shR1/Nh9thgf/Vwr9pz7I\njpMYOHqwk/K1eDPGTMJ0+X+shrTlCHGXAgMBAAGjgYUwgYIwHQYDVR0OBBYEFCue\nG4OSMvFGblE7h8St7BgmCceVMEYGA1UdIwQ/MD2AFCueG4OSMvFGblE7h8St7Bgm\nCceVoRqkGDAWMRQwEgYDVQQDDAtFYXN5LVJTQSBDQYIJAIORQcyEU6o2MAwGA1Ud\nEwQFMAMBAf8wCwYDVR0PBAQDAgEGMA0GCSqGSIb3DQEBCwUAA4IBAQCFOCJM86iY\nM37xNYVh0KDOasYbLn34tccFA/p8evP6PmOe5OagIY/Wxk/wA11w5lAPis9xrJRY\ngAKJgQhCLt31opfZksMAws9PU4WeKrW3xt+/+5USg6G0d25c0moYUEH8Boj/K5D0\nRGTQF8s38z8kUo7N7Cg3+dwdfdeW+pkF9rSyzPLWusr6jQ22uUGd4uxl7JKANylq\nkLNSJZLyq3rwqS2/ApajF4S56UlTfg8zFwlf4uJ2Vk5tnQF2agTISS34ZfPXe+g2\nEdteF7fWYBCHx4T6nS1MKcpkj4N84NjrZOc4gXOUqYuPO1Y1X2jyfx148z7jgDRJ\n/R9mKawve/J4\n-----END CERTIFICATE-----\n",
+        "CA_KEY": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDW3lQZc7P1dq2f\ns0jN65UTsHrGG+U+db+8PK+s/fMgDIKtvyV1b1Y0NaMkos6uTHU0g43s5nahh71A\njBNVgV7b+3MLNSaX8BpDF3JPeYaUi5/h7VZoE48ZbU68shCWOTdicC4NgODRIoRu\nNEzbBBgxm1Wv770vG1xbD3lFXPpdI56PgDROYxBfyhwuANdCWr0SErbHvSfLfBtx\np3X4UrYY99JbdiCg/SuHl6dvBfEQ/rCNF6sfArH0iIjth5Yo/xmw6lbxcnXwtWhs\n41q7ym+6vD3B3Yoj/K6shR1/Nh9thgf/Vwr9pz7IjpMYOHqwk/K1eDPGTMJ0+X+s\nhrTlCHGXAgMBAAECggEBAKFSmcfmRAYWzbLq082vg+UdioB1bz/e/k7hLXDv1fuJ\nCRBURFaQeiOG5e9awVzCEPmVkBh+zDDpDiGJSfbXxBXcC3sts8U9wyn+T5f2ASJE\nVo01Obu4e6c2l3g7JRL08G1bFmiTC7hZdx6a691AjL2qB8Kpd9wHaecAjieS8HK+\nK1EG7ebLtgSngbBB5lXbn009EUuzg11vRo3qY0FngnhyTIV+zmOIiRTA7k2DjT1Y\nChGLY7O0Q6s/jI3ZPfA7ASe4ZKil8vTs8QEIZ5OVy2CYzzNh59yAs5EvdYMq06SK\nWxMkDN45rwbloqjycLZYlCobbKlvcbsHVjXwz4IqWakCgYEA/WaJYeMhemXVd+kh\nxF5k+4dyux4TH/It+9KLFmno7mGooXiLlF+BgxrmtgIgIrGeshOLSTUjE4bDXuhx\neR+pyKr7Gqj8xEBU+8F/iOAk92PLftsmNNavsJYSJqTCiq6nzTDC7xVDYiuNDCTx\ncv0YJj1Lk7m/OVqsIibyXM0Us7sCgYEA2RKaACMAtsxog9N5l3Jb1nuyRzvHSQS3\n88Ghlo4s02AmOZIgaYqc58LSfBdcR1TKiy3t+qTsB9an67BtwSC9mQ5q1FPEbdCc\n/rXHEvsEUN/6qxlCkoqErUo8okD4KbvrC8g7BycV0dHgt0PUqQ86Fe2mFCoFQn/T\n6ro7HXWAxdUCgYAujJJ6J+YzfNd9ApeQYiK8zgH2e6zZtnxaATBJusTuXYRDvUgu\nxmidM+jj0HokxWo4njx9A0ThRmVHXv3RWU6wLTCZkid0ybiS0tXhyAMiavOr5wga\ntsFpd/f3n1aZcUIkAGwezVImi4eKjpLII9Q22hWzGnEVUSHD2FG3WHkQFwKBgQCW\n3jvUbn93jRfyz08J+DxmFLCym5SFZlcnfmN9TTFQc9n9V1dZozIsThaWknHbTc47\n718gPfGh/QnWYFfXy5aaww9ypQm3vS7wRIyo33d/cjw5IKRJTyapfhgoOPmBoA7b\nsH1+GicrHjCNjwJFwcSAKxyrlQz0y/0QfgDKF7m5RQKBgDFriClZ1nazc02xqJdd\n303rkAA5OExJHVH6yo1gm0SfP90rSIhMzcu9X5Lcd6ozYeA3CXxlHqs39jCdJfUi\nXf0NkIjWhngQTrHgaMUz7e5rJ6g/udDNnw1utRFWUBgb0AwTEF8SUTaiYf+mdSxL\nCyvznNOh8L9CEJ7oiHn9UYuK\n-----END PRIVATE KEY-----\n",
+        "CNAME": "qa-penpen",
+        "DH2048_PEM": "-----BEGIN DH PARAMETERS-----\nMIIBCAKCAQEAt/C27YkDQmgC4rRISc9lutchqWbFQVXUHwJCHko0nPJO8Shndnya\nh7kx7pBLNPO8qiBiGOdgQdaqEK3V0YbVAJ5f8tERq2YMHGsE2P2DCtg58HkFYwnD\noZzuxQP1OSKL7o0wgUFOv4tdUPLCC+2dHAOkD6xwX6wYr6gEttcA8rQEyKUPrrbn\nGtgh1chFMWdIXxH9Qi5vuaiovhcw8PTCHAm7kJB2Kln+8Nnm2r8w0vQCHgiadcql\ntgFuv/wvsX67Lo/UBU3BAYri88weYXnmRyqwyBVESWRHNoRL6/q1tP/JgjvB6PhT\nnOy+QyEYaaEX3B4Jn7prL3v/mqWu+WcgcwIBAg==\n-----END DH PARAMETERS-----\n",
+        "EMAIL_BCC": "qa@hbsmith.io",
+        "EMAIL_FROM": "qa@hbsmith.io",
+        "GIT_URL": "git@github.com:HardBoiledSmith/penpen.git",
+        "NAME": "penpen",
+        "OPENVPN_DOMAIN": "qa-penpen.ap-northeast-2.elasticbeanstalk.com",
+        "OPENVPN_ROUTE_0": "10.100.0.0",
+        "OPENVPN_ROUTE_1": "10.110.0.0",
+        "OPENVPN_SUBNET_IP": "10.108.0.0",
+        "PATH_PENPEN": "/opt/python/current/app/penpen",
+        "PATH_PYTHON3": "/opt/python/run/venv/bin/python3",
+        "SECRET_KEY": "j(gr$qvvv+)yq9tmz_6o03nlbvmn#r51m4d&lz^g11_9bptzsb",
+        "SERVER_CRT": "Certificate:\n    Data:\n        Version: 3 (0x2)\n        Serial Number:\n            19:34:a7:ef:28:7e:ce:25:65:77:fc:eb:0e:27:3b:62\n    Signature Algorithm: sha256WithRSAEncryption\n        Issuer: CN=Easy-RSA CA\n        Validity\n            Not Before: Feb 19 14:14:42 2018 GMT\n            Not After : Feb 17 14:14:42 2028 GMT\n        Subject: CN=server\n        Subject Public Key Info:\n            Public Key Algorithm: rsaEncryption\n                Public-Key: (2048 bit)\n                Modulus:\n                    00:b3:52:63:42:fc:62:46:40:2c:98:8a:54:b1:da:\n                    ae:13:93:1f:84:22:e7:b2:74:f9:f2:e1:8f:55:c3:\n                    0d:42:59:28:7f:ea:23:5d:f5:82:cc:7d:2b:66:e4:\n                    b1:91:14:af:e8:be:70:45:87:4e:fc:af:ff:34:87:\n                    4e:8d:d7:df:3d:5a:e6:ce:14:f4:b8:9f:6d:d5:f7:\n                    54:f9:5b:44:89:e2:ae:86:47:dd:b5:6a:b5:52:fe:\n                    f1:09:3c:ce:0b:79:dd:30:03:6d:a0:67:0e:a3:1e:\n                    a5:d9:49:3f:a8:4d:08:51:0b:93:e6:9c:57:16:26:\n                    ce:ca:52:de:7c:3a:a2:4e:e9:c3:b6:63:48:30:d8:\n                    33:f1:93:11:bd:36:18:72:4a:b8:be:fe:8e:0b:db:\n                    41:50:17:23:5e:f8:ac:f9:35:02:84:f5:9c:88:fb:\n                    f2:1b:12:89:de:3d:bc:99:bf:7a:1d:c0:95:12:21:\n                    eb:5a:23:1a:83:86:00:0b:96:85:ba:d5:c8:5c:28:\n                    1e:cd:96:ed:4e:df:21:76:a2:40:69:cf:ee:16:31:\n                    da:6d:91:95:f0:91:09:b1:28:6f:eb:81:72:16:b0:\n                    20:69:94:5c:0e:1c:1f:4c:2d:59:93:f4:f2:01:a3:\n                    7f:3b:5d:b5:49:c0:9f:d4:04:3f:30:da:1a:35:23:\n                    06:a5\n                Exponent: 65537 (0x10001)\n        X509v3 extensions:\n            X509v3 Basic Constraints: \n                CA:FALSE\n            X509v3 Subject Key Identifier: \n                11:5D:F3:A6:12:AC:1A:D0:D3:3E:5D:80:1F:E2:28:C7:C6:FC:90:D5\n            X509v3 Authority Key Identifier: \n                keyid:2B:9E:1B:83:92:32:F1:46:6E:51:3B:87:C4:AD:EC:18:26:09:C7:95\n                DirName:/CN=Easy-RSA CA\n                serial:83:91:41:CC:84:53:AA:36\n\n            X509v3 Extended Key Usage: \n                TLS Web Server Authentication\n            X509v3 Key Usage: \n                Digital Signature, Key Encipherment\n            X509v3 Subject Alternative Name: \n                DNS:server\n    Signature Algorithm: sha256WithRSAEncryption\n         5a:45:7f:ba:c4:51:c2:57:86:47:aa:16:09:38:2f:09:ff:2c:\n         35:73:c0:62:15:3d:2c:53:26:03:d3:97:68:ab:cf:f1:4d:09:\n         c2:78:cf:be:2c:4d:c0:80:3e:4c:fa:fe:9e:05:3e:15:9a:99:\n         2c:59:93:3a:b0:96:07:d8:b9:2d:8d:24:2e:54:8e:48:04:63:\n         5c:c9:40:7c:bd:5d:16:b5:c0:b5:bf:69:12:ca:50:a0:28:9d:\n         8c:66:cb:45:5a:b6:dc:30:18:fa:38:c7:4c:0c:51:66:4a:9f:\n         c6:8a:6b:be:8f:5d:dd:56:92:93:36:dc:5d:cd:cf:7e:b3:12:\n         91:e7:bc:c1:09:3b:f8:64:0d:e6:a2:f5:14:db:5a:ac:ad:1e:\n         7c:4e:b8:2c:17:62:91:58:3d:a4:a2:5d:67:45:f1:27:f7:86:\n         62:ae:e8:d7:68:a2:2b:9e:7f:24:c3:ad:ef:04:6f:a8:8e:69:\n         9a:3d:ab:11:b8:45:e0:21:dc:d3:41:10:97:60:9f:25:32:90:\n         67:49:b9:e7:1a:83:0d:31:55:3e:1d:bd:51:36:2a:29:2a:dd:\n         a4:ad:fc:28:ad:9b:a8:cb:56:63:13:a2:32:68:3b:5a:04:a9:\n         84:b8:f4:50:d6:7f:c2:b0:24:b8:25:2a:ae:e5:a4:45:cb:72:\n         b3:73:f7:5a\n-----BEGIN CERTIFICATE-----\nMIIDXDCCAkSgAwIBAgIQGTSn7yh+ziVld/zrDic7YjANBgkqhkiG9w0BAQsFADAW\nMRQwEgYDVQQDDAtFYXN5LVJTQSBDQTAeFw0xODAyMTkxNDE0NDJaFw0yODAyMTcx\nNDE0NDJaMBExDzANBgNVBAMMBnNlcnZlcjCCASIwDQYJKoZIhvcNAQEBBQADggEP\nADCCAQoCggEBALNSY0L8YkZALJiKVLHarhOTH4Qi57J0+fLhj1XDDUJZKH/qI131\ngsx9K2bksZEUr+i+cEWHTvyv/zSHTo3X3z1a5s4U9LifbdX3VPlbRIniroZH3bVq\ntVL+8Qk8zgt53TADbaBnDqMepdlJP6hNCFELk+acVxYmzspS3nw6ok7pw7ZjSDDY\nM/GTEb02GHJKuL7+jgvbQVAXI174rPk1AoT1nIj78hsSid49vJm/eh3AlRIh61oj\nGoOGAAuWhbrVyFwoHs2W7U7fIXaiQGnP7hYx2m2RlfCRCbEob+uBchawIGmUXA4c\nH0wtWZP08gGjfztdtUnAn9QEPzDaGjUjBqUCAwEAAaOBqjCBpzAJBgNVHRMEAjAA\nMB0GA1UdDgQWBBQRXfOmEqwa0NM+XYAf4ijHxvyQ1TBGBgNVHSMEPzA9gBQrnhuD\nkjLxRm5RO4fErewYJgnHlaEapBgwFjEUMBIGA1UEAwwLRWFzeS1SU0EgQ0GCCQCD\nkUHMhFOqNjATBgNVHSUEDDAKBggrBgEFBQcDATALBgNVHQ8EBAMCBaAwEQYDVR0R\nBAowCIIGc2VydmVyMA0GCSqGSIb3DQEBCwUAA4IBAQBaRX+6xFHCV4ZHqhYJOC8J\n/yw1c8BiFT0sUyYD05doq8/xTQnCeM++LE3AgD5M+v6eBT4VmpksWZM6sJYH2Lkt\njSQuVI5IBGNcyUB8vV0WtcC1v2kSylCgKJ2MZstFWrbcMBj6OMdMDFFmSp/Gimu+\nj13dVpKTNtxdzc9+sxKR57zBCTv4ZA3movUU21qsrR58TrgsF2KRWD2kol1nRfEn\n94ZirujXaKIrnn8kw63vBG+ojmmaPasRuEXgIdzTQRCXYJ8lMpBnSbnnGoMNMVU+\nHb1RNiopKt2krfworZuoy1ZjE6IyaDtaBKmEuPRQ1n/CsCS4JSqu5aRFy3Kzc/da\n-----END CERTIFICATE-----\n",
+        "SERVER_KEY": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCzUmNC/GJGQCyY\nilSx2q4Tkx+EIueydPny4Y9Vww1CWSh/6iNd9YLMfStm5LGRFK/ovnBFh078r/80\nh06N1989WubOFPS4n23V91T5W0SJ4q6GR921arVS/vEJPM4Led0wA22gZw6jHqXZ\nST+oTQhRC5PmnFcWJs7KUt58OqJO6cO2Y0gw2DPxkxG9NhhySri+/o4L20FQFyNe\n+Kz5NQKE9ZyI+/IbEonePbyZv3odwJUSIetaIxqDhgALloW61chcKB7Nlu1O3yF2\nokBpz+4WMdptkZXwkQmxKG/rgXIWsCBplFwOHB9MLVmT9PIBo387XbVJwJ/UBD8w\n2ho1IwalAgMBAAECggEAQTKvTGefA5PJoxyIdrHfoNZZGx3lyAin6BsCllf4tirc\ngsWKXlspV1gbM6nqtakj3CeBgoYTvePvkhWwBfp6/D/UsxEDeSzeLnFiv9bjMI7u\njXwLrC5EBw0Sbh1hfOKt/QsCDNPrintWKY5sSrDXWUAwYiRttWweu4ktw1U+NhpE\nU7Zi7/JJGa/pvmJRSWiICCjw4K4myMkC7OFDYQf9AVoMWOS4Qn8v+qUeqAi7MXlN\n1AX/0Q6blozOukPazl+5CqJAoc7OfQmUGg8UM0tm2CGhNZefPOX+zlAEoE3x5G6W\nFSDnWhHCOmFx1oiz2zxcvxqY18u3Kas+1yBaSJDEcQKBgQDfLDwvE8duJXq4cwwz\n6OlndDrsGRs6R+pmVj6PN9h+i384dBOJG9XVFXqzH+swCxKqS4hGS2km+HEUe2Ut\npreDvYY5JkGzjURyBIwi2WEw6f6l+AYBhErgPBGIU8eA/xd6iZtojCFbBdwTC2d5\nFY1SQHYl+/4MgXF0upucoLn9NwKBgQDNsugRnGLizjCitW1+0Y7a7rO4iRX7hrG/\ngZzZA6KV1mfC5SbMBN9ssjA4vFFPl8863cPu++ufg/GUzrFwotpU1rjPemMwbrSW\nOTJeWC7bC4jAx54tyzwb6sRGmy3+IYSuQg0v5e05+xKHuec4gP3PLBMX+vwhNcEn\nsP/Gf3LpAwKBgQCUGmMGSvX6Xt0GMzNR76uVgEjqDe9HyhoAOBPkL4d401JmQIIG\nZ3aMpmh7Hx+RDoggg2e4Xqs1tYI1uX33wb/fqZK9smm/omxdzi7BockiEOdxdRtn\nPkgCb1qjQhYPwTnvlAqSYwxvv3/BE7xjWq4ie6zsoEKEQhLtCDnkw7UqGQKBgH71\nh6sm/RnD7dzfYh++NBAI+MBTTFAcyKTM2QRQ7A7TcOOoEBQohcZPDNhX00/vASby\nLbbZooqoI3mXQYml2mA2z4avoX0JN0jpMJ9uii0Ep3llO8pEAGuysUZrDS4nff8Y\nIY+IuKzqvHstUPtdEkrGh1prvSa6SOe4pYXcsA4FAoGAHYJmOfrI0S/mjHMyCacV\nSG/I8KCaJIo3kThwgV2WBDyulukYUjhGaGxk7keetuqlaiih3oo02lAIvMB3JfT8\nCkTaT8zKt4eB6EACVmXuVa15FU0fAidaEpxr3SajZY4dcJF6bq42s+I/UtQvUiGB\nCUwlBIQzlbU8VQEMaeyapO8=\n-----END PRIVATE KEY-----\n",
+        "SUBNET_TYPE": "public",
+        "TYPE": "openvpn"
+      },
+      {
+        "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+        "AES_1": "olkexbaarfaxrrryuzctsrtmoyfjinou",
+        "AES_2": "pdklbqfmkvkbjntvnxfvytbponyyqrvs",
+        "AES_3": "ojprwmnrfnybmgbnqryqvmgxygmcdira",
+        "AES_4": "lzfkpuovhrlzsgzjrhsxhncsxjvkjecm",
+        "AES_5": "nyfqmkycxgahafbktmtwpkliojeeerfr",
+        "AES_6": "omnaycufmafldpslbkstlskwyrxozaxx",
+        "AES_7": "ssnrqmrezpzqcymwjcgmaqqxhxnrjqwd",
+        "AES_8": "jhfqrwdknslardvqghdsgtsankvoewzd",
+        "AES_9": "ddzjyosjauxrqicdllhowlrllwvnyskm",
+        "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+        "AWS_ASG_MAX_VALUE": "4",
+        "AWS_ASG_MIN_VALUE": "4",
+        "AWS_CONNECT_FLOW_ID": "7f41b825-0e8c-4196-b70e-d4471dda1271",
+        "AWS_CONNECT_INSTANCE_ID": "453c4f07-7ffc-47e1-8254-22e96c0ad8af",
+        "AWS_CONNECT_REGION": "ap-northeast-1",
+        "AWS_CONNECT_SOURCE_PHONE_1": "+15853512401",
+        "AWS_CONNECT_SOURCE_PHONE_2": "+18179125206",
+        "AWS_EB_NOTIFICATION_EMAIL": "qa@hbsmith.io",
+        "AWS_FAKE_EMAIL_S3_BUCKET_NAME": "qa-hbsmith-email-receive",
+        "AWS_REGION": "ap-northeast-2",
+        "AWS_S3_SCRIPT_BUCKET": "qa-hbsmith-script",
+        "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+        "AWS_SMS_REGION": "ap-northeast-1",
+        "AWS_SQS_BIZMESSAGE": "qa-hbsmith-bizmessage",
+        "AWS_SQS_EMAIL": "qa-hbsmith-email",
+        "AWS_SQS_JANDI": "qa-hbsmith-jandi",
+        "AWS_SQS_SLACK": "qa-hbsmith-slack",
+        "AWS_SQS_SMS": "qa-hbsmith-sms",
+        "CNAME": "qa-sachiel",
+        "CORS_0": "^.+://qa(|-app|-test)\\.hbsmith\\.io$",
+        "GIT_URL": "git@github.com:HardBoiledSmith/sachiel.git",
+        "HOST": "qa-sachiel.hbsmith.io",
+        "INIPAY_MID": "INIBillTst",
+        "JIRA_SERVICE_DESK_ADMIN_ID": "team@hbsmith-email.io",
+        "JIRA_SERVICE_DESK_DOMAIN": "dev-hbsmith.atlassian.net",
+        "JIRA_SERVICE_DESK_FREQUENCY_FIELD": "customfield_10048",
+        "JIRA_SERVICE_DESK_HASHKEY_FIELD": "customfield_10049",
+        "JIRA_SERVICE_DESK_ORGANIZATION_FIELD": "customfield_10002",
+        "JIRA_SERVICE_DESK_PROJECT_ID": "3",
+        "JIRA_SERVICE_DESK_REQUEST_TYPE_ID": "29",
+        "JIRA_SERVICE_DESK_TOKEN": "Y5HrrhdEmwgnxqPqWOY1EC2F",
+        "NAME": "sachiel",
+        "SECRET_KEY": "j(gr$qvvv+)yq9tmz_6o03nlbvmn#r51m4d&lz^g11_9bptzsb",
+        "SUBNET_TYPE": "public",
+        "TWILIO_ACCOUNT_SID": "ACde8515e3d4b0773b11ef351a6419613c",
+        "TWILIO_AUTH_TOKEN": "4b255ce9932a39404fe786ad26f5bd71",
+        "TWILIO_SMS_SERVICE_SID": "MG791c61b154e3db8c7e46c5fc2502aee7",
+        "TYPE": "django",
+        "URL": "https://qa-sachiel.hbsmith.io",
+        "X_FRAME_OPTIONS": "ALLOW-FROM https://qa-test.hbsmith.io"
+      },
+      {
+        "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+        "ARTIFACT_URL": "s3://hbsmith-codebuild-artifacts-us-east-1-20190423/gendo",
+        "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+        "AWS_ASG_MAX_VALUE": "3",
+        "AWS_ASG_MIN_VALUE": "3",
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "AWS_EB_NOTIFICATION_EMAIL": "qa@hbsmith.io",
+        "AWS_S3_BUCKET": "qa-hbsmith-result",
+        "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+        "AWS_SQS_EMAIL": "qa-hbsmith-email",
+        "AWS_SQS_VISUAL_TEST_RESULT": "qa-visual-test-result",
+        "CNAME": "qa-gendo",
+        "GIT_URL": "git@github.com:HardBoiledSmith/gendo.git",
+        "NAME": "gendo",
+        "SUBNET_TYPE": "private",
+        "TYPE": "windows",
+        "URL": "http://qa-gendo.hbsmith.io",
+        "URL_RESULT": "https://qa-result.hbsmith.io",
+        "URL_SACHIEL": "https://qa-sachiel.hbsmith.io",
+        "SENTRY_DSN": "https://XXXXXXXXXX@sentry.io/XXXXX"
+      },
+      {
+        "ACCOUNTS": [
+          "hbsmith:1234qwer"
+        ],
+        "ADMIN_PASSWORD": "31hl92Ab",
+        "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+        "AWS_DEFAULT_REGION": "ap-southeast-1",
+        "AWS_EB_NOTIFICATION_EMAIL": "qa@hbsmith.io",
+        "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+        "CA_CRT": "-----BEGIN CERTIFICATE-----\nMIIDNTCCAh2gAwIBAgIJAIORQcyEU6o2MA0GCSqGSIb3DQEBCwUAMBYxFDASBgNV\nBAMMC0Vhc3ktUlNBIENBMB4XDTE4MDIxOTE0MTQ0MVoXDTI4MDIxNzE0MTQ0MVow\nFjEUMBIGA1UEAwwLRWFzeS1SU0EgQ0EwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw\nggEKAoIBAQDW3lQZc7P1dq2fs0jN65UTsHrGG+U+db+8PK+s/fMgDIKtvyV1b1Y0\nNaMkos6uTHU0g43s5nahh71AjBNVgV7b+3MLNSaX8BpDF3JPeYaUi5/h7VZoE48Z\nbU68shCWOTdicC4NgODRIoRuNEzbBBgxm1Wv770vG1xbD3lFXPpdI56PgDROYxBf\nyhwuANdCWr0SErbHvSfLfBtxp3X4UrYY99JbdiCg/SuHl6dvBfEQ/rCNF6sfArH0\niIjth5Yo/xmw6lbxcnXwtWhs41q7ym+6vD3B3Yoj/K6shR1/Nh9thgf/Vwr9pz7I\njpMYOHqwk/K1eDPGTMJ0+X+shrTlCHGXAgMBAAGjgYUwgYIwHQYDVR0OBBYEFCue\nG4OSMvFGblE7h8St7BgmCceVMEYGA1UdIwQ/MD2AFCueG4OSMvFGblE7h8St7Bgm\nCceVoRqkGDAWMRQwEgYDVQQDDAtFYXN5LVJTQSBDQYIJAIORQcyEU6o2MAwGA1Ud\nEwQFMAMBAf8wCwYDVR0PBAQDAgEGMA0GCSqGSIb3DQEBCwUAA4IBAQCFOCJM86iY\nM37xNYVh0KDOasYbLn34tccFA/p8evP6PmOe5OagIY/Wxk/wA11w5lAPis9xrJRY\ngAKJgQhCLt31opfZksMAws9PU4WeKrW3xt+/+5USg6G0d25c0moYUEH8Boj/K5D0\nRGTQF8s38z8kUo7N7Cg3+dwdfdeW+pkF9rSyzPLWusr6jQ22uUGd4uxl7JKANylq\nkLNSJZLyq3rwqS2/ApajF4S56UlTfg8zFwlf4uJ2Vk5tnQF2agTISS34ZfPXe+g2\nEdteF7fWYBCHx4T6nS1MKcpkj4N84NjrZOc4gXOUqYuPO1Y1X2jyfx148z7jgDRJ\n/R9mKawve/J4\n-----END CERTIFICATE-----\n",
+        "CA_KEY": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDW3lQZc7P1dq2f\ns0jN65UTsHrGG+U+db+8PK+s/fMgDIKtvyV1b1Y0NaMkos6uTHU0g43s5nahh71A\njBNVgV7b+3MLNSaX8BpDF3JPeYaUi5/h7VZoE48ZbU68shCWOTdicC4NgODRIoRu\nNEzbBBgxm1Wv770vG1xbD3lFXPpdI56PgDROYxBfyhwuANdCWr0SErbHvSfLfBtx\np3X4UrYY99JbdiCg/SuHl6dvBfEQ/rCNF6sfArH0iIjth5Yo/xmw6lbxcnXwtWhs\n41q7ym+6vD3B3Yoj/K6shR1/Nh9thgf/Vwr9pz7IjpMYOHqwk/K1eDPGTMJ0+X+s\nhrTlCHGXAgMBAAECggEBAKFSmcfmRAYWzbLq082vg+UdioB1bz/e/k7hLXDv1fuJ\nCRBURFaQeiOG5e9awVzCEPmVkBh+zDDpDiGJSfbXxBXcC3sts8U9wyn+T5f2ASJE\nVo01Obu4e6c2l3g7JRL08G1bFmiTC7hZdx6a691AjL2qB8Kpd9wHaecAjieS8HK+\nK1EG7ebLtgSngbBB5lXbn009EUuzg11vRo3qY0FngnhyTIV+zmOIiRTA7k2DjT1Y\nChGLY7O0Q6s/jI3ZPfA7ASe4ZKil8vTs8QEIZ5OVy2CYzzNh59yAs5EvdYMq06SK\nWxMkDN45rwbloqjycLZYlCobbKlvcbsHVjXwz4IqWakCgYEA/WaJYeMhemXVd+kh\nxF5k+4dyux4TH/It+9KLFmno7mGooXiLlF+BgxrmtgIgIrGeshOLSTUjE4bDXuhx\neR+pyKr7Gqj8xEBU+8F/iOAk92PLftsmNNavsJYSJqTCiq6nzTDC7xVDYiuNDCTx\ncv0YJj1Lk7m/OVqsIibyXM0Us7sCgYEA2RKaACMAtsxog9N5l3Jb1nuyRzvHSQS3\n88Ghlo4s02AmOZIgaYqc58LSfBdcR1TKiy3t+qTsB9an67BtwSC9mQ5q1FPEbdCc\n/rXHEvsEUN/6qxlCkoqErUo8okD4KbvrC8g7BycV0dHgt0PUqQ86Fe2mFCoFQn/T\n6ro7HXWAxdUCgYAujJJ6J+YzfNd9ApeQYiK8zgH2e6zZtnxaATBJusTuXYRDvUgu\nxmidM+jj0HokxWo4njx9A0ThRmVHXv3RWU6wLTCZkid0ybiS0tXhyAMiavOr5wga\ntsFpd/f3n1aZcUIkAGwezVImi4eKjpLII9Q22hWzGnEVUSHD2FG3WHkQFwKBgQCW\n3jvUbn93jRfyz08J+DxmFLCym5SFZlcnfmN9TTFQc9n9V1dZozIsThaWknHbTc47\n718gPfGh/QnWYFfXy5aaww9ypQm3vS7wRIyo33d/cjw5IKRJTyapfhgoOPmBoA7b\nsH1+GicrHjCNjwJFwcSAKxyrlQz0y/0QfgDKF7m5RQKBgDFriClZ1nazc02xqJdd\n303rkAA5OExJHVH6yo1gm0SfP90rSIhMzcu9X5Lcd6ozYeA3CXxlHqs39jCdJfUi\nXf0NkIjWhngQTrHgaMUz7e5rJ6g/udDNnw1utRFWUBgb0AwTEF8SUTaiYf+mdSxL\nCyvznNOh8L9CEJ7oiHn9UYuK\n-----END PRIVATE KEY-----\n",
+        "CNAME": "qa-penpen",
+        "DH2048_PEM": "-----BEGIN DH PARAMETERS-----\nMIIBCAKCAQEAt/C27YkDQmgC4rRISc9lutchqWbFQVXUHwJCHko0nPJO8Shndnya\nh7kx7pBLNPO8qiBiGOdgQdaqEK3V0YbVAJ5f8tERq2YMHGsE2P2DCtg58HkFYwnD\noZzuxQP1OSKL7o0wgUFOv4tdUPLCC+2dHAOkD6xwX6wYr6gEttcA8rQEyKUPrrbn\nGtgh1chFMWdIXxH9Qi5vuaiovhcw8PTCHAm7kJB2Kln+8Nnm2r8w0vQCHgiadcql\ntgFuv/wvsX67Lo/UBU3BAYri88weYXnmRyqwyBVESWRHNoRL6/q1tP/JgjvB6PhT\nnOy+QyEYaaEX3B4Jn7prL3v/mqWu+WcgcwIBAg==\n-----END DH PARAMETERS-----\n",
+        "EMAIL_BCC": "qa@hbsmith.io",
+        "EMAIL_FROM": "qa@hbsmith.io",
+        "GIT_URL": "git@github.com:HardBoiledSmith/penpen.git",
+        "NAME": "penpen",
+        "OPENVPN_DOMAIN": "qa-penpen.ap-southeast-1.elasticbeanstalk.com",
+        "OPENVPN_ROUTE_0": "10.100.0.0",
+        "OPENVPN_ROUTE_1": "10.110.0.0",
+        "OPENVPN_SUBNET_IP": "10.108.0.0",
+        "PATH_PENPEN": "/opt/python/current/app/penpen",
+        "PATH_PYTHON3": "/opt/python/run/venv/bin/python3",
+        "SECRET_KEY": "j(gr$qvvv+)yq9tmz_6o03nlbvmn#r51m4d&lz^g11_9bptzsb",
+        "SERVER_CRT": "Certificate:\n    Data:\n        Version: 3 (0x2)\n        Serial Number:\n            19:34:a7:ef:28:7e:ce:25:65:77:fc:eb:0e:27:3b:62\n    Signature Algorithm: sha256WithRSAEncryption\n        Issuer: CN=Easy-RSA CA\n        Validity\n            Not Before: Feb 19 14:14:42 2018 GMT\n            Not After : Feb 17 14:14:42 2028 GMT\n        Subject: CN=server\n        Subject Public Key Info:\n            Public Key Algorithm: rsaEncryption\n                Public-Key: (2048 bit)\n                Modulus:\n                    00:b3:52:63:42:fc:62:46:40:2c:98:8a:54:b1:da:\n                    ae:13:93:1f:84:22:e7:b2:74:f9:f2:e1:8f:55:c3:\n                    0d:42:59:28:7f:ea:23:5d:f5:82:cc:7d:2b:66:e4:\n                    b1:91:14:af:e8:be:70:45:87:4e:fc:af:ff:34:87:\n                    4e:8d:d7:df:3d:5a:e6:ce:14:f4:b8:9f:6d:d5:f7:\n                    54:f9:5b:44:89:e2:ae:86:47:dd:b5:6a:b5:52:fe:\n                    f1:09:3c:ce:0b:79:dd:30:03:6d:a0:67:0e:a3:1e:\n                    a5:d9:49:3f:a8:4d:08:51:0b:93:e6:9c:57:16:26:\n                    ce:ca:52:de:7c:3a:a2:4e:e9:c3:b6:63:48:30:d8:\n                    33:f1:93:11:bd:36:18:72:4a:b8:be:fe:8e:0b:db:\n                    41:50:17:23:5e:f8:ac:f9:35:02:84:f5:9c:88:fb:\n                    f2:1b:12:89:de:3d:bc:99:bf:7a:1d:c0:95:12:21:\n                    eb:5a:23:1a:83:86:00:0b:96:85:ba:d5:c8:5c:28:\n                    1e:cd:96:ed:4e:df:21:76:a2:40:69:cf:ee:16:31:\n                    da:6d:91:95:f0:91:09:b1:28:6f:eb:81:72:16:b0:\n                    20:69:94:5c:0e:1c:1f:4c:2d:59:93:f4:f2:01:a3:\n                    7f:3b:5d:b5:49:c0:9f:d4:04:3f:30:da:1a:35:23:\n                    06:a5\n                Exponent: 65537 (0x10001)\n        X509v3 extensions:\n            X509v3 Basic Constraints: \n                CA:FALSE\n            X509v3 Subject Key Identifier: \n                11:5D:F3:A6:12:AC:1A:D0:D3:3E:5D:80:1F:E2:28:C7:C6:FC:90:D5\n            X509v3 Authority Key Identifier: \n                keyid:2B:9E:1B:83:92:32:F1:46:6E:51:3B:87:C4:AD:EC:18:26:09:C7:95\n                DirName:/CN=Easy-RSA CA\n                serial:83:91:41:CC:84:53:AA:36\n\n            X509v3 Extended Key Usage: \n                TLS Web Server Authentication\n            X509v3 Key Usage: \n                Digital Signature, Key Encipherment\n            X509v3 Subject Alternative Name: \n                DNS:server\n    Signature Algorithm: sha256WithRSAEncryption\n         5a:45:7f:ba:c4:51:c2:57:86:47:aa:16:09:38:2f:09:ff:2c:\n         35:73:c0:62:15:3d:2c:53:26:03:d3:97:68:ab:cf:f1:4d:09:\n         c2:78:cf:be:2c:4d:c0:80:3e:4c:fa:fe:9e:05:3e:15:9a:99:\n         2c:59:93:3a:b0:96:07:d8:b9:2d:8d:24:2e:54:8e:48:04:63:\n         5c:c9:40:7c:bd:5d:16:b5:c0:b5:bf:69:12:ca:50:a0:28:9d:\n         8c:66:cb:45:5a:b6:dc:30:18:fa:38:c7:4c:0c:51:66:4a:9f:\n         c6:8a:6b:be:8f:5d:dd:56:92:93:36:dc:5d:cd:cf:7e:b3:12:\n         91:e7:bc:c1:09:3b:f8:64:0d:e6:a2:f5:14:db:5a:ac:ad:1e:\n         7c:4e:b8:2c:17:62:91:58:3d:a4:a2:5d:67:45:f1:27:f7:86:\n         62:ae:e8:d7:68:a2:2b:9e:7f:24:c3:ad:ef:04:6f:a8:8e:69:\n         9a:3d:ab:11:b8:45:e0:21:dc:d3:41:10:97:60:9f:25:32:90:\n         67:49:b9:e7:1a:83:0d:31:55:3e:1d:bd:51:36:2a:29:2a:dd:\n         a4:ad:fc:28:ad:9b:a8:cb:56:63:13:a2:32:68:3b:5a:04:a9:\n         84:b8:f4:50:d6:7f:c2:b0:24:b8:25:2a:ae:e5:a4:45:cb:72:\n         b3:73:f7:5a\n-----BEGIN CERTIFICATE-----\nMIIDXDCCAkSgAwIBAgIQGTSn7yh+ziVld/zrDic7YjANBgkqhkiG9w0BAQsFADAW\nMRQwEgYDVQQDDAtFYXN5LVJTQSBDQTAeFw0xODAyMTkxNDE0NDJaFw0yODAyMTcx\nNDE0NDJaMBExDzANBgNVBAMMBnNlcnZlcjCCASIwDQYJKoZIhvcNAQEBBQADggEP\nADCCAQoCggEBALNSY0L8YkZALJiKVLHarhOTH4Qi57J0+fLhj1XDDUJZKH/qI131\ngsx9K2bksZEUr+i+cEWHTvyv/zSHTo3X3z1a5s4U9LifbdX3VPlbRIniroZH3bVq\ntVL+8Qk8zgt53TADbaBnDqMepdlJP6hNCFELk+acVxYmzspS3nw6ok7pw7ZjSDDY\nM/GTEb02GHJKuL7+jgvbQVAXI174rPk1AoT1nIj78hsSid49vJm/eh3AlRIh61oj\nGoOGAAuWhbrVyFwoHs2W7U7fIXaiQGnP7hYx2m2RlfCRCbEob+uBchawIGmUXA4c\nH0wtWZP08gGjfztdtUnAn9QEPzDaGjUjBqUCAwEAAaOBqjCBpzAJBgNVHRMEAjAA\nMB0GA1UdDgQWBBQRXfOmEqwa0NM+XYAf4ijHxvyQ1TBGBgNVHSMEPzA9gBQrnhuD\nkjLxRm5RO4fErewYJgnHlaEapBgwFjEUMBIGA1UEAwwLRWFzeS1SU0EgQ0GCCQCD\nkUHMhFOqNjATBgNVHSUEDDAKBggrBgEFBQcDATALBgNVHQ8EBAMCBaAwEQYDVR0R\nBAowCIIGc2VydmVyMA0GCSqGSIb3DQEBCwUAA4IBAQBaRX+6xFHCV4ZHqhYJOC8J\n/yw1c8BiFT0sUyYD05doq8/xTQnCeM++LE3AgD5M+v6eBT4VmpksWZM6sJYH2Lkt\njSQuVI5IBGNcyUB8vV0WtcC1v2kSylCgKJ2MZstFWrbcMBj6OMdMDFFmSp/Gimu+\nj13dVpKTNtxdzc9+sxKR57zBCTv4ZA3movUU21qsrR58TrgsF2KRWD2kol1nRfEn\n94ZirujXaKIrnn8kw63vBG+ojmmaPasRuEXgIdzTQRCXYJ8lMpBnSbnnGoMNMVU+\nHb1RNiopKt2krfworZuoy1ZjE6IyaDtaBKmEuPRQ1n/CsCS4JSqu5aRFy3Kzc/da\n-----END CERTIFICATE-----\n",
+        "SERVER_KEY": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCzUmNC/GJGQCyY\nilSx2q4Tkx+EIueydPny4Y9Vww1CWSh/6iNd9YLMfStm5LGRFK/ovnBFh078r/80\nh06N1989WubOFPS4n23V91T5W0SJ4q6GR921arVS/vEJPM4Led0wA22gZw6jHqXZ\nST+oTQhRC5PmnFcWJs7KUt58OqJO6cO2Y0gw2DPxkxG9NhhySri+/o4L20FQFyNe\n+Kz5NQKE9ZyI+/IbEonePbyZv3odwJUSIetaIxqDhgALloW61chcKB7Nlu1O3yF2\nokBpz+4WMdptkZXwkQmxKG/rgXIWsCBplFwOHB9MLVmT9PIBo387XbVJwJ/UBD8w\n2ho1IwalAgMBAAECggEAQTKvTGefA5PJoxyIdrHfoNZZGx3lyAin6BsCllf4tirc\ngsWKXlspV1gbM6nqtakj3CeBgoYTvePvkhWwBfp6/D/UsxEDeSzeLnFiv9bjMI7u\njXwLrC5EBw0Sbh1hfOKt/QsCDNPrintWKY5sSrDXWUAwYiRttWweu4ktw1U+NhpE\nU7Zi7/JJGa/pvmJRSWiICCjw4K4myMkC7OFDYQf9AVoMWOS4Qn8v+qUeqAi7MXlN\n1AX/0Q6blozOukPazl+5CqJAoc7OfQmUGg8UM0tm2CGhNZefPOX+zlAEoE3x5G6W\nFSDnWhHCOmFx1oiz2zxcvxqY18u3Kas+1yBaSJDEcQKBgQDfLDwvE8duJXq4cwwz\n6OlndDrsGRs6R+pmVj6PN9h+i384dBOJG9XVFXqzH+swCxKqS4hGS2km+HEUe2Ut\npreDvYY5JkGzjURyBIwi2WEw6f6l+AYBhErgPBGIU8eA/xd6iZtojCFbBdwTC2d5\nFY1SQHYl+/4MgXF0upucoLn9NwKBgQDNsugRnGLizjCitW1+0Y7a7rO4iRX7hrG/\ngZzZA6KV1mfC5SbMBN9ssjA4vFFPl8863cPu++ufg/GUzrFwotpU1rjPemMwbrSW\nOTJeWC7bC4jAx54tyzwb6sRGmy3+IYSuQg0v5e05+xKHuec4gP3PLBMX+vwhNcEn\nsP/Gf3LpAwKBgQCUGmMGSvX6Xt0GMzNR76uVgEjqDe9HyhoAOBPkL4d401JmQIIG\nZ3aMpmh7Hx+RDoggg2e4Xqs1tYI1uX33wb/fqZK9smm/omxdzi7BockiEOdxdRtn\nPkgCb1qjQhYPwTnvlAqSYwxvv3/BE7xjWq4ie6zsoEKEQhLtCDnkw7UqGQKBgH71\nh6sm/RnD7dzfYh++NBAI+MBTTFAcyKTM2QRQ7A7TcOOoEBQohcZPDNhX00/vASby\nLbbZooqoI3mXQYml2mA2z4avoX0JN0jpMJ9uii0Ep3llO8pEAGuysUZrDS4nff8Y\nIY+IuKzqvHstUPtdEkrGh1prvSa6SOe4pYXcsA4FAoGAHYJmOfrI0S/mjHMyCacV\nSG/I8KCaJIo3kThwgV2WBDyulukYUjhGaGxk7keetuqlaiih3oo02lAIvMB3JfT8\nCkTaT8zKt4eB6EACVmXuVa15FU0fAidaEpxr3SajZY4dcJF6bq42s+I/UtQvUiGB\nCUwlBIQzlbU8VQEMaeyapO8=\n-----END PRIVATE KEY-----\n",
+        "SUBNET_TYPE": "public",
+        "TYPE": "openvpn"
+      },
+      {
+        "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+        "ARTIFACT_URL": "s3://hbsmith-codebuild-artifacts-us-east-1-20190423/gendo",
+        "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+        "AWS_ASG_MAX_VALUE": "1",
+        "AWS_ASG_MIN_VALUE": "1",
+        "AWS_DEFAULT_REGION": "ap-southeast-1",
+        "AWS_EB_NOTIFICATION_EMAIL": "qa@hbsmith.io",
+        "AWS_S3_BUCKET": "qa-hbsmith-result",
+        "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+        "AWS_SQS_EMAIL": "qa-hbsmith-email",
+        "AWS_SQS_VISUAL_TEST_RESULT": "qa-visual-test-result",
+        "CNAME": "qa-gendo",
+        "GIT_URL": "git@github.com:HardBoiledSmith/gendo.git",
+        "NAME": "gendo",
+        "SUBNET_TYPE": "private",
+        "TYPE": "windows",
+        "URL": "http://qa-gendo.hbsmith.io",
+        "URL_RESULT": "https://qa-result.hbsmith.io",
+        "URL_SACHIEL": "https://qa-sachiel.hbsmith.io",
+        "SENTRY_DSN": "https://XXXXXXXXXX@sentry.io/XXXXX"
+      }
+    ]
+  },
+  "lambda": [
+    {
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "AWS_SECRET_ACCESS_KEY": "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",
+      "DESCRIPTION": "sachiel - Send Jandi",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_send_jandi",
+      "SQS_NAME": "qa-hbsmith-jandi",
+      "TYPE": "sqs"
+    },
+    {
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "AWS_SECRET_ACCESS_KEY": "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",
+      "DESCRIPTION": "sachiel - Send Slack",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_send_slack",
+      "SQS_NAME": "qa-hbsmith-slack",
+      "AWS_CONNECT_SLACK_URL": "https://hooks.slack.com/services/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",
+      "TYPE": "sqs"
+    },
+    {
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "AWS_SECRET_ACCESS_KEY": "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",
+      "BIZMESSAGE_APPKEYS": "4mAtEgw1cabPppJ1",
+      "BIZMESSAGE_X_SECRET_KEY": "41amt8Di",
+      "DESCRIPTION": "sachiel - Send BizMessage",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_send_bizmessage",
+      "SQS_NAME": "qa-hbsmith-bizmessage",
+      "TYPE": "sqs"
+    },
+    {
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "AWS_SECRET_ACCESS_KEY": "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",
+      "DESCRIPTION": "sachiel - Send SMS",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_send_sms",
+      "SQS_NAME": "qa-hbsmith-sms",
+      "TYPE": "sqs"
+    },
+    {
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "AWS_SECRET_ACCESS_KEY": "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",
+      "DESCRIPTION": "sachiel - Send Email",
+      "EMAIL_BCC": "qa@hbsmith.io",
+      "EMAIL_FROM": "qa@hbsmith.io",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_send_email",
+      "SQS_NAME": "qa-hbsmith-email",
+      "TYPE": "sqs"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DESCRIPTION": "sachiel - Bounced Email",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_bounced_email",
+      "SNS_TOPICS_NAMES": [
+        "us-east-1/ses-feedback-notification"
+      ],
+      "TYPE": "sns",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DESCRIPTION": "cloudwatch - Send alarm to Slack",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "cloudwatch_send_alarm",
+      "SNS_TOPICS_NAMES": [
+        "ap-east-1/cloudwatch-alarm",
+        "ap-southeast-1/cloudwatch-alarm",
+        "ap-northeast-1/cloudwatch-alarm",
+        "ap-northeast-2/cloudwatch-alarm",
+        "us-east-1/cloudwatch-alarm"
+      ],
+      "SLACK_CHANNEL_NAME": "#cloudwatch",
+      "SLACK_WEBHOOK_URL": "https://hooks.slack.com/services/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",
+      "TYPE": "sns"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DESCRIPTION": "sachiel - Generate report",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_report",
+      "SCHEDULE_EXPRESSION": "cron(0/10 * ? * MON *)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DESCRIPTION": "sachiel - Delete old scenario alarms",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_scenario_alarm_old_delete",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DESCRIPTION": "sachiel - Delete old scenario versions",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_scenario_all_version_old_delete",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_1_ap-northeast-2",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_2_ap-northeast-2",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_3_ap-northeast-2",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-northeast-1",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_1_ap-northeast-1",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-northeast-1",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_2_ap-northeast-1",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-northeast-1",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_3_ap-northeast-1",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "us-east-1",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_1_us-east-1",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "us-east-1",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_2_us-east-1",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "us-east-1",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_3_us-east-1",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DESCRIPTION": "sachiel - Delete old results of scenario",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_scenario_result_old_delete",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AES_1": "olkexbaarfaxrrryuzctsrtmoyfjinou",
+      "AES_2": "pdklbqfmkvkbjntvnxfvytbponyyqrvs",
+      "AES_3": "ojprwmnrfnybmgbnqryqvmgxygmcdira",
+      "AES_4": "lzfkpuovhrlzsgzjrhsxhncsxjvkjecm",
+      "AES_5": "nyfqmkycxgahafbktmtwpkliojeeerfr",
+      "AES_6": "omnaycufmafldpslbkstlskwyrxozaxx",
+      "AES_7": "ssnrqmrezpzqcymwjcgmaqqxhxnrjqwd",
+      "AES_8": "jhfqrwdknslardvqghdsgtsankvoewzd",
+      "AES_9": "ddzjyosjauxrqicdllhowlrllwvnyskm",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - polling cloudwatch",
+      "FOLDER_NAME": "sachiel_cloudwatch_result",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_cloudwatch_result",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DESCRIPTION": "sachiel - Delete old results of visual test",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_visual_test_result_old_delete",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DESCRIPTION": "sachiel - Delete old visual test alarms",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_visual_test_alarm_old_delete",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DESCRIPTION": "sachiel - Delete old results of cloudwatch",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_cloudwatch_result_old_delete",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DESCRIPTION": "sachiel - Delete old cloudwatch alarms",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_cloudwatch_alarm_old_delete",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DESCRIPTION": "trigger alarm_call",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "connect_call",
+      "SCHEDULE_EXPRESSION": "rate(1 minute)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_CONNECT_ARN": "arn:aws:connect:ap-northeast-1:141312106417:instance/453c4f07-7ffc-47e1-8254-22e96c0ad8af",
+      "AWS_DEFAULT_REGION": "ap-northeast-1",
+      "DESCRIPTION": "resolve alarm_call",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "connect_resolve",
+      "TYPE": "default",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_CONNECT_ARN": "arn:aws:connect:ap-northeast-1:141312106417:instance/453c4f07-7ffc-47e1-8254-22e96c0ad8af",
+      "AWS_DEFAULT_REGION": "ap-northeast-1",
+      "DESCRIPTION": "error in connect",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "connect_error",
+      "TYPE": "default",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_CONNECT_ARN": "arn:aws:connect:ap-northeast-1:141312106417:instance/453c4f07-7ffc-47e1-8254-22e96c0ad8af",
+      "AWS_DEFAULT_REGION": "ap-northeast-1",
+      "DESCRIPTION": "escalate alarm_call",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "connect_escalation",
+      "TYPE": "default",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DESCRIPTION": "recover alarm_call",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "connect_recovery",
+      "SCHEDULE_EXPRESSION": "rate(1 minute)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_CONNECT_ARN": "arn:aws:connect:ap-northeast-1:141312106417:instance/453c4f07-7ffc-47e1-8254-22e96c0ad8af",
+      "AWS_DEFAULT_REGION": "ap-northeast-1",
+      "DESCRIPTION": "snooze alarm_call",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "connect_snooze",
+      "TYPE": "default",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-southeast-1",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_1_ap-southeast-1",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-southeast-1",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_2_ap-southeast-1",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-southeast-1",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_3_ap-southeast-1",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-east-1",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_1_ap-east-1",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-east-1",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_2_ap-east-1",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-east-1",
+      "AWS_S3_BUCKET": "qa-hbsmith-result",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "sachiel - Test runner for scenarios",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "FOLDER_NAME": "sachiel_scenario_result",
+      "NAME": "sachiel_scenario_result_3_ap-east-1",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_DEFAULT_REGION": "us-east-1",
+      "DESCRIPTION": "save fake email to sachiel",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_fake_email_save",
+      "SNS_TOPICS_NAMES": [
+        "us-east-1/ses-fake-email"
+      ],
+      "TYPE": "sns",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DESCRIPTION": "delete fake email to sachiel",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_fake_email_delete",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_SECRET_ACCESS_KEY": "NxM26TCN9JnnRkvzgHzEPdUVYZSlkKkVUOTSnCh8",
+      "DESCRIPTION": "send fake email to test gendo",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "gendo_test_fake_mail",
+      "SCHEDULE_EXPRESSION": "rate(1 day)",
+      "EMAIL_TO": "test_gendo@hbsmith-email.io",
+      "EMAIL_FROM": "qa@hbsmith.io",
+      "TYPE": "cron"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "AWS_SECRET_ACCESS_KEY": "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",
+      "AWS_SQS_VISUAL_TEST_RESULT": "qa-visual-test-result",
+      "CONCURRENCY": "1",
+      "DESCRIPTION": "sachiel - get results of visual test",
+      "FOLDER_NAME": "sachiel_send_visual_test_result_get",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_send_visual_test_result_get_1_ap-northeast-2",
+      "SCHEDULE_EXPRESSION": "rate(15 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AES_0": "mhtpeirpzxxmnzztkdvfsjqissjuboqr",
+      "AWS_ACCESS_KEY_ID": "AKIASBZW3T6YV3JNYSXQ",
+      "AWS_DEFAULT_REGION": "ap-southeast-1",
+      "AWS_SECRET_ACCESS_KEY": "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",
+      "AWS_SQS_VISUAL_TEST_RESULT": "qa-visual-test-result",
+      "CONCURRENCY": "1",
+      "DESCRIPTION": "sachiel - get results of visual test",
+      "FOLDER_NAME": "sachiel_send_visual_test_result_get",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_send_visual_test_result_get_1_ap-southeast-1",
+      "SCHEDULE_EXPRESSION": "rate(15 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DESCRIPTION": "sachiel - Delete unused visual test script file",
+      "GIT_URL": "git@github.com:HardBoiledSmith/kaji.git",
+      "NAME": "sachiel_visual_test_script_paths_old_delete",
+      "SCHEDULE_EXPRESSION": "rate(10 minutes)",
+      "TYPE": "cron",
+      "URL": "https://qa-sachiel.hbsmith.io"
+    }
+  ],
+  "rds": {
+    "BACKUP_RETENTION_PERIOD": "1",
+    "DATABASE": "hbsmith",
+    "DB_CLASS": "db.t3.small",
+    "DB_CLUSTER_ID": "qa",
+    "DB_INSTANCE_ID": "qa",
+    "DB_SUBNET_NAME": "qa",
+    "IOPS": "0",
+    "LICENSE_MODEL": "general-public-license",
+    "MONITORING_INTERVAL": "60",
+    "MULTI_AZ": "--multi-az",
+    "USER_NAME": "root",
+    "USER_PASSWORD": "1234qwer"
+  },
+  "sns": [
+    {
+      "AWS_DEFAULT_REGION": "ap-east-1",
+      "NAME": "cloudwatch-alarm",
+      "TYPE": "topic"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-southeast-1",
+      "NAME": "cloudwatch-alarm",
+      "TYPE": "topic"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-1",
+      "NAME": "cloudwatch-alarm",
+      "TYPE": "topic"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "NAME": "cloudwatch-alarm",
+      "TYPE": "topic"
+    },
+    {
+      "AWS_DEFAULT_REGION": "us-east-1",
+      "NAME": "cloudwatch-alarm",
+      "TYPE": "topic"
+    },
+    {
+      "AWS_DEFAULT_REGION": "us-east-1",
+      "NAME": "ses-feedback-notification",
+      "TYPE": "topic"
+    },
+    {
+      "AWS_DEFAULT_REGION": "us-east-1",
+      "NAME": "ses-fake-email",
+      "TYPE": "topic"
+    },
+    {
+      "AWS_DEFAULT_REGION": "us-east-1",
+      "NAME": "ses-failure-notification",
+      "TYPE": "topic",
+      "EMAIL": "qa@hbsmith.io"
+    }
+  ],
+  "sqs": [
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DELAY_SECONDS": "0",
+      "NAME": "qa-hbsmith-sms",
+      "RECEIVE_COUNT": "3",
+      "RECEIVE_MESSAGE_WAIT_TIME_SECONDS": "0",
+      "RETENTION": "345600",
+      "TIMEOUT": "180",
+      "USE_REDRIVE_POLICY": "True"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DELAY_SECONDS": "0",
+      "NAME": "qa-hbsmith-email",
+      "RECEIVE_COUNT": "3",
+      "RECEIVE_MESSAGE_WAIT_TIME_SECONDS": "0",
+      "RETENTION": "345600",
+      "TIMEOUT": "180",
+      "USE_REDRIVE_POLICY": "True"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DELAY_SECONDS": "0",
+      "NAME": "qa-hbsmith-jandi",
+      "RECEIVE_COUNT": "3",
+      "RECEIVE_MESSAGE_WAIT_TIME_SECONDS": "0",
+      "RETENTION": "345600",
+      "TIMEOUT": "180",
+      "USE_REDRIVE_POLICY": "True"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DELAY_SECONDS": "0",
+      "NAME": "qa-hbsmith-slack",
+      "RECEIVE_COUNT": "3",
+      "RECEIVE_MESSAGE_WAIT_TIME_SECONDS": "0",
+      "RETENTION": "345600",
+      "TIMEOUT": "180",
+      "USE_REDRIVE_POLICY": "True"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DELAY_SECONDS": "0",
+      "NAME": "qa-hbsmith-bizmessage",
+      "RECEIVE_COUNT": "3",
+      "RECEIVE_MESSAGE_WAIT_TIME_SECONDS": "0",
+      "RETENTION": "345600",
+      "TIMEOUT": "180",
+      "USE_REDRIVE_POLICY": "True"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-northeast-2",
+      "DELAY_SECONDS": "0",
+      "NAME": "qa-visual-test-result",
+      "RECEIVE_COUNT": "3",
+      "RECEIVE_MESSAGE_WAIT_TIME_SECONDS": "0",
+      "RETENTION": "345600",
+      "TIMEOUT": "180",
+      "USE_REDRIVE_POLICY": "True"
+    },
+    {
+      "AWS_DEFAULT_REGION": "ap-southeast-1",
+      "DELAY_SECONDS": "0",
+      "NAME": "qa-visual-test-result",
+      "RECEIVE_COUNT": "3",
+      "RECEIVE_MESSAGE_WAIT_TIME_SECONDS": "0",
+      "RETENTION": "345600",
+      "TIMEOUT": "180",
+      "USE_REDRIVE_POLICY": "True"
+    }
+  ],
+  "s3": [
+    {
+      "BUCKET_NAME": "qa-app.hbsmith.io",
+      "CLOUDFRONT_DIST_ID": "",
+      "GIT_URL": "git@github.com:HardBoiledSmith/hbsmith-web.git",
+      "NAME": "app",
+      "PROTOCOL": "https",
+      "TYPE": "vue-app",
+      "apiUrl": "https://qa-sachiel.hbsmith.io",
+      "logRocketAppID": "xxxx/xxxxxxxxx",
+      "googleAnalyticsTrackingID": "UA-00000000-0",
+      "googleTagManagerID": "GTM-000000",
+      "oauth2ClientID": "Gzkwnho1yZ5MewJdyi4eY32MGNeQA09t9jnm1hSk",
+      "oauthClientSecret": "aTJGEcGhdyJRrustpI4FG4MS91XMr4CJZWjxudf0AsVfxtDUc2DTGWHQoVw2bOmegL7EyRwB1Rggh0lU2K3W3iWgT7NVrttbp6NuCIluVkWkUzEMZ9T8FInz5rgAvsdY",
+      "handsontableLicenseKey": "00000-00000-00000-00000-00000",
+      "sentryDSN": "https://XXXXXXXXXX@sentry.io/XXXXX"
+    },
+    {
+      "BUCKET_NAME": "qa-hbsmith-result",
+      "EXPIRE_FILES_DAYS": 30,
+      "NAME": "qa-hbsmith-result",
+      "POLICY": "website",
+      "REGION": "ap-northeast-2",
+      "TYPE": "bucket",
+      "WEB_HOSTING": true
+    },
+    {
+      "BUCKET_NAME": "qa-hbsmith-script",
+      "NAME": "qa-hbsmith-script",
+      "REGION": "ap-northeast-2",
+      "TYPE": "bucket",
+      "WEB_HOSTING": false
+    },
+    {
+      "BUCKET_NAME": "qa-hbsmith-email-receive",
+      "EXPIRE_FILES_DAYS": 30,
+      "NAME": "qa-hbsmith-email-receive",
+      "POLICY": "email",
+      "REGION": "ap-northeast-2",
+      "TYPE": "bucket",
+      "WEB_HOSTING": false
+    },
+    {
+      "BUCKET_NAME": "qa-test.hbsmith.io",
+      "CLOUDFRONT_DIST_ID": "",
+      "GIT_URL": "git@github.com:HardBoiledSmith/hbsmith-web.git",
+      "NAME": "test",
+      "PROTOCOL": "https",
+      "TYPE": "vue-app",
+      "sentryDSN": "https://XXXXXXXXXX@sentry.io/XXXXX"
+    }
+  ],
+  "ses": {
+    "IDENTITIES": [
+      {
+        "EMAIL": "qa@hbsmith.io",
+        "SNS_TOPICS_NAME": "us-east-1/ses-feedback-notification"
+      }
+    ],
+    "CONFIGURATION_SETS": [
+      {
+        "NAME": "track_template_email",
+        "EVENT_DESTINATIONS": [
+          {
+            "DIMENSION_CONFIG_NAME": "template_name",
+            "DIMENSION_CONFIG_VALUE": "unknown",
+            "DIMENSION_CONFIG_VALUE_SOURCE": "messageTag",
+            "ENABLED": true,
+            "MATCHING_TYPE": [
+              "click",
+              "open"
+            ],
+            "NAME": "Engagement",
+            "TYPE": "cloudwatch"
+          },
+          {
+            "ENABLED": true,
+            "MATCHING_TYPE": [
+              "renderingFailure"
+            ],
+            "NAME": "SendFailure",
+            "TYPE": "sns",
+            "SNS_TOPICS_NAME": "us-east-1/ses-failure-notification"
+          }
+        ]
+      }
+    ],
+    "DOMAIN_IDENTITIES": [
+      {
+        "DOMAIN": "hbsmith-email.io",
+        "RULE_SET_NAME": "receive-rule-set",
+        "RULES": [
+          {
+            "NAME": "receive-rule",
+            "BUCKET_NAME": "qa-hbsmith-email-receive",
+            "BUCKET_LIFECYCLE_EXPIRATION": 30,
+            "SNS_NAME": "ses-fake-email"
+          }
+        ]
+      }
+    ]
+  },
+  "appstream": {
+    "IMAGE_BUILDS": [
+      {
+        "NAME": "naoko-builder",
+        "IMAGE_NAME": "AppStream-WinServer2016-12-12-2019"
+      }
+    ],
+    "STACK": [
+      {
+        "AWS_DEFAULT_REGION": "ap-northeast-2",
+        "AWS_S3_SCRIPT_BUCKET": "qa-hbsmith-script",
+        "EMBED_HOST_DOMAINS": "qa-app.hbsmith.io",
+        "FLEET_NAME": "naoko-fleet",
+        "MAX_CAPACITY": "5",
+        "MIN_CAPACITY": "1",
+        "NAME": "naoko-stack"
+      },
+      {
+        "AWS_DEFAULT_REGION": "ap-southeast-1",
+        "AWS_S3_SCRIPT_BUCKET": "qa-hbsmith-script",
+        "EMBED_HOST_DOMAINS": "qa-app.hbsmith.io",
+        "FLEET_NAME": "naoko-fleet",
+        "MAX_CAPACITY": "5",
+        "MIN_CAPACITY": "1",
+        "NAME": "naoko-stack"
+      }
+    ]
+  },
+  "template": {
+    "GIT_URL": "git@github.com:HardBoiledSmith/magi.git",
+    "NAME": "magi"
+  },
+  "vpc": [
+    {
+      "AWS_AVAILABILITY_ZONE_1": "ap-northeast-2a",
+      "AWS_AVAILABILITY_ZONE_2": "ap-northeast-2c",
+      "AWS_DEFAULT_REGION": "ap-northeast-2"
+    },
+    {
+      "AWS_AVAILABILITY_ZONE_1": "ap-southeast-1a",
+      "AWS_AVAILABILITY_ZONE_2": "ap-southeast-1c",
+      "AWS_DEFAULT_REGION": "ap-southeast-1"
+    }
+  ]
+}
