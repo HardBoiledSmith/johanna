@@ -219,7 +219,6 @@ def run_create_eb_windows(name, settings):
     file_list = list()
     file_list.append('.ebextensions')
     file_list.append('configuration')
-    # file_list.append('save_as_utf8.py')
 
     for ff in file_list:
         cmd = ['mv', f'{name}/_provisioning/{ff}', '.']
