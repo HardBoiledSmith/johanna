@@ -31,6 +31,10 @@ def run_create_eb_windows(name, settings):
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = f'{service_name}_' if service_name else ''
     url = settings['ARTIFACT_URL']
+    sub_branch = settings['BRANCH']
+    if sub_branch == '${GENDO_BRANCH}':
+        sub_branch = 'master'
+    print(f'git branch: {sub_branch}')
 
     cidr_subnet = aws_cli.cidr_subnet
 
@@ -116,9 +120,10 @@ def run_create_eb_windows(name, settings):
     subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
     if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', git_url]
+        git_command = ['git', 'clone', '--depth=1', '-b', sub_branch, git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+
     subprocess.Popen(git_command, cwd=template_path).communicate()
     print(f'{template_path}/{name}')
     if not os.path.exists(f'{template_path}/{name}'):
@@ -152,7 +157,7 @@ def run_create_eb_windows(name, settings):
         f'{template_path}/{name}/_provisioning/configuration/User/vagrant/Desktop/{name}/settings_local.py', lines)
 
     lines = read_file(f'{template_path}/{name}/_provisioning/configuration/'
-                      f'User/vagrant/Desktop/{name}/{name}_cli/{name}_cli.exe_sample.config')
+                      f'User/vagrant/Desktop/{name}/{name}.exe_sample.config')
     option_list = list()
     option_list.append(['PHASE', phase])
     for key in settings:
@@ -164,16 +169,17 @@ def run_create_eb_windows(name, settings):
         else:
             lines = re_sub_lines(lines, f'^.+add key=\"({oo[0]})\" value=.+$', f'<add key="\\1" value="{oo[1]}" />')
     write_file(f'{template_path}/{name}/_provisioning/configuration/'
-               f'User/vagrant/Desktop/{name}/{name}_cli/{name}_cli.exe.config', lines)
+               f'User/vagrant/Desktop/{name}/{name}.exe.config', lines)
 
     ################################################################################
     print_message('download artifact')
 
-    branch = 'master' if phase == 'dv' else phase
+    branch = sub_branch.lower() if phase == 'dv' else phase
+
     file_name = f"{branch}-gendo-{git_hash_app.decode('utf-8').strip()}.zip"
     artifact_url = url + f'/{file_name}'
 
-    cmd = ['s3', 'cp', artifact_url, f'{name}/gendo-artifact.zip']
+    cmd = ['s3', 'cp', artifact_url, 'gendo-artifact.zip']
     aws_cli.run(cmd, cwd=template_path)
 
     ################################################################################
@@ -213,10 +219,20 @@ def run_create_eb_windows(name, settings):
     file_list = list()
     file_list.append('.ebextensions')
     file_list.append('configuration')
-    file_list.append('save_as_utf8.py')
+    # file_list.append('save_as_utf8.py')
 
     for ff in file_list:
         cmd = ['mv', f'{name}/_provisioning/{ff}', '.']
+        subprocess.Popen(cmd, cwd=template_path).communicate()
+
+    cmd_list = list()
+    cmd_list.append(['mkdir', 'temp_gendo'])
+    cmd_list.append(['mv', f'{name}/_provisioning', 'temp_gendo'])
+    cmd_list.append(['mv', f'{name}/requirements.txt', 'temp_gendo/requirements.txt'])
+    cmd_list.append(['rm', '-rf', f'{name}'])
+    cmd_list.append(['mv', 'temp_gendo', f'{name}'])
+
+    for cmd in cmd_list:
         subprocess.Popen(cmd, cwd=template_path).communicate()
 
     cmd = ['zip', '-r', zip_filename, '.', '.ebextensions']
