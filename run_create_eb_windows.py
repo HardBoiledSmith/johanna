@@ -226,6 +226,7 @@ def run_create_eb_windows(name, settings):
 
     cmd_list = list()
     cmd_list.append(['mkdir', 'temp_gendo'])
+    cmd_list.append(['rm', '-rf', f'{name}/_provisioning/pretrained_model'])
     cmd_list.append(['mv', f'{name}/_provisioning', 'temp_gendo'])
     cmd_list.append(['mv', f'{name}/requirements.txt', 'temp_gendo/requirements.txt'])
     cmd_list.append(['rm', '-rf', f'{name}'])
