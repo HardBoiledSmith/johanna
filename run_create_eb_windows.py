@@ -31,11 +31,8 @@ def run_create_eb_windows(name, settings):
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = f'{service_name}_' if service_name else ''
     url = settings['ARTIFACT_URL']
-    sub_branch = settings['BRANCH']
-    if sub_branch == '${GENDO_BRANCH}':
-        sub_branch = 'master'
-    print(f'git branch: {sub_branch}')
-
+    dv_branch = settings.get('BRANCH', 'master')
+	
     cidr_subnet = aws_cli.cidr_subnet
 
     str_timestamp = str(int(time.time()))
@@ -120,7 +117,8 @@ def run_create_eb_windows(name, settings):
     subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
     if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', '-b', sub_branch, git_url]
+		print(f'dv branch: {dv_branch}')
+        git_command = ['git', 'clone', '--depth=1', '-b', dv_branch, git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
 
@@ -174,7 +172,7 @@ def run_create_eb_windows(name, settings):
     ################################################################################
     print_message('download artifact')
 
-    branch = sub_branch.lower() if phase == 'dv' else phase
+    branch = dv_branch.lower() if phase == 'dv' else phase
 
     file_name = f"{branch}-gendo-{git_hash_app.decode('utf-8').strip()}.zip"
     artifact_url = url + f'/{file_name}'
