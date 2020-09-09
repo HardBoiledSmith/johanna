@@ -31,7 +31,7 @@ def run_create_eb_windows(name, settings):
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = f'{service_name}_' if service_name else ''
     url = settings['ARTIFACT_URL']
-    dv_branch = settings.get('BRANCH', 'master')
+    dv_branch = settings.get('BRANCH', 'DEV-10096')
     cidr_subnet = aws_cli.cidr_subnet
 
     str_timestamp = str(int(time.time()))
@@ -117,7 +117,7 @@ def run_create_eb_windows(name, settings):
 
     if phase == 'dv':
         print(f'dv branch: {dv_branch}')
-        git_command = ['git', 'clone', '--depth=1', '-b', dv_branch, git_url]
+        git_command = ['git', 'clone', '--single-branch', '-b', dv_branch, git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
 
@@ -231,6 +231,9 @@ def run_create_eb_windows(name, settings):
 
     for cmd in cmd_list:
         subprocess.Popen(cmd, cwd=template_path).communicate()
+
+    cmd = (['cp', 'manifest/aws-windows-deployment-manifest.json', f'{template_path}'])
+    subprocess.Popen(cmd).communicate()
 
     cmd = ['zip', '-r', zip_filename, '.', '.ebextensions']
     subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=template_path).communicate()
