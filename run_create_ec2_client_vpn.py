@@ -176,7 +176,7 @@ for vpn_env in env['client_vpn']:
     if target_name and vpn_env['NAME'] != target_name:
         continue
 
-    if region and vpn_env.get('AWS_DEFAULT_REGION') != region:
+    if region and vpn_env.get('AWS_VPC_REGION') != region:
         continue
 
     if target_name:
