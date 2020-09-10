@@ -42,6 +42,13 @@ def run_terminate_client_vpn(settings):
         return
 
     ################################################################################
+    print_message('terminate all vpn connections')
+
+    cmd = ['ec2', 'terminate-client-vpn-connections']
+    cmd += ['--client-vpn-endpoint-id', vpn_endpoint_id]
+    aws_cli.run(cmd, ignore_error=True)
+
+    ################################################################################
     print_message('revoke authorizations for target network')
 
     cmd = ['ec2', 'revoke-client-vpn-ingress']
