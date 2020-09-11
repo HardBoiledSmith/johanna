@@ -42,7 +42,7 @@ def run_terminate_client_vpn(settings):
         return
 
     ################################################################################
-    print_message('terminate all vpn connections')
+    print_message('terminate all existing vpn connections')
 
     cmd = ['ec2', 'terminate-client-vpn-connections']
     cmd += ['--client-vpn-endpoint-id', vpn_endpoint_id]
