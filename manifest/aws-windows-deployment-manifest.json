@@ -5,7 +5,7 @@
         {
             "name": "gendo-dotnet-core",
             "parameters": {
-                "appBundle": "gendo-artifact.zip",
+                "appBundle": "watchdog-artifact.zip",
                 "iisPath": "/",
                 "iisWebSite": "Default Web Site"
             }
