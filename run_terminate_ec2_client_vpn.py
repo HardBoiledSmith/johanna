@@ -14,10 +14,10 @@ if __name__ == "__main__":
     args = parse_args()
 
 
-def run_terminate_client_vpn(settings):
+def run_terminate_client_vpn(name, settings):
     vpc_region = settings['AWS_VPC_REGION']
     aws_cli = AWSCli(vpc_region)
-    print_message(f'terminate {settings["NAME"]}')
+    print_message(f'terminate {name}')
 
     ################################################################################
     print_message('get endpoint id')
@@ -31,7 +31,7 @@ def run_terminate_client_vpn(settings):
             continue
 
         for t in r['Tags']:
-            if t['Key'] == 'Name' and t['Value'] == settings['NAME']:
+            if t['Key'] == 'Name' and t['Value'] == name:
                 vpn_endpoint_id = r['ClientVpnEndpointId']
                 break
 
@@ -144,7 +144,7 @@ for vpn_env in env['client_vpn']:
     if target_name:
         check_exists = True
 
-    run_terminate_client_vpn(vpn_env)
+    run_terminate_client_vpn(vpn_env['NAME'], vpn_env)
 
 if not check_exists and target_name:
     print(f'{target_name} is not exists in config.json')

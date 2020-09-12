@@ -60,9 +60,11 @@ def get_network_resource_ids(vpc_region):
     return eb_vpc_id, rds_vpc_id, eb_subnet_id, rds_subnet_id, eb_security_group_id
 
 
-def run_create_client_vpn(settings):
+def run_create_client_vpn(name, settings):
     vpc_region = settings['AWS_VPC_REGION']
     aws_cli = AWSCli(vpc_region)
+    print_message(f'create {name}')
+
     eb_vpc_id, rds_vpc_id, eb_subnet_id, rds_subnet_id, eb_security_group_id = get_network_resource_ids(vpc_region)
 
     ################################################################################
@@ -98,7 +100,7 @@ def run_create_client_vpn(settings):
     cmd += ['--split-tunnel']
     cmd += ['--security-group-ids', eb_security_group_id]
     cmd += ['--vpc-id', eb_vpc_id]
-    cmd += ['--tag-specifications', 'ResourceType=client-vpn-endpoint,Tags=[{Key=Name,Value=%s}]' % settings["NAME"]]
+    cmd += ['--tag-specifications', 'ResourceType=client-vpn-endpoint,Tags=[{Key=Name,Value=%s}]' % name]
     result = aws_cli.run(cmd)
 
     vpn_endpoint_id = result['ClientVpnEndpointId']
@@ -182,7 +184,7 @@ for vpn_env in env['client_vpn']:
     if target_name:
         check_exists = True
 
-    run_create_client_vpn(vpn_env)
+    run_create_client_vpn(vpn_env['NAME'], vpn_env)
 
 if not check_exists and target_name:
     print(f'{target_name} is not exists in config.json')
