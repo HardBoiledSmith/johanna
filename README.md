@@ -93,6 +93,17 @@ Before create codebuild projects, you must create these resources manually using
   > For source code in a GitHub repository, the HTTPS clone URL to the repository that contains the source and the buildspec file. You must connect your AWS account to your GitHub account. Use the AWS CodeBuild console to start creating a build project. When you use the console to connect (or reconnect) with GitHub, on the GitHub Authorize application page, for Organization access , choose Request access next to each repository you want to allow AWS CodeBuild to have access to, and then choose Authorize application . (After you have connected to your GitHub account, you do not need to finish creating the build project. You can leave the AWS CodeBuild console.)    
   > https://docs.aws.amazon.com/cli/latest/reference/codebuild/create-project.html#options
 
+# AWS Client VPN
+
+You can create client configuration (.ovpn) for AWS Client VPN
+
+1. Provision VPC, AWS SES into your account
+1. Provision Client VPN Endpoint into the VPC
+1. SSH into vagrant johanna
+1. Go to `cd /opt/johanna`
+1. Run `./run_export_client_vpn_ovpn.py <client vpn name> <region> <email to> <zip password>`
+1. Check email inbox of `<email to>`
+
 # S3 SRR(Same Region Replication)
 
 This script applies replication to different AWS accounts.
