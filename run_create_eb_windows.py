@@ -31,7 +31,7 @@ def run_create_eb_windows(name, settings):
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = f'{service_name}_' if service_name else ''
     url = settings['ARTIFACT_URL']
-    dv_branch = settings.get('BRANCH', 'DEV-10096')
+    dv_branch = settings.get('BRANCH', 'master')
     cidr_subnet = aws_cli.cidr_subnet
 
     str_timestamp = str(int(time.time()))
@@ -117,7 +117,7 @@ def run_create_eb_windows(name, settings):
 
     if phase == 'dv':
         print(f'dv branch: {dv_branch}')
-        git_command = ['git', 'clone', '--single-branch', '-b', dv_branch, git_url]
+        git_command = ['git', 'clone', '--depth=1', '-b', dv_branch, git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
 
