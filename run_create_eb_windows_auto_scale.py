@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+from env import env
 from run_common import AWSCli
 
 
-def run_create_eb_windows_auto_scale():
+def run_create_eb_windows_auto_scale(settings):
     aws_cli = AWSCli()
+
     cmd = ['autoscaling', 'describe-auto-scaling-groups']
     result = aws_cli.run(cmd)
     auto_scaling_group = ""
@@ -41,7 +43,7 @@ def run_create_eb_windows_auto_scale():
     cmd = ['autoscaling', 'put-scaling-policy']
     cmd += ['--policy-name', 'gendo-scale-out']
     cmd += ['--auto-scaling-group-name', auto_scaling_group]
-    cmd += ['--scaling-adjustment', '1']
+    cmd += ['--scaling-adjustment', settings['SCALE_OUT_ADJUSTMENT']]
     cmd += ['--adjustment-type', 'ChangeInCapacity']
     result = aws_cli.run(cmd)
     scale_out_policy_arn = result['PolicyARN']
@@ -49,7 +51,7 @@ def run_create_eb_windows_auto_scale():
     cmd = ['autoscaling', 'put-scaling-policy']
     cmd += ['--policy-name', 'gendo-scale-in']
     cmd += ['--auto-scaling-group-name', auto_scaling_group]
-    cmd += ['--scaling-adjustment', '-1']
+    cmd += ['--scaling-adjustment', settings['SCALE_IN_ADJUSTMENT']]
     cmd += ['--adjustment-type', 'ChangeInCapacity']
     result = aws_cli.run(cmd)
     scale_in_policy_arn = result['PolicyARN']
@@ -63,7 +65,7 @@ def run_create_eb_windows_auto_scale():
     cmd += ['--period', '180']
     cmd += ['--threshold', '10']
     cmd += ['--comparison-operator', 'GreaterThanThreshold']
-    cmd += ['--dimensions', 'Name=QueueName, Value=dv-visual-test-result']
+    cmd += ['--dimensions', f'Name=QueueName, Value={settings["AWS_SQS_VISUAL_TEST_RESULT"]}']
     cmd += ['--evaluation-periods', '2']
     cmd += ['--alarm-actions', scale_out_policy_arn]
     aws_cli.run(cmd)
@@ -77,7 +79,7 @@ def run_create_eb_windows_auto_scale():
     cmd += ['--period', '300']
     cmd += ['--threshold', '3']
     cmd += ['--comparison-operator', 'LessThanOrEqualToThreshold']
-    cmd += ['--dimensions', 'Name=QueueName, Value=dv-visual-test-result']
+    cmd += ['--dimensions', f'Name=QueueName, Value={settings["AWS_SQS_VISUAL_TEST_RESULT"]}']
     cmd += ['--evaluation-periods', '2']
     cmd += ['--alarm-actions', scale_in_policy_arn]
     aws_cli.run(cmd)
@@ -95,4 +97,9 @@ if __name__ == "__main__":
     from run_common import parse_args
 
     args = parse_args()
-    run_create_eb_windows_auto_scale()
+
+    eb = env['elasticbeanstalk']
+    for eb_env in eb['ENVIRONMENTS']:
+        if eb_env['TYPE'] == 'windows':
+            run_create_eb_windows_auto_scale(eb_env)
+            break
