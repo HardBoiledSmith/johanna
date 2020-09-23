@@ -412,17 +412,3 @@ def run_create_eb_windows(name, settings):
         cmd += ['--source-environment-name', eb_environment_name_old]
         cmd += ['--destination-environment-name', eb_environment_name]
         aws_cli.run(cmd)
-
-    auto_scaling_group_name = ''
-    for rr in result['AutoScalingGroups']:
-        if not rr['Tags']:
-            continue
-
-        for dd in rr['Tags']:
-            if dd['ResourceType'] == 'auto-scaling-group':
-                auto_scaling_group_name = dd['ResourceId']
-                break
-        if auto_scaling_group_name:
-            continue
-        else:
-            break
