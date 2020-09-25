@@ -362,8 +362,6 @@ def run_create_eb_windows(name, settings):
     oo['Value'] = '3'
     option_settings.append(oo)
 
-
-
     option_settings = json.dumps(option_settings)
 
     tag0 = f"Key=git_hash_johanna,Value={git_hash_johanna.decode('utf-8').strip()}"
