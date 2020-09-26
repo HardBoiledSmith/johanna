@@ -228,16 +228,34 @@ def run_create_eb_windows(name, settings):
     cmd_list.append(['mv', f'{name}/requirements.txt', 'temp_gendo/requirements.txt'])
     cmd_list.append(['rm', '-rf', f'{name}'])
     cmd_list.append(['mv', 'temp_gendo', f'{name}'])
-
     for cmd in cmd_list:
         subprocess.Popen(cmd, cwd=template_path).communicate()
+
+    cmd_list = list()
+    cmd_list.append(['mkdir', 'gendo-artifact'])
+    cmd_list.append(['unzip', 'gendo-artifact.zip', '-d', 'gendo-artifact/'])
+    cmd_list.append(['rm', '-rf', 'gendo-artifact.zip'])
+    for cmd in cmd_list:
+        subprocess.Popen(cmd, cwd=template_path).communicate()
+
+    cmd = ['zip', '-r', 'watchdog-artifact.zip', '.']
+    subprocess.Popen(cmd, cwd=f'{template_path}/gendo-artifact/watchdog/site').communicate()
+
+    cmd_list = list()
+    cmd_list.append(['mv', 'gendo-artifact/watchdog/site/watchdog-artifact.zip', '.'])
+    cmd_list.append(['zip', '-r', 'gendo-artifact.zip', 'gendo-artifact/gendo'])
+    cmd_list.append(['rm', '-rf', 'gendo-artifact'])
+    for cmd in cmd_list:
+        subprocess.Popen(cmd, cwd=template_path).communicate()
+
+    cmd = ['cp', 'manifest/aws-windows-deployment-manifest.json', f'{template_path}']
+    subprocess.Popen(cmd).communicate()
 
     cmd = ['zip', '-r', zip_filename, '.', '.ebextensions']
     subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=template_path).communicate()
 
     cmd = ['s3', 'cp', zip_filename, s3_zip_filename]
     aws_cli.run(cmd, cwd=template_path)
-
     cmd = ['elasticbeanstalk', 'create-application-version']
     cmd += ['--application-name', eb_application_name]
     cmd += ['--source-bundle', f'S3Bucket="{s3_bucket}",S3Key="{eb_application_name}/{zip_filename}"']
@@ -315,12 +333,6 @@ def run_create_eb_windows(name, settings):
     oo['Namespace'] = 'aws:elasticbeanstalk:environment'
     oo['OptionName'] = 'LoadBalancerType'
     oo['Value'] = 'application'
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:elasticbeanstalk:environment:process:default'
-    oo['OptionName'] = 'MatcherHTTPCode'
-    oo['Value'] = '403'
     option_settings.append(oo)
 
     oo = dict()

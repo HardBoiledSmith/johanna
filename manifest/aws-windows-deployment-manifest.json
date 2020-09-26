@@ -1,0 +1,15 @@
+{
+    "manifestVersion": 1,
+    "deployments": {
+        "aspNetCoreWeb": [
+        {
+            "name": "gendo-dotnet-core",
+            "parameters": {
+                "appBundle": "watchdog-artifact.zip",
+                "iisPath": "/",
+                "iisWebSite": "Default Web Site"
+            }
+        }
+        ]
+    }
+}
