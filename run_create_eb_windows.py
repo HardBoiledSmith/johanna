@@ -18,6 +18,11 @@ def run_create_eb_windows(name, settings):
 
     aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
     aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
+    aws_sqs_visual_test_result = settings['AWS_SQS_VISUAL_TEST_RESULT']
+    scale_out_adjustment = settings['SCALE_OUT_ADJUSTMENT']
+    scale_out_threshold = settings['SCALE_OUT_THRESHOLD']
+    scale_in_adjustment = settings['SCALE_IN_ADJUSTMENT']
+    scale_in_threshold = settings['SCALE_IN_THRESHOLD']
     aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
     ssl_certificate_id = aws_cli.get_acm_certificate_id('hbsmith.io')
@@ -138,8 +143,12 @@ def run_create_eb_windows(name, settings):
     lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
     lines = re_sub_lines(lines, 'SSL_CERTIFICATE_ID', ssl_certificate_id)
+    lines = re_sub_lines(lines, 'AWS_SQS_VISUAL_TEST_RESULT', aws_sqs_visual_test_result)
+    lines = re_sub_lines(lines, 'SCALE_OUT_ADJUSTMENT', scale_out_adjustment)
+    lines = re_sub_lines(lines, 'SCALE_OUT_THRESHOLD', scale_out_threshold)
+    lines = re_sub_lines(lines, 'SCALE_IN_ADJUSTMENT', scale_in_adjustment)
+    lines = re_sub_lines(lines, 'SCALE_IN_THRESHOLD', scale_in_threshold)
     write_file(f'{template_path}/{name}/_provisioning/.ebextensions/{name}.config', lines)
-
     lines = read_file(
         f'{template_path}/{name}/_provisioning/configuration/User/vagrant/Desktop/{name}/settings_local_sample.py')
     lines = re_sub_lines(lines, '^(DEBUG).*', f'\\1 = {debug}')
