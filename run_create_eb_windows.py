@@ -241,19 +241,23 @@ def run_create_eb_windows(name, settings):
         subprocess.Popen(cmd, cwd=template_path).communicate()
 
     cmd_list = list()
-    cmd_list.append(['mkdir', 'gendo-artifact'])
-    cmd_list.append(['unzip', 'gendo-artifact.zip', '-d', 'gendo-artifact/'])
+    cmd_list.append(['mkdir', 'temp-gendo-artifact'])
+    cmd_list.append(['unzip', 'gendo-artifact.zip', '-d', 'temp-gendo-artifact/'])
     cmd_list.append(['rm', '-rf', 'gendo-artifact.zip'])
     for cmd in cmd_list:
         subprocess.Popen(cmd, cwd=template_path).communicate()
 
     cmd = ['zip', '-r', 'watchdog-artifact.zip', '.']
-    subprocess.Popen(cmd, cwd=f'{template_path}/gendo-artifact/watchdog/site').communicate()
+    subprocess.Popen(cmd, cwd=f'{template_path}/temp-gendo-artifact/watchdog/site').communicate()
+    cmd = ['mv', 'temp-gendo-artifact/watchdog/site/watchdog-artifact.zip', '.']
+    subprocess.Popen(cmd, cwd=template_path).communicate()
+
+    cmd = ['zip', '-r', 'gendo-artifact.zip', 'gendo/']
+    subprocess.Popen(cmd, cwd=f'{template_path}/temp-gendo-artifact').communicate()
 
     cmd_list = list()
-    cmd_list.append(['mv', 'gendo-artifact/watchdog/site/watchdog-artifact.zip', '.'])
-    cmd_list.append(['zip', '-r', 'gendo-artifact.zip', 'gendo-artifact/gendo'])
-    cmd_list.append(['rm', '-rf', 'gendo-artifact'])
+    cmd_list.append(['mv', 'temp-gendo-artifact/gendo-artifact.zip', '.'])
+    cmd_list.append(['rm', '-rf', 'temp-gendo-artifact'])
     for cmd in cmd_list:
         subprocess.Popen(cmd, cwd=template_path).communicate()
 
