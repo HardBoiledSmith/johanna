@@ -18,6 +18,11 @@ def run_create_eb_windows(name, settings):
 
     aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
     aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
+    aws_sqs_visual_test_result = settings['AWS_SQS_VISUAL_TEST_RESULT']
+    scale_out_adjustment = settings['SCALE_OUT_ADJUSTMENT']
+    scale_out_threshold = settings['SCALE_OUT_THRESHOLD']
+    scale_in_adjustment = settings['SCALE_IN_ADJUSTMENT']
+    scale_in_threshold = settings['SCALE_IN_THRESHOLD']
     aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
     ssl_certificate_id = aws_cli.get_acm_certificate_id('hbsmith.io')
@@ -138,8 +143,12 @@ def run_create_eb_windows(name, settings):
     lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
     lines = re_sub_lines(lines, 'SSL_CERTIFICATE_ID', ssl_certificate_id)
+    lines = re_sub_lines(lines, 'AWS_SQS_VISUAL_TEST_RESULT', aws_sqs_visual_test_result)
+    lines = re_sub_lines(lines, 'SCALE_OUT_ADJUSTMENT', scale_out_adjustment)
+    lines = re_sub_lines(lines, 'SCALE_OUT_THRESHOLD', scale_out_threshold)
+    lines = re_sub_lines(lines, 'SCALE_IN_ADJUSTMENT', scale_in_adjustment)
+    lines = re_sub_lines(lines, 'SCALE_IN_THRESHOLD', scale_in_threshold)
     write_file(f'{template_path}/{name}/_provisioning/.ebextensions/{name}.config', lines)
-
     lines = read_file(
         f'{template_path}/{name}/_provisioning/configuration/User/vagrant/Desktop/{name}/settings_local_sample.py')
     lines = re_sub_lines(lines, '^(DEBUG).*', f'\\1 = {debug}')
@@ -228,16 +237,38 @@ def run_create_eb_windows(name, settings):
     cmd_list.append(['mv', f'{name}/requirements.txt', 'temp_gendo/requirements.txt'])
     cmd_list.append(['rm', '-rf', f'{name}'])
     cmd_list.append(['mv', 'temp_gendo', f'{name}'])
-
     for cmd in cmd_list:
         subprocess.Popen(cmd, cwd=template_path).communicate()
+
+    cmd_list = list()
+    cmd_list.append(['mkdir', 'temp-gendo-artifact'])
+    cmd_list.append(['unzip', 'gendo-artifact.zip', '-d', 'temp-gendo-artifact/'])
+    cmd_list.append(['rm', '-rf', 'gendo-artifact.zip'])
+    for cmd in cmd_list:
+        subprocess.Popen(cmd, cwd=template_path).communicate()
+
+    cmd = ['zip', '-r', 'watchdog-artifact.zip', '.']
+    subprocess.Popen(cmd, cwd=f'{template_path}/temp-gendo-artifact/watchdog/site').communicate()
+    cmd = ['mv', 'temp-gendo-artifact/watchdog/site/watchdog-artifact.zip', '.']
+    subprocess.Popen(cmd, cwd=template_path).communicate()
+
+    cmd = ['zip', '-r', 'gendo-artifact.zip', 'gendo/']
+    subprocess.Popen(cmd, cwd=f'{template_path}/temp-gendo-artifact').communicate()
+
+    cmd_list = list()
+    cmd_list.append(['mv', 'temp-gendo-artifact/gendo-artifact.zip', '.'])
+    cmd_list.append(['rm', '-rf', 'temp-gendo-artifact'])
+    for cmd in cmd_list:
+        subprocess.Popen(cmd, cwd=template_path).communicate()
+
+    cmd = ['cp', 'manifest/aws-windows-deployment-manifest.json', f'{template_path}']
+    subprocess.Popen(cmd).communicate()
 
     cmd = ['zip', '-r', zip_filename, '.', '.ebextensions']
     subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=template_path).communicate()
 
     cmd = ['s3', 'cp', zip_filename, s3_zip_filename]
     aws_cli.run(cmd, cwd=template_path)
-
     cmd = ['elasticbeanstalk', 'create-application-version']
     cmd += ['--application-name', eb_application_name]
     cmd += ['--source-bundle', f'S3Bucket="{s3_bucket}",S3Key="{eb_application_name}/{zip_filename}"']
@@ -315,12 +346,6 @@ def run_create_eb_windows(name, settings):
     oo['Namespace'] = 'aws:elasticbeanstalk:environment'
     oo['OptionName'] = 'LoadBalancerType'
     oo['Value'] = 'application'
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:elasticbeanstalk:environment:process:default'
-    oo['OptionName'] = 'MatcherHTTPCode'
-    oo['Value'] = '403'
     option_settings.append(oo)
 
     oo = dict()

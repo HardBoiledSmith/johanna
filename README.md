@@ -97,7 +97,8 @@ Before create codebuild projects, you must create these resources manually using
 
 You can create client configuration (.ovpn) for AWS Client VPN
 
-1. Provision Client VPN Endpoint into VPC
+1. Provision VPC, AWS SES into your account
+1. Provision Client VPN Endpoint into the VPC
 1. SSH into vagrant johanna
 1. Go to `cd /opt/johanna`
 1. Run `./run_export_client_vpn_ovpn.py <client vpn name> <region> <email to> <zip password>`
