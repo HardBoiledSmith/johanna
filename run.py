@@ -117,8 +117,8 @@ if __name__ == "__main__":
     if command == 'run_create':
         __import__('run_create_iam')
         __import__('run_create_vpc')
-        __import__('run_create_ec2_client_vpn')
         __import__('run_create_rds')
+        __import__('run_create_ec2_client_vpn')
         __import__('run_create_sqs')
         __import__('run_reset_database')
         __import__('run_create_eb')
