@@ -80,7 +80,7 @@ def run_create_codebuild_cron(name, settings):
     if need_update:
         print_message('update project: %s' % name)
 
-        cmd = ['codebuild', 'update-project', '--cli-input-json', config]
+        cmd = ['codebuild', 'update-project', '--cli-input-json', config, '--source-version', git_branch]
         aws_cli.run(cmd)
 
         print_message('update cron event')
@@ -93,7 +93,7 @@ def run_create_codebuild_cron(name, settings):
 
     print_message('create project: %s' % name)
 
-    cmd = ['codebuild', 'create-project', '--cli-input-json', config]
+    cmd = ['codebuild', 'create-project', '--cli-input-json', config, '--source-version', git_branch]
     result = aws_cli.run(cmd)
 
     project_arn = result['project']['arn']
