@@ -355,6 +355,12 @@ def run_create_eb_django(name, settings):
     option_settings.append(oo)
 
     oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:healthreporting:system'
+    oo['OptionName'] = 'EnhancedHealthAuthEnabled'
+    oo['Value'] = 'true'
+    option_settings.append(oo)
+
+    oo = dict()
     oo['Namespace'] = 'aws:elasticbeanstalk:cloudwatch:logs'
     oo['OptionName'] = 'StreamLogs'
     oo['Value'] = 'true'
@@ -382,7 +388,7 @@ def run_create_eb_django(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.9.14 running Python 3.6']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.9.15 running Python 3.6']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
