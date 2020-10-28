@@ -219,6 +219,7 @@ for vpn_env in env['client_vpn']:
     if vpn_env.get('AWS_VPC_REGION') != region:
         continue
 
+    check_exists = True
     run_export_new_client_ovpn(vpn_env['NAME'], vpn_env, email, password)
 
 if not check_exists and target_name:
