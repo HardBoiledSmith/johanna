@@ -195,11 +195,11 @@ def run_create_codebuild_github(name, settings):
 
     if need_update:
         print_message(f'update project: {name}')
-        cmd = ['codebuild', 'update-project', '--cli-input-json', config]
+        cmd = ['codebuild', 'update-project', '--cli-input-json', config, '--source-version', git_branch]
         result = aws_cli.run(cmd)
     else:
         print_message(f'create project: {name}')
-        cmd = ['codebuild', 'create-project', '--cli-input-json', config]
+        cmd = ['codebuild', 'create-project', '--cli-input-json', config, '--source-version', git_branch]
         result = aws_cli.run(cmd)
 
     project_arn = result['project']['arn']
