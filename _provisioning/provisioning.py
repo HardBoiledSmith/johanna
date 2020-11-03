@@ -127,7 +127,7 @@ def _preprocess(hostname):
 
     _print_line_number()
 
-    _run(['pip3', 'uninstall', 'awscli'])
+    _run(['pip3', 'uninstall', '-y', 'awscli'])
     _run(['wget', '-O', 'awscliv2.zip', 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip'], cwd='/root')
     _run(['unzip', 'awscliv2.zip'], cwd='/root')
     _run(['./aws/install'], cwd='/root')
