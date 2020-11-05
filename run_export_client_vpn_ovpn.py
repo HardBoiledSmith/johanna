@@ -33,10 +33,10 @@ def send_email(settings, subject, email_to, text, zip_filename):
     phase = env['common']['PHASE']
     timestamp_now = str(datetime.now())[:19]
     msg = MIMEMultipart()
-    msg['Subject'] = f'[{phase}] {subject} ({timestamp_now})'
     msg['From'] = settings['EMAIL_FROM']
     msg['To'] = email_to
     msg['Bcc'] = settings['EMAIL_BCC']
+    msg['Subject'] = f'[{phase}] {subject} ({timestamp_now})'
 
     msg.preamble = 'Multipart message.\n'
 
@@ -54,8 +54,11 @@ def send_email(settings, subject, email_to, text, zip_filename):
         ff.write(content)
 
     cmd = ['ses', 'send-raw-email']
+    cmd += ['--source', settings['EMAIL_FROM']]
+    cmd += ['--destinations', f'{email_to}']
     cmd += ['--raw-message', f'file://{zip_filename}.json']
-    aws_cli.run(cmd)
+    rr = aws_cli.run(cmd)
+    print(rr)
 
 
 def run(cmd, file_path_name=None, yes=None, cwd=None):
