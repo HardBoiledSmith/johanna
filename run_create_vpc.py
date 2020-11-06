@@ -48,6 +48,7 @@ def main(settings):
     cmd = ['ec2', 'import-key-pair']
     cmd += ['--key-name', env['common']['AWS_KEY_PAIR_NAME']]
     cmd += ['--public-key-material', env['common']['AWS_KEY_PAIR_MATERIAL']]
+    cmd += ['--cli-binary-format', 'raw-in-base64-out']
     aws_cli.run(cmd)
 
     ################################################################################
