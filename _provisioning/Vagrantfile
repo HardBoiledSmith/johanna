@@ -4,7 +4,7 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "hbsmith/awslinux2"
 
-  config.vm.provider "virtualbox" do |v|
+  config.vm.provider "parallels" do |prl|
     v.name = 'hbsmith-johanna'
     v.cpus = 2
     v.memory = 2048
@@ -12,6 +12,6 @@ Vagrant.configure(2) do |config|
 
   config.vm.provision "file", source: "../config.json", destination: "/vagrant/opt/johanna/config.json"
   config.vm.provision "shell", inline: "yum -y install python37"
-  config.vm.provision "shell", path: "provisioning.py"
+  config.vm.provision "shell", path: "provisioning.py", reboot: true
   config.vm.network "private_network", ip: "192.168.124.5"
 end
