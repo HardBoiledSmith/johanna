@@ -5,9 +5,9 @@ Vagrant.configure(2) do |config|
   config.vm.box = "hbsmith/awslinux2"
 
   config.vm.provider "parallels" do |prl|
-    v.name = 'hbsmith-johanna'
-    v.cpus = 2
-    v.memory = 2048
+    prl.name = 'hbsmith-johanna'
+    prl.cpus = 2
+    prl.memory = 2048
   end
 
   config.vm.provision "file", source: "../config.json", destination: "/vagrant/opt/johanna/config.json"
