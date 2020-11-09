@@ -15,6 +15,15 @@ The backend includes below:
 
 You can do provisioning/deprovisioning/reprovisioning of the whole system or partial at once. Especially, the reprovisioning of Django API server means a '[continuous deployement](https://en.wikipedia.org/wiki/Continuous_delivery#Relationship_to_continuous_deployment)'.
 
+## Requirements
+```
+- Vagrant 2.2.13+
+
+[For using hbsmith/awslinux2 box] 
+- Parallels Desktop 16+ for Mac 
+- vagrant-parallels plugin 2.0.1+
+```
+
 # How To Play
 
 Using [Lili](https://github.com/HardBoiledSmith/lili)(Vagrant provisioning script) is the simplest way to get a playground.
