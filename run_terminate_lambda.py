@@ -209,6 +209,9 @@ if len(args) == 2:
             if lambda_env['TYPE'] == 'sqs':
                 run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
                 break
+            if lambda_env['TYPE'] == 'ses_sqs':
+                run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
+                break
             if lambda_env['TYPE'] == 'event':
                 run_terminate_event_lambda(lambda_env['NAME'], lambda_env)
                 continue
@@ -228,6 +231,9 @@ else:
             run_terminate_sns_lambda(lambda_env['NAME'], lambda_env)
             continue
         if lambda_env['TYPE'] == 'sqs':
+            run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
+            continue
+        if lambda_env['TYPE'] == 'ses_sqs':
             run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
             continue
         if lambda_env['TYPE'] == 'event':
