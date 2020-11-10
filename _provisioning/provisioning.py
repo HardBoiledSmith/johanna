@@ -236,8 +236,6 @@ def main():
 
     _print_line_number()
 
-    _run(['reboot'])
-
 
 if __name__ == "__main__":
     main()
