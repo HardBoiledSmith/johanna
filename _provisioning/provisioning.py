@@ -127,7 +127,10 @@ def _preprocess(hostname):
 
     _print_line_number()
 
-    _run(['pip3', 'install', '--upgrade', 'awscli'])
+    _run(['pip3', 'uninstall', '-y', 'awscli'])
+    _run(['wget', '-O', 'awscliv2.zip', 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip'], cwd='/root')
+    _run(['unzip', 'awscliv2.zip'], cwd='/root')
+    _run(['./aws/install'], cwd='/root')
 
     _print_line_number()
 
@@ -232,8 +235,6 @@ def main():
         _run(cmd)
 
     _print_line_number()
-
-    _run(['reboot'])
 
 
 if __name__ == "__main__":

@@ -15,6 +15,15 @@ The backend includes below:
 
 You can do provisioning/deprovisioning/reprovisioning of the whole system or partial at once. Especially, the reprovisioning of Django API server means a '[continuous deployement](https://en.wikipedia.org/wiki/Continuous_delivery#Relationship_to_continuous_deployment)'.
 
+## Requirements
+```
+- Vagrant 2.2.13+
+
+[For using hbsmith/awslinux2 box] 
+- Parallels Desktop 16+ for Mac 
+- vagrant-parallels plugin 2.0.1+
+```
+
 # How To Play
 
 Using [Lili](https://github.com/HardBoiledSmith/lili)(Vagrant provisioning script) is the simplest way to get a playground.
@@ -103,31 +112,6 @@ You can create client configuration (.ovpn) for AWS Client VPN
 1. Go to `cd /opt/johanna`
 1. Run `./run_export_client_vpn_ovpn.py <client vpn name> <region> <email to> <zip password>`
 1. Check email inbox of `<email to>`
-
-# S3 SRR(Same Region Replication)
-
-This script applies replication to different AWS accounts.
-
-At least two buckets are required to apply this policy. 
-1. You need a source bucket and replication bucket.
-2. Create two buckets and activate the versioning function on each bucket.
-3. Please run the following a scripts.
-    - run_create_s3_srr.py \
-    ```./run_terminate_s3_srr.py -oa <origin bucket account id> -o <origin bucket name> -ra <replication bucket account id> -r <replication bucket name> -a `<replication bucket owner access key>` -s `<replication bucket owner secret access key> -p <write down the policy name you want> -n <write down the role name you want> ```
-
-        sample code \
-        ./run_create_s3_srr.py -oa `123456789000` -o `dv-srr-test` -ra `009883222211` -r `qa-srr-test` -a `XXXXXXXXXXXXXX` -s `11XXX12XXXXXXXX` -p `srr-policy` -n `srr-role`
-
-4. If this feature is applied, uploading the file to the original bucket will also indicate that the file will be uploaded to the replication bucket.
-
-
-Run the script below if you want to remove the replication function below.
-
-   - run_terminate_s3_srr.py \
-    ```./run_terminate_s3_srr.py -oa <origin bucket account id> -o <origin bucket name> -r <replication bucket name> -a <replication bucket owner access key> -s <replication bucket owner secret access key> -p <policy name applied to store replication> -n <role name applied to store replication>```
-
-   - sample code \
-    ./run_terminate_s3_srr.py -oa `123456789000` -o `dv-srr-test` -r `qa-srr-test` -a `XXXXXXXXXXXXXX` -s `11XXX12XXXXXXXX` -p `srr-policy` -n `srr-role`
 
 # Links
 
