@@ -263,11 +263,13 @@ def run_create_eb_django(name, settings):
             policy_at = ii
             break
 
+    elb_account_id = aws_cli.get_elb_account_id(aws_default_region)
+
     elb_logging_policy = {
         'Sid': 'ELBAccessLogs',
         'Effect': 'Allow',
         'Principal': {
-            'AWS': 'arn:aws:iam::600734575887:root'
+            'AWS': f'arn:aws:iam::{elb_account_id}:root'
         },
         'Action': 's3:PutObject',
         'Resource': f'arn:aws:s3:::{s3_bucket}/*/AWSLogs/*'
