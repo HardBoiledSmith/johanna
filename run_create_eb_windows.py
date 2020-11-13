@@ -150,7 +150,7 @@ def run_create_eb_windows(name, settings):
     lines = re_sub_lines(lines, 'SCALE_IN_THRESHOLD', scale_in_threshold)
     write_file(f'{template_path}/{name}/_provisioning/.ebextensions/{name}.config', lines)
     lines = read_file(
-        f'{template_path}/{name}/_provisioning/configuration/User/vagrant/Desktop/{name}/settings_local_sample.py')
+        f'{template_path}/{name}/_provisioning/configuration/Users/vagrant/Desktop/{name}_exe/settings_local_sample.py')
     lines = re_sub_lines(lines, '^(DEBUG).*', f'\\1 = {debug}')
     option_list = list()
     option_list.append(['PHASE', phase])
@@ -160,10 +160,10 @@ def run_create_eb_windows(name, settings):
     for oo in option_list:
         lines = re_sub_lines(lines, f'^({oo[0]}) .*', f'\\1 = \'{oo[1]}\'')
     write_file(
-        f'{template_path}/{name}/_provisioning/configuration/User/vagrant/Desktop/{name}/settings_local.py', lines)
+        f'{template_path}/{name}/_provisioning/configuration/Users/vagrant/Desktop/{name}_exe/settings_local.py', lines)
 
     lines = read_file(f'{template_path}/{name}/_provisioning/configuration/'
-                      f'User/vagrant/Desktop/{name}/{name}.exe_sample.config')
+                      f'Users/vagrant/Desktop/{name}_exe/{name}.exe_sample.config')
     option_list = list()
     option_list.append(['PHASE', phase])
     for key in settings:
@@ -175,7 +175,7 @@ def run_create_eb_windows(name, settings):
         else:
             lines = re_sub_lines(lines, f'^.+add key=\"({oo[0]})\" value=.+$', f'<add key="\\1" value="{oo[1]}" />')
     write_file(f'{template_path}/{name}/_provisioning/configuration/'
-               f'User/vagrant/Desktop/{name}/{name}.exe.config', lines)
+               f'Users/vagrant/Desktop/{name}_exe/{name}.exe.config', lines)
 
     ################################################################################
     print_message('download artifact')
