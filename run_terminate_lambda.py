@@ -159,6 +159,27 @@ def run_terminate_sqs_lambda(function_name, settings):
     aws_cli.run(cmd, ignore_error=True)
 
 
+def run_terminate_ses_sqs_lambda(function_name, settings):
+    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+
+    ################################################################################
+    print_session(f'terminate lambda: {function_name}')
+
+    print_message(f'delete event sources for {function_name}')
+    cmd = ['lambda', 'list-event-source-mappings',
+           '--function-name', function_name]
+    mappings = aws_cli.run(cmd)['EventSourceMappings']
+    for mapping in mappings:
+        cmd = ['lambda', 'delete-event-source-mapping',
+               '--uuid', mapping['UUID']]
+        aws_cli.run(cmd)
+
+    print_message('delete lambda function')
+    cmd = ['lambda', 'delete-function',
+           '--function-name', function_name]
+    aws_cli.run(cmd, ignore_error=True)
+
+
 def run_terminate_event_lambda(function_name, settings):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
@@ -210,7 +231,7 @@ if len(args) == 2:
                 run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
                 break
             if lambda_env['TYPE'] == 'ses_sqs':
-                run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
+                run_terminate_ses_sqs_lambda(lambda_env['NAME'], lambda_env)
                 break
             if lambda_env['TYPE'] == 'event':
                 run_terminate_event_lambda(lambda_env['NAME'], lambda_env)
@@ -234,7 +255,7 @@ else:
             run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
             continue
         if lambda_env['TYPE'] == 'ses_sqs':
-            run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
+            run_terminate_ses_sqs_lambda(lambda_env['NAME'], lambda_env)
             continue
         if lambda_env['TYPE'] == 'event':
             run_terminate_event_lambda(lambda_env['NAME'], lambda_env)
