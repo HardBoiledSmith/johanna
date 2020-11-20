@@ -205,6 +205,22 @@ class AWSCli:
                 if elapsed_time > 60 * 30:
                     raise Exception()
 
+    def get_elb_account_id(self, region):
+        acc_map = {
+            'us-east-1': "127311923021",
+            'us-west-2': "797873946194",
+            'us-west-1': "027434742980",
+            'eu-west-1': "156460612806",
+            'eu-central-1': "054676820928",
+            'ap-southeast-1': "114774131450",
+            'ap-northeast-1': "582318560864",
+            'ap-southeast-2': "783225319266",
+            'ap-northeast-2': "600734575887",
+            'sa-east-1': "507241528517",
+            'cn-north-1': "638102146993"
+        }
+        return acc_map[region]
+
     def get_rds_address(self, read_replica=None):
         cluster_id = env['rds']['DB_CLUSTER_ID']
         cmd = ['rds', 'describe-db-clusters']
