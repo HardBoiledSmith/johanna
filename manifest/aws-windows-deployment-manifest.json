@@ -3,7 +3,7 @@
     "deployments": {
         "aspNetCoreWeb": [
         {
-            "name": "gendo-dotnet-core",
+            "name": "watchdog",
             "parameters": {
                 "appBundle": "watchdog-artifact.zip",
                 "iisPath": "/",
