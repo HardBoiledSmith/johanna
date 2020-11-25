@@ -8,6 +8,7 @@ from run_common import print_session
 from run_create_lambda_cron import run_create_lambda_cron
 from run_create_lambda_default import run_create_lambda_default
 from run_create_lambda_event import run_create_lambda_event
+from run_create_lambda_ses_sqs import run_create_lambda_ses_sqs
 from run_create_lambda_sns import run_create_lambda_sns
 from run_create_lambda_sqs import run_create_lambda_sqs
 
@@ -83,6 +84,9 @@ if len(args) == 2:
             if lambda_env['TYPE'] == 'sqs':
                 run_create_lambda_sqs(lambda_env['NAME'], lambda_env)
                 break
+            if lambda_env['TYPE'] == 'ses_sqs':
+                run_create_lambda_ses_sqs(lambda_env['NAME'], lambda_env)
+                break
             if lambda_env['TYPE'] == 'event':
                 run_create_lambda_event(lambda_env['NAME'], lambda_env)
                 break
@@ -103,6 +107,9 @@ else:
             continue
         if lambda_env['TYPE'] == 'sqs':
             run_create_lambda_sqs(lambda_env['NAME'], lambda_env)
+            continue
+        if lambda_env['TYPE'] == 'ses_sqs':
+            run_create_lambda_ses_sqs(lambda_env['NAME'], lambda_env)
             continue
         if lambda_env['TYPE'] == 'event':
             run_create_lambda_event(lambda_env['NAME'], lambda_env)

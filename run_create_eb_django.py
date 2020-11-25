@@ -248,6 +248,43 @@ def run_create_eb_django(name, settings):
     aws_cli.run(cmd, cwd=template_path)
 
     ################################################################################
+    print_message('add elb-logging policy to storage location')
+
+    cmd = ['s3api', 'get-bucket-policy']
+    cmd += ['--bucket', s3_bucket]
+    result = aws_cli.run(cmd)
+
+    pp = result['Policy']
+    pp = json.loads(pp)
+
+    policy_at = -1
+    for (ii, ss) in enumerate(pp['Statement']):
+        if ss['Sid'] == 'ELBAccessLogs':
+            policy_at = ii
+            break
+
+    elb_account_id = aws_cli.get_elb_account_id(aws_default_region)
+
+    elb_logging_policy = {
+        'Sid': 'ELBAccessLogs',
+        'Effect': 'Allow',
+        'Principal': {
+            'AWS': f'arn:aws:iam::{elb_account_id}:root'
+        },
+        'Action': 's3:PutObject',
+        'Resource': f'arn:aws:s3:::{s3_bucket}/*/AWSLogs/*'
+    }
+    if policy_at < 0:
+        pp['Statement'].append(elb_logging_policy)
+    else:
+        pp['Statement'][policy_at] = elb_logging_policy
+
+    cmd = ['s3api', 'put-bucket-policy']
+    cmd += ['--bucket', s3_bucket]
+    cmd += ['--policy', json.dumps(pp)]
+    aws_cli.run(cmd)
+
+    ################################################################################
     print_message('create environment %s' % name)
 
     option_settings = list()
