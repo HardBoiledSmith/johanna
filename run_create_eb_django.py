@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import os
+import re
 import subprocess
 import time
 
@@ -248,36 +249,18 @@ def run_create_eb_django(name, settings):
     aws_cli.run(cmd, cwd=template_path)
 
     ################################################################################
-    print_message('add elb-logging policy to storage location')
+    print_message('update s3 policy of storage location')
 
-    cmd = ['s3api', 'get-bucket-policy']
-    cmd += ['--bucket', s3_bucket]
-    result = aws_cli.run(cmd)
+    lines = read_file('aws_iam/aws-elasticbeanstalk-storage-policy.json')
+    lines = re_sub_lines(lines, 'BUCKET_NAME', s3_bucket)
 
-    pp = result['Policy']
-    pp = json.loads(pp)
-
-    policy_at = -1
-    for (ii, ss) in enumerate(pp['Statement']):
-        if ss['Sid'] == 'ELBAccessLogs':
-            policy_at = ii
-            break
+    account_id = re.match(r'^.+-([0-9]+)$', s3_bucket).group(1)
+    lines = re_sub_lines(lines, 'MY_ACCOUNT_ID', account_id)
 
     elb_account_id = aws_cli.get_elb_account_id(aws_default_region)
-
-    elb_logging_policy = {
-        'Sid': 'ELBAccessLogs',
-        'Effect': 'Allow',
-        'Principal': {
-            'AWS': f'arn:aws:iam::{elb_account_id}:root'
-        },
-        'Action': 's3:PutObject',
-        'Resource': f'arn:aws:s3:::{s3_bucket}/*/AWSLogs/*'
-    }
-    if policy_at < 0:
-        pp['Statement'].append(elb_logging_policy)
-    else:
-        pp['Statement'][policy_at] = elb_logging_policy
+    lines = re_sub_lines(lines, 'ELB_ACCOUNT_ID', elb_account_id)
+    pp = ' '.join(lines)
+    pp = json.loads(pp)
 
     cmd = ['s3api', 'put-bucket-policy']
     cmd += ['--bucket', s3_bucket]
