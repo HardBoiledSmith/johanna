@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import os
+import re
 import subprocess
 import time
 
@@ -246,6 +247,25 @@ def run_create_eb_django(name, settings):
     cmd += ['--source-bundle', 'S3Bucket="%s",S3Key="%s/%s"' % (s3_bucket, eb_application_name, zip_filename)]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
+
+    ################################################################################
+    print_message('update s3 policy of storage location')
+
+    lines = read_file('aws_iam/aws-elasticbeanstalk-storage-policy.json')
+    lines = re_sub_lines(lines, 'BUCKET_NAME', s3_bucket)
+
+    account_id = re.match(r'^.+-([0-9]+)$', s3_bucket).group(1)
+    lines = re_sub_lines(lines, 'MY_ACCOUNT_ID', account_id)
+
+    elb_account_id = aws_cli.get_elb_account_id(aws_default_region)
+    lines = re_sub_lines(lines, 'ELB_ACCOUNT_ID', elb_account_id)
+    pp = ' '.join(lines)
+    pp = json.loads(pp)
+
+    cmd = ['s3api', 'put-bucket-policy']
+    cmd += ['--bucket', s3_bucket]
+    cmd += ['--policy', json.dumps(pp)]
+    aws_cli.run(cmd)
 
     ################################################################################
     print_message('create environment %s' % name)

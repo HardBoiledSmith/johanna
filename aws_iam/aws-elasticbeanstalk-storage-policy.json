@@ -1,0 +1,49 @@
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "eb-58950a8c-feb6-11e2-89e0-0800277d041b",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "s3:DeleteBucket",
+      "Resource": "arn:aws:s3:::BUCKET_NAME"
+    },
+    {
+      "Sid": "eb-ad78f54a-f239-4c90-adda-49e5f56cb51e",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::MY_ACCOUNT_ID:role/aws-elasticbeanstalk-ec2-role"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::BUCKET_NAME/resources/environments/logs/*"
+    },
+    {
+      "Sid": "eb-af163bf3-d27b-4712-b795-d1e33e331ca4",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::MY_ACCOUNT_ID:role/aws-elasticbeanstalk-ec2-role"
+      },
+      "Action": [
+        "s3:ListBucket",
+        "s3:ListBucketVersions",
+        "s3:GetObject",
+        "s3:GetObjectVersion"
+      ],
+      "Resource": [
+        "arn:aws:s3:::BUCKET_NAME",
+        "arn:aws:s3:::BUCKET_NAME/resources/environments/*"
+      ]
+    },
+    {
+      "Sid": "ELBAccessLogs",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::ELB_ACCOUNT_ID:root"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::BUCKET_NAME/*/AWSLogs/*"
+    }
+  ]
+}
