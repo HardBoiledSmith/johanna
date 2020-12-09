@@ -3,6 +3,7 @@
 from env import env
 from run_common import print_session
 from run_create_eb_django import run_create_eb_django
+from run_create_eb_django_al2 import run_create_eb_django_al2
 from run_create_eb_windows import run_create_eb_windows
 
 args = []
@@ -44,6 +45,8 @@ for eb_env in eb['ENVIRONMENTS']:
 
     if eb_env['TYPE'] == 'django':
         run_create_eb_django(eb_env['NAME'], eb_env)
+    elif eb_env['TYPE'] == 'django_amazon_linux2':
+        run_create_eb_django_al2(eb_env['NAME'], eb_env)
     elif eb_env['TYPE'] == 'windows':
         run_create_eb_windows(eb_env['NAME'], eb_env)
     else:

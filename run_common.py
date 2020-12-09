@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import base64
 import json
 import os
 import re
@@ -68,7 +69,7 @@ class AWSCli:
         self.env['AWS_SECRET_ACCESS_KEY'] = env['aws']['AWS_SECRET_ACCESS_KEY'] \
             if not aws_secret_access_key \
             else aws_secret_access_key
-        self.env['AWS_DEFAULT_REGION'] = env['aws']['AWS_DEFAULT_REGION'] \
+        self.env['AWS_REGION'] = self.env['AWS_DEFAULT_REGION'] = env['aws']['AWS_DEFAULT_REGION'] \
             if not aws_default_region \
             else aws_default_region
         self.env['AWS_DEFAULT_OUTPUT'] = 'json'
@@ -567,3 +568,9 @@ def reset_template_dir():
 
     if not os.path.exists('template/' + name):
         raise Exception()
+
+
+def encode_as_base64(message):
+    message_bytes = message.encode('utf-8')
+    base64_bytes = base64.b64encode(message_bytes)
+    return base64_bytes.decode('utf-8')

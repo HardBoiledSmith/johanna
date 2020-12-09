@@ -128,40 +128,34 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
             elif dimension == 'TargetGroup':
                 dimension_type = 'tg'
 
-        template = json.dumps(pm[0])
-        new_metrics_list = list()
+        template = json.dumps(pm)
         if dimension_type == 'asg':
             for ii in env_asg_list:
                 new_metric = template.replace('AUTO_SCALING_GROUP_NAME', ii['Name'])
                 new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
                 new_metric = json.loads(new_metric)
-                new_metrics_list.append(new_metric)
         elif dimension_type == 'instance':
             for ii in env_instances_list:
                 new_metric = template.replace('INSTANCE_ID', ii['Id'])
                 new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
                 new_metric = json.loads(new_metric)
-                new_metrics_list.append(new_metric)
         elif dimension_type == 'elb':
             for ii in env_elb_list:
                 new_metric = template.replace('LOAD_BALANCER_NAME', ii['Name'])
                 new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
                 new_metric = json.loads(new_metric)
-                new_metrics_list.append(new_metric)
         elif dimension_type == 'tg':
             for ii in env_tg_list:
                 new_metric = template.replace('TARGET_GROUP', ii['Name'])
                 new_metric = new_metric.replace('LOAD_BALANCER', ii['LoadBalancer'])
                 new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
                 new_metric = json.loads(new_metric)
-                new_metrics_list.append(new_metric)
         else:
             for ii in env_list:
                 new_metric = template.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
                 new_metric = json.loads(new_metric)
-                new_metrics_list.append(new_metric)
 
-        dw['properties']['metrics'] = new_metrics_list
+        dw['properties']['metrics'] = new_metric
 
     dashboard_body = json.dumps(dashboard_body)
 
