@@ -39,7 +39,7 @@ def run_create_lambda_ses_sqs(function_name, settings):
 
     if not os.path.exists(f'template/{git_folder_name}'):
         if phase == 'dv':
-            git_command = ['git', 'clone', '--depth=1', git_url, '--branch', 'DEV-8945']
+            git_command = ['git', 'clone', '--depth=1', git_url]
         else:
             git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
         subprocess.Popen(git_command, cwd='template').communicate()
