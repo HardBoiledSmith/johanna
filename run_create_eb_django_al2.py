@@ -25,7 +25,7 @@ def run_create_eb_django_al2(name, settings):
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
-    instance_type = settings.get('INSTANCE_TYPE', 't3.nano')
+    instance_type = settings.get('INSTANCE_TYPE', 't3.small')
     key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
     rds_required = settings.get('RDS_REQUIRED', True)
@@ -170,7 +170,8 @@ def run_create_eb_django_al2(name, settings):
 
     if db_address_read_replica:
         lines = read_file('%s/%s/_provisioning/configuration/etc/%s/my_replica.cnf' % (template_path, name, name))
-        lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address_read_replica)
+        # TODO: Revert db_address to db_address_read_replica after resolve DEV-10870
+        lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address)
         lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
         lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
         write_file('%s/%s/_provisioning/configuration/etc/%s/my_replica.cnf' % (template_path, name, name), lines)
