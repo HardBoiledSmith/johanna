@@ -128,6 +128,8 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
             elif dimension == 'TargetGroup':
                 dimension_type = 'tg'
 
+        new_metric = []
+
         template = json.dumps(pm)
         if dimension_type == 'asg':
             for ii in env_asg_list:
