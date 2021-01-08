@@ -250,7 +250,6 @@ def run_create_cw_dashboard_sqs_lambda_sms(name, settings):
         for pp in pm:
             template = json.dumps(pp)
             template = template.replace('PHASE-', '%s-' % phase)
-            print(template)
             pm[current_index] = json.loads(template)
             current_index += 1
 
