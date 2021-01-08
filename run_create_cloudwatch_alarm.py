@@ -158,6 +158,8 @@ def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
     cmd += ['--period', settings['PERIOD']]
     cmd += ['--statistic', settings['STATISTIC']]
     cmd += ['--threshold', settings['THRESHOLD']]
+    if 'INSUFFICIENT_DATA_ACTIONS' in settings:
+        cmd += ['--treat-missing-data', settings['INSUFFICIENT_DATA_ACTIONS']]
     aws_cli.run(cmd)
 
 
