@@ -159,7 +159,9 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
 
         dw['properties']['metrics'] = new_metric
 
+    phase = env['common']['PHASE']
     dashboard_body = json.dumps(dashboard_body)
+    dashboard_body = dashboard_body.replace('PHASE-', '%s-' % phase)
 
     cmd = ['cloudwatch', 'put-dashboard']
     cmd += ['--dashboard-name', dashboard_name]
@@ -248,6 +250,7 @@ def run_create_cw_dashboard_sqs_lambda_sms(name, settings):
         for pp in pm:
             template = json.dumps(pp)
             template = template.replace('PHASE-', '%s-' % phase)
+            print(template)
             pm[current_index] = json.loads(template)
             current_index += 1
 
@@ -314,7 +317,7 @@ def run_create_cw_dashboard_alarm(name, settings):
 ################################################################################
 print_session('create cloudwatch dashboard')
 
-reset_template_dir()
+# reset_template_dir()
 
 cw = env.get('cloudwatch', dict())
 target_cw_dashboard_name = None
