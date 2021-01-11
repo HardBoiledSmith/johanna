@@ -73,6 +73,34 @@ def run_create_s3_bucket(name, settings):
         aws_cli.run(cmd)
 
     ################################################################################
+    if 'hbsmith-script' in bucket_name:
+        cmd = ['s3api', 'get-bucket-versioning']
+        cmd += ['--bucket', bucket_name]
+        rr = aws_cli.run(cmd)
+
+        if rr and rr['Status'] == 'Enabled':
+            cc = {
+                "Rules": [
+                    {
+                        "ID": "script_file_manage_rule",
+                        "Status": "Enabled",
+                        "Filter": {
+                        },
+                        "NoncurrentVersionExpiration": {
+                            "NoncurrentDays": expire_days
+                        },
+                        "AbortIncompleteMultipartUpload": {
+                            "DaysAfterInitiation": 7
+                        }
+                    }
+                ]
+            }
+            cmd = ['s3api', 'put-bucket-lifecycle-configuration', '--bucket', bucket_name]
+            cmd += ['--lifecycle-configuration', json.dumps(cc)]
+            aws_cli.run(cmd)
+
+        return
+
     if expire_days > 0:
         print_message('set life cycle rule')
 

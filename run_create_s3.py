@@ -37,8 +37,8 @@ for s3_env in s3_list:
 
     if s3_env['TYPE'] == 'bucket':
         run_create_s3_bucket(s3_env['NAME'], s3_env)
-    elif s3_env['TYPE'] == 'vue-app':
-        run_create_s3_vue(s3_env['NAME'], s3_env)
+    # elif s3_env['TYPE'] == 'vue-app':
+    #     run_create_s3_vue(s3_env['NAME'], s3_env)
     else:
         print('"%s" is not supported' % s3_env['TYPE'])
         raise Exception()
