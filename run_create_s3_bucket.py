@@ -79,6 +79,7 @@ def run_create_s3_bucket(name, settings):
         rr = aws_cli.run(cmd)
 
         if rr and rr['Status'] == 'Enabled':
+            print_message('set script bucket life cycle rule')
             cc = {
                 "Rules": [
                     {
