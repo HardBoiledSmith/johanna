@@ -12,6 +12,7 @@ def run_create_s3_bucket(name, settings):
 
     bucket_name = settings['BUCKET_NAME']
     expire_days = settings.get('EXPIRE_FILES_DAYS', 0)
+    versioning_expire_days = settings.get('EXPIRE_VERSION_DAYS', 0)
     is_web_hosting = settings['WEB_HOSTING']
     region = settings['REGION']
     policy = settings.get('POLICY', '')
@@ -78,7 +79,7 @@ def run_create_s3_bucket(name, settings):
         cmd += ['--bucket', bucket_name]
         rr = aws_cli.run(cmd)
 
-        if rr and rr['Status'] == 'Enabled':
+        if rr and rr['Status'] == 'Enabled' and versioning_expire_days > 0:
             print_message('set script bucket life cycle rule')
             cc = {
                 "Rules": [
@@ -88,7 +89,7 @@ def run_create_s3_bucket(name, settings):
                         "Filter": {
                         },
                         "NoncurrentVersionExpiration": {
-                            "NoncurrentDays": expire_days
+                            "NoncurrentDays": versioning_expire_days
                         },
                         "AbortIncompleteMultipartUpload": {
                             "DaysAfterInitiation": 7
@@ -99,8 +100,6 @@ def run_create_s3_bucket(name, settings):
             cmd = ['s3api', 'put-bucket-lifecycle-configuration', '--bucket', bucket_name]
             cmd += ['--lifecycle-configuration', json.dumps(cc)]
             aws_cli.run(cmd)
-
-        return
 
     if expire_days > 0:
         print_message('set life cycle rule')
