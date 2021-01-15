@@ -57,6 +57,7 @@ def send_email(settings, subject, email_to, text, zip_filename):
     cmd += ['--source', settings['EMAIL_FROM']]
     cmd += ['--destinations', f'{email_to}']
     cmd += ['--raw-message', f'file://{zip_filename}.json']
+    cmd += ['--cli-binary-format', 'raw-in-base64-out']
     rr = aws_cli.run(cmd)
     print(rr)
 
