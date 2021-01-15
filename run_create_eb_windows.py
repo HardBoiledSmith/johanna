@@ -357,7 +357,7 @@ def run_create_eb_windows(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:elasticbeanstalk:healthreporting:system'
     oo['OptionName'] = 'SystemType'
-    oo['Value'] = 'basic'
+    oo['Value'] = 'enhanced'
     option_settings.append(oo)
 
     oo = dict()
