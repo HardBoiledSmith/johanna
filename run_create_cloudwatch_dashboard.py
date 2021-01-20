@@ -159,7 +159,9 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
 
         dw['properties']['metrics'] = new_metric
 
+    phase = env['common']['PHASE']
     dashboard_body = json.dumps(dashboard_body)
+    dashboard_body = dashboard_body.replace('PHASE-', '%s-' % phase)
 
     cmd = ['cloudwatch', 'put-dashboard']
     cmd += ['--dashboard-name', dashboard_name]
