@@ -129,7 +129,7 @@ def run_create_s3_bucket(name, settings):
                     },
                     "Status": "Enabled",
                     "NoncurrentVersionExpiration": {
-                        "NoncurrentDays": expire_days
+                        "NoncurrentDays": 7
                     },
                     "AbortIncompleteMultipartUpload": {
                         "DaysAfterInitiation": 7
