@@ -52,6 +52,11 @@ def create_iam():
     cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier']
     aws_cli.run(cmd)
 
+    cmd = ['iam', 'attach-role-policy']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
+    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore']
+    aws_cli.run(cmd)
+
     cmd = ['iam', 'put-role-policy']
     cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
     cmd += ['--policy-name', 'aws-elasticbeanstalk-ec2-policy']
