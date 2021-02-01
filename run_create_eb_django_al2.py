@@ -65,8 +65,12 @@ def run_create_eb_django_al2(name, settings):
 
     elb_subnet_id_1 = None
     elb_subnet_id_2 = None
+    elb_subnet_id_3 = None
+    elb_subnet_id_4 = None
     ec2_subnet_id_1 = None
     ec2_subnet_id_2 = None
+    ec2_subnet_id_3 = None
+    ec2_subnet_id_4 = None
     cmd = ['ec2', 'describe-subnets']
     result = aws_cli.run(cmd)
     for r in result['Subnets']:
@@ -77,15 +81,27 @@ def run_create_eb_django_al2(name, settings):
                 elb_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
                 elb_subnet_id_2 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['public_3']:
+                elb_subnet_id_1 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['public_4']:
+                elb_subnet_id_2 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
                 ec2_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
+                ec2_subnet_id_2 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_3']:
+                ec2_subnet_id_1 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_4']:
                 ec2_subnet_id_2 = r['SubnetId']
         elif 'private' == subnet_type:
             if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
                 elb_subnet_id_1 = ec2_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
                 elb_subnet_id_2 = ec2_subnet_id_2 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_3']:
+                elb_subnet_id_3 = ec2_subnet_id_3 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_4']:
+                elb_subnet_id_4 = ec2_subnet_id_4 = r['SubnetId']
         else:
             print('ERROR!!! Unknown subnet type:', subnet_type)
             raise Exception()
@@ -316,13 +332,13 @@ def run_create_eb_django_al2(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'ELBSubnets'
-    oo['Value'] = ','.join([elb_subnet_id_1, elb_subnet_id_2])
+    oo['Value'] = ','.join([elb_subnet_id_1, elb_subnet_id_2, elb_subnet_id_3, elb_subnet_id_4])
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'Subnets'
-    oo['Value'] = ','.join([ec2_subnet_id_1, ec2_subnet_id_2])
+    oo['Value'] = ','.join([ec2_subnet_id_1, ec2_subnet_id_2, ec2_subnet_id_3, ec2_subnet_id_4])
     option_settings.append(oo)
 
     oo = dict()
