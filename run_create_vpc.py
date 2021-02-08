@@ -3,9 +3,9 @@ import sys
 
 from env import env
 from run_common import AWSCli
+from run_common import encode_as_base64
 from run_common import print_message
 from run_common import print_session
-from run_common import encode_as_base64
 
 args = []
 
@@ -18,6 +18,8 @@ if __name__ == "__main__":
 def main(settings):
     aws_availability_zone_1 = settings['AWS_AVAILABILITY_ZONE_1']
     aws_availability_zone_2 = settings['AWS_AVAILABILITY_ZONE_2']
+    aws_availability_zone_3 = settings['AWS_AVAILABILITY_ZONE_3']
+    aws_availability_zone_4 = settings['AWS_AVAILABILITY_ZONE_4']
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
     rds_subnet_name = env['rds']['DB_SUBNET_NAME']
     service_name = env['common'].get('SERVICE_NAME', '')
@@ -107,13 +109,30 @@ def main(settings):
     rds_subnet_id['private_2'] = result['Subnet']['SubnetId']
     aws_cli.set_name_tag(rds_subnet_id['private_2'], '%srds_private_2' % name_prefix)
 
+    cmd = ['ec2', 'create-subnet']
+    cmd += ['--vpc-id', rds_vpc_id]
+    cmd += ['--cidr-block', cidr_subnet['rds']['private_3']]
+    cmd += ['--availability-zone', aws_availability_zone_3]
+    result = aws_cli.run(cmd)
+    rds_subnet_id['private_3'] = result['Subnet']['SubnetId']
+    aws_cli.set_name_tag(rds_subnet_id['private_3'], '%srds_private_3' % name_prefix)
+
+    cmd = ['ec2', 'create-subnet']
+    cmd += ['--vpc-id', rds_vpc_id]
+    cmd += ['--cidr-block', cidr_subnet['rds']['private_4']]
+    cmd += ['--availability-zone', aws_availability_zone_4]
+    result = aws_cli.run(cmd)
+    rds_subnet_id['private_4'] = result['Subnet']['SubnetId']
+    aws_cli.set_name_tag(rds_subnet_id['private_4'], '%srds_private_4' % name_prefix)
+
     ################################################################################
     print_message('create db subnet group')
 
     cmd = ['rds', 'create-db-subnet-group']
     cmd += ['--db-subnet-group-name', rds_subnet_name]
     cmd += ['--db-subnet-group-description', rds_subnet_name]
-    cmd += ['--subnet-ids', rds_subnet_id['private_1'], rds_subnet_id['private_2']]
+    cmd += ['--subnet-ids', rds_subnet_id['private_1'], rds_subnet_id['private_2'], rds_subnet_id['private_3'],
+            rds_subnet_id['private_4']]
     aws_cli.run(cmd)
 
     ################################################################################
@@ -140,6 +159,15 @@ def main(settings):
     cmd += ['--route-table-id', rds_route_table_id['private']]
     aws_cli.run(cmd)
 
+    cmd = ['ec2', 'associate-route-table']
+    cmd += ['--subnet-id', rds_subnet_id['private_3']]
+    cmd += ['--route-table-id', rds_route_table_id['private']]
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'associate-route-table']
+    cmd += ['--subnet-id', rds_subnet_id['private_4']]
+    cmd += ['--route-table-id', rds_route_table_id['private']]
+    aws_cli.run(cmd)
     ################################################################################
     print_message('create security group')
 
@@ -207,6 +235,22 @@ def main(settings):
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', eb_vpc_id]
+    cmd += ['--cidr-block', cidr_subnet['eb']['private_3']]
+    cmd += ['--availability-zone', aws_availability_zone_3]
+    result = aws_cli.run(cmd)
+    eb_subnet_id['private_3'] = result['Subnet']['SubnetId']
+    aws_cli.set_name_tag(eb_subnet_id['private_3'], '%seb_private_3' % name_prefix)
+
+    cmd = ['ec2', 'create-subnet']
+    cmd += ['--vpc-id', eb_vpc_id]
+    cmd += ['--cidr-block', cidr_subnet['eb']['private_4']]
+    cmd += ['--availability-zone', aws_availability_zone_4]
+    result = aws_cli.run(cmd)
+    eb_subnet_id['private_4'] = result['Subnet']['SubnetId']
+    aws_cli.set_name_tag(eb_subnet_id['private_4'], '%seb_private_4' % name_prefix)
+
+    cmd = ['ec2', 'create-subnet']
+    cmd += ['--vpc-id', eb_vpc_id]
     cmd += ['--cidr-block', cidr_subnet['eb']['public_1']]
     cmd += ['--availability-zone', aws_availability_zone_1]
     result = aws_cli.run(cmd)
@@ -220,6 +264,22 @@ def main(settings):
     result = aws_cli.run(cmd)
     eb_subnet_id['public_2'] = result['Subnet']['SubnetId']
     aws_cli.set_name_tag(eb_subnet_id['public_2'], '%seb_public_2' % name_prefix)
+
+    cmd = ['ec2', 'create-subnet']
+    cmd += ['--vpc-id', eb_vpc_id]
+    cmd += ['--cidr-block', cidr_subnet['eb']['public_3']]
+    cmd += ['--availability-zone', aws_availability_zone_3]
+    result = aws_cli.run(cmd)
+    eb_subnet_id['public_3'] = result['Subnet']['SubnetId']
+    aws_cli.set_name_tag(eb_subnet_id['public_3'], '%seb_public_3' % name_prefix)
+
+    cmd = ['ec2', 'create-subnet']
+    cmd += ['--vpc-id', eb_vpc_id]
+    cmd += ['--cidr-block', cidr_subnet['eb']['public_4']]
+    cmd += ['--availability-zone', aws_availability_zone_4]
+    result = aws_cli.run(cmd)
+    eb_subnet_id['public_4'] = result['Subnet']['SubnetId']
+    aws_cli.set_name_tag(eb_subnet_id['public_4'], '%seb_public_4' % name_prefix)
 
     ################################################################################
     print_message('create internet gateway')
@@ -292,6 +352,16 @@ def main(settings):
     aws_cli.run(cmd)
 
     cmd = ['ec2', 'associate-route-table']
+    cmd += ['--subnet-id', eb_subnet_id['private_3']]
+    cmd += ['--route-table-id', eb_route_table_id['private']]
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'associate-route-table']
+    cmd += ['--subnet-id', eb_subnet_id['private_4']]
+    cmd += ['--route-table-id', eb_route_table_id['private']]
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'associate-route-table']
     cmd += ['--subnet-id', eb_subnet_id['public_1']]
     cmd += ['--route-table-id', eb_route_table_id['public']]
     aws_cli.run(cmd)
@@ -301,6 +371,15 @@ def main(settings):
     cmd += ['--route-table-id', eb_route_table_id['public']]
     aws_cli.run(cmd)
 
+    cmd = ['ec2', 'associate-route-table']
+    cmd += ['--subnet-id', eb_subnet_id['public_3']]
+    cmd += ['--route-table-id', eb_route_table_id['public']]
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'associate-route-table']
+    cmd += ['--subnet-id', eb_subnet_id['public_4']]
+    cmd += ['--route-table-id', eb_route_table_id['public']]
+    aws_cli.run(cmd)
     ################################################################################
     print_message('create route')
 
@@ -433,6 +512,18 @@ def main(settings):
 
     cmd = ['ec2', 'create-route']
     cmd += ['--route-table-id', rds_route_table_id['private']]
+    cmd += ['--destination-cidr-block', cidr_subnet['eb']['private_3']]
+    cmd += ['--vpc-peering-connection-id', peering_connection_id]
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'create-route']
+    cmd += ['--route-table-id', rds_route_table_id['private']]
+    cmd += ['--destination-cidr-block', cidr_subnet['eb']['private_4']]
+    cmd += ['--vpc-peering-connection-id', peering_connection_id]
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'create-route']
+    cmd += ['--route-table-id', rds_route_table_id['private']]
     cmd += ['--destination-cidr-block', cidr_subnet['eb']['public_1']]
     cmd += ['--vpc-peering-connection-id', peering_connection_id]
     aws_cli.run(cmd)
@@ -443,6 +534,17 @@ def main(settings):
     cmd += ['--vpc-peering-connection-id', peering_connection_id]
     aws_cli.run(cmd)
 
+    cmd = ['ec2', 'create-route']
+    cmd += ['--route-table-id', rds_route_table_id['private']]
+    cmd += ['--destination-cidr-block', cidr_subnet['eb']['public_3']]
+    cmd += ['--vpc-peering-connection-id', peering_connection_id]
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'create-route']
+    cmd += ['--route-table-id', rds_route_table_id['private']]
+    cmd += ['--destination-cidr-block', cidr_subnet['eb']['public_4']]
+    cmd += ['--vpc-peering-connection-id', peering_connection_id]
+    aws_cli.run(cmd)
     ################################################################################
     print_message('create route: eb -> rds')
 
@@ -459,6 +561,18 @@ def main(settings):
     aws_cli.run(cmd)
 
     cmd = ['ec2', 'create-route']
+    cmd += ['--route-table-id', eb_route_table_id['private']]
+    cmd += ['--destination-cidr-block', cidr_subnet['rds']['private_3']]
+    cmd += ['--vpc-peering-connection-id', peering_connection_id]
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'create-route']
+    cmd += ['--route-table-id', eb_route_table_id['private']]
+    cmd += ['--destination-cidr-block', cidr_subnet['rds']['private_4']]
+    cmd += ['--vpc-peering-connection-id', peering_connection_id]
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'create-route']
     cmd += ['--route-table-id', eb_route_table_id['public']]
     cmd += ['--destination-cidr-block', cidr_subnet['rds']['private_1']]
     cmd += ['--vpc-peering-connection-id', peering_connection_id]
@@ -470,6 +584,17 @@ def main(settings):
     cmd += ['--vpc-peering-connection-id', peering_connection_id]
     aws_cli.run(cmd)
 
+    cmd = ['ec2', 'create-route']
+    cmd += ['--route-table-id', eb_route_table_id['public']]
+    cmd += ['--destination-cidr-block', cidr_subnet['rds']['private_3']]
+    cmd += ['--vpc-peering-connection-id', peering_connection_id]
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'create-route']
+    cmd += ['--route-table-id', eb_route_table_id['public']]
+    cmd += ['--destination-cidr-block', cidr_subnet['rds']['private_4']]
+    cmd += ['--vpc-peering-connection-id', peering_connection_id]
+    aws_cli.run(cmd)
     ################################################################################
     #
     # Network Interface
