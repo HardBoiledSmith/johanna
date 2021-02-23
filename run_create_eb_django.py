@@ -25,7 +25,7 @@ def run_create_eb_django(name, settings):
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
-    instance_type = settings.get('INSTANCE_TYPE', 't3.nano')
+    instance_type = settings.get('INSTANCE_TYPE', 't3.small')
     key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
     rds_required = settings.get('RDS_REQUIRED', True)
