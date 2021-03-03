@@ -36,21 +36,6 @@ def main(settings):
         print_session('finish python code')
         sys.exit(0)
 
-    ################################################################################
-    #
-    # EB Application
-    #
-    ################################################################################
-    print_session('create eb application')
-
-    ################################################################################
-    print_message('import key pair')
-
-    cmd = ['ec2', 'import-key-pair']
-    cmd += ['--key-name', env['common']['AWS_KEY_PAIR_NAME']]
-    msg = encode_as_base64(env['common']['AWS_KEY_PAIR_MATERIAL'])
-    cmd += ['--public-key-material', msg]
-    aws_cli.run(cmd)
 
     ################################################################################
     print_message('create application')

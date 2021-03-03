@@ -5,17 +5,6 @@ from run_common import AWSCli
 aws_cli = AWSCli()
 
 
-def describe_key_pairs():
-    cmd = ['ec2', 'describe-key-pairs']
-    result = aws_cli.run(cmd)
-
-    for key_pair in result['KeyPairs']:
-        if key_pair['KeyName'] == env['common']['AWS_KEY_PAIR_NAME']:
-            return True
-
-    return False
-
-
 def describe_list_roles():
     cmd = ['iam', 'list-roles']
     result = aws_cli.run(cmd)
@@ -76,11 +65,6 @@ if __name__ == "__main__":
     parse_args()
 
 results = list()
-
-if not describe_key_pairs():
-    results.append('EC2 Key Pairs -------------- X')
-else:
-    results.append('EC2 Key Pairs -------------- O')
 
 if not describe_list_roles():
     results.append('IAM Roles -------------- X')
