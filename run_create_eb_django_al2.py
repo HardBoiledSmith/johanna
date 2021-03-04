@@ -170,8 +170,7 @@ def run_create_eb_django_al2(name, settings):
 
     if db_address_read_replica:
         lines = read_file('%s/%s/_provisioning/configuration/etc/%s/my_replica.cnf' % (template_path, name, name))
-        # TODO: Revert db_address to db_address_read_replica after resolve DEV-10870
-        lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address)
+        lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address_read_replica)
         lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
         lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
         write_file('%s/%s/_provisioning/configuration/etc/%s/my_replica.cnf' % (template_path, name, name), lines)
