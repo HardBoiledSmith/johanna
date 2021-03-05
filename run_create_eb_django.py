@@ -25,7 +25,7 @@ def run_create_eb_django(name, settings):
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
-    instance_type = settings.get('INSTANCE_TYPE', 't3.nano')
+    instance_type = settings.get('INSTANCE_TYPE', 't3.small')
     key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
     rds_required = settings.get('RDS_REQUIRED', True)
@@ -424,7 +424,7 @@ def run_create_eb_django(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.9.18 running Python 3.6']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2018.03 v2.9.19 running Python 3.6']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)

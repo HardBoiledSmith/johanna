@@ -186,8 +186,7 @@ def run_create_eb_django_al2(name, settings):
 
     if db_address_read_replica:
         lines = read_file('%s/%s/_provisioning/configuration/etc/%s/my_replica.cnf' % (template_path, name, name))
-        # TODO: Revert db_address to db_address_read_replica after resolve DEV-10870
-        lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address)
+        lines = re_sub_lines(lines, '^(host).*', '\\1 = %s' % db_address_read_replica)
         lines = re_sub_lines(lines, '^(user).*', '\\1 = %s' % env['rds']['USER_NAME'])
         lines = re_sub_lines(lines, '^(password).*', '\\1 = %s' % env['rds']['USER_PASSWORD'])
         write_file('%s/%s/_provisioning/configuration/etc/%s/my_replica.cnf' % (template_path, name, name), lines)
@@ -427,7 +426,7 @@ def run_create_eb_django_al2(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2 v3.1.5 running Python 3.7']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2 v3.2.0 running Python 3.8']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)

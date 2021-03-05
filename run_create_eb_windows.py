@@ -45,6 +45,7 @@ def run_create_eb_windows(name, settings):
 
     eb_environment_name = f'{name}-{str_timestamp}'
     eb_environment_name_old = None
+    eb_environment_id_old = None
 
     template_path = f'template/{name}'
 
@@ -223,6 +224,7 @@ def run_create_eb_windows(name, settings):
                 raise Exception()
 
             eb_environment_name_old = r['EnvironmentName']
+            eb_environment_id_old = r['EnvironmentId']
             cname += f'-{str_timestamp}'
             break
 
@@ -404,7 +406,7 @@ def run_create_eb_windows(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.6.0 running IIS 10.0']
+    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.6.3 running IIS 10.0']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
@@ -417,6 +419,7 @@ def run_create_eb_windows(name, settings):
         result = aws_cli.run(cmd)
 
         ee = result['Environments'][0]
+        eb_environment_id = result['Environments'][0]['EnvironmentId']
         print(json.dumps(ee, sort_keys=True, indent=4))
         if ee.get('Health', '') == 'Green' and ee.get('Status', '') == 'Ready':
             break
@@ -452,4 +455,38 @@ def run_create_eb_windows(name, settings):
         cmd = ['elasticbeanstalk', 'swap-environment-cnames']
         cmd += ['--source-environment-name', eb_environment_name_old]
         cmd += ['--destination-environment-name', eb_environment_name]
+        aws_cli.run(cmd)
+
+        print_message('describe elastic beanstalk environment resources')
+
+        cmd = ['elasticbeanstalk', 'describe-environment-resources']
+        cmd += ['--environment-name', eb_environment_name_old]
+        cmd += ['--environment-id', eb_environment_id_old]
+        rr = aws_cli.run(cmd)
+        eb_old_autoscaling_group_name = rr['EnvironmentResources']['AutoScalingGroups'][0]['Name']
+
+        cmd = ['elasticbeanstalk', 'describe-environment-resources']
+        cmd += ['--environment-name', eb_environment_name]
+        cmd += ['--environment-id', eb_environment_id]
+        rr = aws_cli.run(cmd)
+        eb_new_autoscaling_group_name = rr['EnvironmentResources']['AutoScalingGroups'][0]['Name']
+
+        print_message('describe auto scaling-groups for get eb old desired capacity')
+
+        cmd = ['autoscaling', 'describe-auto-scaling-groups']
+        cmd += ['--auto-scaling-group-names', eb_old_autoscaling_group_name]
+        rr = aws_cli.run(cmd)
+
+        eb_old_autoscaling_group_desired_capacity = str(rr['AutoScalingGroups'][0]['DesiredCapacity'])
+
+        print_message('update desired capacity of eb new and old auto scaling-groups')
+
+        cmd = ['autoscaling', 'update-auto-scaling-group']
+        cmd += ['--auto-scaling-group-name', eb_new_autoscaling_group_name]
+        cmd += ['--desired-capacity', eb_old_autoscaling_group_desired_capacity]
+        aws_cli.run(cmd)
+
+        cmd = ['autoscaling', 'update-auto-scaling-group']
+        cmd += ['--auto-scaling-group-name', eb_old_autoscaling_group_name]
+        cmd += ['--desired-capacity', aws_asg_min_value]
         aws_cli.run(cmd)
