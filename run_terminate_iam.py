@@ -62,7 +62,7 @@ def terminate_iam():
     cmd = ['iam', 'detach-role-policy']
     cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
     cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore']
-    aws_cli.run(cmd)
+    aws_cli.run(cmd, ignore_error=True)
 
     cmd = ['iam', 'remove-role-from-instance-profile']
     cmd += ['--instance-profile-name', 'aws-elasticbeanstalk-ec2-role']
