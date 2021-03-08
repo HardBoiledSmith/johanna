@@ -490,3 +490,23 @@ def run_create_eb_windows(name, settings):
         cmd += ['--auto-scaling-group-name', eb_old_autoscaling_group_name]
         cmd += ['--desired-capacity', aws_asg_min_value]
         aws_cli.run(cmd)
+
+        print_message('describe cloudwatch alrams')
+
+        ll = list()
+        cmd = ['cloudwatch', 'describe-alarms']
+        rr = aws_cli.run(cmd)
+
+        for alarm in rr['MetricAlarms']:
+            if eb_environment_id_old in alarm['AlarmName']:
+                ll.append(alarm['AlarmName'])
+
+        if not ll:
+            return
+
+        print_message('delete eb old environment cloudwatch alarms')
+
+        for alarm in ll:
+            cmd = ['cloudwatch', 'delete-alarms']
+            cmd += ['--alarm-names', alarm]
+            aws_cli.run(cmd)
