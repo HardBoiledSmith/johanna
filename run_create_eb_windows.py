@@ -479,12 +479,24 @@ def run_create_eb_windows(name, settings):
 
         eb_old_autoscaling_group_desired_capacity = str(rr['AutoScalingGroups'][0]['DesiredCapacity'])
 
-        print_message('update desired capacity of eb new and old auto scaling-groups')
+        print_message('update desired capacity of eb new auto scaling-groups')
 
         cmd = ['autoscaling', 'update-auto-scaling-group']
         cmd += ['--auto-scaling-group-name', eb_new_autoscaling_group_name]
         cmd += ['--desired-capacity', eb_old_autoscaling_group_desired_capacity]
         aws_cli.run(cmd)
+
+        elapsed_time = 0
+        while True:
+            print(f'20 minutes while waiting for new gendo generation... (elapsed time: {elapsed_time} seconds)')
+
+            if elapsed_time > 60 * 20:
+                break
+
+            time.sleep(30)
+            elapsed_time += 30
+
+        print_message('update desired capacity of eb old auto scaling-groups')
 
         cmd = ['autoscaling', 'update-auto-scaling-group']
         cmd += ['--auto-scaling-group-name', eb_old_autoscaling_group_name]
@@ -501,12 +513,10 @@ def run_create_eb_windows(name, settings):
             if eb_environment_id_old in alarm['AlarmName']:
                 ll.append(alarm['AlarmName'])
 
-        if not ll:
-            return
+        if ll:
+            print_message('delete eb old environment cloudwatch alarms')
 
-        print_message('delete eb old environment cloudwatch alarms')
-
-        for alarm in ll:
-            cmd = ['cloudwatch', 'delete-alarms']
-            cmd += ['--alarm-names', alarm]
-            aws_cli.run(cmd)
+            for alarm in ll:
+                cmd = ['cloudwatch', 'delete-alarms']
+                cmd += ['--alarm-names', alarm]
+                aws_cli.run(cmd)
