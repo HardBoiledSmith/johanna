@@ -30,7 +30,6 @@ def run_create_eb_windows(name, settings):
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
-    key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
     subnet_type = settings['SUBNET_TYPE']
     service_name = env['common'].get('SERVICE_NAME', '')
@@ -300,12 +299,6 @@ def run_create_eb_windows(name, settings):
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
-    oo['OptionName'] = 'EC2KeyName'
-    oo['Value'] = key_pair_name
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'InstanceType'
     oo['Value'] = 't3.medium'
     option_settings.append(oo)
@@ -432,21 +425,6 @@ def run_create_eb_windows(name, settings):
             raise Exception()
 
     subprocess.Popen(['rm', '-rf', f'./{name}'], cwd=template_path).communicate()
-
-    ################################################################################
-    print_message('revoke security group ingress')
-
-    cmd = ['ec2', 'describe-security-groups']
-    cmd += ['--filters', 'Name=tag-key,Values=Name', f'Name=tag-value,Values={eb_environment_name}']
-    result = aws_cli.run(cmd)
-
-    for ss in result['SecurityGroups']:
-        cmd = ['ec2', 'revoke-security-group-ingress']
-        cmd += ['--group-id', ss['GroupId']]
-        cmd += ['--protocol', 'tcp']
-        cmd += ['--port', '22']
-        cmd += ['--cidr', '0.0.0.0/0']
-        aws_cli.run(cmd, ignore_error=True)
 
     ################################################################################
     print_message('swap CNAME if the previous version exists')

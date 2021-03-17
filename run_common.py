@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import base64
 import json
 import os
 import re
@@ -574,9 +573,3 @@ def reset_template_dir():
 
     if not os.path.exists('template/' + name):
         raise Exception()
-
-
-def encode_as_base64(message):
-    message_bytes = message.encode('utf-8')
-    base64_bytes = base64.b64encode(message_bytes)
-    return base64_bytes.decode('utf-8')

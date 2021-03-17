@@ -3,11 +3,8 @@ import argparse
 import json
 import sys
 
-from run_create_ec2_keypair import run_create_ec2_keypair
-
 parser = argparse.ArgumentParser(description='Johanna configuration script')
 parser.add_argument('--email', help='Your Admin Email')
-parser.add_argument('--keypairname', help='AWS EC2 Key Pair Name')
 parser.add_argument('--accesskey', help='AWS Access Key ID')
 parser.add_argument('--secretkey', help='AWS Secret Access Key')
 parser.add_argument('--region', help='Choose AWS Region')
@@ -25,7 +22,6 @@ if __name__ == '__main__':
         args.az1,
         args.az2,
         args.email,
-        args.keypairname,
         args.pw,
         args.region,
         args.secretkey,
@@ -64,13 +60,6 @@ if __name__ == '__main__':
         print('Invalid AWS_AVAILABILITY_ZONE_2')
         sys.exit(0)
     config['aws']['AWS_AVAILABILITY_ZONE_2'] = args.az2
-
-    # AWS KEY PAIR NAME
-    config['common']['AWS_KEY_PAIR_NAME'] = args.keypairname
-
-    # AWS KEY PAIR MATERIAL
-    pub_key = run_create_ec2_keypair(args.keypairname)
-    config['common']['AWS_KEY_PAIR_MATERIAL'] = pub_key
 
     # AWS TEMPLATE
     if args.template and args.template != config['template']['GIT_URL']:

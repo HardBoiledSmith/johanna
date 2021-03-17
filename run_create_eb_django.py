@@ -26,7 +26,6 @@ def run_create_eb_django(name, settings):
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
     instance_type = settings.get('INSTANCE_TYPE', 't3.small')
-    key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
     rds_required = settings.get('RDS_REQUIRED', True)
     ssl_certificate_id = aws_cli.get_acm_certificate_id('hbsmith.io')
@@ -290,12 +289,6 @@ def run_create_eb_django(name, settings):
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
-    oo['OptionName'] = 'EC2KeyName'
-    oo['Value'] = key_pair_name
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'InstanceType'
     oo['Value'] = instance_type
     option_settings.append(oo)
@@ -449,21 +442,6 @@ def run_create_eb_django(name, settings):
             raise Exception()
 
     subprocess.Popen(['rm', '-rf', './%s' % name], cwd=template_path).communicate()
-
-    ################################################################################
-    print_message('revoke security group ingress')
-
-    cmd = ['ec2', 'describe-security-groups']
-    cmd += ['--filters', 'Name=tag-key,Values=Name', f'Name=tag-value,Values={eb_environment_name}']
-    result = aws_cli.run(cmd)
-
-    for ss in result['SecurityGroups']:
-        cmd = ['ec2', 'revoke-security-group-ingress']
-        cmd += ['--group-id', ss['GroupId']]
-        cmd += ['--protocol', 'tcp']
-        cmd += ['--port', '22']
-        cmd += ['--cidr', '0.0.0.0/0']
-        aws_cli.run(cmd, ignore_error=True)
 
     ################################################################################
     print_message('swap CNAME if the previous version exists')
