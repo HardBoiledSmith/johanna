@@ -30,7 +30,6 @@ def run_create_eb_windows(name, settings):
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
-    key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
     subnet_type = settings['SUBNET_TYPE']
     service_name = env['common'].get('SERVICE_NAME', '')
@@ -297,12 +296,6 @@ def run_create_eb_windows(name, settings):
     print_message(f'create environment {name}')
 
     option_settings = list()
-
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
-    oo['OptionName'] = 'EC2KeyName'
-    oo['Value'] = key_pair_name
-    option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'

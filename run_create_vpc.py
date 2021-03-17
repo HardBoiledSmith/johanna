@@ -3,7 +3,6 @@ import sys
 
 from env import env
 from run_common import AWSCli
-from run_common import encode_as_base64
 from run_common import print_message
 from run_common import print_session
 
@@ -44,15 +43,6 @@ def main(settings):
     #
     ################################################################################
     print_session('create eb application')
-
-    ################################################################################
-    print_message('import key pair')
-
-    cmd = ['ec2', 'import-key-pair']
-    cmd += ['--key-name', env['common']['AWS_KEY_PAIR_NAME']]
-    msg = encode_as_base64(env['common']['AWS_KEY_PAIR_MATERIAL'])
-    cmd += ['--public-key-material', msg]
-    aws_cli.run(cmd)
 
     ################################################################################
     print_message('create application')

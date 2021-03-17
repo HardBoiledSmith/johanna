@@ -26,7 +26,6 @@ def run_create_eb_django(name, settings):
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
     instance_type = settings.get('INSTANCE_TYPE', 't3.small')
-    key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
     rds_required = settings.get('RDS_REQUIRED', True)
     ssl_certificate_id = aws_cli.get_acm_certificate_id('hbsmith.io')
@@ -287,12 +286,6 @@ def run_create_eb_django(name, settings):
     print_message('create environment %s' % name)
 
     option_settings = list()
-
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
-    oo['OptionName'] = 'EC2KeyName'
-    oo['Value'] = key_pair_name
-    option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'

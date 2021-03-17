@@ -286,13 +286,6 @@ def main(settings):
     cmd += ['--application-name', env['elasticbeanstalk']['APPLICATION_NAME']]
     aws_cli.run(cmd, ignore_error=True)
 
-    ################################################################################
-    print_message('delete key pair')
-
-    cmd = ['ec2', 'delete-key-pair']
-    cmd += ['--key-name', env['common']['AWS_KEY_PAIR_NAME']]
-    aws_cli.run(cmd, ignore_error=True)
-
 
 ################################################################################
 #
