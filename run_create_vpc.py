@@ -434,13 +434,6 @@ def main(settings):
     cmd = ['ec2', 'authorize-security-group-ingress']
     cmd += ['--group-id', eb_security_group_id['public']]
     cmd += ['--protocol', 'tcp']
-    cmd += ['--port', '22']
-    cmd += ['--cidr', cidr_vpc['eb']]
-    aws_cli.run(cmd)
-
-    cmd = ['ec2', 'authorize-security-group-ingress']
-    cmd += ['--group-id', eb_security_group_id['public']]
-    cmd += ['--protocol', 'tcp']
     cmd += ['--port', '80']
     cmd += ['--cidr', '0.0.0.0/0']
     aws_cli.run(cmd)

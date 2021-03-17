@@ -427,21 +427,6 @@ def run_create_eb_windows(name, settings):
     subprocess.Popen(['rm', '-rf', f'./{name}'], cwd=template_path).communicate()
 
     ################################################################################
-    print_message('revoke security group ingress')
-
-    cmd = ['ec2', 'describe-security-groups']
-    cmd += ['--filters', 'Name=tag-key,Values=Name', f'Name=tag-value,Values={eb_environment_name}']
-    result = aws_cli.run(cmd)
-
-    for ss in result['SecurityGroups']:
-        cmd = ['ec2', 'revoke-security-group-ingress']
-        cmd += ['--group-id', ss['GroupId']]
-        cmd += ['--protocol', 'tcp']
-        cmd += ['--port', '22']
-        cmd += ['--cidr', '0.0.0.0/0']
-        aws_cli.run(cmd, ignore_error=True)
-
-    ################################################################################
     print_message('swap CNAME if the previous version exists')
 
     if eb_environment_name_old:
