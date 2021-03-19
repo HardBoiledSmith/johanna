@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import base64
 import json
 import os
 import re
@@ -50,11 +49,17 @@ class AWSCli:
     cidr_subnet['rds'] = dict()
     cidr_subnet['rds']['private_1'] = env['common']['AWS_SUBNET_RDS_PRIVATE_1']
     cidr_subnet['rds']['private_2'] = env['common']['AWS_SUBNET_RDS_PRIVATE_2']
+    cidr_subnet['rds']['private_3'] = env['common']['AWS_SUBNET_RDS_PRIVATE_3']
+    cidr_subnet['rds']['private_4'] = env['common']['AWS_SUBNET_RDS_PRIVATE_4']
     cidr_subnet['eb'] = dict()
     cidr_subnet['eb']['private_1'] = env['common']['AWS_SUBNET_EB_PRIVATE_1']
     cidr_subnet['eb']['private_2'] = env['common']['AWS_SUBNET_EB_PRIVATE_2']
+    cidr_subnet['eb']['private_3'] = env['common']['AWS_SUBNET_EB_PRIVATE_3']
+    cidr_subnet['eb']['private_4'] = env['common']['AWS_SUBNET_EB_PRIVATE_4']
     cidr_subnet['eb']['public_1'] = env['common']['AWS_SUBNET_EB_PUBLIC_1']
     cidr_subnet['eb']['public_2'] = env['common']['AWS_SUBNET_EB_PUBLIC_2']
+    cidr_subnet['eb']['public_3'] = env['common']['AWS_SUBNET_EB_PUBLIC_3']
+    cidr_subnet['eb']['public_4'] = env['common']['AWS_SUBNET_EB_PUBLIC_4']
 
     def __init__(self, aws_default_region=None, aws_access_key=None, aws_secret_access_key=None):
         if not env['aws'].get('AWS_ACCESS_KEY_ID') or \
@@ -568,9 +573,3 @@ def reset_template_dir():
 
     if not os.path.exists('template/' + name):
         raise Exception()
-
-
-def encode_as_base64(message):
-    message_bytes = message.encode('utf-8')
-    base64_bytes = base64.b64encode(message_bytes)
-    return base64_bytes.decode('utf-8')

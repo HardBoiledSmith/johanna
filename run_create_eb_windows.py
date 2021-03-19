@@ -30,7 +30,6 @@ def run_create_eb_windows(name, settings):
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
-    key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
     subnet_type = settings['SUBNET_TYPE']
     service_name = env['common'].get('SERVICE_NAME', '')
@@ -69,8 +68,12 @@ def run_create_eb_windows(name, settings):
 
     elb_subnet_id_1 = None
     elb_subnet_id_2 = None
+    elb_subnet_id_3 = None
+    elb_subnet_id_4 = None
     ec2_subnet_id_1 = None
     ec2_subnet_id_2 = None
+    ec2_subnet_id_3 = None
+    ec2_subnet_id_4 = None
     cmd = ['ec2', 'describe-subnets']
     result = aws_cli.run(cmd)
     for r in result['Subnets']:
@@ -81,15 +84,27 @@ def run_create_eb_windows(name, settings):
                 elb_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
                 elb_subnet_id_2 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['public_3']:
+                elb_subnet_id_3 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['public_4']:
+                elb_subnet_id_4 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
                 ec2_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
                 ec2_subnet_id_2 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_3']:
+                ec2_subnet_id_3 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_4']:
+                ec2_subnet_id_4 = r['SubnetId']
         elif 'private' == subnet_type:
             if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
                 elb_subnet_id_1 = ec2_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
                 elb_subnet_id_2 = ec2_subnet_id_2 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_3']:
+                elb_subnet_id_3 = ec2_subnet_id_3 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_4']:
+                elb_subnet_id_4 = ec2_subnet_id_4 = r['SubnetId']
         else:
             print('ERROR!!! Unknown subnet type:', subnet_type)
             raise Exception()
@@ -284,12 +299,6 @@ def run_create_eb_windows(name, settings):
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
-    oo['OptionName'] = 'EC2KeyName'
-    oo['Value'] = key_pair_name
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'InstanceType'
     oo['Value'] = 't3.medium'
     option_settings.append(oo)
@@ -323,13 +332,13 @@ def run_create_eb_windows(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'ELBSubnets'
-    oo['Value'] = ','.join([elb_subnet_id_1, elb_subnet_id_2])
+    oo['Value'] = ','.join([elb_subnet_id_1, elb_subnet_id_2, elb_subnet_id_3, elb_subnet_id_4])
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'Subnets'
-    oo['Value'] = ','.join([ec2_subnet_id_1, ec2_subnet_id_2])
+    oo['Value'] = ','.join([ec2_subnet_id_1, ec2_subnet_id_2, ec2_subnet_id_3, ec2_subnet_id_4])
     option_settings.append(oo)
 
     oo = dict()
@@ -418,21 +427,6 @@ def run_create_eb_windows(name, settings):
     subprocess.Popen(['rm', '-rf', f'./{name}'], cwd=template_path).communicate()
 
     ################################################################################
-    print_message('revoke security group ingress')
-
-    cmd = ['ec2', 'describe-security-groups']
-    cmd += ['--filters', 'Name=tag-key,Values=Name', f'Name=tag-value,Values={eb_environment_name}']
-    result = aws_cli.run(cmd)
-
-    for ss in result['SecurityGroups']:
-        cmd = ['ec2', 'revoke-security-group-ingress']
-        cmd += ['--group-id', ss['GroupId']]
-        cmd += ['--protocol', 'tcp']
-        cmd += ['--port', '22']
-        cmd += ['--cidr', '0.0.0.0/0']
-        aws_cli.run(cmd, ignore_error=True)
-
-    ################################################################################
     print_message('swap CNAME if the previous version exists')
 
     if eb_environment_name_old:
@@ -463,14 +457,44 @@ def run_create_eb_windows(name, settings):
 
         eb_old_autoscaling_group_desired_capacity = str(rr['AutoScalingGroups'][0]['DesiredCapacity'])
 
-        print_message('update desired capacity of eb new and old auto scaling-groups')
+        print_message('update desired capacity of eb new auto scaling-groups')
 
         cmd = ['autoscaling', 'update-auto-scaling-group']
         cmd += ['--auto-scaling-group-name', eb_new_autoscaling_group_name]
         cmd += ['--desired-capacity', eb_old_autoscaling_group_desired_capacity]
         aws_cli.run(cmd)
 
+        elapsed_time = 0
+        while True:
+            print(f'20 minutes while waiting for new gendo generation... (elapsed time: {elapsed_time} seconds)')
+
+            if elapsed_time > 60 * 20:
+                break
+
+            time.sleep(30)
+            elapsed_time += 30
+
+        print_message('update desired capacity of eb old auto scaling-groups')
+
         cmd = ['autoscaling', 'update-auto-scaling-group']
         cmd += ['--auto-scaling-group-name', eb_old_autoscaling_group_name]
         cmd += ['--desired-capacity', aws_asg_min_value]
         aws_cli.run(cmd)
+
+        print_message('describe cloudwatch alrams')
+
+        ll = list()
+        cmd = ['cloudwatch', 'describe-alarms']
+        rr = aws_cli.run(cmd)
+
+        for alarm in rr['MetricAlarms']:
+            if eb_environment_id_old in alarm['AlarmName']:
+                ll.append(alarm['AlarmName'])
+
+        if ll:
+            print_message('delete eb old environment cloudwatch alarms')
+
+            for alarm in ll:
+                cmd = ['cloudwatch', 'delete-alarms']
+                cmd += ['--alarm-names', alarm]
+                aws_cli.run(cmd)

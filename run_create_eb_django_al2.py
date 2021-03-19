@@ -26,7 +26,6 @@ def run_create_eb_django_al2(name, settings):
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
     instance_type = settings.get('INSTANCE_TYPE', 't3.small')
-    key_pair_name = env['common']['AWS_KEY_PAIR_NAME']
     phase = env['common']['PHASE']
     rds_required = settings.get('RDS_REQUIRED', True)
     ssl_certificate_id = aws_cli.get_acm_certificate_id('hbsmith.io')
@@ -65,8 +64,12 @@ def run_create_eb_django_al2(name, settings):
 
     elb_subnet_id_1 = None
     elb_subnet_id_2 = None
+    elb_subnet_id_3 = None
+    elb_subnet_id_4 = None
     ec2_subnet_id_1 = None
     ec2_subnet_id_2 = None
+    ec2_subnet_id_3 = None
+    ec2_subnet_id_4 = None
     cmd = ['ec2', 'describe-subnets']
     result = aws_cli.run(cmd)
     for r in result['Subnets']:
@@ -77,15 +80,27 @@ def run_create_eb_django_al2(name, settings):
                 elb_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
                 elb_subnet_id_2 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['public_3']:
+                elb_subnet_id_1 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['public_4']:
+                elb_subnet_id_2 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
                 ec2_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
+                ec2_subnet_id_2 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_3']:
+                ec2_subnet_id_1 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_4']:
                 ec2_subnet_id_2 = r['SubnetId']
         elif 'private' == subnet_type:
             if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
                 elb_subnet_id_1 = ec2_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
                 elb_subnet_id_2 = ec2_subnet_id_2 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_3']:
+                elb_subnet_id_3 = ec2_subnet_id_3 = r['SubnetId']
+            if r['CidrBlock'] == cidr_subnet['eb']['private_4']:
+                elb_subnet_id_4 = ec2_subnet_id_4 = r['SubnetId']
         else:
             print('ERROR!!! Unknown subnet type:', subnet_type)
             raise Exception()
@@ -276,12 +291,6 @@ def run_create_eb_django_al2(name, settings):
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
-    oo['OptionName'] = 'EC2KeyName'
-    oo['Value'] = key_pair_name
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'InstanceType'
     oo['Value'] = instance_type
     option_settings.append(oo)
@@ -315,13 +324,13 @@ def run_create_eb_django_al2(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'ELBSubnets'
-    oo['Value'] = ','.join([elb_subnet_id_1, elb_subnet_id_2])
+    oo['Value'] = ','.join([elb_subnet_id_1, elb_subnet_id_2, elb_subnet_id_3, elb_subnet_id_4])
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'Subnets'
-    oo['Value'] = ','.join([ec2_subnet_id_1, ec2_subnet_id_2])
+    oo['Value'] = ','.join([ec2_subnet_id_1, ec2_subnet_id_2, ec2_subnet_id_3, ec2_subnet_id_4])
     option_settings.append(oo)
 
     oo = dict()
@@ -435,21 +444,6 @@ def run_create_eb_django_al2(name, settings):
             raise Exception()
 
     subprocess.Popen(['rm', '-rf', './%s' % name], cwd=template_path).communicate()
-
-    ################################################################################
-    print_message('revoke security group ingress')
-
-    cmd = ['ec2', 'describe-security-groups']
-    cmd += ['--filters', 'Name=tag-key,Values=Name', f'Name=tag-value,Values={eb_environment_name}']
-    result = aws_cli.run(cmd)
-
-    for ss in result['SecurityGroups']:
-        cmd = ['ec2', 'revoke-security-group-ingress']
-        cmd += ['--group-id', ss['GroupId']]
-        cmd += ['--protocol', 'tcp']
-        cmd += ['--port', '22']
-        cmd += ['--cidr', '0.0.0.0/0']
-        aws_cli.run(cmd, ignore_error=True)
 
     ################################################################################
     print_message('swap CNAME if the previous version exists')
