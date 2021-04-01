@@ -159,7 +159,7 @@ def _preprocess(hostname):
     env['NVM_DIR'] = '/root/.nvm'
     env['NVM_RC_VERSION'] = ''
     env['PATH'] = ('/root/.nvm/versions/node/%s/bin:' % node_version) + env['PATH']
-    _run(['npm', 'install', '-g', 'npm@latest'])
+    _run(['npm', 'install', '-g', 'npm@6.14.11'])
 
     with open('/root/.bashrc', 'a') as f:
         f.write('export NODE_OPTIONS="--max-old-space-size=2048"\n')

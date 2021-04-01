@@ -78,7 +78,7 @@ def create_iam():
 
     cmd = ['iam', 'attach-role-policy']
     cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
-    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkService']
+    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy']
     aws_cli.run(cmd)
 
 

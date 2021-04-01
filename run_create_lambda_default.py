@@ -144,7 +144,9 @@ def run_create_lambda_default(function_name, settings):
            '--timeout', '480']
     aws_cli.run(cmd, cwd=deploy_folder)
 
-    if 'AWS_CONNECT_ARN' in settings:
+    arn = settings.get('AWS_CONNECT_ARN')
+
+    if arn and arn != '...':
         cmd = ['sts', 'get-caller-identity']
         result = aws_cli.run(cmd)
         account_id = result['Account']
