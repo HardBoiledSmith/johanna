@@ -37,6 +37,15 @@ def run_terminate_environment(name):
                 cmd += ['--environment-name', r['EnvironmentName']]
                 aws_cli.run(cmd, ignore_error=True)
 
+                if 'nerv' in r['EnvironmentName']:
+                    cmd = ['cloudwatch', 'delete-alarms']
+                    cmd += ['--alarm-names', f'{r["EnvironmentName"]}_nginx_error_log']
+                    aws_cli.run(cmd, ignore_error=True)
+                if 'sachiel' in r['EnvironmentName']:
+                    cmd = ['cloudwatch', 'delete-alarms']
+                    cmd += ['--alarm-names', f'{r["EnvironmentName"]}_httpd_error_log']
+                    aws_cli.run(cmd, ignore_error=True)
+
         if count == 0:
             break
 

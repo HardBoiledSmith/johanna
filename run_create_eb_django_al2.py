@@ -445,6 +445,37 @@ def run_create_eb_django_al2(name, settings):
 
     subprocess.Popen(['rm', '-rf', './%s' % name], cwd=template_path).communicate()
 
+    if name == 'nerv':
+        topic_arn = aws_cli.get_topic_arn(settings['SNS_TOPIC_NAME'])
+        if topic_arn:
+            print_message('create cloudwatch log filter for nginx error log')
+
+            cmd = ['logs', 'put-metric-filter']
+            cmd += ['--filter-name', f'{eb_environment_name}_nginx_error_log']
+            cmd += ['--log-group-name', f'/aws/elasticbeanstalk/{eb_environment_name}/var/log/nginx/error.log']
+            cmd += ['--filter-pattern', '']
+            cmd += ['--metric-transformations', f'metricName={eb_environment_name},'
+                                                f'metricNamespace={settings["METRIC_NAME_SPACE"]},'
+                                                f'metricValue=1,'
+                                                f'defaultValue=0']
+            aws_cli.run(cmd, cwd=template_path)
+
+            print_message('create cloudwatch alarm for nginx error log filter')
+
+            cmd = ['cloudwatch', 'put-metric-alarm']
+            cmd += ['--alarm-name', f'{eb_environment_name}_nginx_error_log']
+            cmd += ['--alarm-description', f'{eb_environment_name} nginx error log alarm']
+            cmd += ['--evaluation-periods', '1']
+            cmd += ['--metric-name', eb_environment_name]
+            cmd += ['--namespace', settings["METRIC_NAME_SPACE"]]
+            cmd += ['--statistic', 'Sum']
+            cmd += ['--period', '30']
+            cmd += ['--threshold', '1']
+            cmd += ['--comparison-operator', 'GreaterThanOrEqualToThreshold']
+            cmd += ['--alarm-actions', topic_arn]
+            aws_cli.run(cmd, cwd=template_path)
+
+
     ################################################################################
     print_message('swap CNAME if the previous version exists')
 
