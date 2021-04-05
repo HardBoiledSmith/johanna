@@ -475,7 +475,6 @@ def run_create_eb_django_al2(name, settings):
             cmd += ['--alarm-actions', topic_arn]
             aws_cli.run(cmd, cwd=template_path)
 
-
     ################################################################################
     print_message('swap CNAME if the previous version exists')
 

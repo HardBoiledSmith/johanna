@@ -476,7 +476,6 @@ def run_create_eb_django(name, settings):
             cmd += ['--alarm-actions', topic_arn]
             aws_cli.run(cmd, cwd=template_path)
 
-
     if eb_environment_name_old:
         cmd = ['elasticbeanstalk', 'swap-environment-cnames']
         cmd += ['--source-environment-name', eb_environment_name_old]
