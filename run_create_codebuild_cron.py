@@ -1,12 +1,108 @@
 #!/usr/bin/env python3
 import json
+import time
 
 from run_common import AWSCli
 from run_common import print_message
 
 
-def run_create_codebuild_cron(name, settings):
+def have_parameter_store(settings):
+    for pp in settings['ENV_VARIABLES']:
+        if 'PARAMETER_STORE' == pp['type']:
+            return True
+
+    return False
+
+
+def create_iam_for_codebuild(name, settings):
+    aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_cli = AWSCli()
+
+    nn = name.replace('_', '-')
+    role_name = f'aws-codebuild-{nn}-role'
+    if not aws_cli.get_iam_role(role_name):
+        print_message(f'create iam role: {role_name}')
+
+        dd = {
+            'Version': '2012-10-17',
+            'Statement': [
+                {
+                    'Effect': 'Allow',
+                    'Principal': {
+                        'Service': 'codebuild.amazonaws.com'
+                    },
+                    'Action': 'sts:AssumeRole'
+                }
+            ]
+        }
+        cmd = ['iam', 'create-role']
+        cmd += ['--role-name', role_name]
+        cmd += ['--assume-role-policy-document', json.dumps(dd)]
+        aws_cli.run(cmd)
+
+    policy_name = f'aws-codebuild-{nn}-policy'
+    if not aws_cli.get_iam_role_policy(role_name, policy_name):
+        print_message(f'create iam role policy: {policy_name}')
+
+        account_id = aws_cli.get_caller_account_id()
+
+        dd = {
+            'Version': '2012-10-17',
+            'Statement': [
+                {
+                    'Effect': 'Allow',
+                    'Action': [
+                        'logs:CreateLogGroup',
+                        'logs:CreateLogStream',
+                        'logs:PutLogEvents'
+                    ],
+                    'Resource': [
+                        f'arn:aws:logs:{aws_default_region}:{account_id}:log-group:/aws/codebuild/{name}',
+                        f'arn:aws:logs:{aws_default_region}:{account_id}:log-group:/aws/codebuild/{name}:*'
+                    ]
+                }
+            ]
+        }
+
+        if 'ARTIFACTS' in settings \
+                and settings['ARTIFACTS']['type'] == 'S3':
+            pp = {
+                'Effect': 'Allow',
+                'Action': ['s3:PutObject'],
+                'Resource': f"arn:aws:s3:::{settings['ARTIFACTS']['location']}/*"
+            }
+            dd['Statement'].append(pp)
+
+        if have_parameter_store(settings):
+            pp = {
+                'Action': 'ssm:GetParameters',
+                'Effect': 'Allow',
+                'Resource': f'arn:aws:ssm:{aws_default_region}:{account_id}:parameter/CodeBuild/{name}/*'
+            }
+            dd['Statement'].append(pp)
+
+        pp = {
+            'Action': 'codebuild:StartBuild',
+            'Effect': 'Allow',
+            'Resource': f'arn:aws:codebuild:{aws_default_region}:{account_id}:project/CodeBuild/{name}'
+        }
+        dd['Statement'].append(pp)
+
+        cmd = ['iam', 'put-role-policy']
+        cmd += ['--role-name', role_name]
+        cmd += ['--policy-name', policy_name]
+        cmd += ['--policy-document', json.dumps(dd)]
+        aws_cli.run(cmd)
+
+        print_message('wait 120 seconds to let iam role and policy propagated to all regions...')
+        time.sleep(120)
+
+    return role_name
+
+
+def run_create_codebuild_cron(name, settings):
+    aws_default_region = settings['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(aws_default_region)
 
     git_branch = settings['BRANCH']
     build_spec = settings['BUILD_SPEC']
@@ -23,15 +119,16 @@ def run_create_codebuild_cron(name, settings):
     result = aws_cli.run(cmd)
     need_update = name in result['projects']
     ################################################################################
+    role_name = create_iam_for_codebuild(name, settings)
+    role_arn = aws_cli.get_role_arn(role_name)
+
+    ################################################################################
     print_message('set environment variable')
 
     env_list = []
-    is_exist_parameter_store = False
-
     for pp in settings['ENV_VARIABLES']:
         if 'PARAMETER_STORE' == pp['type']:
-            is_exist_parameter_store = True
-            nn = '/CodeBuild/%s/%s' % (name, pp['name'])
+            nn = f"/CodeBuild/{name}/{pp['name']}"
             cmd = ['ssm', 'get-parameter', '--name', nn]
             aws_cli.run(cmd)
 
@@ -39,12 +136,7 @@ def run_create_codebuild_cron(name, settings):
 
         env_list.append(pp)
 
-    role_arn = aws_cli.get_role_arn('aws-codebuild-default-role')
-    if is_exist_parameter_store:
-        role_arn = aws_cli.get_role_arn('aws-codebuild-secure-parameter-role')
-
-    ##########################################################################
-
+    ################################################################################
     config = {
         "name": name,
         "description": description,
@@ -78,7 +170,7 @@ def run_create_codebuild_cron(name, settings):
     config = json.dumps(config)
 
     if need_update:
-        print_message('update project: %s' % name)
+        print_message(f'update project: {name}')
 
         cmd = ['codebuild', 'update-project', '--cli-input-json', config, '--source-version', git_branch]
         aws_cli.run(cmd)
@@ -91,7 +183,7 @@ def run_create_codebuild_cron(name, settings):
         aws_cli.run(cmd)
         return
 
-    print_message('create project: %s' % name)
+    print_message(f'create project: {name}')
 
     cmd = ['codebuild', 'create-project', '--cli-input-json', config, '--source-version', git_branch]
     result = aws_cli.run(cmd)
@@ -108,12 +200,9 @@ def run_create_codebuild_cron(name, settings):
     print_message('link event and codebuild project')
 
     target_input = {
-        "sourceVersion": git_branch,
-        "timeoutInMinutesOverride": 60
+        "sourceVersion": git_branch
     }
     target_input = json.dumps(target_input)
-
-    role_arn = aws_cli.get_role_arn('aws-events-rule-codebuild-role')
 
     target = {
         "Id": "1",
