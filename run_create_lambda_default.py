@@ -147,9 +147,7 @@ def run_create_lambda_default(function_name, settings):
     arn = settings.get('AWS_CONNECT_ARN')
 
     if arn and arn != '...':
-        cmd = ['sts', 'get-caller-identity']
-        result = aws_cli.run(cmd)
-        account_id = result['Account']
+        account_id = aws_cli.get_caller_account_id()
         cmd = ['lambda', 'add-permission',
                '--function-name', function_name,
                '--statement-id', function_name + 'StatementId',

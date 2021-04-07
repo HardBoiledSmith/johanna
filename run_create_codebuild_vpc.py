@@ -115,6 +115,8 @@ def create_iam_for_codebuild_vpc(name, settings, subnet_id_1):
         cmd += ['--policy-name', policy_name]
         cmd += ['--policy-document', json.dumps(dd)]
         aws_cli.run(cmd)
+
+        print_message('wait 120 seconds to let iam role and policy propagated to all regions...')
         time.sleep(120)
 
     return role_name
@@ -243,13 +245,13 @@ def run_create_codebuild_vpc(name, settings):
     config = json.dumps(config)
 
     if need_update:
-        print_message('update project: %s' % name)
+        print_message(f'update project: {name}')
 
         cmd = ['codebuild', 'update-project', '--cli-input-json', config, '--source-version', git_branch]
         aws_cli.run(cmd)
         return
 
-    print_message('create project: %s' % name)
+    print_message(f'create project: {name}')
 
     cmd = ['codebuild', 'create-project', '--cli-input-json', config, '--source-version', git_branch]
     aws_cli.run(cmd)

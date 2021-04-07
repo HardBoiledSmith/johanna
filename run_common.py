@@ -227,6 +227,11 @@ class AWSCli:
         }
         return acc_map[region]
 
+    def get_caller_account_id(self):
+        cmd = ['sts', 'get-caller-identity']
+        result = self.run(cmd)
+        return result['Account']
+
     def get_rds_address(self, read_replica=None):
         cluster_id = env['rds']['DB_CLUSTER_ID']
         cmd = ['rds', 'describe-db-clusters']
