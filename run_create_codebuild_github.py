@@ -15,7 +15,7 @@ def have_parameter_store(settings):
 
 
 def create_iam_for_codebuild(name, settings):
-    aws_default_region = settings.get('AWS_DEFAULT_REGION')
+    aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_cli = AWSCli()
 
     nn = name.replace('_', '-')
@@ -44,6 +44,8 @@ def create_iam_for_codebuild(name, settings):
     if not aws_cli.get_iam_role_policy(role_name, policy_name):
         print_message(f'create iam role policy: {policy_name}')
 
+        account_id = aws_cli.get_caller_account_id()
+
         dd = {
             'Version': '2012-10-17',
             'Statement': [
@@ -54,7 +56,10 @@ def create_iam_for_codebuild(name, settings):
                         'logs:CreateLogStream',
                         'logs:PutLogEvents'
                     ],
-                    'Resource': '*'
+                    'Resource': [
+                        f'arn:aws:logs:{aws_default_region}:{account_id}:log-group:/aws/codebuild/{name}',
+                        f'arn:aws:logs:{aws_default_region}:{account_id}:log-group:/aws/codebuild/{name}:*'
+                    ]
                 }
             ]
         }
@@ -72,7 +77,15 @@ def create_iam_for_codebuild(name, settings):
             pp = {
                 'Action': 'ssm:GetParameters',
                 'Effect': 'Allow',
-                'Resource': f'arn:aws:ssm:{aws_default_region}:*:parameter/CodeBuild/*'
+                'Resource': f'arn:aws:ssm:{aws_default_region}:{account_id}:parameter/CodeBuild/{name}/*'
+            }
+            dd['Statement'].append(pp)
+
+        if settings.get('CRON'):
+            pp = {
+                'Action': 'codebuild:StartBuild',
+                'Effect': 'Allow',
+                'Resource': f'arn:aws:codebuild:{aws_default_region}:{account_id}:project/CodeBuild/{name}'
             }
             dd['Statement'].append(pp)
 
@@ -81,12 +94,14 @@ def create_iam_for_codebuild(name, settings):
         cmd += ['--policy-name', policy_name]
         cmd += ['--policy-document', json.dumps(dd)]
         aws_cli.run(cmd)
+
+        print_message('wait 120 seconds to let iam role and policy propagated to all regions...')
         time.sleep(120)
 
     return role_name
 
 
-def create_cron_event(aws_cli, name, project_arn, schedule_expression, git_branch):
+def create_cron_event(aws_cli, name, project_arn, schedule_expression, git_branch, role_arn):
     print_message('create cron event')
 
     cmd = ['events', 'put-rule']
@@ -97,11 +112,8 @@ def create_cron_event(aws_cli, name, project_arn, schedule_expression, git_branc
 
     print_message('link event and codebuild project')
 
-    role_arn = aws_cli.get_role_arn('aws-events-rule-codebuild-role')
-
     target_input = {
-        "sourceVersion": git_branch,
-        "timeoutInMinutesOverride": 60
+        "sourceVersion": git_branch
     }
     target_input = json.dumps(target_input)
 
@@ -120,7 +132,7 @@ def create_cron_event(aws_cli, name, project_arn, schedule_expression, git_branc
 
 
 def run_create_codebuild_github(name, settings):
-    aws_default_region = settings.get('AWS_DEFAULT_REGION')
+    aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_cli = AWSCli(aws_default_region)
 
     git_branch = settings['BRANCH']
@@ -147,7 +159,6 @@ def run_create_codebuild_github(name, settings):
     print_message('set environment variable')
 
     env_list = []
-
     for pp in settings['ENV_VARIABLES']:
         if 'PARAMETER_STORE' == pp['type']:
             nn = f"/CodeBuild/{name}/{pp['name']}"
@@ -159,7 +170,6 @@ def run_create_codebuild_github(name, settings):
         env_list.append(pp)
 
     ################################################################################
-
     config = {
         'name': name,
         'description': description,
@@ -204,7 +214,7 @@ def run_create_codebuild_github(name, settings):
 
     project_arn = result['project']['arn']
     for cc in settings.get('CRON', list()):
-        create_cron_event(aws_cli, name, project_arn, cc['SCHEDULE_EXPRESSION'], cc['SOURCE_VERSION'])
+        create_cron_event(aws_cli, name, project_arn, cc['SCHEDULE_EXPRESSION'], cc['SOURCE_VERSION'], role_arn)
 
     config = {
         'projectName': name,

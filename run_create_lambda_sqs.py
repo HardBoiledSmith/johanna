@@ -152,7 +152,7 @@ def run_create_lambda_sqs(function_name, settings):
                    '--uuid', mapping['UUID']]
             aws_cli.run(cmd)
 
-        print_message('wait two minutes until deletion is complete')
+        print_message('wait 120 seconds until deletion is complete')
         time.sleep(120)
 
         cmd = ['lambda', 'create-event-source-mapping',
