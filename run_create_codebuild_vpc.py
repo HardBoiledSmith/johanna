@@ -2,128 +2,74 @@
 import json
 import time
 
-from env import env
 from run_common import AWSCli
 from run_common import print_message
+from run_create_codebuild_common import create_base_iam_policy
+from run_create_codebuild_common import create_iam_service_role
+from run_create_codebuild_common import create_managed_secret_iam_policy
+from run_create_codebuild_common import have_parameter_store
 
 
-def get_rds_endpoint(aws, db_cluster_id):
-    cmd = ['rds', 'describe-db-cluster-endpoints']
-    cmd += ['--db-cluster-identifier', db_cluster_id]
-    rr = aws.run(cmd)
-    for dd in rr['DBClusterEndpoints']:
-        if dd['EndpointType'] == 'WRITER':
-            return dd['Endpoint']
+def create_vpc_iam_policy(aws_cli, name, settings, role_name, subnet_id):
+    aws_region = settings['AWS_DEFAULT_REGION']
 
+    account_id = aws_cli.get_caller_account_id()
 
-def have_parameter_store(settings):
-    for pp in settings['ENV_VARIABLES']:
-        if 'PARAMETER_STORE' == pp['type']:
-            return True
-
-    return False
-
-
-def create_iam_for_codebuild_vpc(name, settings, subnet_id_1):
-    region = settings['AWS_VPC_REGION']
-    account_id = settings['CANONICAL_ID']
-    aws_cli = AWSCli(region)
-
-    nn = name.replace('_', '-')
-    role_name = f'aws-codebuild-{nn}-role'
-    if not aws_cli.get_iam_role(role_name):
-        print_message(f'create iam role: {role_name}')
+    policy_name = f'CodeBuildVpcPolicy-{name}-{aws_region}'
+    policy_arn = f'arn:aws:iam::{account_id}:policy/service-role/{policy_name}'
+    if not aws_cli.get_iam_policy(policy_arn):
+        print_message(f'create iam policy: {policy_name}')
 
         dd = {
             'Version': '2012-10-17',
             'Statement': [
                 {
                     'Effect': 'Allow',
-                    'Principal': {
-                        'Service': 'codebuild.amazonaws.com'
-                    },
-                    'Action': 'sts:AssumeRole'
+                    'Action': [
+                        'ec2:CreateNetworkInterface',
+                        'ec2:DescribeDhcpOptions',
+                        'ec2:DescribeNetworkInterfaces',
+                        'ec2:DeleteNetworkInterface',
+                        'ec2:DescribeSubnets',
+                        'ec2:DescribeSecurityGroups',
+                        'ec2:DescribeVpcs'
+                    ],
+                    'Resource': '*'
+                },
+                {
+                    'Effect': 'Allow',
+                    'Action': [
+                        'ec2:CreateNetworkInterfacePermission'
+                    ],
+                    'Resource': f'arn:aws:ec2:{aws_region}:{account_id}:network-interface/*',
+                    'Condition': {
+                        'StringEquals': {
+                            'ec2:Subnet': [
+                                f'arn:aws:ec2:{aws_region}:{account_id}:subnet/{subnet_id}'
+                            ],
+                            'ec2:AuthorizedService': 'codebuild.amazonaws.com'
+                        }
+                    }
                 }
             ]
         }
-        cmd = ['iam', 'create-role']
-        cmd += ['--role-name', role_name]
-        cmd += ['--assume-role-policy-document', json.dumps(dd)]
-        aws_cli.run(cmd)
 
-    policy_name = f'aws-codebuild-{nn}-policy'
-    if not aws_cli.get_iam_role_policy(role_name, policy_name):
-        print_message(f'create iam role policy: {policy_name}')
-        dd = {
-            'Version': '2012-10-17',
-            'Statement': []
-        }
-
-        pp = {
-            'Effect': 'Allow',
-            'Action': [
-                'logs:CreateLogGroup',
-                'logs:CreateLogStream',
-                'logs:PutLogEvents'
-            ],
-            'Resource': '*'
-        }
-        dd['Statement'].append(pp)
-
-        pp = {
-            "Effect": "Allow",
-            "Action": [
-                "ec2:CreateNetworkInterface",
-                "ec2:DescribeDhcpOptions",
-                "ec2:DescribeNetworkInterfaces",
-                "ec2:DeleteNetworkInterface",
-                "ec2:DescribeSubnets",
-                "ec2:DescribeSecurityGroups",
-                "ec2:DescribeVpcs"
-            ],
-            "Resource": "*"
-        }
-        dd['Statement'].append(pp)
-
-        pp = {
-            'Effect': 'Allow',
-            'Action': [
-                'ec2:CreateNetworkInterfacePermission'
-            ],
-            'Resource': f'arn:aws:ec2:{region}:*:network-interface/*',
-            'Condition': {
-                'StringEquals': {
-                    'ec2:Subnet': [
-                        f'arn:aws:ec2:{region}:{account_id}:subnet/{subnet_id_1}'
-                    ],
-                    'ec2:AuthorizedService': 'codebuild.amazonaws.com'
-                }
-            }
-        }
-        dd['Statement'].append(pp)
-
-        if have_parameter_store(settings):
-            pp = {
-                'Effect': 'Allow',
-                'Action': 'ssm:GetParameters',
-                'Resource': f'arn:aws:ssm:{region}:*:parameter/CodeBuild/*'
-            }
-            dd['Statement'].append(pp)
-
-        cmd = ['iam', 'put-role-policy']
-        cmd += ['--role-name', role_name]
+        cmd = ['iam', 'create-policy']
         cmd += ['--policy-name', policy_name]
+        cmd += ['--path', '/service-role/']
+        cmd += ['--description', 'Policy used in trust relationship with CodeBuild']
         cmd += ['--policy-document', json.dumps(dd)]
+        result = aws_cli.run(cmd)
+
+        policy_arn = result['Policy']['Arn']
+
+        cmd = ['iam', 'attach-role-policy']
+        cmd += ['--role-name', role_name]
+        cmd += ['--policy-arn', policy_arn]
         aws_cli.run(cmd)
 
-        print_message('wait 120 seconds to let iam role and policy propagated to all regions...')
-        time.sleep(120)
 
-    return role_name
-
-
-def get_eb_public_subnet_and_security_group_id():
-    aws_cli = AWSCli()
+def get_eb_private_subnet_and_security_group_id(aws_cli):
     cidr_subnet = aws_cli.cidr_subnet
 
     print_message('get vpc id')
@@ -157,10 +103,10 @@ def get_eb_public_subnet_and_security_group_id():
             security_group_id = r['GroupId']
             break
 
-    return [subnet_id_1], security_group_id
+    return subnet_id_1, security_group_id
 
 
-def run_create_codebuild_vpc(name, settings):
+def run_create_vpc_project(name, settings):
     aws_cli = AWSCli()
 
     git_branch = settings['BRANCH']
@@ -179,33 +125,36 @@ def run_create_codebuild_vpc(name, settings):
     need_update = name in result['projects']
 
     ################################################################################
+    print_message('create iam service role')
+
+    service_role_name = create_iam_service_role(aws_cli, name)
+    create_base_iam_policy(aws_cli, name, settings, service_role_name)
+
+    if have_parameter_store(settings):
+        create_managed_secret_iam_policy(aws_cli, name, settings, service_role_name)
+
+    subnet_id, security_group_id = get_eb_private_subnet_and_security_group_id(aws_cli)
+    create_vpc_iam_policy(aws_cli, name, settings, service_role_name, subnet_id)
+
+    time.sleep(5)
+    service_role_arn = aws_cli.get_role_arn(service_role_name)
+
+    ################################################################################
     print_message('set environment variable')
 
     env_list = []
-    end_point = get_rds_endpoint(aws_cli, env['rds']['DB_CLUSTER_ID'])
-
     for pp in settings['ENV_VARIABLES']:
         if 'PARAMETER_STORE' == pp['type']:
-            nn = '/CodeBuild/%s/%s' % (name, pp['name'])
+            nn = f"/CodeBuild/{name}/{pp['name']}"
             cmd = ['ssm', 'get-parameter', '--name', nn]
             aws_cli.run(cmd)
 
             pp['value'] = nn
 
         env_list.append(pp)
-    env_list.append({
-        "name": "HOST",
-        "value": end_point,
-        "type": "PLAINTEXT"
-    })
-
-    _, eb_vpc_id = aws_cli.get_vpc_id()
-    subnet_ids, security_group_id = get_eb_public_subnet_and_security_group_id()
-
-    role_name = create_iam_for_codebuild_vpc(name, settings, subnet_ids[0])
-    role_arn = aws_cli.get_role_arn(role_name)
 
     ################################################################################
+    _, eb_vpc_id = aws_cli.get_vpc_id()
 
     config = {
         "name": name,
@@ -233,12 +182,12 @@ def run_create_codebuild_vpc(name, settings):
             "computeType": compute_type,
             "environmentVariables": env_list
         },
-        "serviceRole": role_arn,
+        "serviceRole": service_role_arn,
         "timeoutInMinutes": build_timeout,
         "badgeEnabled": True,
         "vpcConfig": {
             "vpcId": eb_vpc_id,
-            "subnets": subnet_ids,
+            "subnets": [subnet_id],
             "securityGroupIds": [security_group_id]
         }
     }
@@ -246,12 +195,9 @@ def run_create_codebuild_vpc(name, settings):
 
     if need_update:
         print_message(f'update project: {name}')
-
         cmd = ['codebuild', 'update-project', '--cli-input-json', config, '--source-version', git_branch]
         aws_cli.run(cmd)
-        return
-
-    print_message(f'create project: {name}')
-
-    cmd = ['codebuild', 'create-project', '--cli-input-json', config, '--source-version', git_branch]
-    aws_cli.run(cmd)
+    else:
+        print_message(f'create project: {name}')
+        cmd = ['codebuild', 'create-project', '--cli-input-json', config, '--source-version', git_branch]
+        aws_cli.run(cmd)
