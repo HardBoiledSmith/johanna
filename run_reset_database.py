@@ -4,7 +4,7 @@ import time
 from env import env
 from run_common import AWSCli
 from run_create_codebuild_vpc import run_create_vpc_project
-from run_terminate_codebuild import run_terminate_vpc_project
+from run_terminate_codebuild_common import run_terminate_vpc_project
 
 if __name__ == "__main__":
     from run_common import parse_args
