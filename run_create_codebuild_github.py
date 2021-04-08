@@ -16,7 +16,7 @@ from run_create_codebuild_common import have_parameter_store
 from run_create_codebuild_common import use_ecr_image
 
 
-def run_create_codebuild_github(name, settings):
+def run_create_github_project(name, settings):
     aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_cli = AWSCli(aws_default_region)
 

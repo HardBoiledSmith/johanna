@@ -10,7 +10,7 @@ from run_create_codebuild_common import create_managed_secret_iam_policy
 from run_create_codebuild_common import have_parameter_store
 
 
-def run_create_codebuild_default(name, settings):
+def run_create_default_project(name, settings):
     aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_cli = AWSCli(aws_default_region)
 

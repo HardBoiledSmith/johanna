@@ -4,10 +4,10 @@ from env import env
 from run_common import AWSCli
 from run_common import print_session
 from run_common import reset_template_dir
-from run_create_codebuild_cron import run_create_codebuild_cron
-from run_create_codebuild_default import run_create_codebuild_default
-from run_create_codebuild_github import run_create_codebuild_github
-from run_create_codebuild_vpc import run_create_codebuild_vpc
+from run_create_codebuild_cron import run_create_cron_project
+from run_create_codebuild_default import run_create_default_project
+from run_create_codebuild_github import run_create_github_project
+from run_create_codebuild_vpc import run_create_vpc_project
 
 args = []
 
@@ -36,16 +36,16 @@ if len(args) == 2:
         if codebuild_env['NAME'] == target_codebuild_name:
             target_codebuild_name_exists = True
             if codebuild_env['TYPE'] == 'default':
-                run_create_codebuild_default(codebuild_env['NAME'], codebuild_env)
+                run_create_default_project(codebuild_env['NAME'], codebuild_env)
                 break
             if codebuild_env['TYPE'] == 'cron':
-                run_create_codebuild_cron(codebuild_env['NAME'], codebuild_env)
+                run_create_cron_project(codebuild_env['NAME'], codebuild_env)
                 break
             if codebuild_env['TYPE'] == 'github':
-                run_create_codebuild_github(codebuild_env['NAME'], codebuild_env)
+                run_create_github_project(codebuild_env['NAME'], codebuild_env)
                 break
             if codebuild_env['TYPE'] == 'vpc':
-                run_create_codebuild_vpc(codebuild_env['NAME'], codebuild_env)
+                run_create_vpc_project(codebuild_env['NAME'], codebuild_env)
                 break
             print('"%s" is not supported' % codebuild_env['TYPE'])
             raise Exception()
@@ -54,16 +54,16 @@ if len(args) == 2:
 else:
     for codebuild_env in codebuild_list:
         if codebuild_env['TYPE'] == 'default':
-            run_create_codebuild_default(codebuild_env['NAME'], codebuild_env)
+            run_create_default_project(codebuild_env['NAME'], codebuild_env)
             continue
         if codebuild_env['TYPE'] == 'cron':
-            run_create_codebuild_cron(codebuild_env['NAME'], codebuild_env)
+            run_create_cron_project(codebuild_env['NAME'], codebuild_env)
             continue
         if codebuild_env['TYPE'] == 'github':
-            run_create_codebuild_github(codebuild_env['NAME'], codebuild_env)
+            run_create_github_project(codebuild_env['NAME'], codebuild_env)
             continue
         if codebuild_env['TYPE'] == 'vpc':
-            run_create_codebuild_vpc(codebuild_env['NAME'], codebuild_env)
+            run_create_vpc_project(codebuild_env['NAME'], codebuild_env)
             continue
         print('"%s" is not supported' % codebuild_env['TYPE'])
         raise Exception()

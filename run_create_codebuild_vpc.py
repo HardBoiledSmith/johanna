@@ -107,7 +107,7 @@ def get_eb_private_subnet_and_security_group_id():
     return subnet_id_1, security_group_id
 
 
-def run_create_codebuild_vpc(name, settings):
+def run_create_vpc_project(name, settings):
     aws_cli = AWSCli()
 
     git_branch = settings['BRANCH']
