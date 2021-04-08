@@ -25,12 +25,19 @@ if settings is None:
 
 aws_cli = AWSCli()
 
-writer_endpoint = aws_cli.get_rds_address(read_replica=False)
-
 ev = settings['ENV_VARIABLES']
+
+writer_endpoint = aws_cli.get_rds_address(read_replica=False)
 ev.append({
     "name": "HOST",
     "value": writer_endpoint,
+    "type": "PLAINTEXT"
+})
+
+account_id = aws_cli.get_caller_account_id()
+ev.append({
+    "name": "CANONICAL_ID",
+    "value": account_id,
     "type": "PLAINTEXT"
 })
 
