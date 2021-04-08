@@ -29,7 +29,7 @@ def run_create_default_project(name, settings):
     result = aws_cli.run(cmd)
     need_update = name in result['projects']
 
-    ################################################################################a
+    ################################################################################
     print_message('create iam service role')
 
     service_role_name = create_iam_service_role(aws_cli, name)
