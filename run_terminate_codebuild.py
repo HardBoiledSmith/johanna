@@ -11,8 +11,6 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-aws_cli = AWSCli()
-
 
 def terminate_all_iam_role_and_policy(aws_cli, name, settings):
     aws_region = settings['AWS_DEFAULT_REGION']
@@ -42,6 +40,18 @@ def terminate_all_iam_role_and_policy(aws_cli, name, settings):
     pa_list.append(policy_arn)
 
     for pa in pa_list:
+        print_message(f'detach iam policy: {pa}')
+
+        cmd = ['iam', 'detach-role-policy']
+        cmd += ['--role-name', f'codebuild-{name}-service-role']
+        cmd += ['--policy-arn', pa]
+        aws_cli.run(cmd, ignore_error=True)
+
+        cmd = ['iam', 'detach-role-policy']
+        cmd += ['--role-name', f'codebuild-{name}-cron-role']
+        cmd += ['--policy-arn', pa]
+        aws_cli.run(cmd, ignore_error=True)
+
         print_message(f'delete iam policy: {pa}')
 
         cmd = ['iam', 'delete-policy']

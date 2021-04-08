@@ -144,7 +144,7 @@ def run_create_github_project(name, settings):
     }
     config = json.dumps(config)
 
-    if 'webhook' in result:
+    if 'webhook' in result['project']:
         cmd = ['codebuild', 'update-webhook', '--cli-input-json', config]
         aws_cli.run(cmd)
     else:

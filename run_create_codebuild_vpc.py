@@ -69,8 +69,7 @@ def create_vpc_iam_policy(aws_cli, name, settings, role_name, subnet_id):
         aws_cli.run(cmd)
 
 
-def get_eb_private_subnet_and_security_group_id():
-    aws_cli = AWSCli()
+def get_eb_private_subnet_and_security_group_id(aws_cli):
     cidr_subnet = aws_cli.cidr_subnet
 
     print_message('get vpc id')
@@ -134,7 +133,7 @@ def run_create_vpc_project(name, settings):
     if have_parameter_store(settings):
         create_managed_secret_iam_policy(aws_cli, name, settings, service_role_name)
 
-    subnet_id, security_group_id = get_eb_private_subnet_and_security_group_id()
+    subnet_id, security_group_id = get_eb_private_subnet_and_security_group_id(aws_cli)
     create_vpc_iam_policy(aws_cli, name, settings, service_role_name, subnet_id)
 
     time.sleep(5)
@@ -153,13 +152,6 @@ def run_create_vpc_project(name, settings):
             pp['value'] = nn
 
         env_list.append(pp)
-
-    end_point = aws_cli.get_rds_address(read_replica=False)
-    env_list.append({
-        "name": "HOST",
-        "value": end_point,
-        "type": "PLAINTEXT"
-    })
 
     ################################################################################
     _, eb_vpc_id = aws_cli.get_vpc_id()
