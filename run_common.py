@@ -350,6 +350,11 @@ class AWSCli:
         cmd += ['--policy-name', policy_name]
         return self.run(cmd, ignore_error=True)
 
+    def get_iam_policy(self, policy_arn):
+        cmd = ['iam', 'get-policy']
+        cmd += ['--policy-arn', policy_arn]
+        return self.run(cmd, ignore_error=True)
+
     def get_acm_certificate_id(self, domain):
         cmd = ['acm', 'list-certificates']
         cmd += ['--certificate-statuses', 'ISSUED']
