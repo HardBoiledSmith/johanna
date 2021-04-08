@@ -53,11 +53,12 @@ def create_iam_service_role(aws_cli, name):
 def create_managed_secret_iam_policy(aws_cli, name, settings, role_name):
     aws_region = settings['AWS_DEFAULT_REGION']
 
-    policy_name = f'CodeBuildManagedSecretPolicy-{name}-{aws_region}'
-    if not aws_cli.get_iam_role_policy(role_name, policy_name):
-        print_message(f'create iam role policy: {policy_name}')
+    account_id = aws_cli.get_caller_account_id()
 
-        account_id = aws_cli.get_caller_account_id()
+    policy_name = f'CodeBuildManagedSecretPolicy-{name}-{aws_region}'
+    policy_arn = f'arn:aws:iam::{account_id}:policy/service-role/{policy_name}'
+    if not aws_cli.get_iam_policy(policy_arn):
+        print_message(f'create iam policy: {policy_name}')
 
         dd = {
             'Version': '2012-10-17',
@@ -68,7 +69,7 @@ def create_managed_secret_iam_policy(aws_cli, name, settings, role_name):
                         'ssm:GetParameters'
                     ],
                     'Resource': [
-                        f'arn:aws:ssm:{aws_region}:{account_id}:parameter:/CodeBuild/*'
+                        f'arn:aws:ssm:{aws_region}:{account_id}:parameter/CodeBuild/*'
                     ]
                 }
             ]
@@ -92,11 +93,12 @@ def create_managed_secret_iam_policy(aws_cli, name, settings, role_name):
 def create_base_iam_policy(aws_cli, name, settings, role_name):
     aws_region = settings['AWS_DEFAULT_REGION']
 
-    policy_name = f'CodeBuildBasePolicy-{name}-{aws_region}'
-    if not aws_cli.get_iam_role_policy(role_name, policy_name):
-        print_message(f'create iam role policy: {policy_name}')
+    account_id = aws_cli.get_caller_account_id()
 
-        account_id = aws_cli.get_caller_account_id()
+    policy_name = f'CodeBuildBasePolicy-{name}-{aws_region}'
+    policy_arn = f'arn:aws:iam::{account_id}:policy/service-role/{policy_name}'
+    if not aws_cli.get_iam_policy(policy_arn):
+        print_message(f'create iam policy: {policy_name}')
 
         dd = {
             'Version': '2012-10-17',
@@ -175,11 +177,12 @@ def create_base_iam_policy(aws_cli, name, settings, role_name):
 def create_image_repository_iam_policy(aws_cli, name, settings, role_name):
     aws_region = settings['AWS_DEFAULT_REGION']
 
-    policy_name = f'CodeBuildImageRepositoryPolicy-{name}-{aws_region}'
-    if not aws_cli.get_iam_role_policy(role_name, policy_name):
-        print_message(f'create iam role policy: {policy_name}')
+    account_id = aws_cli.get_caller_account_id()
 
-        account_id = aws_cli.get_caller_account_id()
+    policy_name = f'CodeBuildImageRepositoryPolicy-{name}-{aws_region}'
+    policy_arn = f'arn:aws:iam::{account_id}:policy/service-role/{policy_name}'
+    if not aws_cli.get_iam_policy(policy_arn):
+        print_message(f'create iam policy: {policy_name}')
 
         repo_name = settings['IMAGE'].rstrip(':latest')
         repo_name = repo_name.split('/')[1]
@@ -225,9 +228,7 @@ def create_image_repository_iam_policy(aws_cli, name, settings, role_name):
         aws_cli.run(cmd)
 
 
-def create_iam_cron_role(aws_cli, name, settings):
-    aws_region = settings['AWS_DEFAULT_REGION']
-
+def create_cron_iam_role(aws_cli, name):
     role_name = f'codebuild-{name}-cron-role'
     if not aws_cli.get_iam_role(role_name):
         print_message(f'create iam cron role: {role_name}')
@@ -250,11 +251,18 @@ def create_iam_cron_role(aws_cli, name, settings):
         cmd += ['--assume-role-policy-document', json.dumps(dd)]
         aws_cli.run(cmd)
 
-    policy_name = f'codebuild-{name}-cron-policy'
-    if not aws_cli.get_iam_role_policy(role_name, policy_name):
-        print_message(f'create iam role policy: {policy_name}')
+    return role_name
 
-        account_id = aws_cli.get_caller_account_id()
+
+def create_cron_iam_policy(aws_cli, name, settings, role_name):
+    aws_region = settings['AWS_DEFAULT_REGION']
+
+    account_id = aws_cli.get_caller_account_id()
+
+    policy_name = f'codebuild-{name}-cron-policy'
+    policy_arn = f'arn:aws:iam::{account_id}:policy/service-role/{policy_name}'
+    if not aws_cli.get_iam_policy(policy_arn):
+        print_message(f'create iam role policy: {policy_name}')
 
         dd = {
             'Version': '2012-10-17',
@@ -284,8 +292,6 @@ def create_iam_cron_role(aws_cli, name, settings):
         cmd += ['--role-name', role_name]
         cmd += ['--policy-arn', policy_arn]
         aws_cli.run(cmd)
-
-    return role_name
 
 
 def create_cron_event(aws_cli, name, project_arn, schedule_expression, git_branch, role_arn):
@@ -417,7 +423,8 @@ def run_create_codebuild_github(name, settings):
     print_message('create cron trigger iam role and trigger')
 
     if have_cron(settings):
-        cron_role_name = create_iam_cron_role(aws_cli, name, settings)
+        cron_role_name = create_cron_iam_role(aws_cli, name)
+        create_cron_iam_policy(aws_cli, name, settings, cron_role_name)
 
         time.sleep(5)
         cron_role_arn = aws_cli.get_role_arn(cron_role_name)
@@ -445,7 +452,7 @@ def run_create_codebuild_github(name, settings):
     }
     config = json.dumps(config)
 
-    if need_update:
+    if 'webhook' in result:
         cmd = ['codebuild', 'update-webhook', '--cli-input-json', config]
         aws_cli.run(cmd)
     else:
