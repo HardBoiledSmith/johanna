@@ -50,10 +50,10 @@ def create_iam_service_role(aws_cli, name):
     return role_name
 
 
-def create_secret_manager_iam_policy(aws_cli, name, settings, role_name):
+def create_managed_secret_iam_policy(aws_cli, name, settings, role_name):
     aws_region = settings['AWS_DEFAULT_REGION']
 
-    policy_name = f'CodeBuildSecretsManagerPolicy-{name}-{aws_region}'
+    policy_name = f'CodeBuildManagedSecretPolicy-{name}-{aws_region}'
     if not aws_cli.get_iam_role_policy(role_name, policy_name):
         print_message(f'create iam role policy: {policy_name}')
 
@@ -65,10 +65,10 @@ def create_secret_manager_iam_policy(aws_cli, name, settings, role_name):
                 {
                     'Effect': 'Allow',
                     'Action': [
-                        'secretsmanager:GetSecretValue'
+                        'ssm:GetParameters'
                     ],
                     'Resource': [
-                        f'arn:aws:secretsmanager:{aws_region}:{account_id}:secret:/CodeBuild/*'
+                        f'arn:aws:ssm:{aws_region}:{account_id}:parameter:/CodeBuild/*'
                     ]
                 }
             ]
@@ -346,7 +346,7 @@ def run_create_codebuild_github(name, settings):
     create_base_iam_policy(aws_cli, name, settings, service_role_name)
 
     if have_parameter_store(settings):
-        create_secret_manager_iam_policy(aws_cli, name, settings, service_role_name)
+        create_managed_secret_iam_policy(aws_cli, name, settings, service_role_name)
 
     if use_ecr_image(aws_cli, settings):
         create_image_repository_iam_policy(aws_cli, name, settings, service_role_name)
