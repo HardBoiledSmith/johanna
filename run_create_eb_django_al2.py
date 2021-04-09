@@ -419,7 +419,7 @@ def run_create_eb_django_al2(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2 v3.2.0 running Python 3.8']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2 v3.2.1 running Python 3.8']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
@@ -444,6 +444,37 @@ def run_create_eb_django_al2(name, settings):
             raise Exception()
 
     subprocess.Popen(['rm', '-rf', './%s' % name], cwd=template_path).communicate()
+
+    topic_arn = aws_cli.get_topic_arn(settings['SNS_TOPIC_NAME'])
+    if topic_arn:
+        print_message('create cloudwatch log filter for nginx error log')
+
+        metric_name_space = f'{name}ProxyErrorLog'
+
+        cmd = ['logs', 'put-metric-filter']
+        cmd += ['--filter-name', f'{eb_environment_name}_nginx_error_log']
+        cmd += ['--log-group-name', f'/aws/elasticbeanstalk/{eb_environment_name}/var/log/nginx/error.log']
+        cmd += ['--filter-pattern', '']
+        cmd += ['--metric-transformations', f'metricName={eb_environment_name},'
+                                            f'metricNamespace={metric_name_space},'
+                                            f'metricValue=1,'
+                                            f'defaultValue=0']
+        aws_cli.run(cmd, cwd=template_path)
+
+        print_message('create cloudwatch alarm for nginx error log filter')
+
+        cmd = ['cloudwatch', 'put-metric-alarm']
+        cmd += ['--alarm-name', f'{eb_environment_name}_nginx_error_log']
+        cmd += ['--alarm-description', f'{eb_environment_name} nginx error log alarm']
+        cmd += ['--evaluation-periods', '1']
+        cmd += ['--metric-name', eb_environment_name]
+        cmd += ['--namespace', metric_name_space]
+        cmd += ['--statistic', 'Sum']
+        cmd += ['--period', '30']
+        cmd += ['--threshold', '1']
+        cmd += ['--comparison-operator', 'GreaterThanOrEqualToThreshold']
+        cmd += ['--alarm-actions', topic_arn]
+        aws_cli.run(cmd, cwd=template_path)
 
     ################################################################################
     print_message('swap CNAME if the previous version exists')

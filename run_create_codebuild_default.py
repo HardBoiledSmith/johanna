@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 import json
+import time
 
 from run_common import AWSCli
 from run_common import print_message
+from run_create_codebuild_common import create_base_iam_policy
+from run_create_codebuild_common import create_iam_service_role
+from run_create_codebuild_common import create_managed_secret_iam_policy
+from run_create_codebuild_common import have_parameter_store
 
 
-def run_create_codebuild_default(name, settings):
-    aws_cli = AWSCli()
+def run_create_default_project(name, settings):
+    aws_default_region = settings['AWS_DEFAULT_REGION']
+    aws_cli = AWSCli(aws_default_region)
 
     git_branch = settings['BRANCH']
     build_spec = settings['BUILD_SPEC']
@@ -22,26 +28,32 @@ def run_create_codebuild_default(name, settings):
     cmd = ['codebuild', 'list-projects']
     result = aws_cli.run(cmd)
     need_update = name in result['projects']
+
+    ################################################################################
+    print_message('create iam service role')
+
+    service_role_name = create_iam_service_role(aws_cli, name)
+    create_base_iam_policy(aws_cli, name, settings, service_role_name)
+
+    if have_parameter_store(settings):
+        create_managed_secret_iam_policy(aws_cli, name, settings, service_role_name)
+
+    time.sleep(5)
+    service_role_arn = aws_cli.get_role_arn(service_role_name)
+
     ################################################################################
     print_message('set environment variable')
 
     env_list = []
-    is_exist_parameter_store = False
-
     for pp in settings['ENV_VARIABLES']:
         if 'PARAMETER_STORE' == pp['type']:
-            is_exist_parameter_store = True
-            nn = '/CodeBuild/%s/%s' % (name, pp['name'])
+            nn = f"/CodeBuild/{name}/{pp['name']}"
             cmd = ['ssm', 'get-parameter', '--name', nn]
             aws_cli.run(cmd)
 
             pp['value'] = nn
 
         env_list.append(pp)
-
-    role_arn = aws_cli.get_role_arn('aws-codebuild-default-role')
-    if is_exist_parameter_store:
-        role_arn = aws_cli.get_role_arn('aws-codebuild-secure-parameter-role')
 
     ################################################################################
     config = {
@@ -70,20 +82,17 @@ def run_create_codebuild_default(name, settings):
             "computeType": compute_type,
             "environmentVariables": env_list
         },
-        "serviceRole": role_arn,
+        "serviceRole": service_role_arn,
         "timeoutInMinutes": build_timeout,
         "badgeEnabled": True
     }
     config = json.dumps(config)
 
     if need_update:
-        print_message('update project: %s' % name)
-
+        print_message(f'update project: {name}')
         cmd = ['codebuild', 'update-project', '--cli-input-json', config, '--source-version', git_branch]
         aws_cli.run(cmd)
-        return
-
-    print_message('create project: %s' % name)
-
-    cmd = ['codebuild', 'create-project', '--cli-input-json', config, '--source-version', git_branch]
-    aws_cli.run(cmd)
+    else:
+        print_message(f'create project: {name}')
+        cmd = ['codebuild', 'create-project', '--cli-input-json', config, '--source-version', git_branch]
+        aws_cli.run(cmd)
