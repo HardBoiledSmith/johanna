@@ -446,6 +446,37 @@ def run_create_eb_django(name, settings):
     ################################################################################
     print_message('swap CNAME if the previous version exists')
 
+    topic_arn = aws_cli.get_topic_arn(settings['SNS_TOPIC_NAME'])
+    if topic_arn:
+        print_message('create cloudwatch log filter for httpd error log')
+
+        metric_name_space = f'{name}ProxyErrorLog'
+
+        cmd = ['logs', 'put-metric-filter']
+        cmd += ['--filter-name', f'{eb_environment_name}_httpd_error_log']
+        cmd += ['--log-group-name', f'/aws/elasticbeanstalk/{eb_environment_name}/var/log/httpd/error_log']
+        cmd += ['--filter-pattern', '']
+        cmd += ['--metric-transformations', f'metricName={eb_environment_name},'
+                                            f'metricNamespace={metric_name_space},'
+                                            f'metricValue=1,'
+                                            f'defaultValue=0']
+        aws_cli.run(cmd, cwd=template_path)
+
+        print_message('create cloudwatch alarm for httpd error log filter')
+
+        cmd = ['cloudwatch', 'put-metric-alarm']
+        cmd += ['--alarm-name', f'{eb_environment_name}_httpd_error_log']
+        cmd += ['--alarm-description', f'{eb_environment_name} httpd error log alarm']
+        cmd += ['--evaluation-periods', '1']
+        cmd += ['--metric-name', eb_environment_name]
+        cmd += ['--namespace', metric_name_space]
+        cmd += ['--statistic', 'Sum']
+        cmd += ['--period', '30']
+        cmd += ['--threshold', '1']
+        cmd += ['--comparison-operator', 'GreaterThanOrEqualToThreshold']
+        cmd += ['--alarm-actions', topic_arn]
+        aws_cli.run(cmd, cwd=template_path)
+
     if eb_environment_name_old:
         cmd = ['elasticbeanstalk', 'swap-environment-cnames']
         cmd += ['--source-environment-name', eb_environment_name_old]
