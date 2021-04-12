@@ -95,7 +95,8 @@ def run_create_client_vpn(name, settings):
     cmd += ['--client-cidr-block', settings["CLIENT_CIDR_BLOCK"]]
     cmd += ['--server-certificate-arn', server_cert_arn]
     cmd += ['--authentication-options', json.dumps(ao)]
-    cmd += ['--connection-log-options', 'Enabled=false']
+    lo = f'Enabled=true,CloudwatchLogGroup=/aws/ec2/cvpn/connection,CloudwatchLogStream={name}'
+    cmd += ['--connection-log-options', lo]
     cmd += ['--vpn-port', '1194']
     cmd += ['--split-tunnel']
     cmd += ['--security-group-ids', eb_security_group_id]
