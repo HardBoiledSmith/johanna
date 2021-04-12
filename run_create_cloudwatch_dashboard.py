@@ -127,6 +127,8 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
                 dimension_type = 'elb'
             elif dimension == 'TargetGroup':
                 dimension_type = 'tg'
+            else:
+                dimension_type = 'search_expression'
 
         new_metric = []
 
@@ -152,6 +154,8 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
                 new_metric = new_metric.replace('LOAD_BALANCER', ii['LoadBalancer'])
                 new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
                 new_metric = json.loads(new_metric)
+        elif dimension_type == 'search_expression':
+            new_metric = json.loads(template)
         else:
             for ii in env_list:
                 new_metric = template.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
