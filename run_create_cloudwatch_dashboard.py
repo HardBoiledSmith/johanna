@@ -130,6 +130,7 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
             elif type(dimension) == dict:
                 if 'expression' in dimension:
                     dimension_type = 'search_expression'
+                    break
 
         new_metric = []
 
