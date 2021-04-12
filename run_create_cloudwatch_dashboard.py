@@ -127,8 +127,9 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
                 dimension_type = 'elb'
             elif dimension == 'TargetGroup':
                 dimension_type = 'tg'
-            else:
-                dimension_type = 'search_expression'
+            elif type(dimension) == dict:
+                if 'expression' in dimension:
+                    dimension_type = 'search_expression'
 
         new_metric = []
 
@@ -170,6 +171,7 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
     cmd = ['cloudwatch', 'put-dashboard']
     cmd += ['--dashboard-name', dashboard_name]
     cmd += ['--dashboard-body', dashboard_body]
+    # print(cmd)
     aws_cli.run(cmd)
 
 
@@ -313,26 +315,6 @@ def run_create_cw_dashboard_alarm(name, settings):
     aws_cli.run(cmd)
 
 
-def run_create_cw_dashboard_search_expression(name, settings):
-    dashboard_region = settings['AWS_DEFAULT_REGION']
-    aws_cli = AWSCli(dashboard_region)
-
-    dashboard_name = '%s_%s' % (name, dashboard_region)
-    print_message('create or update cloudwatch dashboard: %s' % dashboard_name)
-
-    template_name = env['template']['NAME']
-    filename_path = 'template/%s/cloudwatch/%s.json' % (template_name, dashboard_name)
-    with open(filename_path, 'r') as ff:
-        dashboard_body = json.load(ff)
-
-    dashboard_body = json.dumps(dashboard_body)
-
-    cmd = ['cloudwatch', 'put-dashboard']
-    cmd += ['--dashboard-name', dashboard_name]
-    cmd += ['--dashboard-body', dashboard_body]
-    aws_cli.run(cmd)
-
-
 ################################################################################
 #
 # start
@@ -362,9 +344,7 @@ for cw_dashboard_env in cw.get('DASHBOARDS', list()):
 
     if target_cw_dashboard_name:
         check_exists = True
-    if cw_dashboard_env['TYPE'] == 'search_expression':
-        run_create_cw_dashboard_search_expression(cw_dashboard_env['NAME'], cw_dashboard_env)
-    elif cw_dashboard_env['TYPE'] == 'elasticbeanstalk':
+    if cw_dashboard_env['TYPE'] == 'elasticbeanstalk':
         run_create_cw_dashboard_elasticbeanstalk(cw_dashboard_env['NAME'], cw_dashboard_env)
     elif cw_dashboard_env['TYPE'] == 'rds/aurora':
         run_create_cw_dashboard_rds_aurora(cw_dashboard_env['NAME'], cw_dashboard_env)
