@@ -171,7 +171,6 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
     cmd = ['cloudwatch', 'put-dashboard']
     cmd += ['--dashboard-name', dashboard_name]
     cmd += ['--dashboard-body', dashboard_body]
-    # print(cmd)
     aws_cli.run(cmd)
 
 
