@@ -49,7 +49,7 @@ def run_create_github_project(name, settings):
     if use_ecr_image(aws_cli, settings):
         create_image_repository_iam_policy(aws_cli, name, settings, service_role_name)
 
-    time.sleep(5)
+    time.sleep(10)
     service_role_arn = aws_cli.get_role_arn(service_role_name)
 
     ################################################################################
