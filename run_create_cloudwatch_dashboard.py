@@ -127,6 +127,10 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
                 dimension_type = 'elb'
             elif dimension == 'TargetGroup':
                 dimension_type = 'tg'
+            elif type(dimension) == dict:
+                if 'expression' in dimension:
+                    dimension_type = 'search_expression'
+                    break
 
         new_metric = []
 
@@ -152,6 +156,8 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
                 new_metric = new_metric.replace('LOAD_BALANCER', ii['LoadBalancer'])
                 new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
                 new_metric = json.loads(new_metric)
+        elif dimension_type == 'search_expression':
+            new_metric = json.loads(template)
         else:
             for ii in env_list:
                 new_metric = template.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
@@ -338,7 +344,6 @@ for cw_dashboard_env in cw.get('DASHBOARDS', list()):
 
     if target_cw_dashboard_name:
         check_exists = True
-
     if cw_dashboard_env['TYPE'] == 'elasticbeanstalk':
         run_create_cw_dashboard_elasticbeanstalk(cw_dashboard_env['NAME'], cw_dashboard_env)
     elif cw_dashboard_env['TYPE'] == 'rds/aurora':
