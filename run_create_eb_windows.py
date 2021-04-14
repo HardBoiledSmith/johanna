@@ -178,21 +178,6 @@ def run_create_eb_windows(name, settings):
     write_file(
         f'{template_path}/{name}/_provisioning/configuration/Users/vagrant/Desktop/{name}_exe/settings_local.py', lines)
 
-    lines = read_file(f'{template_path}/{name}/_provisioning/configuration/'
-                      f'Users/vagrant/Desktop/{name}_exe/{name}.exe_sample.config')
-    option_list = list()
-    option_list.append(['PHASE', phase])
-    for key in settings:
-        value = settings[key]
-        option_list.append([key, value])
-    for oo in option_list:
-        if oo[0] == 'SENTRY_DSN':
-            lines = re_sub_lines(lines, '^.+Dsn value=.+$', f'<Dsn value="{oo[1]}" />')
-        else:
-            lines = re_sub_lines(lines, f'^.+add key=\"({oo[0]})\" value=.+$', f'<add key="\\1" value="{oo[1]}" />')
-    write_file(f'{template_path}/{name}/_provisioning/configuration/'
-               f'Users/vagrant/Desktop/{name}_exe/{name}.exe.config', lines)
-
     ################################################################################
     print_message('download artifact')
 
