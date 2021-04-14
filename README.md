@@ -117,8 +117,9 @@ You can create client configuration (.ovpn) for AWS Client VPN
 ## Troubleshooting - ACM quotas
 > "You have reached the maximum number of certificates. Delete certificates that are not in use, or contact AWS Support to request an increase."
 
-By default, you can import up to 1000 certificates into ACM, but new AWS accounts might start with a lower limit. If you exceed this limit, request an ACM quota increase. You can solve this issue by [opening support case](https://docs.aws.amazon.com/acm/latest/userguide/acm-limits.html).
-
+By default, you can import up to 1000 certificates into ACM, but new AWS accounts might start with a lower limit. If you exceed this limit, request an ACM quota increase with these. You can solve this issue by [opening support case](https://docs.aws.amazon.com/acm/latest/userguide/acm-limits.html).
+- AWS Certificate Manager (ACM) > Imported certificates in last 365 days
+- AWS Certificate Manager (ACM) > ACM certificates created in last 365 days
 
 
 # Links
