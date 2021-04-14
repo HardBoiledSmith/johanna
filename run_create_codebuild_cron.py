@@ -41,7 +41,7 @@ def run_create_cron_project(name, settings):
     if have_parameter_store(settings):
         create_managed_secret_iam_policy(aws_cli, name, settings, service_role_name)
 
-    time.sleep(5)
+    time.sleep(10)
     service_role_arn = aws_cli.get_role_arn(service_role_name)
 
     ################################################################################
