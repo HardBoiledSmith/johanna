@@ -1,6 +1,6 @@
-[![Build Status](https://codebuild.ap-northeast-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiZ1BqQzAxWTF6ZEV3TmJyWWtVQ1lpOEpYTkFxMEh5amNRd3U3bnp2anpiQXhtQm8wSTJLZFYxRndSYVhJc0VCRFdKNG1mMWtaUFpqWlB1d1JEdHlUU1hvPSIsIml2UGFyYW1ldGVyU3BlYyI6InArbTJQTHh6Y08yalMwZmMiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)](https://ap-northeast-2.console.aws.amazon.com/codesuite/codebuild/projects/build_test_johanna/history)
+# Johanna
 
-# Introduction
+[![Build Status](https://codebuild.ap-northeast-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiZ1BqQzAxWTF6ZEV3TmJyWWtVQ1lpOEpYTkFxMEh5amNRd3U3bnp2anpiQXhtQm8wSTJLZFYxRndSYVhJc0VCRFdKNG1mMWtaUFpqWlB1d1JEdHlUU1hvPSIsIml2UGFyYW1ldGVyU3BlYyI6InArbTJQTHh6Y08yalMwZmMiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)](https://ap-northeast-2.console.aws.amazon.com/codesuite/codebuild/projects/build_test_johanna/history)
 
 Johanna is a collection of boilerplate Python scripts that can do provisioning/deprovisioning of a simple backend system using AWS.
 
