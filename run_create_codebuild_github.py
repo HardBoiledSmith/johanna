@@ -20,6 +20,7 @@ def run_create_github_project(name, settings):
     aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_cli = AWSCli(aws_default_region)
 
+    aws_chatbot_arn = settings['AWS_CHATBOT_ARN']
     git_branch = settings['BRANCH']
     build_spec = settings['BUILD_SPEC']
     build_timeout = settings['BUILD_TIMEOUT']
@@ -150,3 +151,26 @@ def run_create_github_project(name, settings):
     else:
         cmd = ['codebuild', 'create-webhook', '--cli-input-json', config]
         aws_cli.run(cmd)
+
+    ################################################################################
+    print_message('create slack notification')
+
+    project_arn = result['project']['arn']
+
+    cmd = ['codestar-notifications', 'create-notification-rule']
+    cmd += ['--name', f'codebuild-{name}-notification-rule']
+    eid_list = list()
+    eid_list.append('codebuild-project-build-state-succeeded')
+    eid_list.append('codebuild-project-build-state-stopped')
+    eid_list.append('codebuild-project-build-state-failed')
+    eid_list.append('codebuild-project-build-state-in-progress')
+    cmd += (['--event-type-ids'] + eid_list)
+    cmd += ['--resource', project_arn]
+    tt = dict()
+    tt['TargetAddress'] = aws_chatbot_arn
+    tt['TargetType'] = 'AWSChatbotSlack'
+    cmd += ['--targets', json.dumps([tt])]
+    cmd += ['--detail-type', 'FULL']
+    result = aws_cli.run(cmd)
+
+    print(result)
