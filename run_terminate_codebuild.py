@@ -41,6 +41,8 @@ def run_terminate_default_project(name, settings):
 
     terminate_all_iam_role_and_policy(aws_cli, name, settings)
 
+    terminate_all_iam_role_and_policy(aws_cli, name, settings)
+
 
 def run_terminate_github_project(name, settings):
     aws_default_region = settings['AWS_DEFAULT_REGION']
@@ -81,6 +83,8 @@ def run_terminate_cron_project(name, settings):
 
     rule_name = f'{name}CronRuleSourceBy{git_branch.title()}'
     terminate_cron_event(aws_cli, rule_name)
+
+    terminate_all_iam_role_and_policy(aws_cli, name, settings)
 
     terminate_all_iam_role_and_policy(aws_cli, name, settings)
 
