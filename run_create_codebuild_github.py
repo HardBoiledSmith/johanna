@@ -11,8 +11,11 @@ from run_create_codebuild_common import create_cron_iam_role
 from run_create_codebuild_common import create_iam_service_role
 from run_create_codebuild_common import create_image_repository_iam_policy
 from run_create_codebuild_common import create_managed_secret_iam_policy
+from run_create_codebuild_common import create_notification_rule
+from run_create_codebuild_common import get_notification_rule
 from run_create_codebuild_common import have_cron
 from run_create_codebuild_common import have_parameter_store
+from run_create_codebuild_common import update_notification_rule
 from run_create_codebuild_common import use_ecr_image
 
 
@@ -20,7 +23,6 @@ def run_create_github_project(name, settings):
     aws_default_region = settings['AWS_DEFAULT_REGION']
     aws_cli = AWSCli(aws_default_region)
 
-    aws_chatbot_arn = settings['AWS_CHATBOT_ARN']
     git_branch = settings['BRANCH']
     build_spec = settings['BUILD_SPEC']
     build_timeout = settings['BUILD_TIMEOUT']
@@ -157,20 +159,9 @@ def run_create_github_project(name, settings):
 
     project_arn = result['project']['arn']
 
-    cmd = ['codestar-notifications', 'create-notification-rule']
-    cmd += ['--name', f'codebuild-{name}-notification-rule']
-    eid_list = list()
-    eid_list.append('codebuild-project-build-state-succeeded')
-    eid_list.append('codebuild-project-build-state-stopped')
-    eid_list.append('codebuild-project-build-state-failed')
-    eid_list.append('codebuild-project-build-state-in-progress')
-    cmd += (['--event-type-ids'] + eid_list)
-    cmd += ['--resource', project_arn]
-    tt = dict()
-    tt['TargetAddress'] = aws_chatbot_arn
-    tt['TargetType'] = 'AWSChatbotSlack'
-    cmd += ['--targets', json.dumps([tt])]
-    cmd += ['--detail-type', 'FULL']
-    result = aws_cli.run(cmd)
+    notification_rule_arn = get_notification_rule(aws_cli, project_arn)
 
-    print(result)
+    if not notification_rule_arn:
+        create_notification_rule(aws_cli, name, project_arn)
+    else:
+        update_notification_rule(aws_cli, name, notification_rule_arn)

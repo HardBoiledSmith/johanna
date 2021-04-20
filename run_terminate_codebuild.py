@@ -5,6 +5,7 @@ from run_common import print_message
 from run_common import print_session
 from run_terminate_codebuild_common import run_terminate_vpc_project
 from run_terminate_codebuild_common import terminate_all_iam_role_and_policy
+from run_terminate_codebuild_common import terminate_all_notification_rule
 
 args = []
 
@@ -62,6 +63,8 @@ def run_terminate_github_project(name, settings):
     aws_cli.run(cmd, ignore_error=True)
 
     terminate_all_iam_role_and_policy(aws_cli, name, settings)
+
+    terminate_all_notification_rule(aws_cli, name, settings)
 
 
 def run_terminate_cron_project(name, settings):
