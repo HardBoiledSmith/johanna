@@ -9,6 +9,28 @@
         "logs:PutLogEvents"
       ],
       "Resource": "*"
+    },
+    {
+      "Action": [
+        "ce:GetCostAndUsage"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    },
+    {
+      "Action": [
+        "organizations:ListAccounts"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Stmt1619015187687",
+      "Action": [
+        "ses:SendEmail"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
     }
   ]
 }
