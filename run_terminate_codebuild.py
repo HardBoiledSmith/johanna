@@ -41,7 +41,7 @@ def run_terminate_default_project(name, settings):
 
     terminate_all_iam_role_and_policy(aws_cli, name, settings)
 
-    terminate_all_iam_role_and_policy(aws_cli, name, settings)
+    terminate_all_notification_rule(aws_cli, name, settings)
 
 
 def run_terminate_github_project(name, settings):
@@ -86,7 +86,7 @@ def run_terminate_cron_project(name, settings):
 
     terminate_all_iam_role_and_policy(aws_cli, name, settings)
 
-    terminate_all_iam_role_and_policy(aws_cli, name, settings)
+    terminate_all_notification_rule(aws_cli, name, settings)
 
 
 ################################################################################
