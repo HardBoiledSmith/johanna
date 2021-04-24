@@ -39,10 +39,7 @@ def run_create_lambda_ses_sqs(function_name, settings):
 
     if not os.path.exists(f'template/{git_folder_name}'):
         if phase == 'dv':
-            print('#' * 80)
-            print('DEV-11661')
-            print('#' * 80)
-            git_command = ['git', 'clone', '--depth=1', '-b', 'DEV-11661', git_url]
+            git_command = ['git', 'clone', '--depth=1', git_url]
 
         else:
             git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
