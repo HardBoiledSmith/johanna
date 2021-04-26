@@ -40,6 +40,7 @@ def run_create_lambda_ses_sqs(function_name, settings):
     if not os.path.exists(f'template/{git_folder_name}'):
         if phase == 'dv':
             git_command = ['git', 'clone', '--depth=1', git_url]
+
         else:
             git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
         subprocess.Popen(git_command, cwd='template').communicate()
@@ -136,7 +137,7 @@ def run_create_lambda_ses_sqs(function_name, settings):
 
     print_message('create lambda function')
 
-    role_arn = aws_cli.get_role_arn('aws-lambda-sqs-role')
+    role_arn = aws_cli.get_role_arn('aws-lambda-default-role')
 
     git_hash_johanna = subprocess.Popen(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE).communicate()[0]
     git_hash_template = subprocess.Popen(['git', 'rev-parse', 'HEAD'],
