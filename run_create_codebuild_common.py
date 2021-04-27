@@ -22,6 +22,18 @@ def have_cron(settings):
     return len(cc) > 0
 
 
+def get_notification_rule(aws_cli, project_arn):
+    cmd = ['codestar-notifications', 'list-notification-rules']
+    tt = dict()
+    tt['Name'] = 'RESOURCE'
+    tt['Value'] = project_arn
+    cmd += ['--filters', json.dumps([tt])]
+    rr = aws_cli.run(cmd)
+
+    if len(rr['NotificationRules']) > 0:
+        return rr['NotificationRules'][0]['Arn']
+
+
 def create_iam_service_role(aws_cli, name):
     role_name = f'codebuild-{name}-service-role'
     if not aws_cli.get_iam_role(role_name):
@@ -319,4 +331,46 @@ def create_cron_event(aws_cli, name, project_arn, schedule_expression, git_branc
     cmd = ['events', 'put-targets']
     cmd += ['--rule', rule_name]
     cmd += ['--targets', target]
+    aws_cli.run(cmd)
+
+
+def create_notification_rule(aws_cli, name, project_arn):
+    account_id = aws_cli.get_caller_account_id()
+
+    cmd = ['codestar-notifications', 'create-notification-rule']
+    cmd += ['--name', f'codebuild-{name}-notification-rule']
+    eid_list = list()
+    eid_list.append('codebuild-project-build-state-succeeded')
+    eid_list.append('codebuild-project-build-state-stopped')
+    eid_list.append('codebuild-project-build-state-failed')
+    eid_list.append('codebuild-project-build-state-in-progress')
+    cmd += (['--event-type-ids'] + eid_list)
+    cmd += ['--resource', project_arn]
+    tt = dict()
+    aa = f'arn:aws:chatbot::{account_id}:chat-configuration/slack-channel/hbsmith-codebuild-notification'
+    tt['TargetAddress'] = aa
+    tt['TargetType'] = 'AWSChatbotSlack'
+    cmd += ['--targets', json.dumps([tt])]
+    cmd += ['--detail-type', 'FULL']
+    aws_cli.run(cmd)
+
+
+def update_notification_rule(aws_cli, name, notification_rule_arn):
+    account_id = aws_cli.get_caller_account_id()
+
+    cmd = ['codestar-notifications', 'update-notification-rule']
+    cmd += ['--arn', notification_rule_arn]
+    cmd += ['--name', f'codebuild-{name}-notification-rule']
+    eid_list = list()
+    eid_list.append('codebuild-project-build-state-succeeded')
+    eid_list.append('codebuild-project-build-state-stopped')
+    eid_list.append('codebuild-project-build-state-failed')
+    eid_list.append('codebuild-project-build-state-in-progress')
+    cmd += (['--event-type-ids'] + eid_list)
+    tt = dict()
+    aa = f'arn:aws:chatbot::{account_id}:chat-configuration/slack-channel/hbsmith-codebuild-notification'
+    tt['TargetAddress'] = aa
+    tt['TargetType'] = 'AWSChatbotSlack'
+    cmd += ['--targets', json.dumps([tt])]
+    cmd += ['--detail-type', 'FULL']
     aws_cli.run(cmd)
