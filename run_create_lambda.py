@@ -60,8 +60,7 @@ print_session('create lambda')
 
 ################################################################################
 default_role_created = create_iam_for_lambda('default')
-sqs_role_created = create_iam_for_lambda('sqs')
-if default_role_created or sqs_role_created:
+if default_role_created:
     print_message('wait 120 seconds to let iam role and policy propagated to all regions...')
     time.sleep(120)
 

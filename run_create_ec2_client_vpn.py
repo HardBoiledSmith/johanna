@@ -83,6 +83,29 @@ def run_create_client_vpn(name, settings):
     server_cert_arn = result['CertificateArn']
 
     ################################################################################
+    print_message('create log group and stream')
+
+    cmd = ['logs', 'describe-log-groups']
+    cmd += ['--log-group-name-prefix', '/aws/ec2/cvpn/connection']
+    result = aws_cli.run(cmd)
+
+    if len(result['logGroups']) < 1:
+        cmd = ['logs', 'create-log-group']
+        cmd += ['--log-group-name', '/aws/ec2/cvpn/connection']
+        aws_cli.run(cmd)
+
+    cmd = ['logs', 'describe-log-streams']
+    cmd += ['--log-group-name', '/aws/ec2/cvpn/connection']
+    cmd += ['--log-stream-name-prefix', f'{name}']
+    result = aws_cli.run(cmd)
+
+    if len(result['logStreams']) < 1:
+        cmd = ['logs', 'create-log-stream']
+        cmd += ['--log-group-name', '/aws/ec2/cvpn/connection']
+        cmd += ['--log-stream-name', f'{name}']
+        aws_cli.run(cmd)
+
+    ################################################################################
     print_message('create client vpn endpoint')
 
     ao = dict()

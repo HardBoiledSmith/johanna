@@ -7,7 +7,10 @@ from run_common import print_message
 from run_create_codebuild_common import create_base_iam_policy
 from run_create_codebuild_common import create_iam_service_role
 from run_create_codebuild_common import create_managed_secret_iam_policy
+from run_create_codebuild_common import create_notification_rule
+from run_create_codebuild_common import get_notification_rule
 from run_create_codebuild_common import have_parameter_store
+from run_create_codebuild_common import update_notification_rule
 
 
 def run_create_default_project(name, settings):
@@ -96,3 +99,15 @@ def run_create_default_project(name, settings):
         print_message(f'create project: {name}')
         cmd = ['codebuild', 'create-project', '--cli-input-json', config, '--source-version', git_branch]
         aws_cli.run(cmd)
+
+    ################################################################################
+    print_message('create slack notification')
+
+    project_arn = result['project']['arn']
+
+    notification_rule_arn = get_notification_rule(aws_cli, project_arn)
+
+    if not notification_rule_arn:
+        create_notification_rule(aws_cli, name, project_arn)
+    else:
+        update_notification_rule(aws_cli, name, notification_rule_arn)

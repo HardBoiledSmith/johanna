@@ -1,6 +1,27 @@
 #!/usr/bin/env python3
+import json
+
 from run_common import AWSCli
 from run_common import print_message
+
+
+def terminate_all_notification_rule(aws_cli, name, settings):
+    aws_default_region = settings['AWS_DEFAULT_REGION']
+
+    account_id = aws_cli.get_caller_account_id()
+    project_arn = f'arn:aws:codebuild:{aws_default_region}:{account_id}:project/{name}'
+
+    cmd = ['codestar-notifications', 'list-notification-rules']
+    tt = dict()
+    tt['Name'] = 'RESOURCE'
+    tt['Value'] = project_arn
+    cmd += ['--filters', json.dumps([tt])]
+    result = aws_cli.run(cmd)
+
+    for oo in result['NotificationRules']:
+        cmd = ['codestar-notifications', 'delete-notification-rule']
+        cmd += ['--arn', oo['Arn']]
+        aws_cli.run(cmd, ignore_error=True)
 
 
 def terminate_all_iam_role_and_policy(aws_cli, name, settings):
