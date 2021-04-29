@@ -32,39 +32,37 @@ def run_export_cloudwatch_dashboard(name, settings):
         pm = dw['properties'].get('metrics')
         if not pm:
             return
-        pm = pm[:1]
         prev = ''
         current_index = 0
-        if len(pm) < 1:
-            return
-        for dimension in pm[0]:
-            if service_type == 'elasticbeanstalk':
-                if prev == 'AutoScalingGroupName':
-                    pm[0][current_index] = 'AUTO_SCALING_GROUP_NAME'
-                if prev == 'EnvironmentName':
-                    pm[0][current_index] = 'ENVIRONMENT_NAME'
-                if prev == 'InstanceId':
-                    pm[0][current_index] = 'INSTANCE_ID'
-                if prev == 'LoadBalancerName':
-                    pm[0][current_index] = 'LOAD_BALANCER_NAME'
-                if prev == 'LoadBalancer':
-                    pm[0][current_index] = 'LOAD_BALANCER'
-                if prev == 'TargetGroup':
-                    pm[0][current_index] = 'TARGET_GROUP'
-                if type(dimension) == dict and 'label' in dimension \
-                        and re.match(r'^%s-[0-9]{10}$' % name, dimension['label']):
-                    dimension['label'] = 'ENVIRONMENT_NAME'
+        for pp in pm:
+            for dimension in pp:
+                if service_type == 'elasticbeanstalk':
+                    if prev == 'AutoScalingGroupName':
+                        pp[current_index] = 'AUTO_SCALING_GROUP_NAME'
+                    if prev == 'EnvironmentName':
+                        pp[current_index] = 'ENVIRONMENT_NAME'
+                    if prev == 'InstanceId':
+                        pp[current_index] = 'INSTANCE_ID'
+                    if prev == 'LoadBalancerName':
+                        pp[current_index] = 'LOAD_BALANCER_NAME'
+                    if prev == 'LoadBalancer':
+                        pp[current_index] = 'LOAD_BALANCER'
+                    if prev == 'TargetGroup':
+                        pp[current_index] = 'TARGET_GROUP'
+                    if type(dimension) == dict and 'label' in dimension \
+                            and re.match(r'^%s-[0-9]{10}$' % name, dimension['label']):
+                        dimension['label'] = 'ENVIRONMENT_NAME'
 
-            if service_type == 'rds/aurora':
-                if prev == 'Role':
-                    pm[0][current_index] = 'ROLE'
-                if prev == 'DBClusterIdentifier':
-                    pm[0][current_index] = 'DB_CLUSTER_IDENTIFIER'
-                if prev == 'DbClusterIdentifier':
-                    pm[0][current_index] = 'DB_CLUSTER_IDENTIFIER'
+                if service_type == 'rds/aurora':
+                    if prev == 'Role':
+                        pp[current_index] = 'ROLE'
+                    if prev == 'DBClusterIdentifier':
+                        pp[current_index] = 'DB_CLUSTER_IDENTIFIER'
+                    if prev == 'DbClusterIdentifier':
+                        pp[current_index] = 'DB_CLUSTER_IDENTIFIER'
 
-            prev = dimension
-            current_index += 1
+                prev = dimension
+                current_index += 1
         dw['properties']['metrics'] = pm
 
     template_name = env['template']['NAME']
@@ -88,23 +86,23 @@ def run_export_cloudwatch_dashboard_sqs_lambda(name, settings):
 
     for dw in dashboard_body['widgets']:
         pm = dw['properties']['metrics']
-        first_pm = pm[:1]
+        if not pm:
+            return
         prev = ''
         current_index = 0
-        if len(first_pm) < 1:
-            return
-        for dimension in first_pm[0]:
-            if prev == 'QueueName':
-                queue_name = first_pm[0][current_index]
-                if queue_name.startswith('dv-'):
-                    queue_name = queue_name.replace('dv-', 'PHASE-')
-                if queue_name.startswith('qa-'):
-                    queue_name = queue_name.replace('qa-', 'PHASE-')
-                if queue_name.startswith('op-'):
-                    queue_name = queue_name.replace('op-', 'PHASE-')
-                first_pm[0][current_index] = queue_name
-            prev = dimension
-            current_index += 1
+        for pp in pm:
+            for dimension in pp:
+                if prev == 'QueueName':
+                    queue_name = pp[current_index]
+                    if queue_name.startswith('dv-'):
+                        queue_name = queue_name.replace('dv-', 'PHASE-')
+                    if queue_name.startswith('qa-'):
+                        queue_name = queue_name.replace('qa-', 'PHASE-')
+                    if queue_name.startswith('op-'):
+                        queue_name = queue_name.replace('op-', 'PHASE-')
+                    pp[current_index] = queue_name
+                prev = dimension
+                current_index += 1
         dw['properties']['metrics'] = pm
 
         title = dw['properties']['title']

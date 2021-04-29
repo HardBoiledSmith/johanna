@@ -7,7 +7,10 @@ from run_common import print_message
 from run_create_codebuild_common import create_base_iam_policy
 from run_create_codebuild_common import create_iam_service_role
 from run_create_codebuild_common import create_managed_secret_iam_policy
+from run_create_codebuild_common import create_notification_rule
+from run_create_codebuild_common import get_notification_rule
 from run_create_codebuild_common import have_parameter_store
+from run_create_codebuild_common import update_notification_rule
 
 
 def create_vpc_iam_policy(aws_cli, name, settings, role_name, subnet_id):
@@ -136,7 +139,7 @@ def run_create_vpc_project(name, settings):
     subnet_id, security_group_id = get_eb_private_subnet_and_security_group_id(aws_cli)
     create_vpc_iam_policy(aws_cli, name, settings, service_role_name, subnet_id)
 
-    time.sleep(5)
+    time.sleep(10)
     service_role_arn = aws_cli.get_role_arn(service_role_name)
 
     ################################################################################

@@ -1,6 +1,6 @@
-[![Build Status](https://codebuild.ap-northeast-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiQWJKb1lUc0tkNnlEVWZPMldDa3FoQncrOEdKS2M1emM2eG9pNmR4UW9aWVJmZXl3c0xUVU4wR2tmVDcySHpSRm1hTHBNSTE0V0RUU1lYV29YdmpVMS9nPSIsIml2UGFyYW1ldGVyU3BlYyI6IjI3TU5qY0hZRGFTL29EbEMiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)](https://ap-northeast-2.console.aws.amazon.com/codesuite/codebuild/projects/build_test_johanna/history)
+# Johanna
 
-# Introduction
+[![Build Status](https://codebuild.ap-northeast-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiZ1BqQzAxWTF6ZEV3TmJyWWtVQ1lpOEpYTkFxMEh5amNRd3U3bnp2anpiQXhtQm8wSTJLZFYxRndSYVhJc0VCRFdKNG1mMWtaUFpqWlB1d1JEdHlUU1hvPSIsIml2UGFyYW1ldGVyU3BlYyI6InArbTJQTHh6Y08yalMwZmMiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)](https://ap-northeast-2.console.aws.amazon.com/codesuite/codebuild/projects/build_test_johanna/history)
 
 Johanna is a collection of boilerplate Python scripts that can do provisioning/deprovisioning of a simple backend system using AWS.
 
@@ -117,8 +117,9 @@ You can create client configuration (.ovpn) for AWS Client VPN
 ## Troubleshooting - ACM quotas
 > "You have reached the maximum number of certificates. Delete certificates that are not in use, or contact AWS Support to request an increase."
 
-By default, you can import up to 1000 certificates into ACM, but new AWS accounts might start with a lower limit. If you exceed this limit, request an ACM quota increase. You can solve this issue by [opening support case](https://docs.aws.amazon.com/acm/latest/userguide/acm-limits.html).
-
+By default, you can import up to 1000 certificates into ACM, but new AWS accounts might start with a lower limit. If you exceed this limit, request an ACM quota increase with these. You can solve this issue by [opening support case](https://docs.aws.amazon.com/acm/latest/userguide/acm-limits.html).
+- AWS Certificate Manager (ACM) > Imported certificates in last 365 days
+- AWS Certificate Manager (ACM) > ACM certificates created in last 365 days
 
 
 # Links

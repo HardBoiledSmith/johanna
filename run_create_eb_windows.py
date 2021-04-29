@@ -178,21 +178,6 @@ def run_create_eb_windows(name, settings):
     write_file(
         f'{template_path}/{name}/_provisioning/configuration/Users/vagrant/Desktop/{name}_exe/settings_local.py', lines)
 
-    lines = read_file(f'{template_path}/{name}/_provisioning/configuration/'
-                      f'Users/vagrant/Desktop/{name}_exe/{name}.exe_sample.config')
-    option_list = list()
-    option_list.append(['PHASE', phase])
-    for key in settings:
-        value = settings[key]
-        option_list.append([key, value])
-    for oo in option_list:
-        if oo[0] == 'SENTRY_DSN':
-            lines = re_sub_lines(lines, '^.+Dsn value=.+$', f'<Dsn value="{oo[1]}" />')
-        else:
-            lines = re_sub_lines(lines, f'^.+add key=\"({oo[0]})\" value=.+$', f'<add key="\\1" value="{oo[1]}" />')
-    write_file(f'{template_path}/{name}/_provisioning/configuration/'
-               f'Users/vagrant/Desktop/{name}_exe/{name}.exe.config', lines)
-
     ################################################################################
     print_message('download artifact')
 
@@ -369,6 +354,27 @@ def run_create_eb_windows(name, settings):
     oo['Namespace'] = 'aws:elasticbeanstalk:healthreporting:system'
     oo['OptionName'] = 'SystemType'
     oo['Value'] = 'enhanced'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:healthreporting:system'
+    oo['OptionName'] = 'ConfigDocument'
+    cw_env = dict()
+    cw_env['ApplicationRequestsTotal'] = 60
+    cw_env['ApplicationRequests2xx'] = 60
+    cw_env['ApplicationRequests3xx'] = 60
+    cw_env['ApplicationRequests4xx'] = 60
+    cw_env['ApplicationRequests5xx'] = 60
+    cw_instance = dict()
+    cw_instance['InstanceHealth'] = 60
+    cw_instance['CPUIdle'] = 60
+    cw = dict()
+    cw['Environment'] = cw_env
+    cw['Instance'] = cw_instance
+    cfg_doc = dict()
+    cfg_doc['CloudWatchMetrics'] = cw
+    cfg_doc['Version'] = 1
+    oo['Value'] = json.dumps(cfg_doc)
     option_settings.append(oo)
 
     oo = dict()
