@@ -59,15 +59,15 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
     cmd += ['--no-include-deleted']
     result = aws_cli.run(cmd)
 
-    latest_name = ''
     latest_ee = None
+    latest_name = ''
     for ee in result['Environments']:
         ename = ee['EnvironmentName']
         if not ename.startswith(name):
             continue
         if latest_name < ename:
             latest_ee = ee
-        latest_name = ename
+            latest_name = ename
 
     env_list = [latest_ee]
 
