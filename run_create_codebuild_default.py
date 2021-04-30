@@ -94,11 +94,11 @@ def run_create_default_project(name, settings):
     if need_update:
         print_message(f'update project: {name}')
         cmd = ['codebuild', 'update-project', '--cli-input-json', config, '--source-version', git_branch]
-        aws_cli.run(cmd)
+        result = aws_cli.run(cmd)
     else:
         print_message(f'create project: {name}')
         cmd = ['codebuild', 'create-project', '--cli-input-json', config, '--source-version', git_branch]
-        aws_cli.run(cmd)
+        result = aws_cli.run(cmd)
 
     ################################################################################
     print_message('create slack notification')
