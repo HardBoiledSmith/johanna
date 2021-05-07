@@ -35,7 +35,7 @@ def run_create_eb_windows(name, settings):
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = f'{service_name}_' if service_name else ''
     url = settings['ARTIFACT_URL']
-    dv_branch = settings.get('BRANCH', 'master')
+    dv_branch = settings.get('BRANCH', 'DEV-11644')
     cidr_subnet = aws_cli.cidr_subnet
 
     str_timestamp = str(int(time.time()))
@@ -281,6 +281,12 @@ def run_create_eb_windows(name, settings):
     print_message(f'create environment {name}')
 
     option_settings = list()
+
+    oo = dict()
+    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
+    oo['OptionName'] = 'ImageId'
+    oo['Value'] = 'ami-05c5c7a60ee93b26f'
+    option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
