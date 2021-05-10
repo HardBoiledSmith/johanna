@@ -101,6 +101,9 @@ def run_create_s3_bucket(name, settings):
                         "Status": "Enabled",
                         "Filter": {
                         },
+                        "Expiration": {
+                            "ExpiredObjectDeleteMarker": True
+                        },
                         "NoncurrentVersionExpiration": {
                             "NoncurrentDays": versioning_expire_days
                         },
