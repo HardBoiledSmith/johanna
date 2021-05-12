@@ -155,4 +155,7 @@ if db_multi_az == '--multi-az':
     cmd += ['--db-instance-identifier', '%s-%s' % (db_instance_id, ss)]
     cmd += ['--db-instance-class', db_instance_class]
     cmd += ['--engine', 'aurora-mysql']
+    cmd += ['--monitoring-interval', monitoring_interval]
+    cmd += ['--monitoring-role-arn', monitoring_role_arn]
+    cmd += ['--enable-performance-insights']
     aws_cli.run(cmd)
