@@ -145,6 +145,7 @@ cmd += ['--iops', db_iops]
 cmd += ['--license-model', license_model]
 cmd += ['--monitoring-interval', monitoring_interval]
 cmd += ['--monitoring-role-arn', monitoring_role_arn]
+cmd += ['--enable-performance-insights']
 aws_cli.run(cmd)
 
 if db_multi_az == '--multi-az':
