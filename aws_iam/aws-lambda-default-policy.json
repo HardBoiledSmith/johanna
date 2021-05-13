@@ -25,7 +25,10 @@
       "Resource": "*"
     },
     {
-      "Action": "autoscaling-plans:*",
+      "Action": [
+          "autoscaling:DescribeAutoScalingGroups",
+          "autoscaling:UpdateAutoScalingGroup"
+      ],
       "Effect": "Allow",
       "Resource": "*"
     },
