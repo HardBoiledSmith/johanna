@@ -12,7 +12,7 @@ from run_common import print_session
 from run_common import re_sub_lines
 from run_common import read_file
 from run_common import write_file
-from run_create_lambda import create_iam_for_lambda
+from run_create_lambda_iam import create_iam_for_lambda
 
 
 def run_create_lambda_ses_sqs(function_name, settings):
