@@ -50,7 +50,7 @@ def run_create_lambda_event(function_name, settings):
     ################################################################################
     print_message(f'create iam: {function_name}')
 
-    role_created = create_iam_for_lambda(git_folder_name, function_name)
+    role_created = create_iam_for_lambda(git_folder_name, folder_name, function_name)
     if role_created:
         print_message('wait 120 seconds to let iam role and policy propagated to all regions...')
         time.sleep(120)

@@ -69,7 +69,8 @@ else:
         if not mm:
             raise Exception()
         git_folder_name = mm.group(1)
-        rr = create_iam_for_lambda(git_folder_name, lambda_env['NAME'])
+        folder_name = lambda_env.get('FOLDER_NAME', lambda_env['NAME'])
+        rr = create_iam_for_lambda(git_folder_name, folder_name, lambda_env['NAME'])
         if rr:
             role_created = rr
 
