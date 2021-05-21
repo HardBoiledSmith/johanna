@@ -58,7 +58,6 @@ command_list.append('describe_rds')
 command_list.append('describe_sns')
 command_list.append('describe_vpc')
 
-command_list.append('export_cloudwatch_dashboard')
 command_list.append('reset_template')
 
 
