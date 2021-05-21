@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 import time
 
 from env import env
@@ -21,36 +22,6 @@ if __name__ == "__main__":
 
 aws_cli = AWSCli()
 
-
-def create_iam_for_lambda(lambda_type):
-    sleep_required = False
-
-    role_name = 'aws-lambda-%s-role' % lambda_type
-    if not aws_cli.get_iam_role(role_name):
-        print_message('create iam role')
-
-        role_file_path = 'file://aws_iam/%s.json' % role_name
-        cmd = ['iam', 'create-role']
-        cmd += ['--role-name', role_name]
-        cmd += ['--assume-role-policy-document', role_file_path]
-        aws_cli.run(cmd)
-        sleep_required = True
-
-    policy_name = 'aws-lambda-%s-policy' % lambda_type
-    if not aws_cli.get_iam_role_policy(role_name, policy_name):
-        print_message('put iam role policy')
-
-        policy_file_path = 'file://aws_iam/%s.json' % policy_name
-        cmd = ['iam', 'put-role-policy']
-        cmd += ['--role-name', role_name]
-        cmd += ['--policy-name', policy_name]
-        cmd += ['--policy-document', policy_file_path]
-        aws_cli.run(cmd)
-        sleep_required = True
-
-    return sleep_required
-
-
 ################################################################################
 #
 # start
@@ -59,10 +30,6 @@ def create_iam_for_lambda(lambda_type):
 print_session('create lambda')
 
 ################################################################################
-default_role_created = create_iam_for_lambda('default')
-if default_role_created:
-    print_message('wait 120 seconds to let iam role and policy propagated to all regions...')
-    time.sleep(120)
 
 lambdas_list = env['lambda']
 if len(args) == 2:
