@@ -109,9 +109,10 @@ def run_create_client_vpn(name, settings):
     print_message('create client vpn endpoint')
 
     ao = dict()
-    ao['Type'] = 'certificate-authentication'
-    ao['MutualAuthentication'] = dict()
-    ao['MutualAuthentication']['ClientRootCertificateChainArn'] = server_cert_arn
+    ao['Type'] = 'federated-authentication'
+    ao['FederatedAuthentication'] = dict()
+    ao['FederatedAuthentication']['SAMLProviderArn'] = 'arn:aws:iam::788968797716:saml-provider/Okta-ClientVPN'
+    ao['FederatedAuthentication']['SelfServiceSAMLProviderArn'] = ao['FederatedAuthentication']['SAMLProviderArn']
     ao = [ao]
 
     cmd = ['ec2', 'create-client-vpn-endpoint']
@@ -125,6 +126,7 @@ def run_create_client_vpn(name, settings):
     cmd += ['--security-group-ids', eb_security_group_id]
     cmd += ['--vpc-id', eb_vpc_id]
     cmd += ['--tag-specifications', 'ResourceType=client-vpn-endpoint,Tags=[{Key=Name,Value=%s}]' % name]
+    cmd += ['--self-service-portal', 'enabled']
     result = aws_cli.run(cmd)
 
     vpn_endpoint_id = result['ClientVpnEndpointId']
