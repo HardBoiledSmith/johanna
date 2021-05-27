@@ -145,13 +145,19 @@ cmd += ['--iops', db_iops]
 cmd += ['--license-model', license_model]
 cmd += ['--monitoring-interval', monitoring_interval]
 cmd += ['--monitoring-role-arn', monitoring_role_arn]
+cmd += ['--enable-performance-insights']
 aws_cli.run(cmd)
 
 if db_multi_az == '--multi-az':
     cmd = ['rds', 'create-db-instance']
     cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
+    cmd += ['--db-instance-class', db_instance_class]
     ss = datetime.datetime.today().strftime('%Y%m%d')
     cmd += ['--db-instance-identifier', '%s-%s' % (db_instance_id, ss)]
-    cmd += ['--db-instance-class', db_instance_class]
     cmd += ['--engine', 'aurora-mysql']
+    cmd += ['--iops', db_iops]
+    cmd += ['--license-model', license_model]
+    cmd += ['--monitoring-interval', monitoring_interval]
+    cmd += ['--monitoring-role-arn', monitoring_role_arn]
+    cmd += ['--enable-performance-insights']
     aws_cli.run(cmd)

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import json
 import re
+from datetime import datetime
+from datetime import timedelta
 
 from env import env
 from run_common import AWSCli
@@ -56,14 +58,105 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
     print_message(f'get elasticbeanstalk environment info: {name}')
 
     cmd = ['elasticbeanstalk', 'describe-environments']
+    cmd += ['--include-deleted']
+    dd = datetime.now() - timedelta(weeks=8)
+    cmd += ['--included-deleted-back-to', dd.strftime('%Y-%m-%d')]
+    result = aws_cli.run(cmd)
+
+    eid_list = set()
+    for ee in result['Environments']:
+        ename = ee['EnvironmentName']
+        if not ename.startswith(name):
+            continue
+        eid_list.add(ee['EnvironmentId'])
+
+    def find_metrics(*args):
+        cmd = ['cloudwatch', 'list-metrics']
+        cmd += ['--namespace', args[0]]
+        cmd += ['--metric-name', args[1]]
+        result = aws_cli.run(cmd)
+
+        mm_list = list()
+
+        for cc in result['Metrics']:
+            dd = cc['Dimensions']
+            if args[2] != dd[0]['Name']:
+                continue
+
+            mm = re.match(r'^awseb-(.+)-stack.+$', dd[0]['Value'])
+            if not mm:
+                continue
+
+            eid = mm.group(1)
+            if eid not in eid_list:
+                continue
+
+            mm_list.append(cc)
+        return mm_list
+
+    ################################################################################
+    dashboard_name = '%s_%s' % (name, dashboard_region)
+    print_message('create or update cloudwatch dashboard: %s' % dashboard_name)
+
+    template_name = env['template']['NAME']
+    filename_path = 'template/%s/cloudwatch/%s.json' % (template_name, dashboard_name)
+    with open(filename_path, 'r') as ff:
+        dashboard_body = json.load(ff)
+
+    asg_only = ['CPUUtilization', 'CPUCreditBalance', 'CPUSurplusCreditBalance', 'NetworkIn', 'NetworkOut']
+
+    for dw in dashboard_body['widgets']:
+        if dw['properties'].get('title') not in asg_only:
+            continue
+        if not dw['properties'].get('metrics'):
+            continue
+        pm = dw['properties']['metrics']
+        ii = 1
+        new_metric = []
+
+        ll = find_metrics(*pm[0])
+        for oo in ll:
+            mm = [oo['Namespace'], oo['MetricName']]
+            for aa in oo['Dimensions']:
+                mm.append(aa['Name'])
+                mm.append(aa['Value'])
+            mm.append({'id': f'max{ii}', 'visible': False, 'stat': 'Maximum'})
+            new_metric.append(mm)
+
+            mm = [oo['Namespace'], oo['MetricName']]
+            for aa in oo['Dimensions']:
+                mm.append(aa['Name'])
+                mm.append(aa['Value'])
+            mm.append({'id': f'avg{ii}', 'visible': False, 'stat': 'Average'})
+            new_metric.append(mm)
+
+            mm = [oo['Namespace'], oo['MetricName']]
+            for aa in oo['Dimensions']:
+                mm.append(aa['Name'])
+                mm.append(aa['Value'])
+            mm.append({'id': f'min{ii}', 'visible': False, 'stat': 'Minimum'})
+            new_metric.append(mm)
+            ii += 1
+
+        new_metric += pm[1:]
+        dw['properties']['metrics'] = new_metric
+
+    ################################################################################
+    cmd = ['elasticbeanstalk', 'describe-environments']
     cmd += ['--no-include-deleted']
     result = aws_cli.run(cmd)
 
-    env_list = list()
+    latest_ee = None
+    latest_name = ''
     for ee in result['Environments']:
         ename = ee['EnvironmentName']
-        if ename.startswith(name):
-            env_list.append(ee)
+        if not ename.startswith(name):
+            continue
+        if latest_name < ename:
+            latest_ee = ee
+            latest_name = ename
+
+    env_list = [latest_ee]
 
     env_instances_list = list()
     env_asg_list = list()
@@ -103,16 +196,9 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
                 ii['EnvironmentName'] = ee_res['EnvironmentName']
                 env_tg_list.append(ii)
 
-    ################################################################################
-    dashboard_name = '%s_%s' % (name, dashboard_region)
-    print_message('create or update cloudwatch dashboard: %s' % dashboard_name)
-
-    template_name = env['template']['NAME']
-    filename_path = 'template/%s/cloudwatch/%s.json' % (template_name, dashboard_name)
-    with open(filename_path, 'r') as ff:
-        dashboard_body = json.load(ff)
-
     for dw in dashboard_body['widgets']:
+        if dw['properties'].get('title') in asg_only:
+            continue
         if not dw['properties'].get('metrics'):
             continue
         pm = dw['properties']['metrics']
@@ -165,6 +251,7 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
 
         dw['properties']['metrics'] = new_metric
 
+    ################################################################################
     phase = env['common']['PHASE']
     dashboard_body = json.dumps(dashboard_body)
     dashboard_body = dashboard_body.replace('PHASE-', '%s-' % phase)

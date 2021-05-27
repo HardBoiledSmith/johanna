@@ -81,17 +81,17 @@ def run_create_eb_django_al2(name, settings):
             if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
                 elb_subnet_id_2 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['public_3']:
-                elb_subnet_id_1 = r['SubnetId']
+                elb_subnet_id_3 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['public_4']:
-                elb_subnet_id_2 = r['SubnetId']
+                elb_subnet_id_4 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
                 ec2_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
                 ec2_subnet_id_2 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_3']:
-                ec2_subnet_id_1 = r['SubnetId']
+                ec2_subnet_id_3 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_4']:
-                ec2_subnet_id_2 = r['SubnetId']
+                ec2_subnet_id_4 = r['SubnetId']
         elif 'private' == subnet_type:
             if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
                 elb_subnet_id_1 = ec2_subnet_id_1 = r['SubnetId']
@@ -419,7 +419,7 @@ def run_create_eb_django_al2(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2 v3.2.1 running Python 3.8']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2 v3.2.2 running Python 3.8']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
