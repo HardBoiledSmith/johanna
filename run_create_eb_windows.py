@@ -378,6 +378,12 @@ def run_create_eb_windows(name, settings):
     option_settings.append(oo)
 
     oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:healthreporting:system'
+    oo['OptionName'] = 'EnhancedHealthAuthEnabled'
+    oo['Value'] = 'true'
+    option_settings.append(oo)
+
+    oo = dict()
     oo['Namespace'] = 'aws:elasticbeanstalk:cloudwatch:logs'
     oo['OptionName'] = 'StreamLogs'
     oo['Value'] = 'true'

@@ -117,7 +117,6 @@ def _preprocess(hostname):
     _print_line_number()
 
     _run(['/usr/bin/pip-3.7', 'install', '-U', 'pip'])
-    _run(['ln', '-s', '/usr/local/bin/pip3', '/usr/bin/pip3'])
     file_path_name = '/vagrant/requirements.txt'
     if os.path.exists(file_path_name):
         with open(file_path_name, 'r') as f:
@@ -134,8 +133,8 @@ def _preprocess(hostname):
 
     _print_line_number()
 
-    node_version = 'v12.16.1'
-    _run(['wget', 'https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh'], cwd='/root')
+    node_version = 'v14.17.0'
+    _run(['wget', 'https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh'], cwd='/root')
     _run(['chmod', '+x', 'install.sh'], cwd='/root')
     _run(['./install.sh'], cwd='/root')
 
