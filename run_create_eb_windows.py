@@ -285,7 +285,7 @@ def run_create_eb_windows(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'ImageId'
-    oo['Value'] = 'ami-05c5c7a60ee93b26f'
+    oo['Value'] = 'ami-049b5e6e772427d55'
     option_settings.append(oo)
 
     oo = dict()
