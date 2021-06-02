@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 
+from run_terminate_lambda_iam import terminate_iam_for_lambda
 from env import env
 from run_common import AWSCli
 from run_common import print_message
@@ -12,23 +13,6 @@ if __name__ == "__main__":
     from run_common import parse_args
 
     args = parse_args()
-
-
-def terminate_iam_for_lambda(lambda_type):
-    aws_cli = AWSCli()
-
-    print_message('delete iam role policy')
-
-    cmd = ['iam', 'delete-role-policy']
-    cmd += ['--role-name', f'aws-lambda-{lambda_type}-role']
-    cmd += ['--policy-name', f'aws-lambda-{lambda_type}-policy']
-    aws_cli.run(cmd, ignore_error=True)
-
-    print_message('delete iam role')
-
-    cmd = ['iam', 'delete-role']
-    cmd += ['--role-name', f'aws-lambda-{lambda_type}-role']
-    aws_cli.run(cmd, ignore_error=True)
 
 
 def run_terminate_default_lambda(function_name, settings):
@@ -220,21 +204,27 @@ if len(args) == 2:
             target_lambda_name_exists = True
             if lambda_env['TYPE'] == 'default':
                 run_terminate_default_lambda(lambda_env['NAME'], lambda_env)
+                terminate_iam_for_lambda(lambda_env['NAME'])
                 break
             if lambda_env['TYPE'] == 'cron':
                 run_terminate_cron_lambda(lambda_env['NAME'], lambda_env)
+                terminate_iam_for_lambda(lambda_env['NAME'])
                 break
             if lambda_env['TYPE'] == 'sns':
                 run_terminate_sns_lambda(lambda_env['NAME'], lambda_env)
+                terminate_iam_for_lambda(lambda_env['NAME'])
                 break
             if lambda_env['TYPE'] == 'sqs':
                 run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
+                terminate_iam_for_lambda(lambda_env['NAME'])
                 break
             if lambda_env['TYPE'] == 'ses_sqs':
                 run_terminate_ses_sqs_lambda(lambda_env['NAME'], lambda_env)
+                terminate_iam_for_lambda(lambda_env['NAME'])
                 break
             if lambda_env['TYPE'] == 'event':
                 run_terminate_event_lambda(lambda_env['NAME'], lambda_env)
+                terminate_iam_for_lambda(lambda_env['NAME'])
                 continue
             print(f"\"{lambda_env['TYPE']}\" is not supported")
             raise Exception()
@@ -244,23 +234,27 @@ else:
     for lambda_env in lambdas_list:
         if lambda_env['TYPE'] == 'default':
             run_terminate_default_lambda(lambda_env['NAME'], lambda_env)
+            terminate_iam_for_lambda(lambda_env['NAME'])
             continue
         if lambda_env['TYPE'] == 'cron':
             run_terminate_cron_lambda(lambda_env['NAME'], lambda_env)
+            terminate_iam_for_lambda(lambda_env['NAME'])
             continue
         if lambda_env['TYPE'] == 'sns':
             run_terminate_sns_lambda(lambda_env['NAME'], lambda_env)
+            terminate_iam_for_lambda(lambda_env['NAME'])
             continue
         if lambda_env['TYPE'] == 'sqs':
             run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
+            terminate_iam_for_lambda(lambda_env['NAME'])
             continue
         if lambda_env['TYPE'] == 'ses_sqs':
             run_terminate_ses_sqs_lambda(lambda_env['NAME'], lambda_env)
+            terminate_iam_for_lambda(lambda_env['NAME'])
             continue
         if lambda_env['TYPE'] == 'event':
             run_terminate_event_lambda(lambda_env['NAME'], lambda_env)
+            terminate_iam_for_lambda(lambda_env['NAME'])
             continue
         print(f"\"{lambda_env['TYPE']}\" is not supported")
         raise Exception()
-    terminate_iam_for_lambda('sqs')
-    terminate_iam_for_lambda('default')

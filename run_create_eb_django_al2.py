@@ -81,17 +81,17 @@ def run_create_eb_django_al2(name, settings):
             if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
                 elb_subnet_id_2 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['public_3']:
-                elb_subnet_id_1 = r['SubnetId']
+                elb_subnet_id_3 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['public_4']:
-                elb_subnet_id_2 = r['SubnetId']
+                elb_subnet_id_4 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
                 ec2_subnet_id_1 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
                 ec2_subnet_id_2 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_3']:
-                ec2_subnet_id_1 = r['SubnetId']
+                ec2_subnet_id_3 = r['SubnetId']
             if r['CidrBlock'] == cidr_subnet['eb']['private_4']:
-                ec2_subnet_id_2 = r['SubnetId']
+                ec2_subnet_id_4 = r['SubnetId']
         elif 'private' == subnet_type:
             if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
                 elb_subnet_id_1 = ec2_subnet_id_1 = r['SubnetId']

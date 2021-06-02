@@ -2,6 +2,7 @@
 import os
 import re
 import subprocess
+import time
 
 from env import env
 from run_common import AWSCli
@@ -10,6 +11,7 @@ from run_common import print_session
 from run_common import re_sub_lines
 from run_common import read_file
 from run_common import write_file
+from run_create_lambda_iam import create_iam_for_lambda
 
 
 def run_create_lambda_sns(function_name, settings):
@@ -43,6 +45,14 @@ def run_create_lambda_sns(function_name, settings):
             raise Exception()
 
     deploy_folder = 'template/%s/lambda/%s' % (git_folder_name, folder_name)
+
+    ################################################################################
+    print_message(f'create iam: {function_name}')
+
+    role_created = create_iam_for_lambda(git_folder_name, folder_name, function_name)
+    if role_created:
+        print_message('wait 10 seconds to let iam role and policy propagated to all regions...')
+        time.sleep(10)
 
     ################################################################################
     topic_arn_list = list()
@@ -90,7 +100,8 @@ def run_create_lambda_sns(function_name, settings):
 
     print_message('create lambda function')
 
-    role_arn = aws_cli.get_role_arn('aws-lambda-default-role')
+    replaced_function_name = function_name.replace('_', '-')
+    role_arn = aws_cli.get_role_arn(f'lambda-{replaced_function_name}-role')
 
     git_hash_johanna = subprocess.Popen(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE).communicate()[0]
     git_hash_template = subprocess.Popen(['git', 'rev-parse', 'HEAD'],
