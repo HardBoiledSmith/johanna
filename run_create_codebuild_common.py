@@ -154,6 +154,24 @@ def create_base_iam_policy(aws_cli, name, settings, role_name):
             ]
         }
 
+        if 'IAM_POLICY_S3_BUCKET_NAME' in settings:
+            pp = {
+                'Effect': 'Allow',
+                'Action': [
+                    's3:DeleteObject',
+                    's3:GetObject',
+                    's3:ListBucket',
+                    's3:ListObjects',
+                    's3:PutObject',
+                    's3:PutObjectAcl'
+                ],
+                'Resource': [
+                    f"arn:aws:s3:::{settings['IAM_POLICY_S3_BUCKET_NAME']}",
+                    f"arn:aws:s3:::{settings['IAM_POLICY_S3_BUCKET_NAME']}/*"
+                ]
+            }
+            dd['Statement'].append(pp)
+
         if 'ARTIFACTS' in settings and settings['ARTIFACTS']['type'] == 'S3':
             pp = {
                 'Effect': 'Allow',
