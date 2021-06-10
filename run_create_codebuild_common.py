@@ -161,7 +161,6 @@ def create_base_iam_policy(aws_cli, name, settings, role_name):
                     's3:DeleteObject',
                     's3:GetObject',
                     's3:ListBucket',
-                    's3:ListObjects',
                     's3:PutObject',
                     's3:PutObjectAcl'
                 ],
