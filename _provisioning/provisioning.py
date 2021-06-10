@@ -106,7 +106,7 @@ def _preprocess(hostname):
 
     _print_line_number()
 
-    _run(['yum', '-y', 'update'])
+    # _run(['yum', '-y', 'update'])
     file_path_name = '/vagrant/requirements_rpm.txt'
     if os.path.exists(file_path_name):
         with open(file_path_name, 'r') as f:
