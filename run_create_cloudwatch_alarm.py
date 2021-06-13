@@ -32,7 +32,7 @@ def run_create_cloudwatch_alarm_lambda(name, settings):
     dd['Id'] = 'errors'
     dd['MetricStat'] = dict()
     dd['MetricStat']['Metric'] = dict()
-    dd['MetricStat']['Metric']['Dimensions'] = []
+    dd['MetricStat']['Metric']['Dimensions'] = list()
     dd['MetricStat']['Metric']['MetricName'] = 'Errors'
     dd['MetricStat']['Metric']['Namespace'] = 'AWS/Lambda'
     dd['MetricStat']['Period'] = 60 * 5
