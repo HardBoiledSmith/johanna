@@ -27,40 +27,17 @@ def run_create_cloudwatch_alarm_lambda(name, settings):
         print('sns topic: "%s" is not exists in %s' % (settings['SNS_TOPIC_NAME'], alarm_region))
         raise Exception()
 
-    dimensions = list()
-    dimensions.append({"Name": "FunctionName", "Value": name})
-    dimensions.append({"Name": "Resource", "Value": name})
-
     metrics = list()
-    dd = dict()
-    dd['Id'] = 'availability'
-    dd['Expression'] = '100 - 100 * errors / invocations'
-    dd['Label'] = 'Success rate (%)'
-    dd['ReturnData'] = True
-    metrics.append(dd)
-
     dd = dict()
     dd['Id'] = 'errors'
     dd['MetricStat'] = dict()
     dd['MetricStat']['Metric'] = dict()
-    dd['MetricStat']['Metric']['Dimensions'] = dimensions
+    dd['MetricStat']['Metric']['Dimensions'] = list()
     dd['MetricStat']['Metric']['MetricName'] = 'Errors'
     dd['MetricStat']['Metric']['Namespace'] = 'AWS/Lambda'
-    dd['MetricStat']['Period'] = 60 * 15
-    dd['MetricStat']['Stat'] = 'Sum'
-    dd['ReturnData'] = False
-    metrics.append(dd)
-
-    dd = dict()
-    dd['Id'] = 'invocations'
-    dd['MetricStat'] = dict()
-    dd['MetricStat']['Metric'] = dict()
-    dd['MetricStat']['Metric']['Dimensions'] = dimensions
-    dd['MetricStat']['Metric']['MetricName'] = 'Invocations'
-    dd['MetricStat']['Metric']['Namespace'] = 'AWS/Lambda'
-    dd['MetricStat']['Period'] = 60 * 15
-    dd['MetricStat']['Stat'] = 'Sum'
-    dd['ReturnData'] = False
+    dd['MetricStat']['Period'] = 60 * 5
+    dd['MetricStat']['Stat'] = 'Maximum'
+    dd['ReturnData'] = True
     metrics.append(dd)
 
     cmd = ['cloudwatch', 'put-metric-alarm']
