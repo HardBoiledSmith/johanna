@@ -212,6 +212,13 @@ def run_create_s3_vue(name, settings):
         print(invalidate_result)
 
     ################################################################################
+    print_message('upload sourcemaps at sentry')
+
+    subprocess.Popen(['sentry-cli', 'releases', '-p', f'{git_folder_name}-{name}', 'files', git_hash_app,
+                      'upload-sourcemaps', 'app/dist/js'],
+                     cwd=f'template/{git_folder_name}').communicate()
+
+    ################################################################################
     print_message('finalize release for sentry')
 
     subprocess.Popen(['sentry-cli', 'releases', 'finalize', git_hash_app],
