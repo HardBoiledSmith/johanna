@@ -45,6 +45,25 @@
       ],
       "Effect": "Allow",
       "Resource": "*"
+    },
+    {
+      "Sid": "Sachiel",
+      "Action":[
+        "appstream:CreateStreamingURL",
+        "connect:StartOutboundVoiceContact",
+        "cloudwatch:DescribeAlarms",
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey",
+        "kms:GenerateDataKeyPair",
+        "kms:GenerateDataKeyPairWithoutPlaintext",
+        "kms:GenerateDataKeyWithoutPlaintext",
+        "kms:ReEncryptFrom",
+        "kms:ReEncryptTo"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
     }
   ]
 }
