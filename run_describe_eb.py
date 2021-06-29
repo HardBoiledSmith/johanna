@@ -5,15 +5,15 @@ from run_common import AWSCli
 aws_cli = AWSCli()
 
 
-def describe_list_roles():
+def describe_list_roles(name):
     cmd = ['iam', 'list-roles']
     result = aws_cli.run(cmd)
     count = 0
 
     for role in result['Roles']:
-        if role['RoleName'] == 'aws-elasticbeanstalk-ec2-role':
+        if role['RoleName'] == f'aws-elasticbeanstalk-{name}-ec2-role':
             count += 1
-        if role['RoleName'] == 'aws-elasticbeanstalk-service-role':
+        if role['RoleName'] == f'aws-elasticbeanstalk-{name}-service-role':
             count += 1
 
     if count == 3:
@@ -66,10 +66,11 @@ if __name__ == "__main__":
 
 results = list()
 
-if not describe_list_roles():
-    results.append('IAM Roles -------------- X')
-else:
-    results.append('IAM Roles -------------- O')
+for environment in env['elasticbeanstalk']['ENVIRONMENTS']:
+    if not describe_list_roles(environment['NAME']):
+        results.append(f'IAM {environment["NAME"]} Roles -------------- X')
+    else:
+        results.append(f'IAM {environment["NAME"]} Roles -------------- O')
 
 if not describe_role_policy():
     results.append('IAM Role Policy -------------- X')

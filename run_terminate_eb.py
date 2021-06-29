@@ -52,6 +52,51 @@ def run_terminate_environment(name):
         time.sleep(5)
         elapsed_time += 5
 
+    ################################################################################
+
+    instance_profile_name = f'aws-elasticbeanstalk-{name}-ec2-role'
+    instance_profile_policy_name = f'aws-elasticbeanstalk-{name}-ec2-policy'
+
+    print_message(f'terminate profile, iam, policy: {instance_profile_name}')
+
+    cmd = ['iam', 'delete-role-policy']
+    cmd += ['--role-name', instance_profile_name]
+    cmd += ['--policy-name', instance_profile_policy_name]
+    aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['iam', 'detach-role-policy']
+    cmd += ['--role-name', instance_profile_name]
+    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier']
+    aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['iam', 'detach-role-policy']
+    cmd += ['--role-name', instance_profile_name]
+    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker']
+    aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['iam', 'detach-role-policy']
+    cmd += ['--role-name', instance_profile_name]
+    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier']
+    aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['iam', 'detach-role-policy']
+    cmd += ['--role-name', instance_profile_name]
+    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore']
+    aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['iam', 'remove-role-from-instance-profile']
+    cmd += ['--instance-profile-name', instance_profile_name]
+    cmd += ['--role-name', instance_profile_name]
+    aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['iam', 'delete-role']
+    cmd += ['--role-name', instance_profile_name]
+    aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['iam', 'delete-instance-profile']
+    cmd += ['--instance-profile-name', instance_profile_name]
+    aws_cli.run(cmd, ignore_error=True)
+
 
 ################################################################################
 #
