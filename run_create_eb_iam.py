@@ -25,7 +25,7 @@ def create_iam_for_eb(name):
 
         cmd = ['iam', 'add-role-to-instance-profile']
         cmd += ['--instance-profile-name', instance_profile_name]
-        cmd += ['--role-name', 'instance_profile_name']
+        cmd += ['--role-name', instance_profile_name]
         aws_cli.run(cmd)
 
         cmd = ['iam', 'attach-role-policy']
