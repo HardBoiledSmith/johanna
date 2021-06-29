@@ -14,7 +14,7 @@
       "Sid": "eb-ad78f54a-f239-4c90-adda-49e5f56cb51e",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::MY_ACCOUNT_ID:role/aws-elasticbeanstalk-ec2-role"
+        "AWS": "arn:aws:iam::MY_ACCOUNT_ID:role/aws-elasticbeanstalk-ENVIRONMENT_NAME-ec2-role"
       },
       "Action": "s3:PutObject",
       "Resource": "arn:aws:s3:::BUCKET_NAME/resources/environments/logs/*"
@@ -23,7 +23,7 @@
       "Sid": "eb-af163bf3-d27b-4712-b795-d1e33e331ca4",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::MY_ACCOUNT_ID:role/aws-elasticbeanstalk-ec2-role"
+        "AWS": "arn:aws:iam::MY_ACCOUNT_ID:role/aws-elasticbeanstalk-ENVIRONMENT_NAME-ec2-role"
       },
       "Action": [
         "s3:ListBucket",

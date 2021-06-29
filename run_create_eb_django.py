@@ -225,7 +225,7 @@ def run_create_eb_django(name, settings):
             break
 
     ################################################################################
-    print_message(f'create ec2 instance profile, iam, policy')
+    print_message('create ec2 instance profile, iam, policy')
 
     create_iam_for_eb(name)
     print_message('wait 10 seconds to let iam role and policy propagated to all regions...')
@@ -281,6 +281,7 @@ def run_create_eb_django(name, settings):
 
     account_id = re.match(r'^.+-([0-9]+)$', s3_bucket).group(1)
     lines = re_sub_lines(lines, 'MY_ACCOUNT_ID', account_id)
+    lines = re_sub_lines(lines, 'ENVIRONMENT_NAME', name)
 
     elb_account_id = aws_cli.get_elb_account_id(aws_default_region)
     lines = re_sub_lines(lines, 'ELB_ACCOUNT_ID', elb_account_id)

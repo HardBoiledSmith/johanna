@@ -214,7 +214,7 @@ def run_create_eb_windows(name, settings):
             break
 
     ################################################################################
-    print_message(f'create ec2 instance profile, iam, policy')
+    print_message('create ec2 instance profile, iam, policy')
 
     create_iam_for_eb(name)
     print_message('wait 10 seconds to let iam role and policy propagated to all regions...')
