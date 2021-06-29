@@ -53,5 +53,5 @@ def create_iam_for_eb(name):
     cmd = ['iam', 'put-role-policy']
     cmd += ['--role-name', instance_profile_name]
     cmd += ['--policy-name', instance_profile_policy_name]
-    cmd += ['--policy-document', f'file://{dotfile_path}/policy.json']
+    cmd += ['--policy-document', f'file://{dotfile_path}/instance-profile/policy.json']
     aws_cli.run(cmd)
