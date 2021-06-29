@@ -243,30 +243,29 @@ def run_create_eb_windows(name, settings):
         subprocess.Popen(cmd, cwd=template_path).communicate()
 
     cmd_list = list()
-    cmd_list.append(['mkdir', 'temp-gendo-artifact'])
-    cmd_list.append(['unzip', 'gendo-artifact.zip', '-d', 'temp-gendo-artifact/'])
-    cmd_list.append(['rm', '-rf', 'gendo-artifact.zip'])
+    cmd_list.append(['mkdir', 'gendo-artifact'])
+    cmd_list.append(['unzip', 'gendo-artifact.zip', '-d', 'gendo-artifact/'])
+    cmd_list.append(['rm', '-f', 'gendo-artifact.zip'])
     for cmd in cmd_list:
         subprocess.Popen(cmd, cwd=template_path).communicate()
 
-    cmd = ['zip', '-r', 'watchdog-artifact.zip', '.']
-    subprocess.Popen(cmd, cwd=f'{template_path}/temp-gendo-artifact/watchdog/site').communicate()
-    cmd = ['mv', 'temp-gendo-artifact/watchdog/site/watchdog-artifact.zip', '.']
+    cmd = ['zip', '-m', '-r', 'watchdog-bundle.zip', '.']
+    subprocess.Popen(cmd, cwd=f'{template_path}/gendo-artifact/watchdog').communicate()
+    cmd = ['mv', 'gendo-artifact/watchdog/watchdog-bundle.zip', '.']
     subprocess.Popen(cmd, cwd=template_path).communicate()
 
-    cmd = ['zip', '-r', 'gendo-artifact.zip', 'gendo/']
-    subprocess.Popen(cmd, cwd=f'{template_path}/temp-gendo-artifact').communicate()
+    cmd = ['zip', '-m', '-r', 'gendo-bundle.zip', '.']
+    subprocess.Popen(cmd, cwd=f'{template_path}/gendo-artifact/gendo').communicate()
+    cmd = ['mv', 'gendo-artifact/gendo/gendo-bundle.zip', '.']
+    subprocess.Popen(cmd, cwd=template_path).communicate()
 
-    cmd_list = list()
-    cmd_list.append(['mv', 'temp-gendo-artifact/gendo-artifact.zip', '.'])
-    cmd_list.append(['rm', '-rf', 'temp-gendo-artifact'])
-    for cmd in cmd_list:
-        subprocess.Popen(cmd, cwd=template_path).communicate()
+    cmd = ['rm', '-rf', 'gendo-artifact']
+    subprocess.Popen(cmd, cwd=template_path).communicate()
 
     cmd = ['cp', 'manifest/aws-windows-deployment-manifest.json', f'{template_path}']
     subprocess.Popen(cmd).communicate()
 
-    cmd = ['zip', '-r', zip_filename, '.', '.ebextensions']
+    cmd = ['zip', '-m', '-r', zip_filename, '.', '.ebextensions']
     subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=template_path).communicate()
 
     cmd = ['s3', 'cp', zip_filename, s3_zip_filename]
@@ -411,7 +410,7 @@ def run_create_eb_windows(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.6.5 running IIS 10.0']
+    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.6.6 running IIS 10.0']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)

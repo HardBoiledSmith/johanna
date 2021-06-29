@@ -5,7 +5,7 @@
         {
             "name": "watchdog",
             "parameters": {
-                "appBundle": "watchdog-artifact.zip",
+                "appBundle": "watchdog-bundle.zip",
                 "iisPath": "/",
                 "iisWebSite": "Default Web Site"
             }
