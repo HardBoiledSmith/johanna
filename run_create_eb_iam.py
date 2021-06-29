@@ -9,7 +9,7 @@ aws_cli = AWSCli()
 def create_iam_for_eb(name):
     instance_profile_name = f'aws-elasticbeanstalk-{name}-ec2-role'
     instance_profile_policy_name = f'aws-elasticbeanstalk-{name}-ec2-policy'
-    dotfile_path = f'template/{name}/_provisioning/.johanna'
+    dotfile_path = f'template/{name}/{name}/_provisioning/.johanna'
 
     if not aws_cli.get_iam_role(instance_profile_name):
         print_message(f'create iam: {instance_profile_name}')
@@ -25,7 +25,7 @@ def create_iam_for_eb(name):
 
         cmd = ['iam', 'add-role-to-instance-profile']
         cmd += ['--instance-profile-name', instance_profile_name]
-        cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
+        cmd += ['--role-name', 'instance_profile_name']
         aws_cli.run(cmd)
 
         cmd = ['iam', 'attach-role-policy']
