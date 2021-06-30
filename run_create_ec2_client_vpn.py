@@ -189,6 +189,7 @@ def run_create_client_vpn(name, settings):
 
         result = result['ClientVpnEndpoints'][0]
         if result['Status']['Code'] == 'available':
+            print('endpoint created. download .ovpn from: %s' % result['SelfServicePortalUrl'])
             break
 
         print('waiting for endpoint available... (elapsed time: \'%d\' seconds)' % elapsed_time)
