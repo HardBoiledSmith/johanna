@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import base64
 import json
 import time
 
@@ -68,6 +69,23 @@ def run_create_client_vpn(name, settings):
     eb_vpc_id, rds_vpc_id, eb_subnet_id, rds_subnet_id, eb_security_group_id = get_network_resource_ids(vpc_region)
 
     ################################################################################
+    print_message('create SAML identity provider')
+
+    bb = settings['SAML_BASE64']
+    bb = bb.encode('ascii')
+    bb = base64.decodebytes(bb)
+    bb = bb.decode('ascii')
+
+    write_file('/tmp/saml.xml', bb)
+
+    cmd = ['iam', 'create-saml-provider']
+    cmd += ['--saml-metadata-document', 'file:///tmp/saml.xml']
+    cmd += ['--name', f'AWSClientVPN_SAML_{name}']
+    result = aws_cli.run(cmd)
+
+    saml_provider_arn = result['SAMLProviderArn']
+
+    ################################################################################
     print_message('import server certificate')
 
     write_file('/tmp/server.crt', settings['SERVER_CRT'])
@@ -111,8 +129,8 @@ def run_create_client_vpn(name, settings):
     ao = dict()
     ao['Type'] = 'federated-authentication'
     ao['FederatedAuthentication'] = dict()
-    ao['FederatedAuthentication']['SAMLProviderArn'] = 'arn:aws:iam::788968797716:saml-provider/Okta-ClientVPN'
-    ao['FederatedAuthentication']['SelfServiceSAMLProviderArn'] = ao['FederatedAuthentication']['SAMLProviderArn']
+    ao['FederatedAuthentication']['SAMLProviderArn'] = saml_provider_arn
+    ao['FederatedAuthentication']['SelfServiceSAMLProviderArn'] = saml_provider_arn
     ao = [ao]
 
     cmd = ['ec2', 'create-client-vpn-endpoint']
