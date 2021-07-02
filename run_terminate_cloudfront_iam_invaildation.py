@@ -13,7 +13,7 @@ if __name__ == "__main__":
     args = parse_args()
 
 
-def run_terminate_cloudfront_iam_for_invaildations(name):
+def run_terminate_cloudfront_iam_for_invaildation(name):
     print_session('terminate iam')
 
     aws_cli = AWSCli()
@@ -43,21 +43,17 @@ def run_terminate_cloudfront_iam_for_invaildations(name):
 # start
 #
 ################################################################################
-print_session('create iam user for use cloudfront invalidations')
+print_session('terminate iam user for use cloudfront invalidations')
 
 ################################################################################
 
-check_exists = False
-
-if len(args) != 3:
-    print('usage:', args[0], '<delete role or policy user name>')
-    raise Exception()
+if len(args) != 2:
+    raise Exception('usage:', args[0], '<delete role or policy user name>')
 
 phase = env['common']['PHASE']
 if phase != 'op':
-    print('# It is a script dedicated to the op environment.')
-    raise Exception()
+    raise Exception('It is a script dedicated to the op environment.')
 
 user_name = args[1]
 
-run_terminate_cloudfront_iam_for_invaildations(user_name)
+run_terminate_cloudfront_iam_for_invaildation(user_name)
