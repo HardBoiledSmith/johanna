@@ -202,12 +202,10 @@ def run_create_s3_vue(name, settings):
     for ll in upload_result.split('\n'):
         print(ll)
 
-
     print_message('invalidate cache from cloudfront')
 
     cf_dist_id = settings.get('CLOUDFRONT_DIST_ID', '')
     if len(cf_dist_id) > 0:
-
         cf_role_arn = settings.get('CLOUDFRONT_INVALIDATION_ROLE_ARN', '')
         cmd = ['sts', 'assume-role']
         cmd += ['--role-arn', cf_role_arn]
