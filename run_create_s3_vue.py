@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import glob
 import os
 import re
 import subprocess
@@ -105,6 +106,16 @@ def run_create_s3_vue(name, settings):
     if npm_process.returncode != 0:
         print(' '.join(['Npm exited with:', str(npm_process.returncode)]))
         raise Exception()
+
+    ################################################################################
+    print_message('move sourcemap file to external folder')
+
+    subprocess.Popen(['mkdir', '-p', f'./sourcemaps/{name}'], cwd=f'template/{git_folder_name}').communicate()
+
+    sourcemap_files = glob.glob(f'template/{git_folder_name}/{name}/dist/js/*.map')
+
+    for sourcemap_file in sourcemap_files:
+        subprocess.Popen(['mv', sourcemap_file, f'template/{git_folder_name}/sourcemaps/{name}/']).communicate()
 
     ################################################################################
     print_message('upload to temp bucket')
@@ -215,7 +226,7 @@ def run_create_s3_vue(name, settings):
     print_message('upload sourcemaps at sentry')
 
     subprocess.Popen(['sentry-cli', 'releases', '-p', f'{git_folder_name}-{name}', 'files', git_hash_app,
-                      'upload-sourcemaps', 'app/dist/js'],
+                      'upload-sourcemaps', f'sourcemaps/{name}'],
                      cwd=f'template/{git_folder_name}').communicate()
 
     ################################################################################
