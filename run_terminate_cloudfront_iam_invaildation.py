@@ -18,12 +18,11 @@ def run_terminate_cloudfront_iam_for_invaildation(name):
 
     aws_cli = AWSCli()
 
-    iam_owner_aws_account_id = env['cloudfront']['IAM_OWNER_AWS_ACCOUNT_ID']
-
     ################################################################################
     base_name = f'{name}-cloudfront-invalidations'
     print_message(f'terminate iam: {base_name}-role')
 
+    iam_owner_aws_account_id = aws_cli.get_caller_account_id()
     cmd = ['iam', 'detach-role-policy']
     cmd += ['--role-name', f'{base_name}-role']
     cmd += ['--policy-arn', f'arn:aws:iam::{iam_owner_aws_account_id}:policy/{base_name}-policy']

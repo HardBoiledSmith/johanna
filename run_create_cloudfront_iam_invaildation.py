@@ -19,8 +19,6 @@ if __name__ == "__main__":
 def run_create_cloudfront_iam_for_invaildation(user_name, allow_role_aws_account_id, distribution_id):
     aws_cli = AWSCli()
 
-    iam_owner_aws_account_id = aws_cli.get_caller_account_id()
-
     base_name = f'{user_name}-cloudfront-invalidations'
     ################################################################################
     print_message(f'create role: {base_name}')
@@ -34,6 +32,7 @@ def run_create_cloudfront_iam_for_invaildation(user_name, allow_role_aws_account
     cmd += ['--assume-role-policy-document', pp]
     aws_cli.run(cmd)
 
+    iam_owner_aws_account_id = aws_cli.get_caller_account_id()
     lines = read_file('aws_iam/aws-cloudfront-invalidations-policy.json')
     lines = re_sub_lines(lines, 'ACCOUNT_ID', iam_owner_aws_account_id)
     lines = re_sub_lines(lines, 'DISTRIBUTION_ID', distribution_id)
