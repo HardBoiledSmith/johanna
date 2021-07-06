@@ -5,7 +5,10 @@
             "Sid": "cloudfrontInvalidation",
             "Effect": "Allow",
             "Action": "cloudfront:CreateInvalidation",
-            "Resource": "arn:aws:cloudfront::ACCOUNT_ID:distribution/DISTRIBUTION_ID"
+            "Resource": [
+                "arn:aws:cloudfront::ACCOUNT_ID:distribution/APP_DISTRIBUTION_ID",
+                "arn:aws:cloudfront::ACCOUNT_ID:distribution/TEST_DISTRIBUTION_ID"
+            ]
         }
     ]
 }
