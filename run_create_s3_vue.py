@@ -202,13 +202,24 @@ def run_create_s3_vue(name, settings):
     for ll in upload_result.split('\n'):
         print(ll)
 
-    ################################################################################
     print_message('invalidate cache from cloudfront')
 
     cf_dist_id = settings.get('CLOUDFRONT_DIST_ID', '')
     if len(cf_dist_id) > 0:
+        cf_role_arn = settings.get('CLOUDFRONT_INVALIDATION_ROLE_ARN', '')
+        cmd = ['sts', 'assume-role']
+        cmd += ['--role-arn', cf_role_arn]
+        cmd += ['--role-session-name', 'cloudfront-invalidation-token']
+        rr = aws_cli.run(cmd)
+
+        access_key = rr['Credentials']['AccessKeyId']
+        secret_key = rr['Credentials']['SecretAccessKey']
+        session_token = rr['Credentials']['SessionToken']
+        aws_cli_for_cloudfront = AWSCli(aws_access_key=access_key,
+                                        aws_secret_access_key=secret_key,
+                                        aws_session_token=session_token)
         cmd = ['cloudfront', 'create-invalidation', '--distribution-id', cf_dist_id, '--paths', '/*']
-        invalidate_result = aws_cli.run(cmd)
+        invalidate_result = aws_cli_for_cloudfront.run(cmd)
         print(invalidate_result)
 
     ################################################################################

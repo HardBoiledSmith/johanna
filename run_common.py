@@ -61,7 +61,8 @@ class AWSCli:
     cidr_subnet['eb']['public_3'] = env['common']['AWS_SUBNET_EB_PUBLIC_3']
     cidr_subnet['eb']['public_4'] = env['common']['AWS_SUBNET_EB_PUBLIC_4']
 
-    def __init__(self, aws_default_region=None, aws_access_key=None, aws_secret_access_key=None):
+    def __init__(self, aws_default_region=None, aws_access_key=None, aws_secret_access_key=None,
+                 aws_session_token=None):
         if not env['aws'].get('AWS_ACCESS_KEY_ID') or \
                 not env['aws'].get('AWS_SECRET_ACCESS_KEY') or \
                 not env['aws'].get('AWS_DEFAULT_REGION'):
@@ -78,6 +79,8 @@ class AWSCli:
             if not aws_default_region \
             else aws_default_region
         self.env['AWS_DEFAULT_OUTPUT'] = 'json'
+        if aws_session_token:
+            self.env['AWS_SESSION_TOKEN'] = aws_session_token
 
     def run(self, args, cwd=None, ignore_error=None):
         args = ['aws'] + args
