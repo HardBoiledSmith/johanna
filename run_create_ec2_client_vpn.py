@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import base64
 import json
 import time
 
@@ -68,6 +69,23 @@ def run_create_client_vpn(name, settings):
     eb_vpc_id, rds_vpc_id, eb_subnet_id, rds_subnet_id, eb_security_group_id = get_network_resource_ids(vpc_region)
 
     ################################################################################
+    print_message('create SAML identity provider')
+
+    bb = settings['SAML_BASE64']
+    bb = bb.encode('ascii')
+    bb = base64.decodebytes(bb)
+    bb = bb.decode('ascii')
+
+    write_file('/tmp/saml.xml', bb)
+
+    cmd = ['iam', 'create-saml-provider']
+    cmd += ['--saml-metadata-document', 'file:///tmp/saml.xml']
+    cmd += ['--name', f'AWSClientVPN_SAML_{name}']
+    result = aws_cli.run(cmd)
+
+    saml_provider_arn = result['SAMLProviderArn']
+
+    ################################################################################
     print_message('import server certificate')
 
     write_file('/tmp/server.crt', settings['SERVER_CRT'])
@@ -109,9 +127,10 @@ def run_create_client_vpn(name, settings):
     print_message('create client vpn endpoint')
 
     ao = dict()
-    ao['Type'] = 'certificate-authentication'
-    ao['MutualAuthentication'] = dict()
-    ao['MutualAuthentication']['ClientRootCertificateChainArn'] = server_cert_arn
+    ao['Type'] = 'federated-authentication'
+    ao['FederatedAuthentication'] = dict()
+    ao['FederatedAuthentication']['SAMLProviderArn'] = saml_provider_arn
+    ao['FederatedAuthentication']['SelfServiceSAMLProviderArn'] = saml_provider_arn
     ao = [ao]
 
     cmd = ['ec2', 'create-client-vpn-endpoint']
@@ -125,6 +144,7 @@ def run_create_client_vpn(name, settings):
     cmd += ['--security-group-ids', eb_security_group_id]
     cmd += ['--vpc-id', eb_vpc_id]
     cmd += ['--tag-specifications', 'ResourceType=client-vpn-endpoint,Tags=[{Key=Name,Value=%s}]' % name]
+    cmd += ['--self-service-portal', 'enabled']
     result = aws_cli.run(cmd)
 
     vpn_endpoint_id = result['ClientVpnEndpointId']
@@ -169,6 +189,7 @@ def run_create_client_vpn(name, settings):
 
         result = result['ClientVpnEndpoints'][0]
         if result['Status']['Code'] == 'available':
+            print('endpoint created. download .ovpn from: %s' % result['SelfServicePortalUrl'])
             break
 
         print('waiting for endpoint available... (elapsed time: \'%d\' seconds)' % elapsed_time)
