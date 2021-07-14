@@ -1,444 +1,258 @@
 #!/usr/bin/env python3
-import json
-import os
 import subprocess
-import time
 
 from env import env
+import os
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
-from run_common import re_sub_lines
 from run_common import read_file
-from run_common import write_file
+import json
+import time
+
+args = []
+
+if __name__ == "__main__":
+    from run_common import parse_args
+
+    args = parse_args()
 
 
-def run_create_eb_windows(name, settings):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+def run_create_image_builder(settings, update_version):
+    aws_cli = AWSCli()
 
-    aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
-    aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
-    aws_sqs_visual_test_result = settings['AWS_SQS_VISUAL_TEST_RESULT']
-    scale_out_adjustment = settings['SCALE_OUT_ADJUSTMENT']
-    scale_out_threshold = settings['SCALE_OUT_THRESHOLD']
-    scale_in_adjustment = settings['SCALE_IN_ADJUSTMENT']
-    scale_in_threshold = settings['SCALE_IN_THRESHOLD']
-    aws_default_region = settings['AWS_DEFAULT_REGION']
-    aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
-    ssl_certificate_id = aws_cli.get_acm_certificate_id('hbsmith.io')
-    cname = settings['CNAME']
-    debug = env['common']['DEBUG']
-    eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
-    git_url = settings['GIT_URL']
     phase = env['common']['PHASE']
-    subnet_type = settings['SUBNET_TYPE']
-    service_name = env['common'].get('SERVICE_NAME', '')
-    name_prefix = f'{service_name}_' if service_name else ''
-    url = settings['ARTIFACT_URL']
-    dv_branch = settings.get('BRANCH', 'DEV-11644')
-    cidr_subnet = aws_cli.cidr_subnet
-
-    str_timestamp = str(int(time.time()))
-
-    zip_filename = f'{name}-{str_timestamp}.zip'
-
-    eb_environment_name = f'{name}-{str_timestamp}'
-    eb_environment_name_old = None
-    eb_environment_id_old = None
-
-    template_path = f'template/{name}'
-
+    # git_url = settings['GIT_URL']
+    git_url = "git@github.com:HardBoiledSmith/gendo.git"
+    name = 'gendo'
+    template_path = 'template/%s' % name
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
 
-    ################################################################################
-    print_session(f'create {name}')
-
-    ################################################################################
-    print_message('get vpc id')
-
-    rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
-
-    if not eb_vpc_id:
-        print('ERROR!!! No VPC found')
-        raise Exception()
-
-    ################################################################################
-    print_message('get subnet id')
-
-    elb_subnet_id_1 = None
-    elb_subnet_id_2 = None
-    elb_subnet_id_3 = None
-    elb_subnet_id_4 = None
-    ec2_subnet_id_1 = None
-    ec2_subnet_id_2 = None
-    ec2_subnet_id_3 = None
-    ec2_subnet_id_4 = None
-    cmd = ['ec2', 'describe-subnets']
-    result = aws_cli.run(cmd)
-    for r in result['Subnets']:
-        if r['VpcId'] != eb_vpc_id:
-            continue
-        if 'public' == subnet_type:
-            if r['CidrBlock'] == cidr_subnet['eb']['public_1']:
-                elb_subnet_id_1 = r['SubnetId']
-            if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
-                elb_subnet_id_2 = r['SubnetId']
-            if r['CidrBlock'] == cidr_subnet['eb']['public_3']:
-                elb_subnet_id_3 = r['SubnetId']
-            if r['CidrBlock'] == cidr_subnet['eb']['public_4']:
-                elb_subnet_id_4 = r['SubnetId']
-            if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
-                ec2_subnet_id_1 = r['SubnetId']
-            if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
-                ec2_subnet_id_2 = r['SubnetId']
-            if r['CidrBlock'] == cidr_subnet['eb']['private_3']:
-                ec2_subnet_id_3 = r['SubnetId']
-            if r['CidrBlock'] == cidr_subnet['eb']['private_4']:
-                ec2_subnet_id_4 = r['SubnetId']
-        elif 'private' == subnet_type:
-            if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
-                elb_subnet_id_1 = ec2_subnet_id_1 = r['SubnetId']
-            if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
-                elb_subnet_id_2 = ec2_subnet_id_2 = r['SubnetId']
-            if r['CidrBlock'] == cidr_subnet['eb']['private_3']:
-                elb_subnet_id_3 = ec2_subnet_id_3 = r['SubnetId']
-            if r['CidrBlock'] == cidr_subnet['eb']['private_4']:
-                elb_subnet_id_4 = ec2_subnet_id_4 = r['SubnetId']
-        else:
-            print('ERROR!!! Unknown subnet type:', subnet_type)
-            raise Exception()
-
-    ################################################################################
-    print_message('get security group id')
-
-    security_group_id = None
-    cmd = ['ec2', 'describe-security-groups']
-    result = aws_cli.run(cmd)
-    for r in result['SecurityGroups']:
-        if r['VpcId'] != eb_vpc_id:
-            continue
-        if 'public' == subnet_type:
-            if r['GroupName'] == f'{name_prefix}eb_private':
-                security_group_id = r['GroupId']
-                break
-        elif 'private' == subnet_type:
-            if r['GroupName'] == f'{name_prefix}eb_private':
-                security_group_id = r['GroupId']
-                break
-        else:
-            print('ERROR!!! Unknown subnet type:', subnet_type)
-            raise Exception()
-
-    #################################################################################
+    ##############################################################################
     print_message('git clone')
 
     subprocess.Popen(['rm', '-rf', template_path]).communicate()
     subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
     if phase == 'dv':
-        print(f'dv branch: {dv_branch}')
-        git_command = ['git', 'clone', '--depth=1', '-b', dv_branch, git_url]
+        git_command = ['git', 'clone', '-b', 'DEV-11644', git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
-
     subprocess.Popen(git_command, cwd=template_path).communicate()
-    print(f'{template_path}/{name}')
-    if not os.path.exists(f'{template_path}/{name}'):
+    if not os.path.exists('%s/%s' % (template_path, name)):
         raise Exception()
 
     git_hash_app = subprocess.Popen(git_rev,
                                     stdout=subprocess.PIPE,
-                                    cwd=f'{template_path}/{name}').communicate()[0]
+                                    cwd='%s/%s' % (template_path, name)).communicate()[0]
 
-    subprocess.Popen(['rm', '-rf', f'./{name}/.git'], cwd=template_path).communicate()
-    subprocess.Popen(['rm', '-rf', f'./{name}/.gitignore'], cwd=template_path).communicate()
+    subprocess.Popen(['rm', '-rf', './%s/.git' % name], cwd=template_path).communicate()
+    subprocess.Popen(['rm', '-rf', './%s/.gitignore' % name], cwd=template_path).communicate()
 
-    lines = read_file(f'{template_path}/{name}/_provisioning/.ebextensions/{name}.config.sample')
-    lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
-    lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
-    lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
-    lines = re_sub_lines(lines, 'SSL_CERTIFICATE_ID', ssl_certificate_id)
-    lines = re_sub_lines(lines, 'AWS_SQS_VISUAL_TEST_RESULT', aws_sqs_visual_test_result)
-    lines = re_sub_lines(lines, 'SCALE_OUT_ADJUSTMENT', scale_out_adjustment)
-    lines = re_sub_lines(lines, 'SCALE_OUT_THRESHOLD', scale_out_threshold)
-    lines = re_sub_lines(lines, 'SCALE_IN_ADJUSTMENT', scale_in_adjustment)
-    lines = re_sub_lines(lines, 'SCALE_IN_THRESHOLD', scale_in_threshold)
-    write_file(f'{template_path}/{name}/_provisioning/.ebextensions/{name}.config', lines)
-    lines = read_file(
-        f'{template_path}/{name}/_provisioning/configuration/Users/vagrant/Desktop/{name}_exe/settings_local_sample.py')
-    lines = re_sub_lines(lines, '^(DEBUG).*', f'\\1 = {debug}')
-    option_list = list()
-    option_list.append(['PHASE', phase])
-    for key in settings:
-        value = settings[key]
-        option_list.append([key, value])
-    for oo in option_list:
-        lines = re_sub_lines(lines, f'^({oo[0]}) .*', f'\\1 = \'{oo[1]}\'')
-    write_file(
-        f'{template_path}/{name}/_provisioning/configuration/Users/vagrant/Desktop/{name}_exe/settings_local.py', lines)
+    ############################################################################
+    semantic_version = '0.0.0'
+    str_timestamp = str(int(time.time()))
 
-    ################################################################################
-    print_message('download artifact')
+    print_session('create component')
 
-    branch = dv_branch.lower() if phase == 'dv' else phase
+    gendo_component_name = f'gendo_provisioning_component_{str_timestamp}'
+    # cmd = ['imagebuilder', 'list-components']
+    # cmd += ['--filters', f'name=name,values="{gendo_component_name}"']
+    # rr = aws_cli.run(cmd)
 
-    file_name = f"{branch}-gendo-{git_hash_app.decode('utf-8').strip()}.zip"
-    artifact_url = url + f'/{file_name}'
+    # if len(rr['componentVersionList']) > 1:
+    # latest_component_version = rr['componentVersionList'][-1]['version']
+    # rr_version = latest_component_version.split('.')
+    #
+    # if update_version == 'major':
+    #     rr_version[0] = str(int(rr_version[0]) + 1)
+    # elif update_version == 'minor':
+    #     rr_version[1] = str(int(rr_version[1]) + 1)
+    # elif update_version == 'patch':
+    #     rr_version[2] = str(int(rr_version[2]) + 1)
+    #
+    # semantic_version = '.'.join(rr_version)
+    # print(semantic_version)
 
-    cmd = ['s3', 'cp', artifact_url, 'gendo-artifact.zip']
-    aws_cli.run(cmd, cwd=template_path)
+    file_path_name = 'template/gendo/gendo/requirements.txt'
+    tmp_lines = read_file(file_path_name)
+    lines = list()
 
-    ################################################################################
-    print_message('check previous version')
+    for ll in tmp_lines:
+        ll = ll.replace('\n', '')
+        tt = f'{" "*14}pip install {ll}\n'
+        lines.append(tt)
+    pp = ''.join(lines)
 
-    cmd = ['elasticbeanstalk', 'describe-environments']
-    cmd += ['--application-name', eb_application_name]
-    result = aws_cli.run(cmd)
+    sample_filename_path = 'template/gendo/gendo/_provisioning/gendo_golden_image_sample.yml'
+    filename_path = 'template/gendo/gendo/_provisioning/gendo_golden_image.yml'
+    with open(filename_path, 'w') as ff:
+        with open(sample_filename_path, 'r') as f:
+            tmp_list = f.readlines()
+            for line in tmp_list:
+                if 'requirements.txt' in line:
+                    ff.write(pp)
+                else:
+                    ff.write(line)
 
-    for r in result['Environments']:
-        if 'CNAME' not in r:
-            continue
+    # tag0 = 'Key=git_hash_johanna,Value=%s' % git_hash_johanna.decode('utf-8').strip()
+    # tag1 = 'Key=git_hash_%s,Value=%s' % (name, git_hash_app.decode('utf-8').strip())
 
-        if r['CNAME'] == f'{cname}.{aws_default_region}.elasticbeanstalk.com':
-            if r['Status'] == 'Terminated':
-                continue
-            elif r['Status'] != 'Ready':
-                print('previous version is not ready.')
-                raise Exception()
+    cmd = ['imagebuilder', 'create-component']
+    cmd += ['--name', gendo_component_name]
+    cmd += ['--semantic-version', semantic_version]
+    cmd += ['--platform', 'Windows']
+    ## TODO: env로 전환 supported-os-versions
+    cmd += ['--supported-os-versions', 'Microsoft Windows Server 2016']
+    # cmd += ['--tags', tag0, tag1]
+    # cmd += ['--policy-document', f'file://tem']
+    cmd += ['--data', f'file://template/gendo/gendo/_provisioning/gendo_golden_image.yml']
 
-            eb_environment_name_old = r['EnvironmentName']
-            eb_environment_id_old = r['EnvironmentId']
-            cname += f'-{str_timestamp}'
-            break
+    rr = aws_cli.run(cmd)
+    gendo_component_arn = rr['componentBuildVersionArn']
 
-    ################################################################################
-    print_message('create storage location')
+    ############################################################################
+    print_session('create recipe')
 
-    cmd = ['elasticbeanstalk', 'create-storage-location']
-    result = aws_cli.run(cmd)
+    recipe_components = list()
 
-    s3_bucket = result['S3Bucket']
-    s3_zip_filename = '/'.join(['s3://' + s3_bucket, eb_application_name, zip_filename])
+    recipe_component = dict()
+    recipe_component['componentArn'] = gendo_component_arn
+    recipe_components.append(recipe_component)
 
-    ################################################################################
-    print_message('create application version')
+    cmd = ['imagebuilder', 'list-components']
+    cmd += ['--owner', 'Amazon']
+    cmd += ['--filters', 'name=name,values="aws-cli-version-2-windows"']
+    rr = aws_cli.run(cmd)
+    recipe_component = dict()
+    arn = rr['componentVersionList'][-1]['arn']
+    recipe_component['componentArn'] = arn
+    recipe_components.append(recipe_component)
 
-    file_list = list()
-    file_list.append('.ebextensions')
-    file_list.append('configuration')
+    cmd = ['ec2', 'describe-images']
+    cmd += ['--owner', 'amazon']
+    cmd += ['--filters',
+            'Name=name,Values=aws-elasticbeanstalk-amzn-??????????.x86_64-WindowsServer*',
+            'Name=state,Values=available']
+    cmd += ['--query', 'reverse(sort_by(Images, &CreationDate))[:1].ImageId']
+    cmd += ['--output', 'text']
+    cmd += ['--region', 'ap-northeast-2']
+    latest_eb_platform_ami = aws_cli.run(cmd)
 
-    for ff in file_list:
-        cmd = ['mv', f'{name}/_provisioning/{ff}', '.']
-        subprocess.Popen(cmd, cwd=template_path).communicate()
+    cmd = ['elasticbeanstalk', 'describe-platform-version']
+    cmd += ['--region', 'ap-northeast-2']
+    cmd += ['--platform-arn',
+            'arn:aws:elasticbeanstalk:ap-northeast-2::platform/IIS 10.0 running on 64bit Windows Server 2016/2.6.7']
+    cmd += ['--query', 'PlatformDescription.CustomAmiList']
+    rr = aws_cli.run(cmd)
 
-    cmd_list = list()
-    cmd_list.append(['mkdir', 'temp_gendo'])
-    cmd_list.append(['rm', '-rf', f'{name}/_provisioning/pretrained_model'])
-    cmd_list.append(['mv', f'{name}/_provisioning', 'temp_gendo'])
-    cmd_list.append(['mv', f'{name}/requirements.txt', 'temp_gendo/requirements.txt'])
-    cmd_list.append(['rm', '-rf', f'{name}'])
-    cmd_list.append(['mv', 'temp_gendo', f'{name}'])
-    for cmd in cmd_list:
-        subprocess.Popen(cmd, cwd=template_path).communicate()
+    eb_platform_ami = ''
+    for vv in rr:
+        if vv['VirtualizationType'] == 'hvm':
+            eb_platform_ami = vv['ImageId']
 
-    cmd_list = list()
-    cmd_list.append(['mkdir', 'gendo-artifact'])
-    cmd_list.append(['unzip', 'gendo-artifact.zip', '-d', 'gendo-artifact/'])
-    cmd_list.append(['rm', '-f', 'gendo-artifact.zip'])
-    for cmd in cmd_list:
-        subprocess.Popen(cmd, cwd=template_path).communicate()
+    if latest_eb_platform_ami != eb_platform_ami:
+        update_required = True
 
-    cmd = ['zip', '-m', '-r', 'watchdog-bundle.zip', '.']
-    subprocess.Popen(cmd, cwd=f'{template_path}/gendo-artifact/watchdog').communicate()
-    cmd = ['mv', 'gendo-artifact/watchdog/watchdog-bundle.zip', '.']
-    subprocess.Popen(cmd, cwd=template_path).communicate()
+    recipe_name = f'gendo_recipe_{str_timestamp}'
+    cmd = ['imagebuilder', 'create-image-recipe']
+    cmd += ['--name', recipe_name]
+    cmd += ['--working-directory', '/tmp']
+    cmd += ['--semantic-version', semantic_version]
+    cmd += ['--components', json.dumps(recipe_components)]
+    cmd += ['--parent-image', eb_platform_ami]
+    rr = aws_cli.run(cmd)
+    gendo_recipe_arn = rr['imageRecipeArn']
 
-    cmd = ['zip', '-m', '-r', 'gendo-bundle.zip', '.']
-    subprocess.Popen(cmd, cwd=f'{template_path}/gendo-artifact/gendo').communicate()
-    cmd = ['mv', 'gendo-artifact/gendo/gendo-bundle.zip', '.']
-    subprocess.Popen(cmd, cwd=template_path).communicate()
+    ############################################################################
+    print_session('create infrastructure')
 
-    cmd = ['rm', '-rf', 'gendo-artifact']
-    subprocess.Popen(cmd, cwd=template_path).communicate()
+    infrastructure_name = f'gendo_infrastructure_{str_timestamp}'
+    cmd = ['imagebuilder', 'create-infrastructure-configuration']
+    cmd += ['--name', infrastructure_name]
+    cmd += ['--instance-profile-name', 'EC2InstanceProfileForImageBuilder']
+    cmd += ['--instance-types', 'r5.large']
+    cmd += ['--terminate-instance-on-failure']
+    ## sns 추가 가능
+    # cmd += ['--sns-topic-arn', topic_arn]
+    rr = aws_cli.run(cmd)
+    gendo_infrastructure_arn = rr['infrastructureConfigurationArn']
 
-    cmd = ['cp', 'manifest/aws-windows-deployment-manifest.json', f'{template_path}']
-    subprocess.Popen(cmd).communicate()
+    ############################################################################
+    print_session('create distribution')
 
-    cmd = ['zip', '-m', '-r', zip_filename, '.', '.ebextensions']
-    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=template_path).communicate()
+    # ## Todo : cross account의 경우 권한 조정이 필요함.
+    distributions = [
+        {
+            "region": "ap-northeast-2",
+            "amiDistributionConfiguration": {
+                "name": "Gendo_{{ imagebuilder:buildDate }}",
+                "launchPermission": {
+                }
+            }
+        }
+    ]
 
-    cmd = ['s3', 'cp', zip_filename, s3_zip_filename]
-    aws_cli.run(cmd, cwd=template_path)
-    cmd = ['elasticbeanstalk', 'create-application-version']
-    cmd += ['--application-name', eb_application_name]
-    cmd += ['--source-bundle', f'S3Bucket="{s3_bucket}",S3Key="{eb_application_name}/{zip_filename}"']
-    cmd += ['--version-label', eb_environment_name]
-    aws_cli.run(cmd, cwd=template_path)
+    distribution_name = f'gendo_distribution_{str_timestamp}'
+    cmd = ['imagebuilder', 'create-distribution-configuration']
+    cmd += ['--name', distribution_name]
+    cmd += ['--distributions', json.dumps(distributions)]
+    rr = aws_cli.run(cmd)
+    gendo_distributions_arn = rr['distributionConfigurationArn']
 
-    ################################################################################
-    print_message(f'create environment {name}')
+    ###########################################################################
+    print_session('create pipeline')
 
-    option_settings = list()
+    # version 관리가 되면 스케줄 부분에서 예약된 시간에 파이프라인이 실행 되도록 할 수 있음. 다만, 버전관리가 힘들 것으로 보여 version 관리 부분을 제거함.
 
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
-    oo['OptionName'] = 'ImageId'
-    oo['Value'] = 'ami-049b5e6e772427d55'
-    option_settings.append(oo)
+    pipeline_name = f'gendo_pipeline_{str_timestamp}'
+    cmd = ['imagebuilder', 'create-image-pipeline']
+    cmd += ['--name', pipeline_name]
+    cmd += ['--image-recipe-arn', gendo_recipe_arn]
+    cmd += ['--infrastructure-configuration-arn', gendo_infrastructure_arn]
+    cmd += ['--distribution-configuration-arn', gendo_distributions_arn]
+    # cmd += ['--schedule', ]
+    # "schedule": { "scheduleExpression": "cron(0 0 * * SUN)",
+    # "pipelineExecutionStartCondition": "EXPRESSION_MATCH_AND_DEPENDENCY_UPDATES_AVAILABLE" },'
+    rr = aws_cli.run(cmd)
 
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
-    oo['OptionName'] = 'InstanceType'
-    oo['Value'] = 't3.medium'
-    option_settings.append(oo)
+    gendo_pipeline_arn = rr['imagePipelineArn']
 
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
-    oo['OptionName'] = 'IamInstanceProfile'
-    oo['Value'] = 'aws-elasticbeanstalk-ec2-role'
-    option_settings.append(oo)
+    ###########################################################################
+    print_session('excution pipeline for image')
+    cmd = ['imagebuilder', 'start-image-pipeline-execution']
+    cmd += ['--image-pipeline-arn', gendo_pipeline_arn]
+    aws_cli.run(cmd)
 
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
-    oo['OptionName'] = 'SecurityGroups'
-    oo['Value'] = security_group_id
-    option_settings.append(oo)
+    if update_required:
+        print_session('Pleas Check Your eb platfrom version // '
+                      'Reference : https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/'
+                      'platforms-supported.html#platforms-supported.net')
 
-    oo = dict()
-    oo['Namespace'] = 'aws:ec2:vpc'
-    oo['OptionName'] = 'AssociatePublicIpAddress'
-    oo['Value'] = 'false'
-    option_settings.append(oo)
+    print_message('get gendo golden img arn')
 
-    oo = dict()
-    oo['Namespace'] = 'aws:ec2:vpc'
-    oo['OptionName'] = 'ELBScheme'
-    oo['Value'] = 'public'
-    if 'private' == subnet_type:
-        oo['Value'] = 'internal'
-    option_settings.append(oo)
+    cmd = ['ec2', 'describe-images']
+    cmd += ['--filters',
+            'Name=name,Values=Gendo_*',
+            'Name=state,Values=available']
+    cmd += ['--query', 'reverse(sort_by(Images, &CreationDate))[:1].ImageId']
+    cmd += ['--output', 'text']
+    cmd += ['--region', 'ap-northeast-2']
+    latest_eb_platform_ami = aws_cli.run(cmd)
+    print(latest_eb_platform_ami)
 
-    oo = dict()
-    oo['Namespace'] = 'aws:ec2:vpc'
-    oo['OptionName'] = 'ELBSubnets'
-    oo['Value'] = ','.join([elb_subnet_id_1, elb_subnet_id_2, elb_subnet_id_3, elb_subnet_id_4])
-    option_settings.append(oo)
+################################################################################
+#
+# start
+#
+################################################################################
+print_session('create image builder')
+################################################################################
 
-    oo = dict()
-    oo['Namespace'] = 'aws:ec2:vpc'
-    oo['OptionName'] = 'Subnets'
-    oo['Value'] = ','.join([ec2_subnet_id_1, ec2_subnet_id_2, ec2_subnet_id_3, ec2_subnet_id_4])
-    option_settings.append(oo)
+update_version = 'patch'
+if len(args) > 1:
+    if 'major' == args[1] or 'minor' == args[1]:
+        update_version = args[1]
 
-    oo = dict()
-    oo['Namespace'] = 'aws:ec2:vpc'
-    oo['OptionName'] = 'VPCId'
-    oo['Value'] = eb_vpc_id
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:elasticbeanstalk:environment'
-    oo['OptionName'] = 'EnvironmentType'
-    oo['Value'] = 'LoadBalanced'
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:elasticbeanstalk:environment'
-    oo['OptionName'] = 'LoadBalancerType'
-    oo['Value'] = 'application'
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:elasticbeanstalk:environment'
-    oo['OptionName'] = 'ServiceRole'
-    oo['Value'] = 'aws-elasticbeanstalk-service-role'
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:elasticbeanstalk:healthreporting:system'
-    oo['OptionName'] = 'SystemType'
-    oo['Value'] = 'enhanced'
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:elasticbeanstalk:healthreporting:system'
-    oo['OptionName'] = 'ConfigDocument'
-    cw_env = dict()
-    cw_env['ApplicationRequestsTotal'] = 60
-    cw_env['ApplicationRequests2xx'] = 60
-    cw_env['ApplicationRequests3xx'] = 60
-    cw_env['ApplicationRequests4xx'] = 60
-    cw_env['ApplicationRequests5xx'] = 60
-    cw_instance = dict()
-    cw_instance['InstanceHealth'] = 60
-    cw_instance['CPUIdle'] = 60
-    cw = dict()
-    cw['Environment'] = cw_env
-    cw['Instance'] = cw_instance
-    cfg_doc = dict()
-    cfg_doc['CloudWatchMetrics'] = cw
-    cfg_doc['Version'] = 1
-    oo['Value'] = json.dumps(cfg_doc)
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:elasticbeanstalk:healthreporting:system'
-    oo['OptionName'] = 'EnhancedHealthAuthEnabled'
-    oo['Value'] = 'true'
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:elasticbeanstalk:cloudwatch:logs'
-    oo['OptionName'] = 'StreamLogs'
-    oo['Value'] = 'true'
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:elasticbeanstalk:cloudwatch:logs'
-    oo['OptionName'] = 'DeleteOnTerminate'
-    oo['Value'] = 'true'
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:elasticbeanstalk:cloudwatch:logs'
-    oo['OptionName'] = 'RetentionInDays'
-    oo['Value'] = '3'
-    option_settings.append(oo)
-
-    option_settings = json.dumps(option_settings)
-
-    tag0 = f"Key=git_hash_johanna,Value={git_hash_johanna.decode('utf-8').strip()}"
-    tag1 = f"Key=git_hash_{name},Value={git_hash_app.decode('utf-8').strip()}"
-
-    cmd = ['elasticbeanstalk', 'create-environment']
-    cmd += ['--application-name', eb_application_name]
-    cmd += ['--cname-prefix', cname]
-    cmd += ['--environment-name', eb_environment_name]
-    cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.6.6 running IIS 10.0']
-    cmd += ['--tags', tag0, tag1]
-    cmd += ['--version-label', eb_environment_name]
-    aws_cli.run(cmd, cwd=template_path)
-
-    elapsed_time = 0
-    while True:
-        cmd = ['elasticbeanstalk', 'describe-environments']
-        cmd += ['--application-name', eb_application_name]
-        cmd += ['--environment-name', eb_environment_name]
-        result = aws_cli.run(cmd)
-
-        ee = result['Environments'][0]
-        eb_environment_id = result['Environments'][0]['EnvironmentId']
-        print(json.dumps(ee, sort_keys=True, indent=4))
-        if ee.get('Health', '') == 'Green' and ee.get('Status', '') == 'Ready':
-            break
-
-        print('creating... (elapsed time: \'%d\' seconds)' % elapsed_time)
-        time.sleep(5)
-        elapsed_time += 5
-
-        if elapsed_time > 60 * 60:
-            raise Exception()
-
-    subprocess.Popen(['rm', '-rf', f'./{name}'], cwd=template_path).communicate()
+run_create_image_builder(env, update_version)

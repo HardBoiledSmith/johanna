@@ -55,6 +55,20 @@ def run_create_eb_windows(name, settings):
     print_session(f'create {name}')
 
     ################################################################################
+    print_message('get gendo golden img arn')
+
+    cmd = ['ec2', 'describe-images']
+    cmd += ['--filters',
+            'Name=name,Values=Gendo_*',
+            'Name=state,Values=available']
+    cmd += ['--query', 'reverse(sort_by(Images, &CreationDate))[:1].ImageId']
+    cmd += ['--output', 'text']
+    cmd += ['--region', 'ap-northeast-2']
+    latest_eb_platform_ami = aws_cli.run(cmd)
+    if not latest_eb_platform_ami:
+        Exception('not exist gendo ami')
+
+    ################################################################################
     print_message('get vpc id')
 
     rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
@@ -284,7 +298,7 @@ def run_create_eb_windows(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'ImageId'
-    oo['Value'] = 'ami-049b5e6e772427d55'
+    oo['Value'] = latest_eb_platform_ami
     option_settings.append(oo)
 
     oo = dict()
