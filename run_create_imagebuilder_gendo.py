@@ -18,7 +18,7 @@ if __name__ == "__main__":
     args = parse_args()
 
 
-def run_create_image_builder(settings, update_version):
+def run_create_image_builder():
     aws_cli = AWSCli()
 
     phase = env['common']['PHASE']
@@ -57,23 +57,6 @@ def run_create_image_builder(settings, update_version):
     print_session('create component')
 
     gendo_component_name = f'gendo_provisioning_component_{str_timestamp}'
-    # cmd = ['imagebuilder', 'list-components']
-    # cmd += ['--filters', f'name=name,values="{gendo_component_name}"']
-    # rr = aws_cli.run(cmd)
-
-    # if len(rr['componentVersionList']) > 1:
-    # latest_component_version = rr['componentVersionList'][-1]['version']
-    # rr_version = latest_component_version.split('.')
-    #
-    # if update_version == 'major':
-    #     rr_version[0] = str(int(rr_version[0]) + 1)
-    # elif update_version == 'minor':
-    #     rr_version[1] = str(int(rr_version[1]) + 1)
-    # elif update_version == 'patch':
-    #     rr_version[2] = str(int(rr_version[2]) + 1)
-    #
-    # semantic_version = '.'.join(rr_version)
-    # print(semantic_version)
 
     file_path_name = 'template/gendo/gendo/requirements.txt'
     tmp_lines = read_file(file_path_name)
@@ -96,8 +79,8 @@ def run_create_image_builder(settings, update_version):
                 else:
                     ff.write(line)
 
-    # tag0 = 'Key=git_hash_johanna,Value=%s' % git_hash_johanna.decode('utf-8').strip()
-    # tag1 = 'Key=git_hash_%s,Value=%s' % (name, git_hash_app.decode('utf-8').strip())
+    tag0 = 'Key=git_hash_johanna,Value=%s' % git_hash_johanna.decode('utf-8').strip()
+    tag1 = 'Key=git_hash_%s,Value=%s' % (name, git_hash_app.decode('utf-8').strip())
 
     cmd = ['imagebuilder', 'create-component']
     cmd += ['--name', gendo_component_name]
@@ -105,8 +88,7 @@ def run_create_image_builder(settings, update_version):
     cmd += ['--platform', 'Windows']
     ## TODO: env로 전환 supported-os-versions
     cmd += ['--supported-os-versions', 'Microsoft Windows Server 2016']
-    # cmd += ['--tags', tag0, tag1]
-    # cmd += ['--policy-document', f'file://tem']
+    cmd += ['--tags', tag0, tag1]
     cmd += ['--data', f'file://template/gendo/gendo/_provisioning/gendo_golden_image.yml']
 
     rr = aws_cli.run(cmd)
@@ -250,9 +232,4 @@ def run_create_image_builder(settings, update_version):
 print_session('create image builder')
 ################################################################################
 
-update_version = 'patch'
-if len(args) > 1:
-    if 'major' == args[1] or 'minor' == args[1]:
-        update_version = args[1]
-
-run_create_image_builder(env, update_version)
+run_create_image_builder(env)
