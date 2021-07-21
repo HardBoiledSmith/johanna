@@ -6,12 +6,12 @@ aws_cli = AWSCli()
 
 
 def create_iam_profile_for_ec2_instances(name):
-    profile_name = f'eb-{name}-instance-profile'
+    profile_name = f'aws-elasticbeanstalk-{name}-instance-profile'
     cmd = ['iam', 'create-instance-profile']
     cmd += ['--instance-profile-name', profile_name]
     aws_cli.run(cmd)
 
-    role_name = f'eb-{name}-ec2-role'
+    role_name = f'aws-elasticbeanstalk-{name}-ec2-role'
     role_file_path = f'file://template/{name}/_provisioning/iam/aws-elasticbeanstalk-ec2-role.json'
     cmd = ['iam', 'create-role']
     cmd += ['--role-name', role_name]
@@ -43,7 +43,7 @@ def create_iam_profile_for_ec2_instances(name):
     cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore']
     aws_cli.run(cmd)
 
-    policy_name = f'eb-{name}-ec2-policy'
+    policy_name = f'aws-elasticbeanstalk-{name}-ec2-policy'
     policy_file_path = f'file://template/{name}/_provisioning/iam/aws-elasticbeanstalk-ec2-policy.json'
     cmd = ['iam', 'put-role-policy']
     cmd += ['--role-name', role_name]

@@ -112,7 +112,6 @@ if __name__ == "__main__":
 
     command = f'run_{command}'
     if command == 'run_create':
-        __import__('run_create_iam')
         __import__('run_create_vpc')
         __import__('run_create_rds')
         __import__('run_create_ec2_client_vpn')
@@ -137,7 +136,6 @@ if __name__ == "__main__":
         __import__('run_terminate_rds')
         __import__('run_terminate_ec2_client_vpn')
         __import__('run_terminate_vpc')
-        __import__('run_terminate_iam')
     elif command == 'run_describe':
         __import__('run_describe_eb')
         __import__('run_describe_vpc')

@@ -45,6 +45,24 @@ def main(settings):
     print_session('create eb application')
 
     ################################################################################
+    print_message('create service role')
+
+    cmd = ['iam', 'create-role']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
+    cmd += ['--assume-role-policy-document', 'file://aws_iam/aws-elasticbeanstalk-service-role.json']
+    aws_cli.run(cmd)
+
+    cmd = ['iam', 'attach-role-policy']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
+    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth']
+    aws_cli.run(cmd)
+
+    cmd = ['iam', 'attach-role-policy']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
+    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy']
+    aws_cli.run(cmd)
+
+    ################################################################################
     print_message('create application')
 
     eb_service_role_arn = aws_cli.get_iam_role('aws-elasticbeanstalk-service-role')['Role']['Arn']

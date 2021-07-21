@@ -11,6 +11,7 @@ from run_common import print_session
 from run_common import re_sub_lines
 from run_common import read_file
 from run_common import write_file
+from run_create_eb_iam import create_iam_profile_for_ec2_instances
 
 
 def run_create_eb_windows(name, settings):
@@ -190,6 +191,13 @@ def run_create_eb_windows(name, settings):
     aws_cli.run(cmd, cwd=template_path)
 
     ################################################################################
+    print_message(f'create iam')
+
+    instance_profile_name = create_iam_profile_for_ec2_instances(name)
+    print_message('wait 10 seconds to let iam role and policy propagated to all regions...')
+    time.sleep(10)
+
+    ################################################################################
     print_message('check previous version')
 
     cmd = ['elasticbeanstalk', 'describe-environments']
@@ -290,7 +298,7 @@ def run_create_eb_windows(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'IamInstanceProfile'
-    oo['Value'] = 'aws-elasticbeanstalk-ec2-role'
+    oo['Value'] = instance_profile_name
     option_settings.append(oo)
 
     oo = dict()

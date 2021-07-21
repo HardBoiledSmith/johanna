@@ -3,6 +3,7 @@
 from env import env
 from run_common import print_session
 from run_create_eb_django import run_create_eb_django
+from run_create_eb_iam import create_iam_role_for_eb_service
 from run_create_eb_windows import run_create_eb_windows
 
 args = []
@@ -31,6 +32,8 @@ if len(args) > 1:
 
 if len(args) > 2:
     region = args[2]
+
+create_iam_role_for_eb_service()
 
 for eb_env in eb['ENVIRONMENTS']:
     if target_eb_name and eb_env['NAME'] != target_eb_name:
