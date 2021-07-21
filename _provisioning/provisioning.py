@@ -132,7 +132,7 @@ def _preprocess(hostname):
 
     _print_line_number()
 
-    node_version = 'v14.17.0'
+    node_version = 'v14.17.2'
     _run(['wget', 'https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh'], cwd='/root')
     _run(['chmod', '+x', 'install.sh'], cwd='/root')
     _run(['./install.sh'], cwd='/root')
