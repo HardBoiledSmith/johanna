@@ -172,15 +172,6 @@ def _preprocess(hostname):
 
     _print_line_number()
 
-    _run(['mkdir', '-p', '/etc/openvpn'])
-
-    easy_rsa_version = '3.0.8'
-    uu = f'https://github.com/OpenVPN/easy-rsa/releases/download/v{easy_rsa_version}/'
-    uu += f'EasyRSA-{easy_rsa_version}.tgz'
-    _run(['wget', uu], cwd='/etc/openvpn')
-    _run(['tar', '-xvzf', f'EasyRSA-{easy_rsa_version}.tgz'], cwd='/etc/openvpn')
-    _run(['mv', f'EasyRSA-{easy_rsa_version}', 'easy-rsa'], cwd='/etc/openvpn')
-
 
 def main():
     hostname = 'dv-johanna-my-local-1a-012345.localdomain'
