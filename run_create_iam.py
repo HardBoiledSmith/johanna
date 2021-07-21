@@ -20,50 +20,6 @@ def create_iam():
 
     aws_cli = AWSCli()
 
-    ################################################################################
-    print_message('create iam: aws-elasticbeanstalk-ec2-role')
-
-    cmd = ['iam', 'create-instance-profile']
-    cmd += ['--instance-profile-name', 'aws-elasticbeanstalk-ec2-role']
-    aws_cli.run(cmd)
-
-    cmd = ['iam', 'create-role']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
-    cmd += ['--assume-role-policy-document', 'file://aws_iam/aws-elasticbeanstalk-ec2-role.json']
-    aws_cli.run(cmd)
-
-    cmd = ['iam', 'add-role-to-instance-profile']
-    cmd += ['--instance-profile-name', 'aws-elasticbeanstalk-ec2-role']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
-    aws_cli.run(cmd)
-
-    cmd = ['iam', 'attach-role-policy']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
-    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier']
-    aws_cli.run(cmd)
-
-    cmd = ['iam', 'attach-role-policy']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
-    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker']
-    aws_cli.run(cmd)
-
-    cmd = ['iam', 'attach-role-policy']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
-    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier']
-    aws_cli.run(cmd)
-
-    cmd = ['iam', 'attach-role-policy']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
-    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore']
-    aws_cli.run(cmd)
-
-    cmd = ['iam', 'put-role-policy']
-    cmd += ['--role-name', 'aws-elasticbeanstalk-ec2-role']
-    cmd += ['--policy-name', 'aws-elasticbeanstalk-ec2-policy']
-    cmd += ['--policy-document', 'file://aws_iam/aws-elasticbeanstalk-ec2-policy.json']
-    aws_cli.run(cmd)
-
-    ################################################################################
     print_message('create iam: aws-elasticbeanstalk-service-role')
 
     cmd = ['iam', 'create-role']
