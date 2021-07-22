@@ -22,7 +22,6 @@ def run_create_image_builder():
     aws_cli = AWSCli()
 
     phase = env['common']['PHASE']
-    # git_url = settings['GIT_URL']
     git_url = "git@github.com:HardBoiledSmith/gendo.git"
     name = 'gendo'
     template_path = 'template/%s' % name
@@ -79,8 +78,8 @@ def run_create_image_builder():
                 else:
                     ff.write(line)
 
-    tag0 = 'Key=git_hash_johanna,Value=%s' % git_hash_johanna.decode('utf-8').strip()
-    tag1 = 'Key=git_hash_%s,Value=%s' % (name, git_hash_app.decode('utf-8').strip())
+    tag0 = 'git_hash_johanna=%s' % git_hash_johanna.decode('utf-8').strip()
+    tag1 = 'git_hash_%s=%s' % (name, git_hash_app.decode('utf-8').strip())
 
     cmd = ['imagebuilder', 'create-component']
     cmd += ['--name', gendo_component_name]
@@ -88,7 +87,7 @@ def run_create_image_builder():
     cmd += ['--platform', 'Windows']
     ## TODO: env로 전환 supported-os-versions
     cmd += ['--supported-os-versions', 'Microsoft Windows Server 2016']
-    cmd += ['--tags', tag0, tag1]
+    cmd += ['--tags', f'{tag0},{tag1}']
     cmd += ['--data', f'file://template/gendo/gendo/_provisioning/gendo_golden_image.yml']
 
     rr = aws_cli.run(cmd)
@@ -115,7 +114,7 @@ def run_create_image_builder():
     cmd = ['ec2', 'describe-images']
     cmd += ['--owner', 'amazon']
     cmd += ['--filters',
-            'Name=name,Values=aws-elasticbeanstalk-amzn-??????????.x86_64-WindowsServer*',
+            'Name=name,Values=aws-elasticbeanstalk-amzn-??????????.x86_64-WindowsServer2016',
             'Name=state,Values=available']
     cmd += ['--query', 'reverse(sort_by(Images, &CreationDate))[:1].ImageId']
     cmd += ['--output', 'text']
@@ -125,7 +124,7 @@ def run_create_image_builder():
     cmd = ['elasticbeanstalk', 'describe-platform-version']
     cmd += ['--region', 'ap-northeast-2']
     cmd += ['--platform-arn',
-            'arn:aws:elasticbeanstalk:ap-northeast-2::platform/IIS 10.0 running on 64bit Windows Server 2016/2.6.7']
+            'arn:aws:elasticbeanstalk:ap-northeast-2::platform/IIS 10.0 running on 64bit Windows Server 2016/2.6.8']
     cmd += ['--query', 'PlatformDescription.CustomAmiList']
     rr = aws_cli.run(cmd)
 
@@ -164,7 +163,6 @@ def run_create_image_builder():
     ############################################################################
     print_session('create distribution')
 
-    # ## Todo : cross account의 경우 권한 조정이 필요함.
     distributions = [
         {
             "region": "ap-northeast-2",
@@ -186,8 +184,6 @@ def run_create_image_builder():
     ###########################################################################
     print_session('create pipeline')
 
-    # version 관리가 되면 스케줄 부분에서 예약된 시간에 파이프라인이 실행 되도록 할 수 있음. 다만, 버전관리가 힘들 것으로 보여 version 관리 부분을 제거함.
-
     pipeline_name = f'gendo_pipeline_{str_timestamp}'
     cmd = ['imagebuilder', 'create-image-pipeline']
     cmd += ['--name', pipeline_name]
@@ -202,27 +198,15 @@ def run_create_image_builder():
     gendo_pipeline_arn = rr['imagePipelineArn']
 
     ###########################################################################
-    print_session('excution pipeline for image')
-    cmd = ['imagebuilder', 'start-image-pipeline-execution']
-    cmd += ['--image-pipeline-arn', gendo_pipeline_arn]
-    aws_cli.run(cmd)
+    # print_session('excution pipeline for image')
+    # cmd = ['imagebuilder', 'start-image-pipeline-execution']
+    # cmd += ['--image-pipeline-arn', gendo_pipeline_arn]
+    # aws_cli.run(cmd)
 
     if update_required:
         print_session('Pleas Check Your eb platfrom version // '
                       'Reference : https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/'
                       'platforms-supported.html#platforms-supported.net')
-
-    print_message('get gendo golden img arn')
-
-    cmd = ['ec2', 'describe-images']
-    cmd += ['--filters',
-            'Name=name,Values=Gendo_*',
-            'Name=state,Values=available']
-    cmd += ['--query', 'reverse(sort_by(Images, &CreationDate))[:1].ImageId']
-    cmd += ['--output', 'text']
-    cmd += ['--region', 'ap-northeast-2']
-    latest_eb_platform_ami = aws_cli.run(cmd)
-    print(latest_eb_platform_ami)
 
 ################################################################################
 #
@@ -232,4 +216,4 @@ def run_create_image_builder():
 print_session('create image builder')
 ################################################################################
 
-run_create_image_builder(env)
+run_create_image_builder()
