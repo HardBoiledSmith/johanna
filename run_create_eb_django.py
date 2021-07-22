@@ -144,7 +144,7 @@ def run_create_eb_django(name, settings):
     subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
     if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', git_url]
+        git_command = ['git', 'clone', '--depth=1', '-b', 'DEV-12143', git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
     subprocess.Popen(git_command, cwd=template_path).communicate()
@@ -205,7 +205,7 @@ def run_create_eb_django(name, settings):
     ################################################################################
     print_message(f'create iam')
 
-    instance_profile_name = create_iam_profile_for_ec2_instances(name)
+    instance_profile_name, role_arn = create_iam_profile_for_ec2_instances(template_path, name)
     print_message('wait 10 seconds to let iam role and policy propagated to all regions...')
     time.sleep(10)
 
@@ -276,14 +276,24 @@ def run_create_eb_django(name, settings):
     ################################################################################
     print_message('update s3 policy of storage location')
 
+    cmd = ['s3api', 'get-bucket-policy']
+    cmd += ['--bucket', s3_bucket]
+    rr = aws_cli.run(cmd)
+    rr = rr['Policy']
+
+    account_id = aws_cli.get_caller_account_id()
+    ppp = fr'arn:aws:iam::{account_id}:role/aws-elasticbeanstalk-.*ec2-role'
+    role_list = re.findall(ppp, rr)
+
+    if role_arn not in role_list:
+        role_list.append(role_arn)
+
     lines = read_file('aws_iam/aws-elasticbeanstalk-storage-policy.json')
     lines = re_sub_lines(lines, 'BUCKET_NAME', s3_bucket)
-
-    account_id = re.match(r'^.+-([0-9]+)$', s3_bucket).group(1)
-    lines = re_sub_lines(lines, 'MY_ACCOUNT_ID', account_id)
-
+    lines = re_sub_lines(lines, 'AWS_ACCOUNT_ID', account_id)
     elb_account_id = aws_cli.get_elb_account_id(aws_default_region)
     lines = re_sub_lines(lines, 'ELB_ACCOUNT_ID', elb_account_id)
+    lines = re_sub_lines(lines, 'EC2_ROLE_LIST', json.dumps(role_list))
     pp = ' '.join(lines)
     pp = json.loads(pp)
 
@@ -427,7 +437,7 @@ def run_create_eb_django(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2 v3.3.1 running Python 3.8']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2 v3.3.3 running Python 3.8']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)

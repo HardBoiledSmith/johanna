@@ -14,16 +14,6 @@ def terminate_iam_profile_for_ec2_instances(name):
 
     cmd = ['iam', 'detach-role-policy']
     cmd += ['--role-name', role_name]
-    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier']
-    aws_cli.run(cmd, ignore_error=True)
-
-    cmd = ['iam', 'detach-role-policy']
-    cmd += ['--role-name', role_name]
-    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker']
-    aws_cli.run(cmd, ignore_error=True)
-
-    cmd = ['iam', 'detach-role-policy']
-    cmd += ['--role-name', role_name]
     cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier']
     aws_cli.run(cmd, ignore_error=True)
 

@@ -63,6 +63,8 @@ def main(settings):
     ################################################################################
     print_message('delete vpc peering connection')
 
+    print(rds_vpc_id, eb_vpc_id)
+
     cmd = ['ec2', 'describe-vpc-peering-connections']
     result = aws_cli.run(cmd, ignore_error=True)
     for vpc_peer in result['VpcPeeringConnections']:
