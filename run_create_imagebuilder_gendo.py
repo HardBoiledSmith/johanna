@@ -85,10 +85,10 @@ def run_create_image_builder():
     cmd += ['--name', gendo_component_name]
     cmd += ['--semantic-version', semantic_version]
     cmd += ['--platform', 'Windows']
-    ## TODO: env로 전환 supported-os-versions
+    # TODO: env로 전환 supported-os-versions
     cmd += ['--supported-os-versions', 'Microsoft Windows Server 2016']
     cmd += ['--tags', f'{tag0},{tag1}']
-    cmd += ['--data', f'file://template/gendo/gendo/_provisioning/gendo_golden_image.yml']
+    cmd += ['--data', 'file://template/gendo/gendo/_provisioning/gendo_golden_image.yml']
 
     rr = aws_cli.run(cmd)
     gendo_component_arn = rr['componentBuildVersionArn']
@@ -114,7 +114,7 @@ def run_create_image_builder():
     cmd = ['ec2', 'describe-images']
     cmd += ['--owner', 'amazon']
     cmd += ['--filters',
-            'Name=name,Values=aws-elasticbeanstalk-amzn-??????????.x86_64-WindowsServer2016',
+            'Name=name,Values=aws-elasticbeanstalk-amzn-??????????.x86_64-WindowsServer2016-V2-hvm-*',
             'Name=state,Values=available']
     cmd += ['--query', 'reverse(sort_by(Images, &CreationDate))[:1].ImageId']
     cmd += ['--output', 'text']
@@ -155,7 +155,6 @@ def run_create_image_builder():
     cmd += ['--instance-profile-name', 'EC2InstanceProfileForImageBuilder']
     cmd += ['--instance-types', 'r5.large']
     cmd += ['--terminate-instance-on-failure']
-    ## sns 추가 가능
     # cmd += ['--sns-topic-arn', topic_arn]
     rr = aws_cli.run(cmd)
     gendo_infrastructure_arn = rr['infrastructureConfigurationArn']
@@ -190,18 +189,15 @@ def run_create_image_builder():
     cmd += ['--image-recipe-arn', gendo_recipe_arn]
     cmd += ['--infrastructure-configuration-arn', gendo_infrastructure_arn]
     cmd += ['--distribution-configuration-arn', gendo_distributions_arn]
-    # cmd += ['--schedule', ]
-    # "schedule": { "scheduleExpression": "cron(0 0 * * SUN)",
-    # "pipelineExecutionStartCondition": "EXPRESSION_MATCH_AND_DEPENDENCY_UPDATES_AVAILABLE" },'
     rr = aws_cli.run(cmd)
 
     gendo_pipeline_arn = rr['imagePipelineArn']
 
     ###########################################################################
-    # print_session('excution pipeline for image')
-    # cmd = ['imagebuilder', 'start-image-pipeline-execution']
-    # cmd += ['--image-pipeline-arn', gendo_pipeline_arn]
-    # aws_cli.run(cmd)
+    print_session('excution pipeline for image')
+    cmd = ['imagebuilder', 'start-image-pipeline-execution']
+    cmd += ['--image-pipeline-arn', gendo_pipeline_arn]
+    aws_cli.run(cmd)
 
     if update_required:
         print_session('Pleas Check Your eb platfrom version // '
@@ -213,7 +209,8 @@ def run_create_image_builder():
 # start
 #
 ################################################################################
+
+
 print_session('create image builder')
-################################################################################
 
 run_create_image_builder()
