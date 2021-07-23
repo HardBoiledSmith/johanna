@@ -39,6 +39,19 @@ def main(settings):
     rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
 
     ################################################################################
+    print_message('vpc endpoint')
+
+    cmd = ['ec2', 'describe-vpc-endpoints']
+    result = aws_cli.run(cmd, ignore_error=True)
+
+    for r in result['VpcEndpoints']:
+        vpce_id = r['VpcEndpointId']
+
+        cmd = ['ec2', 'delete-vpc-endpoints']
+        cmd += ['--vpc-endpoint-ids', vpce_id]
+        aws_cli.run(cmd, ignore_error=True)
+
+    ################################################################################
     print_message('delete network interface')
 
     cmd = ['ec2', 'describe-network-interfaces']
