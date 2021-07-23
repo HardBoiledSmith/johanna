@@ -168,7 +168,7 @@ def run_create_eb_windows(name, settings):
     subprocess.Popen(['rm', '-rf', f'./{name}/.git'], cwd=template_path).communicate()
     subprocess.Popen(['rm', '-rf', f'./{name}/.gitignore'], cwd=template_path).communicate()
 
-    lines = read_file(f'{template_path}/{name}/_provisioning/.ebextensions/{name}.config.sample')
+    lines = read_file(f'{template_path}/{name}/_provisioning/.ebextensions/{name}.config.sample2')
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
     lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
