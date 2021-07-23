@@ -295,11 +295,12 @@ def run_create_eb_windows(name, settings):
     rr = rr['Policy']
 
     account_id = aws_cli.get_caller_account_id()
-    ppp = fr'arn:aws:iam::{account_id}:role/aws-elasticbeanstalk-.*ec2-role'
+    ppp = fr'arn:aws:iam::{account_id}:role/aws-elasticbeanstalk-(?:[a-z]+-ec2|ec2)-role'
     role_list = re.findall(ppp, rr)
 
-    if role_arn not in role_list:
-        role_list.append(role_arn)
+    role_list = set(role_list)
+    role_list.add(role_arn)
+    role_list = list(role_list)
 
     lines = read_file('aws_iam/aws-elasticbeanstalk-storage-policy.json')
     lines = re_sub_lines(lines, 'BUCKET_NAME', s3_bucket)

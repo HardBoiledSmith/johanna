@@ -141,7 +141,7 @@ def run_create_lambda_sqs(function_name, settings):
                '--role', role_arn,
                '--handler', 'lambda.handler',
                '--runtime', 'python3.7',
-               '--timeout', '240']
+               '--timeout', '180']
         aws_cli.run(cmd, cwd=deploy_folder)
 
         print_message('update lambda tags')
@@ -182,7 +182,7 @@ def run_create_lambda_sqs(function_name, settings):
            '--handler', 'lambda.handler',
            '--runtime', 'python3.7',
            '--tags', ','.join(tags),
-           '--timeout', '240']
+           '--timeout', '180']
     aws_cli.run(cmd, cwd=deploy_folder)
 
     print_message('give event permission')
