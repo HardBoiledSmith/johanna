@@ -339,6 +339,12 @@ def run_create_eb_windows(name, settings):
     option_settings.append(oo)
 
     oo = dict()
+    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
+    oo['OptionName'] = 'RootVolumeType'
+    oo['Value'] = 'gp3'
+    option_settings.append(oo)
+
+    oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'AssociatePublicIpAddress'
     oo['Value'] = 'false'
