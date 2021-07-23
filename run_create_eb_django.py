@@ -144,7 +144,7 @@ def run_create_eb_django(name, settings):
     subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
     if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', '-b', 'DEV-12143', git_url]
+        git_command = ['git', 'clone', '--depth=1', git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
     subprocess.Popen(git_command, cwd=template_path).communicate()
@@ -203,7 +203,7 @@ def run_create_eb_django(name, settings):
     write_file('%s/%s/_provisioning/configuration/etc/%s/settings_local.py' % (template_path, name, name), lines)
 
     ################################################################################
-    print_message(f'create iam')
+    print_message('create iam')
 
     instance_profile_name, role_arn = create_iam_profile_for_ec2_instances(template_path, name)
     print_message('wait 10 seconds to let iam role and policy propagated to all regions...')

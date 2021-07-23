@@ -140,7 +140,7 @@ def run_create_eb_windows(name, settings):
 
     if phase == 'dv':
         print(f'dv branch: {dv_branch}')
-        git_command = ['git', 'clone', '--depth=1', '-b', 'DEV-12143', git_url]
+        git_command = ['git', 'clone', '--depth=1', git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
 
@@ -192,7 +192,7 @@ def run_create_eb_windows(name, settings):
     aws_cli.run(cmd, cwd=template_path)
 
     ################################################################################
-    print_message(f'create iam')
+    print_message('create iam')
 
     instance_profile_name, role_arn = create_iam_profile_for_ec2_instances(template_path, name)
     print_message('wait 10 seconds to let iam role and policy propagated to all regions...')
