@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import os
+import re
 import subprocess
 import time
 
@@ -11,6 +12,7 @@ from run_common import print_session
 from run_common import re_sub_lines
 from run_common import read_file
 from run_common import write_file
+from run_create_eb_iam import create_iam_profile_for_ec2_instances
 
 
 def run_create_eb_windows(name, settings):
@@ -138,7 +140,7 @@ def run_create_eb_windows(name, settings):
 
     if phase == 'dv':
         print(f'dv branch: {dv_branch}')
-        git_command = ['git', 'clone', '--depth=1', '-b', dv_branch, git_url]
+        git_command = ['git', 'clone', '--depth=1', git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
 
@@ -188,6 +190,13 @@ def run_create_eb_windows(name, settings):
 
     cmd = ['s3', 'cp', artifact_url, 'gendo-artifact.zip']
     aws_cli.run(cmd, cwd=template_path)
+
+    ################################################################################
+    print_message('create iam')
+
+    instance_profile_name, role_arn = create_iam_profile_for_ec2_instances(template_path, name)
+    print_message('wait 10 seconds to let iam role and policy propagated to all regions...')
+    time.sleep(10)
 
     ################################################################################
     print_message('check previous version')
@@ -270,11 +279,41 @@ def run_create_eb_windows(name, settings):
 
     cmd = ['s3', 'cp', zip_filename, s3_zip_filename]
     aws_cli.run(cmd, cwd=template_path)
+
     cmd = ['elasticbeanstalk', 'create-application-version']
     cmd += ['--application-name', eb_application_name]
     cmd += ['--source-bundle', f'S3Bucket="{s3_bucket}",S3Key="{eb_application_name}/{zip_filename}"']
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
+
+    ################################################################################
+    print_message('update s3 policy of storage location')
+
+    cmd = ['s3api', 'get-bucket-policy']
+    cmd += ['--bucket', s3_bucket]
+    rr = aws_cli.run(cmd)
+    rr = rr['Policy']
+
+    account_id = aws_cli.get_caller_account_id()
+    ppp = fr'arn:aws:iam::{account_id}:role/aws-elasticbeanstalk-.*ec2-role'
+    role_list = re.findall(ppp, rr)
+
+    if role_arn not in role_list:
+        role_list.append(role_arn)
+
+    lines = read_file('aws_iam/aws-elasticbeanstalk-storage-policy.json')
+    lines = re_sub_lines(lines, 'BUCKET_NAME', s3_bucket)
+    lines = re_sub_lines(lines, 'AWS_ACCOUNT_ID', account_id)
+    elb_account_id = aws_cli.get_elb_account_id(aws_default_region)
+    lines = re_sub_lines(lines, 'ELB_ACCOUNT_ID', elb_account_id)
+    lines = re_sub_lines(lines, 'EC2_ROLE_LIST', json.dumps(role_list))
+    pp = ' '.join(lines)
+    pp = json.loads(pp)
+
+    cmd = ['s3api', 'put-bucket-policy']
+    cmd += ['--bucket', s3_bucket]
+    cmd += ['--policy', json.dumps(pp)]
+    aws_cli.run(cmd)
 
     ################################################################################
     print_message(f'create environment {name}')
@@ -290,7 +329,7 @@ def run_create_eb_windows(name, settings):
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'IamInstanceProfile'
-    oo['Value'] = 'aws-elasticbeanstalk-ec2-role'
+    oo['Value'] = instance_profile_name
     option_settings.append(oo)
 
     oo = dict()
@@ -416,7 +455,7 @@ def run_create_eb_windows(name, settings):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.6.6 running IIS 10.0']
+    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.6.8 running IIS 10.0']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
