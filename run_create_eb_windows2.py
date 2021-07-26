@@ -35,7 +35,7 @@ def run_create_eb_windows(name, settings):
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = f'{service_name}_' if service_name else ''
     url = settings['ARTIFACT_URL']
-    dv_branch = settings.get('BRANCH', 'DEV-11644')
+    dv_branch = settings.get('BRANCH', 'master')
     cidr_subnet = aws_cli.cidr_subnet
 
     str_timestamp = str(int(time.time()))
@@ -529,3 +529,25 @@ def run_create_eb_windows(name, settings):
                 cmd = ['cloudwatch', 'delete-alarms']
                 cmd += ['--alarm-names', alarm]
                 aws_cli.run(cmd)
+
+
+################################################################################
+#
+# start
+#
+################################################################################
+print_session('create eb')
+
+################################################################################
+
+eb = env['elasticbeanstalk']
+
+
+for eb_env in eb['ENVIRONMENTS']:
+    if eb_env['TYPE'] == 'django':
+        continue
+    if eb_env['TYPE'] == 'windows':
+        run_create_eb_windows(eb_env['NAME'], eb_env)
+    else:
+        print(f"\"{eb_env['TYPE']}\" is not supported")
+        raise Exception()
