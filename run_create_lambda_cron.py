@@ -39,7 +39,7 @@ def run_create_lambda_cron(function_name, settings):
 
     if not os.path.exists('template/%s' % git_folder_name):
         if phase == 'dv':
-            git_command = ['git', 'clone', '-b', 'DEV-11644', git_url]
+            git_command = ['git', 'clone', '--depth=1', git_url]
         else:
             git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
         subprocess.Popen(git_command, cwd='template').communicate()
