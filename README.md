@@ -11,7 +11,7 @@ The backend includes below:
 - An Elastic Beanstalk application and an environment for Python Django API server
 - An aurora RDS cluster with instances
 - An sample SQS
-- An sample apply SRR(Same Region Replication) to S3  
+- and more...
 
 You can do provisioning/deprovisioning/reprovisioning of the whole system or partial at once. Especially, the reprovisioning of Django API server means a '[continuous deployement](https://en.wikipedia.org/wiki/Continuous_delivery#Relationship_to_continuous_deployment)'.
 
@@ -51,6 +51,9 @@ Using [Lili](https://github.com/HardBoiledSmith/lili)(Vagrant provisioning scrip
 You can use this on web GUI
 
 * [raynor](https://github.com/HardBoiledSmith/raynor) is web based GUI for johanna
+
+# Options
+
 
 # Script to create cloudfront and route 53
 - Execute `run_create_cloudfront.py` to create cloud front

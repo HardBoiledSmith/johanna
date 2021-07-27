@@ -5,7 +5,7 @@ from run_common import print_session
 from run_create_eb_django import run_create_eb_django
 from run_create_eb_windows import run_create_eb_windows
 
-options, args = {}, []
+options, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args

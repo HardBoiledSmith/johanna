@@ -68,10 +68,15 @@ def print_usage():
     for cc in command_list:
         print(f'    ./run.py [OPTIONS] {cc}')
     print('-' * 80)
+    print('    ./run_create_eb.py [OPTIONS] <eb-environment-name>\t\t' +
+          '(ex: \'./run_create_eb.py sachiel\')')
+    print('    ./run_create_lambda.py [OPTIONS] <lambda-function-name>\t\t' +
+          '(ex: \'./run_create_eb.py sachiel_send_email\')')
+    print('    ./run_create_s3.py [OPTIONS] <s3-bucket-name>\t\t' +
+          '(ex: \'./run_create_eb.py dv-hbsmith-web\')')
+    print('-' * 80)
     print('    ./run.py [OPTIONS] -- [AWS CLI COMMAND]\t\t' +
           '(ex: \'./run.py -- aws ec2 describe-instances\')')
-    print('    cd nova; ../run.py [OPTIONS] -- [EB CLI COMMAND]\t' +
-          '(ex: \'cd nova; ../run.py -- eb list --region ap-northeast-2\')')
     print('-' * 80)
     print('OPTIONS')
     print('')
@@ -88,7 +93,7 @@ def print_usage():
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args(True)
+    options, args = parse_args(True)
 
     if len(args) < 2:
         print_usage()

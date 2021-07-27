@@ -10,7 +10,7 @@ from run_create_lambda_ses_sqs import run_create_lambda_ses_sqs
 from run_create_lambda_sns import run_create_lambda_sns
 from run_create_lambda_sqs import run_create_lambda_sqs
 
-options, args = {}, []
+options, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args

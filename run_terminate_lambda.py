@@ -7,7 +7,7 @@ from run_common import print_message
 from run_common import print_session
 from run_terminate_lambda_iam import terminate_iam_for_lambda
 
-_, args = {}, []
+_, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args

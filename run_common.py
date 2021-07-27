@@ -525,7 +525,7 @@ def parse_args(require_arg=False):
     if not options.force:
         _confirm_phase()
 
-    return options, args
+    return options.__dict__, args
 
 
 def print_message(message):

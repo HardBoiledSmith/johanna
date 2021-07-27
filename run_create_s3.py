@@ -5,7 +5,7 @@ from run_common import print_session
 from run_create_s3_bucket import run_create_s3_bucket
 from run_create_s3_vue import run_create_s3_vue
 
-_, args = {}, []
+_, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args

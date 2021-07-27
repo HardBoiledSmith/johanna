@@ -7,7 +7,7 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
-_, args = {}, []
+_, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args

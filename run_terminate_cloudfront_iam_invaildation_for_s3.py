@@ -4,7 +4,7 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
-_, args = {}, []
+_, args = dict(), list()
 
 # It is a script dedicated to the op environment.
 if __name__ == "__main__":

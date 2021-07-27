@@ -7,7 +7,7 @@ from run_common import print_message
 from run_common import print_session
 from run_terminate_eb_iam import terminate_iam_profile_for_ec2_instances
 
-_, args = {}, []
+_, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args

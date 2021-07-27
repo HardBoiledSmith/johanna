@@ -10,7 +10,7 @@ from run_common import print_message
 from run_common import print_session
 from run_common import reset_template_dir
 
-options, args = {}, []
+options, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args
