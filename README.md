@@ -74,7 +74,8 @@ You can use this on web GUI
 - set config.json below root of johanna
 - move to provisioning folder using `johanna $ cd _provisioning`
 - copy `id_rsa` : `cp ~/.ssh/id_rsa ./_provisioning/configuration/root/.ssh/`
-- fill the `_provisioning/configuration/root/.sentryclirc`. you can generate required token from sentry web console. (Settings > Account > API > Auth Tokens)
+- (optional) To use release feature for sentry, must set environment value: `SENTRY_AUTH_TOKEN` and `SENTRY_ORG`
+  - https://docs.sentry.io/product/releases/suspect-commits/#using-the-cli
 - create or run vagrant using `johanna/_provisioning $ vagrant up`
 - connect to vagrant using `$ ssh root@dv-johanna.hbsmith.io` or `$ ssh root@192.168.124.5` 
 - move to johanna folder using  `$ cd /opt/johanna`

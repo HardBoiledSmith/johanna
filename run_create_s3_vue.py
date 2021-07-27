@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import glob
 import os
 import re
 import subprocess
@@ -51,9 +50,11 @@ def run_create_s3_vue(name, settings):
     ################################################################################
     print_message('create release for sentry')
 
-    subprocess.Popen(['sentry-cli', 'releases', 'new', '-p', f'{git_folder_name}-{name}', git_hash_app],
+    sentry_release_version = f'{git_folder_name}-{name}@{git_hash_app}'
+
+    subprocess.Popen(['sentry-cli', 'releases', 'new', '-p', f'{git_folder_name}-{name}', sentry_release_version],
                      cwd=f'template/{git_folder_name}').communicate()
-    subprocess.Popen(['sentry-cli', 'releases', 'set-commits', git_hash_app, '--auto'],
+    subprocess.Popen(['sentry-cli', 'releases', 'set-commits', '--auto', sentry_release_version],
                      cwd=f'template/{git_folder_name}').communicate()
 
     ################################################################################
@@ -108,14 +109,14 @@ def run_create_s3_vue(name, settings):
         raise Exception()
 
     ################################################################################
-    print_message('move sourcemap file to external folder')
+    print_message('upload sourcemaps at sentry')
 
-    subprocess.Popen(['mkdir', '-p', f'./sourcemaps/{name}'], cwd=f'template/{git_folder_name}').communicate()
+    subprocess.Popen(['sentry-cli', 'releases', '-p', f'{git_folder_name}-{name}', 'files', sentry_release_version,
+                      'upload-sourcemaps', f'template/{git_folder_name}/{name}/dist']).communicate()
 
-    sourcemap_files = glob.glob(f'template/{git_folder_name}/{name}/dist/js/*.map')
-
-    for sourcemap_file in sourcemap_files:
-        subprocess.Popen(['mv', sourcemap_file, f'template/{git_folder_name}/sourcemaps/{name}/']).communicate()
+    print_message('delete local sourcemaps')
+    subprocess.Popen(['find', '.', '-name', '*.map', '-type', 'f', '-delete', '-print'],
+                     cwd=f'template/{git_folder_name}/{name}/dist').communicate()
 
     ################################################################################
     print_message('upload to temp bucket')
@@ -234,14 +235,7 @@ def run_create_s3_vue(name, settings):
         print(invalidate_result)
 
     ################################################################################
-    print_message('upload sourcemaps at sentry')
-
-    subprocess.Popen(['sentry-cli', 'releases', '-p', f'{git_folder_name}-{name}', 'files', git_hash_app,
-                      'upload-sourcemaps', f'sourcemaps/{name}'],
-                     cwd=f'template/{git_folder_name}').communicate()
-
-    ################################################################################
     print_message('finalize release for sentry')
 
-    subprocess.Popen(['sentry-cli', 'releases', 'finalize', git_hash_app],
+    subprocess.Popen(['sentry-cli', 'releases', 'finalize', sentry_release_version],
                      cwd=f'template/{git_folder_name}').communicate()
