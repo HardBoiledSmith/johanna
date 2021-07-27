@@ -188,7 +188,6 @@ def main():
     cmd_common = ['cp', '--backup']
     file_list = list()
     file_list.append('/root/.ssh/id_rsa')
-    file_list.append('/root/.sentryclirc')
     for ff in file_list:
         cmd = cmd_common + ['/vagrant/configuration' + ff, ff]
         _run(cmd)
