@@ -525,7 +525,8 @@ def parse_args(require_arg=False):
     if not options.force:
         _confirm_phase()
 
-    return options.__dict__, args
+    option_dict = {k: v for k, v in options.__dict__.items() if v is not None}
+    return option_dict, args
 
 
 def print_message(message):

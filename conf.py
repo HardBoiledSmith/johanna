@@ -47,7 +47,7 @@ if __name__ == '__main__':
     if args.region not in AWS_REGIONS:
         print('Invalid Region Name')
         sys.exit(0)
-    config['aws']['AWS_DEFAULT_REGION'] = args.region
+    config['aws']['AWS_REGION'] = args.region
 
     # AWS AVAILABILITY ZONE 1
     if args.region not in args.az1:
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     config['rds']['USER_PASSWORD'] = args.pw
 
     # VPC Configuration
-    config['vpc'][0]['AWS_DEFAULT_REGION'] = args.region
+    config['vpc'][0]['AWS_REGION'] = args.region
     config['vpc'][0]['AWS_AVAILABILITY_ZONE_1'] = args.az1
     config['vpc'][0]['AWS_AVAILABILITY_ZONE_2'] = args.az2
 

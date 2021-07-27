@@ -15,7 +15,7 @@ from run_create_lambda_iam import create_iam_for_lambda
 
 
 def run_create_lambda_cron(function_name, settings, options):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    aws_cli = AWSCli(settings['AWS_REGION'])
 
     description = settings['DESCRIPTION']
     folder_name = settings.get('FOLDER_NAME', function_name)

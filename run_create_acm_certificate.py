@@ -4,6 +4,13 @@ from env import env
 from run_common import AWSCli
 from run_common import print_session
 
+options, args = dict(), list()
+
+if __name__ == "__main__":
+    from run_common import parse_args
+
+    options, args = parse_args()
+
 
 def get_acm_certificates_list(region):
     aws_cli = AWSCli(region)
@@ -22,7 +29,7 @@ def find_certificates_arn(list, domain_name):
 
 
 def run_create_acm_certificate(domain_name, additional_names, validation_method, region):
-    print_session('create acm certificate')
+    print_session('create certificate')
 
     aws_cli = AWSCli(region)
     cmd = ['acm', 'request-certificate']
@@ -39,31 +46,36 @@ def run_create_acm_certificate(domain_name, additional_names, validation_method,
 # start
 #
 ################################################################################
-if __name__ == "__main__":
-    from run_common import parse_args
+print_session('create acm')
 
-    _, args = parse_args()
-    acm_envs = env['acm']
+target_name = None
+region = options.get('region')
+is_target_exists = False
 
-    target_name = None
-    check_exists = False
+if len(args) > 1:
+    target_name = args[1]
 
-    if len(args) > 1:
-        target_name = args[1]
+for settings in env.get('acm', list()):
+    if target_name and settings['NAME'] != target_name:
+        continue
 
-    for acm_env in acm_envs:
-        if target_name and acm_env['NAME'] != target_name:
-            continue
+    if region and settings['AWS_REGION'] != region:
+        continue
 
-        certificates_list = get_acm_certificates_list(acm_env['AWS_DEFAULT_REGION'])
-        if find_certificates_arn(certificates_list, acm_env['DOMAIN_NAME']) is not None:
-            continue
+    certificates_list = get_acm_certificates_list(settings['AWS_REGION'])
+    if find_certificates_arn(certificates_list, settings['DOMAIN_NAME']) is not None:
+        continue
 
-        if target_name:
-            check_exists = True
+    is_target_exists = True
 
-        run_create_acm_certificate(acm_env['DOMAIN_NAME'], acm_env['ADDITIONAL_NAMES'],
-                                   acm_env['VALIDATION_METHOD'], acm_env['AWS_DEFAULT_REGION'])
+    run_create_acm_certificate(settings['DOMAIN_NAME'], settings['ADDITIONAL_NAMES'],
+                               settings['VALIDATION_METHOD'], settings['AWS_REGION'])
 
-    if not check_exists and target_name:
-        print(f'{target_name} is not exists in config.json')
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'acm: {mm} is not found in config.json')

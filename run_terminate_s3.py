@@ -19,27 +19,29 @@ if __name__ == "__main__":
 ################################################################################
 print_session('terminate s3')
 
-s3_list = env.get('s3', list())
-target_s3_name = None
-check_exists = False
+target_name = None
+is_target_exists = False
 
 if len(args) > 1:
-    target_s3_name = args[1]
+    target_name = args[1]
 
-for s3_env in s3_list:
-    if target_s3_name and s3_env['NAME'] != target_s3_name:
+for settings in env.get('s3', list()):
+    if target_name and settings['NAME'] != target_name:
         continue
 
-    if target_s3_name:
-        check_exists = True
+    is_target_exists = True
 
-    if s3_env['TYPE'] == 'bucket':
-        run_terminate_s3_bucket(s3_env['NAME'], s3_env)
-    elif s3_env['TYPE'] == 'vue-app':
-        run_terminate_s3_vue(s3_env['NAME'], s3_env)
+    if settings['TYPE'] == 'bucket':
+        run_terminate_s3_bucket(settings['NAME'], settings)
+    elif settings['TYPE'] == 'vue-app':
+        run_terminate_s3_vue(settings['NAME'], settings)
     else:
-        print('"%s" is not supported' % s3_env['TYPE'])
+        print(f'{settings["TYPE"]} is not supported')
         raise Exception()
 
-if not check_exists and target_s3_name:
-    print('"%s" is not exists in config.json' % target_s3_name)
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    mm = ' in '.join(mm)
+    print(f's3: {mm} is not found in config.json')

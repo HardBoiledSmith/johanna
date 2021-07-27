@@ -7,6 +7,13 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
+options, args = dict(), list()
+
+if __name__ == "__main__":
+    from run_common import parse_args
+
+    options, args = parse_args()
+
 
 def terminate_iam_for_appstream():
     aws_cli = AWSCli()
@@ -107,36 +114,43 @@ def wait_state(name, fleet_region):
 # start
 #
 ################################################################################
+print_session('terminate appstream stack & fleet')
 
+appstream = env['appstream']
+target_name = None
+region = options.get('region')
+is_target_exists = False
 
-if __name__ == "__main__":
-    from run_common import parse_args
+if len(args) > 1:
+    target_name = args[1]
 
-    options, args = parse_args()
+for settings in appstream.get('STACK', list()):
+    if target_name and settings['NAME'] != target_name:
+        continue
 
-    target_name = None
-    region = options.get('region')
+    if region and settings['AWS_REGION'] != region:
+        continue
 
-    if len(args) > 1:
-        target_name = args[1]
+    is_target_exists = True
 
-    print_session('terminate appstream stack & fleet')
+    fleet_name = settings['FLEET_NAME']
+    region = settings['AWS_REGION']
+    stack_name = settings['NAME']
 
-    for settings in env['appstream']['STACK']:
-        if target_name and settings['NAME'] != target_name:
-            continue
+    disassociate_fleet(fleet_name, stack_name, region)
+    delete_stack(stack_name, region)
+    stop_fleet(fleet_name, region)
+    wait_state(fleet_name, region)
+    delete_fleet(fleet_name, region)
 
-        if region and settings.get('AWS_DEFAULT_REGION') != region:
-            continue
-
-        fleet_name = settings['FLEET_NAME']
-        region = settings['AWS_DEFAULT_REGION']
-        stack_name = settings['NAME']
-
-        disassociate_fleet(fleet_name, stack_name, region)
-        delete_stack(stack_name, region)
-        stop_fleet(fleet_name, region)
-        wait_state(fleet_name, region)
-        delete_fleet(fleet_name, region)
-
+if not target_name and not region:
     terminate_iam_for_appstream()
+
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'appstream fleet & stack: {mm} is not found in config.json')

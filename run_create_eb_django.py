@@ -16,11 +16,11 @@ from run_create_eb_iam import create_iam_profile_for_ec2_instances
 
 
 def run_create_eb_django(name, settings, options):
-    aws_cli = AWSCli()
+    aws_cli = AWSCli(settings['AWS_REGION'])
 
     aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
     aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
-    aws_default_region = env['aws']['AWS_DEFAULT_REGION']
+    aws_region = settings['AWS_REGION']
     aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
     cname = settings['CNAME']
     debug = env['common']['DEBUG']
@@ -219,7 +219,7 @@ def run_create_eb_django(name, settings, options):
         if 'CNAME' not in r:
             continue
 
-        if r['CNAME'] == '%s.%s.elasticbeanstalk.com' % (cname, aws_default_region):
+        if r['CNAME'] == '%s.%s.elasticbeanstalk.com' % (cname, aws_region):
             if r['Status'] == 'Terminated':
                 continue
             elif r['Status'] != 'Ready':
@@ -291,7 +291,7 @@ def run_create_eb_django(name, settings, options):
     lines = read_file('aws_iam/aws-elasticbeanstalk-storage-policy.json')
     lines = re_sub_lines(lines, 'BUCKET_NAME', s3_bucket)
     lines = re_sub_lines(lines, 'AWS_ACCOUNT_ID', account_id)
-    elb_account_id = aws_cli.get_elb_account_id(aws_default_region)
+    elb_account_id = aws_cli.get_elb_account_id(aws_region)
     lines = re_sub_lines(lines, 'ELB_ACCOUNT_ID', elb_account_id)
     lines = re_sub_lines(lines, 'EC2_ROLE_LIST', json.dumps(role_list))
     pp = ' '.join(lines)

@@ -9,6 +9,13 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
+options, args = dict(), list()
+
+if __name__ == "__main__":
+    from run_common import parse_args
+
+    options, args = parse_args()
+
 
 def create_iam_for_appstream(settings):
     aws_cli = AWSCli()
@@ -234,40 +241,46 @@ def get_latest_image(image_region):
 # start
 #
 ################################################################################
+print_session('create appstream image stack & fleet')
 
+appstream = env['appstream']
+target_name = None
+region = options.get('region')
+is_target_exists = False
 
-if __name__ == "__main__":
-    from run_common import parse_args
+if len(args) > 1:
+    target_name = args[1]
 
-    options, args = parse_args()
+for settings in appstream.get('STACK', list()):
+    if target_name and settings['NAME'] != target_name:
+        continue
 
-    target_name = None
-    region = options.get('region')
+    if region and settings['AWS_REGION'] != region:
+        continue
 
-    if len(args) > 1:
-        target_name = args[1]
+    is_target_exists = True
 
-    print_session('create appstream image stack & fleet')
+    create_iam_for_appstream(settings)
 
-    for settings in env['appstream']['STACK']:
-        if target_name and settings['NAME'] != target_name:
-            continue
+    desired_instances = settings.get('DESIRED_INSTANCES', 1)
+    embed_host_domains = settings['EMBED_HOST_DOMAINS']
+    fleet_name = settings['FLEET_NAME']
+    region = settings['AWS_REGION']
+    stack_name = settings['NAME']
 
-        if region and settings.get('AWS_DEFAULT_REGION') != region:
-            continue
+    image_name = get_latest_image(region)
+    subnet_ids, security_group_id = get_subnet_and_security_group_id(region)
 
-        create_iam_for_appstream(settings)
+    create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances, region)
+    create_stack(stack_name, embed_host_domains, region)
+    wait_state(fleet_name, region)
+    associate_fleet(stack_name, fleet_name, region)
 
-        desired_instances = settings.get('DESIRED_INSTANCES', 1)
-        embed_host_domains = settings['EMBED_HOST_DOMAINS']
-        fleet_name = settings['FLEET_NAME']
-        region = settings['AWS_DEFAULT_REGION']
-        stack_name = settings['NAME']
-
-        image_name = get_latest_image(region)
-        subnet_ids, security_group_id = get_subnet_and_security_group_id(region)
-
-        create_fleet(fleet_name, image_name, ','.join(subnet_ids), security_group_id, desired_instances, region)
-        create_stack(stack_name, embed_host_domains, region)
-        wait_state(fleet_name, region)
-        associate_fleet(stack_name, fleet_name, region)
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'appstream fleet & stack: {mm} is not found in config.json')

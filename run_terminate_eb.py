@@ -7,15 +7,18 @@ from run_common import print_message
 from run_common import print_session
 from run_terminate_eb_iam import terminate_iam_profile_for_ec2_instances
 
-_, args = dict(), list()
+options, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    _, args = parse_args()
+    options, args = parse_args()
 
 
-def run_terminate_environment(name):
+def run_terminate_environment(name, settings):
+    aws_cli = AWSCli(settings['AWS_REGION'])
+    eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
+
     print_message(f'terminate {name}')
 
     elapsed_time = 0
@@ -61,26 +64,31 @@ def run_terminate_environment(name):
 ################################################################################
 print_session('terminate eb')
 
-eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
+eb = env['elasticbeanstalk']
+target_name = None
+region = options.get('region')
+is_target_exists = False
 
-for vpc_env in env['vpc']:
-    aws_cli = AWSCli(vpc_env['AWS_DEFAULT_REGION'])
-    aws_default_region = vpc_env['AWS_DEFAULT_REGION']
+if len(args) > 1:
+    target_name = args[1]
 
-    eb = env['elasticbeanstalk']
+for settings in eb.get('ENVIRONMENTS', list()):
+    if target_name and settings['NAME'] != target_name:
+        continue
 
-    if len(args) == 2:
-        target_eb_name = args[1]
-        target_eb_name_exists = False
-        for eb_env in eb['ENVIRONMENTS']:
-            if eb_env['NAME'] == target_eb_name:
-                target_eb_name_exists = True
-                run_terminate_environment(eb_env['NAME'])
-                terminate_iam_profile_for_ec2_instances(eb_env['NAME'])
-                break
-        if not target_eb_name_exists:
-            print(f'"{target_eb_name}" is not exists in config.json')
-    else:
-        for eb_env in eb['ENVIRONMENTS']:
-            run_terminate_environment(eb_env['NAME'])
-            terminate_iam_profile_for_ec2_instances(eb_env['NAME'])
+    if region and settings['AWS_REGION'] != region:
+        continue
+
+    is_target_exists = True
+
+    run_terminate_environment(settings['NAME'], settings)
+    terminate_iam_profile_for_ec2_instances(settings['NAME'])
+
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'eb environment: {mm} is not found in config.json')

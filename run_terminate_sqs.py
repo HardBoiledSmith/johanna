@@ -4,16 +4,39 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
+options, args = dict(), list()
+
 if __name__ == "__main__":
     from run_common import parse_args
 
-    parse_args()
+    options, args = parse_args()
 
-sqs = env['sqs']
-list_region = []
-for sqs_env in sqs:
-    rr = sqs_env['AWS_DEFAULT_REGION']
-    list_region.append(rr)
+
+def run_terminate_queue(name, settings):
+    print_message(f'terminate sqs queue: {name}')
+
+    aws_cli = AWSCli(settings['AWS_REGION'])
+
+    cmd = ['sqs', 'get-queue-url']
+    cmd += ['--queue-name', f'{name}-dead-letter']
+    result = aws_cli.run(cmd, ignore_error=True)
+
+    if result:
+        queue_url = result['QueueUrl']
+        cmd = ['sqs', 'delete-queue']
+        cmd += ['--queue-url', queue_url]
+        aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['sqs', 'get-queue-url']
+    cmd += ['--queue-name', name]
+    result = aws_cli.run(cmd, ignore_error=True)
+
+    if result:
+        queue_url = result['QueueUrl']
+        cmd = ['sqs', 'delete-queue']
+        cmd += ['--queue-url', queue_url]
+        aws_cli.run(cmd, ignore_error=True)
+
 
 ################################################################################
 #
@@ -22,22 +45,26 @@ for sqs_env in sqs:
 ################################################################################
 print_session('terminate sqs')
 
-################################################################################
-for rr in list_region:
-    aws_cli = AWSCli(rr)
+target_name = None
+region = options.get('region')
+is_target_exists = False
 
-    print_message('load queue lists')
+for settings in env.get('sqs', list()):
+    if target_name and settings['NAME'] != target_name:
+        continue
 
-    cmd = ['sqs', 'list-queues']
-    command_result = aws_cli.run(cmd)
-    if 'QueueUrls' in command_result:
-        sqs = command_result['QueueUrls']
+    if region and settings['AWS_REGION'] != region:
+        continue
 
-        print_message('delete queues')
+    is_target_exists = True
 
-        for sqs_env in sqs:
-            cmd = ['sqs', 'delete-queue']
-            cmd += ['--queue-url', sqs_env]
-            aws_cli.run(cmd, ignore_error=True)
+    run_terminate_queue(settings['NAME'], settings)
 
-            print('delete :', sqs_env)
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'sqs: {mm} is not found in config.json')

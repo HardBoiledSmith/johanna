@@ -7,12 +7,12 @@ from run_terminate_codebuild_common import run_terminate_vpc_project
 from run_terminate_codebuild_common import terminate_all_iam_role_and_policy
 from run_terminate_codebuild_common import terminate_all_notification_rule
 
-_, args = dict(), list()
+options, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    _, args = parse_args()
+    options, args = parse_args()
 
 
 def terminate_cron_event(aws_cli, rule_name):
@@ -29,11 +29,11 @@ def terminate_cron_event(aws_cli, rule_name):
 
 
 def run_terminate_default_project(name, settings):
-    aws_default_region = settings['AWS_DEFAULT_REGION']
+    aws_region = settings['AWS_REGION']
 
     print_message(f'delete default project: {name}')
 
-    aws_cli = AWSCli(aws_default_region)
+    aws_cli = AWSCli(aws_region)
 
     cmd = ['codebuild', 'delete-project']
     cmd += ['--name', name]
@@ -45,11 +45,11 @@ def run_terminate_default_project(name, settings):
 
 
 def run_terminate_github_project(name, settings):
-    aws_default_region = settings['AWS_DEFAULT_REGION']
+    aws_region = settings['AWS_REGION']
 
     print_message(f'delete github project: {name}')
 
-    aws_cli = AWSCli(aws_default_region)
+    aws_cli = AWSCli(aws_region)
 
     cmd = ['codebuild', 'delete-webhook']
     cmd += ['--project-name', name]
@@ -70,12 +70,12 @@ def run_terminate_github_project(name, settings):
 
 
 def run_terminate_cron_project(name, settings):
-    aws_default_region = settings['AWS_DEFAULT_REGION']
+    aws_region = settings['AWS_REGION']
     git_branch = settings['BRANCH']
 
     print_message(f'delete cron project: {name}')
 
-    aws_cli = AWSCli(aws_default_region)
+    aws_cli = AWSCli(aws_region)
 
     cmd = ['codebuild', 'delete-project']
     cmd += ['--name', name]
@@ -96,42 +96,39 @@ def run_terminate_cron_project(name, settings):
 ################################################################################
 print_session('terminate codebuild')
 
-codebuild_list = env.get('codebuild', list())
-if len(args) == 2:
-    target_codebuild_name = args[1]
-    target_codebuild_name_exists = False
-    for codebuild_env in codebuild_list:
-        if codebuild_env['NAME'] == target_codebuild_name:
-            target_codebuild_name_exists = True
-            if codebuild_env['TYPE'] == 'default':
-                run_terminate_default_project(codebuild_env['NAME'], codebuild_env)
-                break
-            if codebuild_env['TYPE'] == 'cron':
-                run_terminate_cron_project(codebuild_env['NAME'], codebuild_env)
-                break
-            if codebuild_env['TYPE'] == 'github':
-                run_terminate_github_project(codebuild_env['NAME'], codebuild_env)
-                break
-            if codebuild_env['TYPE'] == 'vpc':
-                run_terminate_vpc_project(codebuild_env['NAME'], codebuild_env)
-                break
-            print('"%s" is not supported' % codebuild_env['TYPE'])
-            raise Exception()
-    if not target_codebuild_name_exists:
-        print('"%s" is not exists in config.json' % target_codebuild_name)
-else:
-    for codebuild_env in codebuild_list:
-        if codebuild_env['TYPE'] == 'default':
-            run_terminate_default_project(codebuild_env['NAME'], codebuild_env)
-            continue
-        if codebuild_env['TYPE'] == 'cron':
-            run_terminate_cron_project(codebuild_env['NAME'], codebuild_env)
-            continue
-        if codebuild_env['TYPE'] == 'github':
-            run_terminate_github_project(codebuild_env['NAME'], codebuild_env)
-            continue
-        if codebuild_env['TYPE'] == 'vpc':
-            run_terminate_vpc_project(codebuild_env['NAME'], codebuild_env)
-            continue
-        print('"%s" is not supported' % codebuild_env['TYPE'])
+target_name = None
+region = options.get('region')
+is_target_exists = False
+
+if len(args) > 1:
+    target_name = args[1]
+
+for settings in env.get('codebuild', list()):
+    if target_name and settings['NAME'] != target_name:
+        continue
+
+    if region and settings['AWS_REGION'] != region:
+        continue
+
+    is_target_exists = True
+
+    if settings['TYPE'] == 'default':
+        run_terminate_default_project(settings['NAME'], settings)
+    elif settings['TYPE'] == 'cron':
+        run_terminate_cron_project(settings['NAME'], settings)
+    elif settings['TYPE'] == 'github':
+        run_terminate_github_project(settings['NAME'], settings)
+    elif settings['TYPE'] == 'vpc':
+        run_terminate_vpc_project(settings['NAME'], settings)
+    else:
+        print(f'{settings["TYPE"]} is not supported')
         raise Exception()
+
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'codebuild: {mm} is not found in config.json')

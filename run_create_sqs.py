@@ -7,13 +7,17 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
+options, args = dict(), list()
+
 if __name__ == "__main__":
     from run_common import parse_args
 
-    parse_args()
+    options, args = parse_args()
 
 
 def run_create_queue(name, settings):
+    print_message(f'create sqs queue: {name}')
+
     delay_seconds = settings['DELAY_SECONDS']
     receive_count = settings['RECEIVE_COUNT']
     receive_message_wait_time_seconds = settings['RECEIVE_MESSAGE_WAIT_TIME_SECONDS']
@@ -22,28 +26,20 @@ def run_create_queue(name, settings):
     use_redrive_policy = settings['USE_REDRIVE_POLICY']
     dead_letter_queue_arn = None
 
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    aws_cli = AWSCli(settings['AWS_REGION'])
 
     if use_redrive_policy == "True":
-        ################################################################################
-        print_message('create queue (dead letter)')
-
         attributes = dict()
         attributes['MessageRetentionPeriod'] = retention
 
         cmd = ['sqs', 'create-queue']
         cmd += ['--queue-name', f'{name}-dead-letter']
         cmd += ['--attributes', json.dumps(attributes)]
-        result = aws_cli.run(cmd)
-
-        print('create :', result['QueueUrl'])
-
-        ################################################################################
-        print_message('get queue url (dead letter)')
+        aws_cli.run(cmd)
 
         elapsed_time = 0
         while True:
-            cmd = ['sqs', 'get-queue-url', '--queue-name', '%s-dead-letter' % name]
+            cmd = ['sqs', 'get-queue-url', '--queue-name', f'{name}-dead-letter']
             result = aws_cli.run(cmd)
 
             if type(result) == dict:
@@ -53,9 +49,6 @@ def run_create_queue(name, settings):
             print('get url... (elapsed time: \'%d\' seconds)' % elapsed_time)
             time.sleep(5)
             elapsed_time += 5
-
-        ################################################################################
-        print_message('get queue arn (dead letter)')
 
         cmd = ['sqs', 'get-queue-attributes']
         cmd += ['--queue-url', result['QueueUrl']]
@@ -78,9 +71,7 @@ def run_create_queue(name, settings):
     cmd = ['sqs', 'create-queue']
     cmd += ['--queue-name', name]
     cmd += ['--attributes', json.dumps(attr)]
-    result = aws_cli.run(cmd)
-
-    print('create :', result['QueueUrl'])
+    aws_cli.run(cmd)
 
 
 ################################################################################
@@ -90,6 +81,26 @@ def run_create_queue(name, settings):
 ################################################################################
 print_session('create sqs')
 
-sqs = env['sqs']
-for sqs_env in sqs:
-    run_create_queue(sqs_env['NAME'], sqs_env)
+target_name = None
+region = options.get('region')
+is_target_exists = False
+
+for settings in env.get('sqs', list()):
+    if target_name and settings['NAME'] != target_name:
+        continue
+
+    if region and settings['AWS_REGION'] != region:
+        continue
+
+    is_target_exists = True
+
+    run_create_queue(settings['NAME'], settings)
+
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'sqs: {mm} is not found in config.json')

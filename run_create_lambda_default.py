@@ -15,7 +15,7 @@ from run_create_lambda_iam import create_iam_for_lambda
 
 
 def run_create_lambda_default(function_name, settings, options):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    aws_cli = AWSCli(settings['AWS_REGION'])
 
     description = settings['DESCRIPTION']
     folder_name = settings.get('FOLDER_NAME', function_name)
@@ -27,6 +27,7 @@ def run_create_lambda_default(function_name, settings, options):
         raise Exception()
     git_folder_name = mm.group(1)
 
+    ################################################################################
     ################################################################################
     print_session(f'create {function_name}')
 

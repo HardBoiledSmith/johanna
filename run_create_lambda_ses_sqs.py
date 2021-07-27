@@ -16,7 +16,7 @@ from run_create_lambda_iam import create_iam_for_lambda
 
 
 def run_create_lambda_ses_sqs(function_name, settings, options):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    aws_cli = AWSCli(settings['AWS_REGION'])
     aws_cli_us_east_1 = AWSCli('us-east-1')
 
     description = settings['DESCRIPTION']
