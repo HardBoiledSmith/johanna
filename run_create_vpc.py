@@ -45,6 +45,24 @@ def main(settings):
     print_session('create eb application')
 
     ################################################################################
+    print_message('create service role')
+
+    cmd = ['iam', 'create-role']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
+    cmd += ['--assume-role-policy-document', 'file://aws_iam/aws-elasticbeanstalk-service-role.json']
+    aws_cli.run(cmd)
+
+    cmd = ['iam', 'attach-role-policy']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
+    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth']
+    aws_cli.run(cmd)
+
+    cmd = ['iam', 'attach-role-policy']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
+    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy']
+    aws_cli.run(cmd)
+
+    ################################################################################
     print_message('create application')
 
     eb_service_role_arn = aws_cli.get_iam_role('aws-elasticbeanstalk-service-role')['Role']['Arn']
@@ -602,6 +620,20 @@ def main(settings):
             result = aws_cli.run(cmd)
             network_interface_id = result['NetworkInterface']['NetworkInterfaceId']
             aws_cli.set_name_tag(network_interface_id, '%snat' % name_prefix)
+    ################################################################################
+    #
+    # VPC Endpoint
+    #
+    ################################################################################
+    print_session('vpc endpoint')
+
+    cmd = ['ec2', 'create-vpc-endpoint']
+    cmd += ['--vpc-id', eb_vpc_id]
+    cmd += ['--vpc-endpoint-type', 'Gateway']
+    cmd += ['--service-name', 'com.amazonaws.ap-northeast-2.s3']
+    cmd += ['--route-table-ids', eb_route_table_id['private']]
+    cmd += ['--policy-document', 'file://aws_iam/aws-ec2-vpc-endpoint-policy-for-s3.json']
+    aws_cli.run(cmd)
 
 
 ################################################################################

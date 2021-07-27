@@ -5,6 +5,7 @@ from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
+from run_terminate_eb_iam import terminate_iam_profile_for_ec2_instances
 
 args = []
 
@@ -75,9 +76,11 @@ for vpc_env in env['vpc']:
             if eb_env['NAME'] == target_eb_name:
                 target_eb_name_exists = True
                 run_terminate_environment(eb_env['NAME'])
+                terminate_iam_profile_for_ec2_instances(eb_env['NAME'])
                 break
         if not target_eb_name_exists:
             print(f'"{target_eb_name}" is not exists in config.json')
     else:
         for eb_env in eb['ENVIRONMENTS']:
             run_terminate_environment(eb_env['NAME'])
+            terminate_iam_profile_for_ec2_instances(eb_env['NAME'])

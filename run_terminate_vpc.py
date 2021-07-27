@@ -39,6 +39,19 @@ def main(settings):
     rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
 
     ################################################################################
+    print_message('vpc endpoint')
+
+    cmd = ['ec2', 'describe-vpc-endpoints']
+    result = aws_cli.run(cmd, ignore_error=True)
+
+    for r in result['VpcEndpoints']:
+        vpce_id = r['VpcEndpointId']
+
+        cmd = ['ec2', 'delete-vpc-endpoints']
+        cmd += ['--vpc-endpoint-ids', vpce_id]
+        aws_cli.run(cmd, ignore_error=True)
+
+    ################################################################################
     print_message('delete network interface')
 
     cmd = ['ec2', 'describe-network-interfaces']
@@ -62,6 +75,8 @@ def main(settings):
 
     ################################################################################
     print_message('delete vpc peering connection')
+
+    print(rds_vpc_id, eb_vpc_id)
 
     cmd = ['ec2', 'describe-vpc-peering-connections']
     result = aws_cli.run(cmd, ignore_error=True)
@@ -284,6 +299,23 @@ def main(settings):
 
     cmd = ['elasticbeanstalk', 'delete-application']
     cmd += ['--application-name', env['elasticbeanstalk']['APPLICATION_NAME']]
+    aws_cli.run(cmd, ignore_error=True)
+
+    ################################################################################
+    print_message('terminate service role')
+
+    cmd = ['iam', 'detach-role-policy']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
+    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy']
+    aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['iam', 'detach-role-policy']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
+    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth']
+    aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['iam', 'delete-role']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
     aws_cli.run(cmd, ignore_error=True)
 
 
