@@ -9,7 +9,7 @@ from run_terminate_codebuild_common import run_terminate_vpc_project
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    parse_args()
 
 if env['common']['PHASE'] == 'op':
     raise Exception('op is not supported!')

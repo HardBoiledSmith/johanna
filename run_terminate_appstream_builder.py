@@ -69,7 +69,7 @@ def wait_state(name):
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    _, args = parse_args()
 
     target_name = None
 

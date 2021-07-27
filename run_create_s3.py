@@ -2,15 +2,15 @@
 
 from env import env
 from run_common import print_session
-from run_create_s3_vue import run_create_s3_vue
 from run_create_s3_bucket import run_create_s3_bucket
+from run_create_s3_vue import run_create_s3_vue
 
-args = []
+_, args = {}, []
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    _, args = parse_args()
 
 ################################################################################
 #

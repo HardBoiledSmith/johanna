@@ -5,12 +5,12 @@ from run_common import print_session
 from run_create_eb_django import run_create_eb_django
 from run_create_eb_windows import run_create_eb_windows
 
-args = []
+options, args = {}, []
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
 ################################################################################
 #
@@ -23,14 +23,11 @@ print_session('create eb')
 
 eb = env['elasticbeanstalk']
 target_eb_name = None
-region = None
+region = options.get('region')
 check_exists = False
 
 if len(args) > 1:
     target_eb_name = args[1]
-
-if len(args) > 2:
-    region = args[2]
 
 for eb_env in eb['ENVIRONMENTS']:
     if target_eb_name and eb_env['NAME'] != target_eb_name:
@@ -43,9 +40,9 @@ for eb_env in eb['ENVIRONMENTS']:
         check_exists = True
 
     if eb_env['TYPE'] == 'django':
-        run_create_eb_django(eb_env['NAME'], eb_env)
+        run_create_eb_django(eb_env['NAME'], eb_env, options)
     elif eb_env['TYPE'] == 'windows':
-        run_create_eb_windows(eb_env['NAME'], eb_env)
+        run_create_eb_windows(eb_env['NAME'], eb_env, options)
     else:
         print(f"\"{eb_env['TYPE']}\" is not supported")
         raise Exception()

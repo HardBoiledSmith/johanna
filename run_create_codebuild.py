@@ -9,12 +9,12 @@ from run_create_codebuild_default import run_create_default_project
 from run_create_codebuild_github import run_create_github_project
 from run_create_codebuild_vpc import run_create_vpc_project
 
-args = []
+_, args = {}, []
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    _, args = parse_args()
 
 aws_cli = AWSCli()
 

@@ -7,12 +7,12 @@ from run_common import print_message
 from run_common import print_session
 from run_terminate_eb_iam import terminate_iam_profile_for_ec2_instances
 
-args = []
+_, args = {}, []
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    _, args = parse_args()
 
 
 def run_terminate_environment(name):

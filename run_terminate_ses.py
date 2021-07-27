@@ -43,12 +43,10 @@ def terminate_receipt_rule_set():
         aws_cli.run(cmd, ignore_error=True)
 
 
-args = []
-
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    parse_args()
 
 ################################################################################
 #

@@ -221,12 +221,10 @@ def __find_sns_topic(rr, rule):
     return sns_topic
 
 
-args = []
-
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    parse_args()
 
 ################################################################################
 #

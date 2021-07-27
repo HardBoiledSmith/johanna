@@ -14,7 +14,7 @@ from run_common import write_file
 from run_create_lambda_iam import create_iam_for_lambda
 
 
-def run_create_lambda_default(function_name, settings):
+def run_create_lambda_default(function_name, settings, options):
     aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
 
     description = settings['DESCRIPTION']
@@ -36,10 +36,9 @@ def run_create_lambda_default(function_name, settings):
     subprocess.Popen(['mkdir', '-p', './template']).communicate()
 
     if not os.path.exists(f'template/{git_folder_name}'):
-        if phase == 'dv':
-            git_command = ['git', 'clone', '--depth=1', git_url]
-        else:
-            git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+        branch = options.get('branch', 'master' if phase == 'dv' else phase)
+        print(f'branch: {branch}')
+        git_command = ['git', 'clone', '--depth=1', '-b', branch, git_url]
         subprocess.Popen(git_command, cwd='template').communicate()
         if not os.path.exists(f'template/{git_folder_name}'):
             raise Exception()

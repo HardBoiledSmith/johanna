@@ -5,13 +5,12 @@ from run_common import print_session
 from run_terminate_s3_bucket import run_terminate_s3_bucket
 from run_terminate_s3_vue import run_terminate_s3_vue
 
-args = []
+_, args = {}, []
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
-
+    _, args = parse_args()
 
 ################################################################################
 #

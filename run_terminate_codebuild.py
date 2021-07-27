@@ -7,12 +7,12 @@ from run_terminate_codebuild_common import run_terminate_vpc_project
 from run_terminate_codebuild_common import terminate_all_iam_role_and_policy
 from run_terminate_codebuild_common import terminate_all_notification_rule
 
-args = []
+_, args = {}, []
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    _, args = parse_args()
 
 
 def terminate_cron_event(aws_cli, rule_name):

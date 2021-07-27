@@ -9,12 +9,12 @@ from run_common import print_message
 from run_common import print_session
 from run_common import write_file
 
-args = []
+options, args = {}, []
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
 
 def get_network_resource_ids(vpc_region):
@@ -210,14 +210,11 @@ print_session('create client vpn')
 ################################################################################
 
 target_name = None
-region = None
+region = options.get('region')
 check_exists = False
 
 if len(args) > 1:
     target_name = args[1]
-
-if len(args) > 2:
-    region = args[2]
 
 for vpn_env in env['client_vpn']:
     if target_name and vpn_env['NAME'] != target_name:

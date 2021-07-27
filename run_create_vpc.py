@@ -6,12 +6,12 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
-args = []
+options, args = {}, []
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
 
 def main(settings):
@@ -643,11 +643,8 @@ def main(settings):
 ################################################################################
 print_session('create vpc')
 
-region = None
+region = options.get('region')
 check_exists = False
-
-if len(args) > 1:
-    region = args[1]
 
 for vpc_env in env['vpc']:
 

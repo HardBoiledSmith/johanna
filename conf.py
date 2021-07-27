@@ -15,7 +15,7 @@ parser.add_argument('--user', help='RDS User Name')
 parser.add_argument('--pw', help='RDS User Password')
 
 if __name__ == '__main__':
-    args = parser.parse_args()
+    options, args = parser.parse_args()
 
     required_args = [
         args.accesskey,

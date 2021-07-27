@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
+from env import env
 from run_common import AWSCli
 from run_common import print_session
-from env import env
 
 
 def get_acm_certificates_list(region):
@@ -42,7 +42,7 @@ def run_create_acm_certificate(domain_name, additional_names, validation_method,
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    _, args = parse_args()
     acm_envs = env['acm']
 
     target_name = None

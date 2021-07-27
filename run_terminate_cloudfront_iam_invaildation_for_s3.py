@@ -4,13 +4,13 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
-args = []
+_, args = {}, []
 
 # It is a script dedicated to the op environment.
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    _, args = parse_args()
 
 
 def run_terminate_cloudfront_iam_for_invaildation(name):

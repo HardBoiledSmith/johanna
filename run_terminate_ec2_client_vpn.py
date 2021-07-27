@@ -6,12 +6,12 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
-args = []
+options, args = {}, []
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
 
 def run_terminate_client_vpn(name, settings):
@@ -145,14 +145,11 @@ print_session('terminate client vpn')
 ################################################################################
 
 target_name = None
-region = None
+region = options.get('region')
 check_exists = False
 
 if len(args) > 1:
     target_name = args[1]
-
-if len(args) > 2:
-    region = args[2]
 
 for vpn_env in env['client_vpn']:
     if target_name and vpn_env['NAME'] != target_name:

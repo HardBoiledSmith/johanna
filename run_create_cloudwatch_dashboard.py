@@ -10,12 +10,12 @@ from run_common import print_message
 from run_common import print_session
 from run_common import reset_template_dir
 
-args = []
+options, args = {}, []
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
 
 def create_sms_log():
@@ -409,18 +409,15 @@ def run_create_cw_dashboard_alarm(name, settings):
 ################################################################################
 print_session('create cloudwatch dashboard')
 
-reset_template_dir()
+reset_template_dir(options)
 
 cw = env.get('cloudwatch', dict())
 target_cw_dashboard_name = None
-region = None
+region = options.get('region')
 check_exists = False
 
 if len(args) > 1:
     target_cw_dashboard_name = args[1]
-
-if len(args) > 2:
-    region = args[2]
 
 for cw_dashboard_env in cw.get('DASHBOARDS', list()):
     if target_cw_dashboard_name and cw_dashboard_env['NAME'] != target_cw_dashboard_name:

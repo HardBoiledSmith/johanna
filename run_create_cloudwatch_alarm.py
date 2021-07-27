@@ -7,12 +7,12 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
-args = []
+options, args = {}, []
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
 
 def run_create_cloudwatch_alarm_lambda(name, settings):
@@ -255,14 +255,11 @@ print_session('create cloudwatch alarm')
 
 cw = env.get('cloudwatch', dict())
 target_cw_alarm_name = None
-region = None
+region = options.get('region')
 check_exists = False
 
 if len(args) > 1:
     target_cw_alarm_name = args[1]
-
-if len(args) > 2:
-    region = args[2]
 
 for cw_alarm_env in cw.get('ALARMS', list()):
     if target_cw_alarm_name and cw_alarm_env['NAME'] != target_cw_alarm_name:

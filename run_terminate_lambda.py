@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 import json
 
-from run_terminate_lambda_iam import terminate_iam_for_lambda
 from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
+from run_terminate_lambda_iam import terminate_iam_for_lambda
 
-args = []
+_, args = {}, []
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    _, args = parse_args()
 
 
 def run_terminate_default_lambda(function_name, settings):

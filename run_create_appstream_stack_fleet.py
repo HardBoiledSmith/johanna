@@ -239,16 +239,13 @@ def get_latest_image(image_region):
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
     target_name = None
-    region = None
+    region = options.get('region')
 
     if len(args) > 1:
         target_name = args[1]
-
-    if len(args) > 2:
-        region = args[2]
 
     print_session('create appstream image stack & fleet')
 
