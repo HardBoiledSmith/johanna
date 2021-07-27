@@ -140,7 +140,7 @@ def run_create_eb_windows(name, settings):
 
     if phase == 'dv':
         print(f'dv branch: {dv_branch}')
-        git_command = ['git', 'clone', '--depth=1', git_url]
+        git_command = ['git', 'clone', '--depth=1', '-b', dv_branch, git_url]
     else:
         git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
 
