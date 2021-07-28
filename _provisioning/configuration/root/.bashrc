@@ -19,4 +19,3 @@ export PS1="\u@\h \[\e[32m\]\w \[\e[91m\]\$(parse_git_branch)\[\e[00m\]$ "
 
 # node settings
 export NODE_OPTIONS="--max-old-space-size=2048"
-export PATH=$PATH:/usr/local/bin
