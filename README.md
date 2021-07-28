@@ -96,6 +96,7 @@ You can use this on web GUI
 - (optional) To use release feature for sentry, must set environment value: `SENTRY_AUTH_TOKEN` and `SENTRY_ORG`
   - https://docs.sentry.io/product/releases/suspect-commits/#using-the-cli
 - create or run vagrant using `johanna/_provisioning $ vagrant up`
+- (optional) Run `BRANCH=<branch name> vagrant up` for provisioning with specific git branch.
 - connect to vagrant using `$ ssh root@dv-johanna.hbsmith.io` or `$ ssh root@192.168.124.5` 
 - move to johanna folder using  `$ cd /opt/johanna`
 - run provisioning script using `/opt/johanna $ ./run.py`
