@@ -8,12 +8,14 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
+_, args = dict(), list()
 
-################################################################################
-#
-# start
-#
-################################################################################
+if __name__ == "__main__":
+    from run_common import parse_args
+
+    _, args = parse_args()
+
+
 def create_iam_for_appstream():
     aws_cli = AWSCli()
     sleep_required = False
@@ -125,35 +127,43 @@ def get_subnet_and_security_group_id():
     for r in rr['SecurityGroups']:
         if r['VpcId'] != eb_vpc_id:
             continue
-        if r['GroupName'] == '%seb_private' % name_prefix:
+        if r['GroupName'] == 'eb_private':
             security_group_id = r['GroupId']
             break
 
     return [subnet_id_1, subnet_id_2], security_group_id
 
 
-if __name__ == "__main__":
-    from run_common import parse_args
+################################################################################
+#
+# start
+#
+################################################################################
+print_session('create appstream image builder')
 
-    _, args = parse_args()
+appstream = env['appstream']
+target_name = None
+is_target_exists = False
 
-    target_name = None
-    service_name = env['common'].get('SERVICE_NAME', '')
-    name_prefix = '%s_' % service_name if service_name else ''
-    subnet_ids, security_group_id = get_subnet_and_security_group_id()
+if len(args) > 1:
+    target_name = args[1]
 
-    if len(args) > 1:
-        target_name = args[1]
+subnet_ids, security_group_id = get_subnet_and_security_group_id()
 
-    print_session('create appstream image builder')
+create_iam_for_appstream()
 
-    create_iam_for_appstream()
-    for settings in env['appstream']['IMAGE_BUILDS']:
-        if target_name and settings['NAME'] != target_name:
-            continue
+for settings in appstream.get('IMAGE_BUILDS', list()):
+    if target_name and settings['NAME'] != target_name:
+        continue
 
-        name = settings['NAME']
-        image_name = settings['IMAGE_NAME']
+    is_target_exists = True
 
-        create_image_builder(name, subnet_ids[0], security_group_id, image_name)
-        wait_state(name)
+    create_image_builder(settings['NAME'], subnet_ids[0], security_group_id, settings['IMAGE_NAME'])
+    wait_state(settings['NAME'])
+
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    mm = ' in '.join(mm)
+    print(f'appstream image builder: {mm} is not found in config.json')
