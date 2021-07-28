@@ -11,6 +11,7 @@ from subprocess import PIPE
 
 env = dict(os.environ)
 env['PATH'] = f"{env['PATH']}:/usr/local/bin"
+env['BRANCH'] = 'master' if not env.get('BRANCH') else env['BRANCH']
 
 
 def _print_line_number(number_of_outer_frame=1):
@@ -202,7 +203,9 @@ def main():
         try:
             # Non interactive git clone (ssh fingerprint prompt)
             _run(['ssh-keyscan', 'github.com'], '/root/.ssh/known_hosts')
-            _run(['git', 'clone', '--depth=1', 'git@github.com:HardBoiledSmith/johanna.git'], cwd='/opt')
+            print(f'branch: {env["BRANCH"]}')
+            _run(['git', 'clone', '--depth=1', '-b', env['BRANCH'], 'git@github.com:HardBoiledSmith/johanna.git'],
+                 cwd='/opt')
             if os.path.exists('/opt/johanna'):
                 is_success = True
                 break
