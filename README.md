@@ -52,8 +52,24 @@ You can use this on web GUI
 
 * [raynor](https://github.com/HardBoiledSmith/raynor) is web based GUI for johanna
 
-# Options
+# CLI Options
 
+```
+./run_create_eb.py [OPTIONS] <eb-environment-name>		(ex: './run_create_eb.py sachiel')
+./run_terminate_eb.py [OPTIONS] <eb-environment-name>	        (ex: './run_terminate_eb.py sachiel')
+./run_create_lambda.py [OPTIONS] <lambda-function-name>		(ex: './run_create_eb.py sachiel_send_email')
+./run_terminate_lambda.py [OPTIONS] <lambda-function-name>	(ex: './run_terminate_lambda.py sachiel_send_email')
+./run_create_s3.py [OPTIONS] <s3-bucket-name>		        (ex: './run_create_eb.py dv-hbsmith-web')
+./run_terminate_s3.py [OPTIONS] <s3-bucket-name>		(ex: './run_terminate_s3.py dv-hbsmith-web')
+./run.py [OPTIONS] -- [AWS CLI COMMAND]		                (ex: './run.py -- aws ec2 describe-instances')
+```
+
+- `--force` or `-f`
+	Attempt to execute the commend without prompting for phase confirmation.
+- `--branch` or `-b`
+	Attempt to execute the command with specific git branch.
+- `--region` or `-r`
+	Attempt to execute the command on specific region.
 
 # Script to create cloudfront and route 53
 - Execute `run_create_cloudfront.py` to create cloud front
