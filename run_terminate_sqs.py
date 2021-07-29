@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
+from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
-from env import env
 
 if __name__ == "__main__":
     from run_common import parse_args

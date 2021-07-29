@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
+import sys
+
+from env import env
 from run_common import AWSCli
 from run_common import print_session
-from env import env
-import sys
 
 
 def get_acm_certificates_list(region):

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import json
 
-from run_terminate_lambda_iam import terminate_iam_for_lambda
 from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
+from run_terminate_lambda_iam import terminate_iam_for_lambda
 
 args = []
 

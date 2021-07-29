@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from run_common import print_message
 from run_common import AWSCli
+from run_common import print_message
 
 aws_cli = AWSCli()
 
