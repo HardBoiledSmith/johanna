@@ -103,7 +103,7 @@ def run_create_ec2_keypair(key_name):
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    _, args = parse_args()
 
     if len(args) != 2:
         print('usage:', args[0], '<key-name>')

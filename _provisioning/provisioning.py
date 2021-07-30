@@ -11,6 +11,7 @@ from subprocess import PIPE
 
 env = dict(os.environ)
 env['PATH'] = f"{env['PATH']}:/usr/local/bin"
+env['BRANCH'] = 'master' if not env.get('BRANCH') else env['BRANCH']
 
 
 def _print_line_number(number_of_outer_frame=1):
@@ -159,11 +160,6 @@ def _preprocess(hostname):
     env['PATH'] = ('/root/.nvm/versions/node/%s/bin:' % node_version) + env['PATH']
     _run(['npm', 'install', '-g', 'npm@6.14.11'])
 
-    with open('/root/.bashrc', 'a') as f:
-        f.write('export NODE_OPTIONS="--max-old-space-size=2048"\n')
-        f.write('export PATH=$PATH:/usr/local/bin\n')
-        f.write("complete -C '/usr/local/bin/aws_completer' aws\n")
-
     _print_line_number()
 
     _run(['wget', '-O', 'install.sh', 'https://sentry.io/get-cli/'], cwd='/root')
@@ -188,6 +184,7 @@ def main():
     cmd_common = ['cp', '--backup']
     file_list = list()
     file_list.append('/root/.ssh/id_rsa')
+    file_list.append('/root/.bashrc')
     for ff in file_list:
         cmd = cmd_common + ['/vagrant/configuration' + ff, ff]
         _run(cmd)
@@ -202,7 +199,9 @@ def main():
         try:
             # Non interactive git clone (ssh fingerprint prompt)
             _run(['ssh-keyscan', 'github.com'], '/root/.ssh/known_hosts')
-            _run(['git', 'clone', '--depth=1', 'git@github.com:HardBoiledSmith/johanna.git'], cwd='/opt')
+            print(f'branch: {env["BRANCH"]}')
+            _run(['git', 'clone', '--depth=1', '-b', env['BRANCH'], 'git@github.com:HardBoiledSmith/johanna.git'],
+                 cwd='/opt')
             if os.path.exists('/opt/johanna'):
                 is_success = True
                 break

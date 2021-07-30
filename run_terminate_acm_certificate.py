@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 
-import sys
-
 from env import env
 from run_common import AWSCli
 from run_common import print_session
+
+options, args = dict(), list()
+
+if __name__ == "__main__":
+    from run_common import parse_args
+
+    options, args = parse_args()
 
 
 def get_acm_certificates_list(region):
@@ -37,40 +42,37 @@ def run_terminate_acm_certificate(region, arn):
 # start
 #
 ################################################################################
-if __name__ == "__main__":
-    from run_common import parse_args
+acm_envs = env['acm']
 
-    args = parse_args()
-    acm_envs = env['acm']
+target_name = None
+region = options.get('region')
+is_target_exists = False
 
-    target_name = None
-    check_exists = False
+if len(args) > 1:
+    target_name = args[1]
 
-    if len(args) > 1:
-        target_name = args[1]
+for settings in env.get('acm', list()):
+    if target_name and settings['NAME'] != target_name:
+        continue
 
-    list_region = {}
-    for ee in acm_envs:
-        rr = ee['AWS_DEFAULT_REGION']
-        list_region.add(rr)
+    if region and settings['AWS_REGION'] != region:
+        continue
 
-    certificates_list = []
-    for rr in list_region:
-        certificates_list = get_acm_certificates_list(rr)
+    certificates_list = get_acm_certificates_list(settings['AWS_REGION'])
+    if len(certificates_list) < 1:
+        continue
 
-        if len(certificates_list) < 1:
-            continue
+    arn = find_certificates_arn(certificates_list, settings['DOMAIN_NAME'])
+    if not arn:
+        continue
 
-        for acm_env in acm_envs:
-            if target_name and acm_env['NAME'] != target_name:
-                continue
+    run_terminate_acm_certificate(settings['AWS_REGION'], arn)
 
-            if target_name:
-                check_exists = True
-
-            arn = find_certificates_arn(certificates_list, acm_env['DOMAIN_NAME'])
-            if arn:
-                run_terminate_acm_certificate(rr, arn)
-
-    if not check_exists and target_name:
-        print(f'{target_name} is not exists in config.json')
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'acm: {mm} is not found in config.json')

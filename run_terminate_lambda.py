@@ -7,16 +7,16 @@ from run_common import print_message
 from run_common import print_session
 from run_terminate_lambda_iam import terminate_iam_for_lambda
 
-args = []
+options, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
 
 def run_terminate_default_lambda(function_name, settings):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    aws_cli = AWSCli(settings['AWS_REGION'])
 
     ################################################################################
     print_session(f'terminate lambda: {function_name}')
@@ -29,7 +29,7 @@ def run_terminate_default_lambda(function_name, settings):
 
 
 def run_terminate_cron_lambda(function_name, settings):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    aws_cli = AWSCli(settings['AWS_REGION'])
 
     ################################################################################
     print_session(f'terminate lambda: {function_name}')
@@ -76,7 +76,7 @@ def run_terminate_cron_lambda(function_name, settings):
 
 
 def run_terminate_sns_lambda(function_name, settings):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    aws_cli = AWSCli(settings['AWS_REGION'])
 
     ################################################################################
     print_session(f'terminate lambda: {function_name}')
@@ -123,7 +123,7 @@ def run_terminate_sns_lambda(function_name, settings):
 
 
 def run_terminate_sqs_lambda(function_name, settings):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    aws_cli = AWSCli(settings['AWS_REGION'])
 
     ################################################################################
     print_session(f'terminate lambda: {function_name}')
@@ -144,7 +144,7 @@ def run_terminate_sqs_lambda(function_name, settings):
 
 
 def run_terminate_ses_sqs_lambda(function_name, settings):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    aws_cli = AWSCli(settings['AWS_REGION'])
 
     ################################################################################
     print_session(f'terminate lambda: {function_name}')
@@ -165,7 +165,7 @@ def run_terminate_ses_sqs_lambda(function_name, settings):
 
 
 def run_terminate_event_lambda(function_name, settings):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    aws_cli = AWSCli(settings['AWS_REGION'])
 
     ################################################################################
     print_session(f'terminate lambda: {function_name}')
@@ -195,66 +195,49 @@ def run_terminate_event_lambda(function_name, settings):
 ################################################################################
 print_session('terminate lambda')
 
-lambdas_list = env.get('lambda', list())
-if len(args) == 2:
-    target_lambda_name = args[1]
-    target_lambda_name_exists = False
-    for lambda_env in lambdas_list:
-        if lambda_env['NAME'] == target_lambda_name:
-            target_lambda_name_exists = True
-            if lambda_env['TYPE'] == 'default':
-                run_terminate_default_lambda(lambda_env['NAME'], lambda_env)
-                terminate_iam_for_lambda(lambda_env['NAME'])
-                break
-            if lambda_env['TYPE'] == 'cron':
-                run_terminate_cron_lambda(lambda_env['NAME'], lambda_env)
-                terminate_iam_for_lambda(lambda_env['NAME'])
-                break
-            if lambda_env['TYPE'] == 'sns':
-                run_terminate_sns_lambda(lambda_env['NAME'], lambda_env)
-                terminate_iam_for_lambda(lambda_env['NAME'])
-                break
-            if lambda_env['TYPE'] == 'sqs':
-                run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
-                terminate_iam_for_lambda(lambda_env['NAME'])
-                break
-            if lambda_env['TYPE'] == 'ses_sqs':
-                run_terminate_ses_sqs_lambda(lambda_env['NAME'], lambda_env)
-                terminate_iam_for_lambda(lambda_env['NAME'])
-                break
-            if lambda_env['TYPE'] == 'event':
-                run_terminate_event_lambda(lambda_env['NAME'], lambda_env)
-                terminate_iam_for_lambda(lambda_env['NAME'])
-                continue
-            print(f"\"{lambda_env['TYPE']}\" is not supported")
-            raise Exception()
-    if not target_lambda_name_exists:
-        print(f'"{target_lambda_name}" is not exists in config.json')
-else:
-    for lambda_env in lambdas_list:
-        if lambda_env['TYPE'] == 'default':
-            run_terminate_default_lambda(lambda_env['NAME'], lambda_env)
-            terminate_iam_for_lambda(lambda_env['NAME'])
-            continue
-        if lambda_env['TYPE'] == 'cron':
-            run_terminate_cron_lambda(lambda_env['NAME'], lambda_env)
-            terminate_iam_for_lambda(lambda_env['NAME'])
-            continue
-        if lambda_env['TYPE'] == 'sns':
-            run_terminate_sns_lambda(lambda_env['NAME'], lambda_env)
-            terminate_iam_for_lambda(lambda_env['NAME'])
-            continue
-        if lambda_env['TYPE'] == 'sqs':
-            run_terminate_sqs_lambda(lambda_env['NAME'], lambda_env)
-            terminate_iam_for_lambda(lambda_env['NAME'])
-            continue
-        if lambda_env['TYPE'] == 'ses_sqs':
-            run_terminate_ses_sqs_lambda(lambda_env['NAME'], lambda_env)
-            terminate_iam_for_lambda(lambda_env['NAME'])
-            continue
-        if lambda_env['TYPE'] == 'event':
-            run_terminate_event_lambda(lambda_env['NAME'], lambda_env)
-            terminate_iam_for_lambda(lambda_env['NAME'])
-            continue
-        print(f"\"{lambda_env['TYPE']}\" is not supported")
+target_name = None
+region = options.get('region')
+is_target_exists = False
+
+if len(args) > 1:
+    target_name = args[1]
+
+for settings in env.get('lambda', list()):
+    if target_name and settings['NAME'] != target_name:
+        continue
+
+    if region and settings['AWS_REGION'] != region:
+        continue
+
+    is_target_exists = True
+
+    if settings['TYPE'] == 'default':
+        run_terminate_default_lambda(settings['NAME'], settings)
+        terminate_iam_for_lambda(settings['NAME'])
+    elif settings['TYPE'] == 'cron':
+        run_terminate_cron_lambda(settings['NAME'], settings)
+        terminate_iam_for_lambda(settings['NAME'])
+    elif settings['TYPE'] == 'sns':
+        run_terminate_sns_lambda(settings['NAME'], settings)
+        terminate_iam_for_lambda(settings['NAME'])
+    elif settings['TYPE'] == 'sqs':
+        run_terminate_sqs_lambda(settings['NAME'], settings)
+        terminate_iam_for_lambda(settings['NAME'])
+    elif settings['TYPE'] == 'ses_sqs':
+        run_terminate_ses_sqs_lambda(settings['NAME'], settings)
+        terminate_iam_for_lambda(settings['NAME'])
+    elif settings['TYPE'] == 'event':
+        run_terminate_event_lambda(settings['NAME'], settings)
+        terminate_iam_for_lambda(settings['NAME'])
+    else:
+        print(f'{settings["TYPE"]} is not supported')
         raise Exception()
+
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'lambda: {mm} is not found in config.json')

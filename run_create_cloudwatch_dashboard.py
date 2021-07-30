@@ -10,12 +10,12 @@ from run_common import print_message
 from run_common import print_session
 from run_common import reset_template_dir
 
-args = []
+options, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
 
 def create_sms_log():
@@ -52,7 +52,7 @@ def create_sms_log():
 
 
 def run_create_cw_dashboard_elasticbeanstalk(name, settings):
-    dashboard_region = settings['AWS_DEFAULT_REGION']
+    dashboard_region = settings['AWS_REGION']
     aws_cli = AWSCli(dashboard_region)
 
     print_message(f'get elasticbeanstalk environment info: {name}')
@@ -270,7 +270,7 @@ def run_create_cw_dashboard_rds_aurora(name, settings):
     if env['rds'].get('ENGINE') != 'aurora':
         print_message('Only RDS Aurora supported')
 
-    dashboard_region = settings['AWS_DEFAULT_REGION']
+    dashboard_region = settings['AWS_REGION']
     aws_cli = AWSCli(dashboard_region)
 
     cluster_id = env['rds']['DB_CLUSTER_ID']
@@ -323,7 +323,7 @@ def run_create_cw_dashboard_sqs_lambda_sms(name, settings):
     create_sms_log()
 
     phase = env['common']['PHASE']
-    dashboard_region = settings['AWS_DEFAULT_REGION']
+    dashboard_region = settings['AWS_REGION']
     aws_cli = AWSCli(dashboard_region)
 
     dashboard_name = '%s_%s' % (name, dashboard_region)
@@ -363,7 +363,7 @@ def run_create_cw_dashboard_sqs_lambda_sms(name, settings):
 
 def run_create_cw_dashboard_alarm(name, settings):
     phase = env['common']['PHASE']
-    alarm_region = settings['AWS_DEFAULT_REGION']
+    alarm_region = settings['AWS_REGION']
     aws_cli = AWSCli(alarm_region)
 
     dashboard_name = '%s_%s' % (name, alarm_region)
@@ -409,42 +409,42 @@ def run_create_cw_dashboard_alarm(name, settings):
 ################################################################################
 print_session('create cloudwatch dashboard')
 
-reset_template_dir()
+reset_template_dir(options)
 
 cw = env.get('cloudwatch', dict())
-target_cw_dashboard_name = None
-region = None
-check_exists = False
+target_name = None
+region = options.get('region')
+is_target_exists = False
 
 if len(args) > 1:
-    target_cw_dashboard_name = args[1]
+    target_name = args[1]
 
-if len(args) > 2:
-    region = args[2]
-
-for cw_dashboard_env in cw.get('DASHBOARDS', list()):
-    if target_cw_dashboard_name and cw_dashboard_env['NAME'] != target_cw_dashboard_name:
+for settings in cw.get('DASHBOARDS', list()):
+    if target_name and settings['NAME'] != target_name:
         continue
 
-    if region and cw_dashboard_env.get('AWS_DEFAULT_REGION') != region:
+    if region and settings['AWS_REGION'] != region:
         continue
 
-    if target_cw_dashboard_name:
-        check_exists = True
-    if cw_dashboard_env['TYPE'] == 'elasticbeanstalk':
-        run_create_cw_dashboard_elasticbeanstalk(cw_dashboard_env['NAME'], cw_dashboard_env)
-    elif cw_dashboard_env['TYPE'] == 'rds/aurora':
-        run_create_cw_dashboard_rds_aurora(cw_dashboard_env['NAME'], cw_dashboard_env)
-    elif cw_dashboard_env['TYPE'] == 'sqs,lambda,sms':
-        run_create_cw_dashboard_sqs_lambda_sms(cw_dashboard_env['NAME'], cw_dashboard_env)
-    elif cw_dashboard_env['TYPE'] == 'alarm':
-        run_create_cw_dashboard_alarm(cw_dashboard_env['NAME'], cw_dashboard_env)
+    is_target_exists = True
+
+    if settings['TYPE'] == 'elasticbeanstalk':
+        run_create_cw_dashboard_elasticbeanstalk(settings['NAME'], settings)
+    elif settings['TYPE'] == 'rds/aurora':
+        run_create_cw_dashboard_rds_aurora(settings['NAME'], settings)
+    elif settings['TYPE'] == 'sqs,lambda,sms':
+        run_create_cw_dashboard_sqs_lambda_sms(settings['NAME'], settings)
+    elif settings['TYPE'] == 'alarm':
+        run_create_cw_dashboard_alarm(settings['NAME'], settings)
     else:
-        print('"%s" is not supported' % cw_dashboard_env['TYPE'])
+        print('"%s" is not supported' % settings['TYPE'])
         raise Exception()
 
-if not check_exists and target_cw_dashboard_name and not region:
-    print('"%s" is not exists in config.json' % target_cw_dashboard_name)
-
-if not check_exists and target_cw_dashboard_name and region:
-    print('"%s, %s" is not exists in config.json' % (target_cw_dashboard_name, region))
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'cloudwatch dashboard: {mm} is not found in config.json')

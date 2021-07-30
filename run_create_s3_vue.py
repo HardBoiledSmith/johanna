@@ -13,7 +13,7 @@ from run_common import read_file
 from run_common import write_file
 
 
-def run_create_s3_vue(name, settings):
+def run_create_s3_vue(name, settings, options):
     aws_cli = AWSCli()
 
     deploy_bucket_name = settings['BUCKET_NAME']
@@ -32,12 +32,11 @@ def run_create_s3_vue(name, settings):
     print_message('git clone')
 
     subprocess.Popen(['mkdir', '-p', './template']).communicate()
-
     subprocess.Popen(['rm', '-rf', './%s' % git_folder_name], cwd='template').communicate()
-    if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', git_url]
-    else:
-        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+
+    branch = options.get('branch', 'master' if phase == 'dv' else phase)
+    print(f'branch: {branch}')
+    git_command = ['git', 'clone', '--depth=1', '-b', branch, git_url]
     subprocess.Popen(git_command, cwd='template').communicate()
     if not os.path.exists('template/%s' % git_folder_name):
         raise Exception()

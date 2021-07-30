@@ -13,7 +13,7 @@ The backend includes below:
 - An Elastic Beanstalk application and an environment for Python Django API server
 - An aurora RDS cluster with instances
 - An sample SQS
-- An sample apply SRR(Same Region Replication) to S3
+- and more...
 
 You can do provisioning/deprovisioning/reprovisioning of the whole system or partial at once. Especially, the
 reprovisioning of Django API server means
@@ -58,6 +58,25 @@ You can use this on web GUI
 
 * [raynor](https://github.com/HardBoiledSmith/raynor) is web based GUI for johanna
 
+# CLI Options
+
+```
+./run_create_eb.py [OPTIONS] <eb-environment-name>		(ex: './run_create_eb.py sachiel')
+./run_terminate_eb.py [OPTIONS] <eb-environment-name>	        (ex: './run_terminate_eb.py sachiel')
+./run_create_lambda.py [OPTIONS] <lambda-function-name>		(ex: './run_create_eb.py sachiel_send_email')
+./run_terminate_lambda.py [OPTIONS] <lambda-function-name>	(ex: './run_terminate_lambda.py sachiel_send_email')
+./run_create_s3.py [OPTIONS] <s3-bucket-name>		        (ex: './run_create_eb.py dv-hbsmith-web')
+./run_terminate_s3.py [OPTIONS] <s3-bucket-name>		(ex: './run_terminate_s3.py dv-hbsmith-web')
+./run.py [OPTIONS] -- [AWS CLI COMMAND]		                (ex: './run.py -- aws ec2 describe-instances')
+```
+
+- `--force` or `-f`
+	Attempt to execute the commend without prompting for phase confirmation.
+- `--branch` or `-b`
+	Attempt to execute the command with specific git branch.
+- `--region` or `-r`
+	Attempt to execute the command on specific region.
+
 # Script to create cloudfront and route 53
 
 - Execute `run_create_cloudfront.py` to create cloud front
@@ -89,7 +108,8 @@ You can use this on web GUI
 - (optional) To use release feature for sentry, must set environment value: `SENTRY_AUTH_TOKEN` and `SENTRY_ORG`
     - https://docs.sentry.io/product/releases/suspect-commits/#using-the-cli
 - create or run vagrant using `johanna/_provisioning $ vagrant up`
-- connect to vagrant using `$ ssh root@dv-johanna.hbsmith.io` or `$ ssh root@192.168.124.5`
+- (optional) Run `BRANCH=<branch name> vagrant up` for provisioning with specific git branch.
+- connect to vagrant using `$ ssh root@dv-johanna.hbsmith.io` or `$ ssh root@192.168.124.5` 
 - move to johanna folder using  `$ cd /opt/johanna`
 - run provisioning script using `/opt/johanna $ ./run.py`
 

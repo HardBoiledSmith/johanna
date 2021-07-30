@@ -17,7 +17,6 @@ command_list.append('create_eb')
 command_list.append('create_ec2_client_vpn')
 command_list.append('create_ec2_keypair')
 command_list.append('create_ec2_route53')
-command_list.append('create_iam')
 command_list.append('create_lambda')
 command_list.append('create_rds')
 command_list.append('create_s3')
@@ -40,7 +39,6 @@ command_list.append('terminate_eb_old_environment_version')
 command_list.append('terminate_ec2_client_vpn')
 command_list.append('terminate_ec2_keypair')
 command_list.append('terminate_ec2_route53')
-command_list.append('terminate_iam')
 command_list.append('terminate_lambda')
 command_list.append('terminate_rds')
 command_list.append('terminate_s3')
@@ -59,6 +57,7 @@ command_list.append('describe_sns')
 command_list.append('describe_vpc')
 
 command_list.append('reset_template')
+command_list.append('reset_database')
 
 
 def print_usage():
@@ -69,15 +68,24 @@ def print_usage():
     for cc in command_list:
         print(f'    ./run.py [OPTIONS] {cc}')
     print('-' * 80)
+    print('    ./run_create_eb.py [OPTIONS] <eb-environment-name>\t\t' +
+          '(ex: \'./run_create_eb.py sachiel\')')
+    print('    ./run_create_lambda.py [OPTIONS] <lambda-function-name>\t\t' +
+          '(ex: \'./run_create_eb.py sachiel_send_email\')')
+    print('    ./run_create_s3.py [OPTIONS] <s3-bucket-name>\t\t' +
+          '(ex: \'./run_create_eb.py dv-hbsmith-web\')')
+    print('-' * 80)
     print('    ./run.py [OPTIONS] -- [AWS CLI COMMAND]\t\t' +
           '(ex: \'./run.py -- aws ec2 describe-instances\')')
-    print('    cd nova; ../run.py [OPTIONS] -- [EB CLI COMMAND]\t' +
-          '(ex: \'cd nova; ../run.py -- eb list --region ap-northeast-2\')')
     print('-' * 80)
     print('OPTIONS')
     print('')
     print('`--force` or `-f`')
     print('\tAttempt to execute the commend without prompting for phase confirmation.')
+    print('`--branch` or `-b`')
+    print('\tAttempt to execute the command with specific branch.')
+    print('`--region` or `-r`')
+    print('\tAttempt to execute the command on specific region.')
     print('')
     print('#' * 80)
 
@@ -85,7 +93,7 @@ def print_usage():
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args(True)
+    options, args = parse_args(True)
 
     if len(args) < 2:
         print_usage()
