@@ -1,15 +1,15 @@
 {
-    "manifestVersion": 1,
-    "deployments": {
-        "aspNetCoreWeb": [
-        {
-            "name": "watchdog",
-            "parameters": {
-                "appBundle": "watchdog-bundle.zip",
-                "iisPath": "/",
-                "iisWebSite": "Default Web Site"
-            }
+  "manifestVersion": 1,
+  "deployments": {
+    "aspNetCoreWeb": [
+      {
+        "name": "watchdog",
+        "parameters": {
+          "appBundle": "watchdog-bundle.zip",
+          "iisPath": "/",
+          "iisWebSite": "Default Web Site"
         }
-        ]
-    }
+      }
+    ]
+  }
 }

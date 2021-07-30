@@ -1,5 +1,5 @@
-from run_common import print_message
 from run_common import AWSCli
+from run_common import print_message
 
 
 def terminate_iam_for_lambda(function_name):
