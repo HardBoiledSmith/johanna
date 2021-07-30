@@ -160,11 +160,6 @@ def _preprocess(hostname):
     env['PATH'] = ('/root/.nvm/versions/node/%s/bin:' % node_version) + env['PATH']
     _run(['npm', 'install', '-g', 'npm@6.14.11'])
 
-    # with open('/root/.bashrc', 'a') as f:
-    #     f.write('export NODE_OPTIONS="--max-old-space-size=2048"\n')
-    #     f.write('export PATH=$PATH:/usr/local/bin\n')
-    #     f.write("complete -C '/usr/local/bin/aws_completer' aws\n")
-
     _print_line_number()
 
     _run(['wget', '-O', 'install.sh', 'https://sentry.io/get-cli/'], cwd='/root')
