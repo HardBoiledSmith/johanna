@@ -172,6 +172,8 @@ def _preprocess(hostname):
 def main():
     hostname = 'dv-johanna-my-local-1a-012345.localdomain'
 
+    _run(['cp', '--backup', '/vagrant/configuration/root/.bashrc', '/root/.bashrc'])
+
     _preprocess(hostname)
 
     _print_line_number()
@@ -184,7 +186,6 @@ def main():
     cmd_common = ['cp', '--backup']
     file_list = list()
     file_list.append('/root/.ssh/id_rsa')
-    file_list.append('/root/.bashrc')
     for ff in file_list:
         cmd = cmd_common + ['/vagrant/configuration' + ff, ff]
         _run(cmd)
