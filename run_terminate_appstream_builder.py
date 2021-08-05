@@ -6,6 +6,13 @@ from env import env
 from run_common import AWSCli
 from run_common import print_session
 
+options, args = dict(), list()
+
+if __name__ == "__main__":
+    from run_common import parse_args
+
+    options, args = parse_args()
+
 
 def delete_image(image_name):
     aws_cli = AWSCli()
@@ -64,28 +71,31 @@ def wait_state(name):
 # start
 #
 ################################################################################
+print_session('terminate appstream image builder')
 
+appstream = env['appstream']
+target_name = None
+is_target_exists = False
 
-if __name__ == "__main__":
-    from run_common import parse_args
+if len(args) > 1:
+    target_name = args[1]
 
-    args = parse_args()
+for settings in appstream.get('IMAGE_BUILDS', list()):
+    if target_name and settings['NAME'] != target_name:
+        continue
 
-    target_name = None
+    if not exist_image_builder(settings['NAME']):
+        continue
 
-    if len(args) > 1:
-        target_name = args[1]
+    is_target_exists = True
 
-    print_session('terminate appstream image builder')
+    stop_image_builder(settings['NAME'])
+    wait_state(settings['NAME'])
+    delete_image_builder(settings['NAME'])
 
-    for settings in env['appstream']['IMAGE_BUILDS']:
-        image_builder_name = settings['NAME']
-        if target_name and image_builder_name != target_name:
-            continue
-
-        if not exist_image_builder(image_builder_name):
-            continue
-
-        stop_image_builder(image_builder_name)
-        wait_state(image_builder_name)
-        delete_image_builder(image_builder_name)
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    mm = ' in '.join(mm)
+    print(f'appstream image builder: {mm} is not found in config.json')

@@ -517,13 +517,16 @@ def parse_args(require_arg=False):
         usage = 'usage: %prog [options]'
 
     parser = OptionParser(usage=usage)
-    parser.add_option("-f", "--force", action="store_true", help='skip the phase confirm')
+    parser.add_option('-f', '--force', action='store_true', help='skip the phase confirm')
+    parser.add_option('-b', '--branch', help='override git branch')
+    parser.add_option('-r', '--region', help='filter for specific aws region')
     (options, args) = parser.parse_args(sys.argv)
 
     if not options.force:
         _confirm_phase()
 
-    return args
+    option_dict = {k: v for k, v in options.__dict__.items() if v is not None}
+    return option_dict, args
 
 
 def print_message(message):
@@ -562,7 +565,7 @@ def re_sub_lines(lines, pattern, repl):
     return new_lines
 
 
-def reset_template_dir():
+def reset_template_dir(options):
     template_name = env['template']['NAME']
     print_session('reset template: %s' % template_name)
 
@@ -578,10 +581,9 @@ def reset_template_dir():
     subprocess.Popen(['rm', '-rf', './%s' % name], cwd='template').communicate()
 
     print_message('download template from git repository')
-    if phase == 'dv':
-        template_git_command = ['git', 'clone', '--depth=1', git_url]
-    else:
-        template_git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+    branch = options.get('branch', 'master' if phase == 'dv' else phase)
+    print(f'branch: {branch}')
+    template_git_command = ['git', 'clone', '--depth=1', '-b', branch, git_url]
     subprocess.Popen(template_git_command, cwd='template').communicate()
 
     if not os.path.exists('template/' + name):

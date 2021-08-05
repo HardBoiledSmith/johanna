@@ -14,7 +14,7 @@ from run_create_codebuild_common import update_notification_rule
 
 
 def create_vpc_iam_policy(aws_cli, name, settings, role_name, subnet_id):
-    aws_region = settings['AWS_DEFAULT_REGION']
+    aws_region = settings['AWS_REGION']
 
     account_id = aws_cli.get_caller_account_id()
 
@@ -110,7 +110,7 @@ def get_eb_private_subnet_and_security_group_id(aws_cli):
 
 
 def run_create_vpc_project(name, settings):
-    aws_cli = AWSCli()
+    aws_cli = AWSCli(settings['AWS_REGION'])
 
     git_branch = settings['BRANCH']
     build_spec = settings['BUILD_SPEC']

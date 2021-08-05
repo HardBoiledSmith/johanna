@@ -6,12 +6,12 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
-args = []
+options, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
 
 def main(settings):
@@ -19,10 +19,8 @@ def main(settings):
     aws_availability_zone_2 = settings['AWS_AVAILABILITY_ZONE_2']
     aws_availability_zone_3 = settings['AWS_AVAILABILITY_ZONE_3']
     aws_availability_zone_4 = settings['AWS_AVAILABILITY_ZONE_4']
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    aws_cli = AWSCli(settings['AWS_REGION'])
     rds_subnet_name = env['rds']['DB_SUBNET_NAME']
-    service_name = env['common'].get('SERVICE_NAME', '')
-    name_prefix = '%s_' % service_name if service_name else ''
 
     cidr_vpc = aws_cli.cidr_vpc
     cidr_subnet = aws_cli.cidr_subnet
@@ -94,7 +92,7 @@ def main(settings):
     cmd += ['--cidr-block', cidr_vpc['rds']]
     result = aws_cli.run(cmd)
     rds_vpc_id = result['Vpc']['VpcId']
-    aws_cli.set_name_tag(rds_vpc_id, '%srds' % name_prefix)
+    aws_cli.set_name_tag(rds_vpc_id, 'rds')
 
     ################################################################################
     print_message('create subnet')
@@ -107,7 +105,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_1]
     result = aws_cli.run(cmd)
     rds_subnet_id['private_1'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(rds_subnet_id['private_1'], '%srds_private_1' % name_prefix)
+    aws_cli.set_name_tag(rds_subnet_id['private_1'], 'rds_private_1')
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', rds_vpc_id]
@@ -115,7 +113,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_2]
     result = aws_cli.run(cmd)
     rds_subnet_id['private_2'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(rds_subnet_id['private_2'], '%srds_private_2' % name_prefix)
+    aws_cli.set_name_tag(rds_subnet_id['private_2'], 'rds_private_2')
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', rds_vpc_id]
@@ -123,7 +121,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_3]
     result = aws_cli.run(cmd)
     rds_subnet_id['private_3'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(rds_subnet_id['private_3'], '%srds_private_3' % name_prefix)
+    aws_cli.set_name_tag(rds_subnet_id['private_3'], 'rds_private_3')
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', rds_vpc_id]
@@ -131,7 +129,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_4]
     result = aws_cli.run(cmd)
     rds_subnet_id['private_4'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(rds_subnet_id['private_4'], '%srds_private_4' % name_prefix)
+    aws_cli.set_name_tag(rds_subnet_id['private_4'], 'rds_private_4')
 
     ################################################################################
     print_message('create db subnet group')
@@ -152,7 +150,7 @@ def main(settings):
     cmd += ['--vpc-id', rds_vpc_id]
     result = aws_cli.run(cmd)
     rds_route_table_id['private'] = result['RouteTable']['RouteTableId']
-    aws_cli.set_name_tag(rds_route_table_id['private'], '%srds_private' % name_prefix)
+    aws_cli.set_name_tag(rds_route_table_id['private'], 'rds_private')
 
     ################################################################################
     print_message('associate route table')
@@ -182,8 +180,8 @@ def main(settings):
     rds_security_group_id = dict()
 
     cmd = ['ec2', 'create-security-group']
-    cmd += ['--group-name', '%srds' % name_prefix]
-    cmd += ['--description', '%srds' % name_prefix]
+    cmd += ['--group-name', 'rds']
+    cmd += ['--description', 'rds']
     cmd += ['--vpc-id', rds_vpc_id]
     result = aws_cli.run(cmd)
     rds_security_group_id['private'] = result['GroupId']
@@ -218,7 +216,7 @@ def main(settings):
     cmd += ['--cidr-block', cidr_vpc['eb']]
     result = aws_cli.run(cmd)
     eb_vpc_id = result['Vpc']['VpcId']
-    aws_cli.set_name_tag(eb_vpc_id, '%seb' % name_prefix)
+    aws_cli.set_name_tag(eb_vpc_id, 'eb')
 
     ################################################################################
     print_message('create subnet')
@@ -231,7 +229,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_1]
     result = aws_cli.run(cmd)
     eb_subnet_id['private_1'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(eb_subnet_id['private_1'], '%seb_private_1' % name_prefix)
+    aws_cli.set_name_tag(eb_subnet_id['private_1'], 'eb_private_1')
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', eb_vpc_id]
@@ -239,7 +237,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_2]
     result = aws_cli.run(cmd)
     eb_subnet_id['private_2'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(eb_subnet_id['private_2'], '%seb_private_2' % name_prefix)
+    aws_cli.set_name_tag(eb_subnet_id['private_2'], 'eb_private_2')
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', eb_vpc_id]
@@ -247,7 +245,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_3]
     result = aws_cli.run(cmd)
     eb_subnet_id['private_3'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(eb_subnet_id['private_3'], '%seb_private_3' % name_prefix)
+    aws_cli.set_name_tag(eb_subnet_id['private_3'], 'eb_private_3')
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', eb_vpc_id]
@@ -255,7 +253,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_4]
     result = aws_cli.run(cmd)
     eb_subnet_id['private_4'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(eb_subnet_id['private_4'], '%seb_private_4' % name_prefix)
+    aws_cli.set_name_tag(eb_subnet_id['private_4'], 'eb_private_4')
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', eb_vpc_id]
@@ -263,7 +261,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_1]
     result = aws_cli.run(cmd)
     eb_subnet_id['public_1'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(eb_subnet_id['public_1'], '%seb_public_1' % name_prefix)
+    aws_cli.set_name_tag(eb_subnet_id['public_1'], 'eb_public_1')
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', eb_vpc_id]
@@ -271,7 +269,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_2]
     result = aws_cli.run(cmd)
     eb_subnet_id['public_2'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(eb_subnet_id['public_2'], '%seb_public_2' % name_prefix)
+    aws_cli.set_name_tag(eb_subnet_id['public_2'], 'eb_public_2')
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', eb_vpc_id]
@@ -279,7 +277,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_3]
     result = aws_cli.run(cmd)
     eb_subnet_id['public_3'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(eb_subnet_id['public_3'], '%seb_public_3' % name_prefix)
+    aws_cli.set_name_tag(eb_subnet_id['public_3'], 'eb_public_3')
 
     cmd = ['ec2', 'create-subnet']
     cmd += ['--vpc-id', eb_vpc_id]
@@ -287,7 +285,7 @@ def main(settings):
     cmd += ['--availability-zone', aws_availability_zone_4]
     result = aws_cli.run(cmd)
     eb_subnet_id['public_4'] = result['Subnet']['SubnetId']
-    aws_cli.set_name_tag(eb_subnet_id['public_4'], '%seb_public_4' % name_prefix)
+    aws_cli.set_name_tag(eb_subnet_id['public_4'], 'eb_public_4')
 
     ################################################################################
     print_message('create internet gateway')
@@ -295,7 +293,7 @@ def main(settings):
     cmd = ['ec2', 'create-internet-gateway']
     result = aws_cli.run(cmd)
     internet_gateway_id = result['InternetGateway']['InternetGatewayId']
-    aws_cli.set_name_tag(internet_gateway_id, '%seb' % name_prefix)
+    aws_cli.set_name_tag(internet_gateway_id, 'eb')
 
     ################################################################################
     print_message('attach internet gateway')
@@ -312,7 +310,7 @@ def main(settings):
     cmd += ['--domain', 'vpc']
     result = aws_cli.run(cmd)
     eb_eip_id = result['AllocationId']
-    aws_cli.set_name_tag(eb_eip_id, '%snat' % name_prefix)
+    aws_cli.set_name_tag(eb_eip_id, 'nat')
 
     ################################################################################
     print_message('create nat gateway')  # We use only one NAT gateway at subnet 'public_1'
@@ -322,7 +320,7 @@ def main(settings):
     cmd += ['--allocation-id', eb_eip_id]
     result = aws_cli.run(cmd)
     eb_nat_gateway_id = result['NatGateway']['NatGatewayId']
-    aws_cli.set_name_tag(eb_nat_gateway_id, '%seb' % name_prefix)
+    aws_cli.set_name_tag(eb_nat_gateway_id, 'eb')
 
     ################################################################################
     print_message('wait create nat gateway')
@@ -338,13 +336,13 @@ def main(settings):
     cmd += ['--vpc-id', eb_vpc_id]
     result = aws_cli.run(cmd)
     eb_route_table_id['private'] = result['RouteTable']['RouteTableId']
-    aws_cli.set_name_tag(eb_route_table_id['private'], '%seb_private' % name_prefix)
+    aws_cli.set_name_tag(eb_route_table_id['private'], 'eb_private')
 
     cmd = ['ec2', 'create-route-table']
     cmd += ['--vpc-id', eb_vpc_id]
     result = aws_cli.run(cmd)
     eb_route_table_id['public'] = result['RouteTable']['RouteTableId']
-    aws_cli.set_name_tag(eb_route_table_id['public'], '%seb_public' % name_prefix)
+    aws_cli.set_name_tag(eb_route_table_id['public'], 'eb_public')
 
     ################################################################################
     print_message('associate route table')
@@ -409,15 +407,15 @@ def main(settings):
     eb_security_group_id = dict()
 
     cmd = ['ec2', 'create-security-group']
-    cmd += ['--group-name', '%seb_private' % name_prefix]
-    cmd += ['--description', '%seb_private' % name_prefix]
+    cmd += ['--group-name', 'eb_private']
+    cmd += ['--description', 'eb_private']
     cmd += ['--vpc-id', eb_vpc_id]
     result = aws_cli.run(cmd)
     eb_security_group_id['private'] = result['GroupId']
 
     cmd = ['ec2', 'create-security-group']
-    cmd += ['--group-name', '%seb_public' % name_prefix]
-    cmd += ['--description', '%seb_public' % name_prefix]
+    cmd += ['--group-name', 'eb_public']
+    cmd += ['--description', 'eb_public']
     cmd += ['--vpc-id', eb_vpc_id]
     result = aws_cli.run(cmd)
     eb_security_group_id['public'] = result['GroupId']
@@ -490,7 +488,6 @@ def main(settings):
     cmd += ['--peer-vpc-id', eb_vpc_id]
     result = aws_cli.run(cmd)
     peering_connection_id = result['VpcPeeringConnection']['VpcPeeringConnectionId']
-    aws_cli.set_name_tag(peering_connection_id, '%s' % service_name)
 
     cmd = ['ec2', 'accept-vpc-peering-connection']
     cmd += ['--vpc-peering-connection-id', peering_connection_id]
@@ -619,7 +616,7 @@ def main(settings):
             cmd += ['--groups', eb_security_group_id['private']]
             result = aws_cli.run(cmd)
             network_interface_id = result['NetworkInterface']['NetworkInterfaceId']
-            aws_cli.set_name_tag(network_interface_id, '%snat' % name_prefix)
+            aws_cli.set_name_tag(network_interface_id, 'nat')
     ################################################################################
     #
     # VPC Endpoint
@@ -643,20 +640,21 @@ def main(settings):
 ################################################################################
 print_session('create vpc')
 
-region = None
-check_exists = False
+region = options.get('region')
+is_target_exists = False
 
-if len(args) > 1:
-    region = args[1]
+for vpc_env in env.get('vpc', list()):
 
-for vpc_env in env['vpc']:
-
-    if region and vpc_env.get('AWS_DEFAULT_REGION') != region:
+    if region and vpc_env['AWS_REGION'] != region:
         continue
 
-    check_exists = True
+    is_target_exists = True
 
     main(vpc_env)
 
-if not check_exists and region:
-    print('vpc for "%s" is not exists in config.json' % region)
+if is_target_exists is False:
+    mm = list()
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'vpc: {mm} is not found in config.json')

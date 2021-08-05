@@ -6,12 +6,12 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
-args = []
+options, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
 
 def run_terminate_client_vpn(name, settings):
@@ -145,26 +145,28 @@ print_session('terminate client vpn')
 ################################################################################
 
 target_name = None
-region = None
-check_exists = False
+region = options.get('region')
+is_target_exists = False
 
 if len(args) > 1:
     target_name = args[1]
 
-if len(args) > 2:
-    region = args[2]
-
-for vpn_env in env['client_vpn']:
+for vpn_env in env.get('client_vpn', list()):
     if target_name and vpn_env['NAME'] != target_name:
         continue
 
-    if region and vpn_env.get('AWS_VPC_REGION') != region:
+    if region and vpn_env['AWS_VPC_REGION'] != region:
         continue
 
-    if target_name:
-        check_exists = True
+    is_target_exists = True
 
     run_terminate_client_vpn(vpn_env['NAME'], vpn_env)
 
-if not check_exists and target_name:
-    print(f'{target_name} is not exists in config.json')
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'client vpn: {mm} is not found in config.json')

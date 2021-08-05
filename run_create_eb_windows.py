@@ -15,8 +15,8 @@ from run_common import write_file
 from run_create_eb_iam import create_iam_profile_for_ec2_instances
 
 
-def run_create_eb_windows(name, settings):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+def run_create_eb_windows(name, settings, options):
+    aws_cli = AWSCli(settings['AWS_REGION'])
 
     aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
     aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
@@ -25,7 +25,7 @@ def run_create_eb_windows(name, settings):
     scale_out_threshold = settings['SCALE_OUT_THRESHOLD']
     scale_in_adjustment = settings['SCALE_IN_ADJUSTMENT']
     scale_in_threshold = settings['SCALE_IN_THRESHOLD']
-    aws_default_region = settings['AWS_DEFAULT_REGION']
+    aws_region = settings['AWS_REGION']
     aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
     ssl_certificate_id = aws_cli.get_acm_certificate_id('hbsmith.io')
     cname = settings['CNAME']
@@ -37,7 +37,6 @@ def run_create_eb_windows(name, settings):
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = f'{service_name}_' if service_name else ''
     url = settings['ARTIFACT_URL']
-    dv_branch = settings.get('BRANCH', 'master')
     cidr_subnet = aws_cli.cidr_subnet
 
     str_timestamp = str(int(time.time()))
@@ -138,12 +137,9 @@ def run_create_eb_windows(name, settings):
     subprocess.Popen(['rm', '-rf', template_path]).communicate()
     subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
-    if phase == 'dv':
-        print(f'dv branch: {dv_branch}')
-        git_command = ['git', 'clone', '--depth=1', '-b', dv_branch, git_url]
-    else:
-        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
-
+    branch = options.get('branch', 'master' if phase == 'dv' else phase)
+    print(f'branch: {branch}')
+    git_command = ['git', 'clone', '--depth=1', '-b', branch, git_url]
     subprocess.Popen(git_command, cwd=template_path).communicate()
     print(f'{template_path}/{name}')
     if not os.path.exists(f'{template_path}/{name}'):
@@ -183,8 +179,6 @@ def run_create_eb_windows(name, settings):
     ################################################################################
     print_message('download artifact')
 
-    branch = dv_branch.lower() if phase == 'dv' else phase
-
     file_name = f"{branch}-gendo-{git_hash_app.decode('utf-8').strip()}.zip"
     artifact_url = url + f'/{file_name}'
 
@@ -209,7 +203,7 @@ def run_create_eb_windows(name, settings):
         if 'CNAME' not in r:
             continue
 
-        if r['CNAME'] == f'{cname}.{aws_default_region}.elasticbeanstalk.com':
+        if r['CNAME'] == f'{cname}.{aws_region}.elasticbeanstalk.com':
             if r['Status'] == 'Terminated':
                 continue
             elif r['Status'] != 'Ready':
@@ -305,7 +299,7 @@ def run_create_eb_windows(name, settings):
     lines = read_file('aws_iam/aws-elasticbeanstalk-storage-policy.json')
     lines = re_sub_lines(lines, 'BUCKET_NAME', s3_bucket)
     lines = re_sub_lines(lines, 'AWS_ACCOUNT_ID', account_id)
-    elb_account_id = aws_cli.get_elb_account_id(aws_default_region)
+    elb_account_id = aws_cli.get_elb_account_id(aws_region)
     lines = re_sub_lines(lines, 'ELB_ACCOUNT_ID', elb_account_id)
     lines = re_sub_lines(lines, 'EC2_ROLE_LIST', json.dumps(role_list))
     pp = ' '.join(lines)

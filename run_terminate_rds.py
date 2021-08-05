@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import re
 
 from env import env
 from run_common import AWSCli
