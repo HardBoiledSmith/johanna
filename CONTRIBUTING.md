@@ -10,8 +10,10 @@ There are a few guidelines that we need contributors to follow.
 
 ## Making Changes
 
-* Create a working branch 'dv-[issue number]-[your GitHub id]' and push your commits to it. Pushing changes to master branch without a pull request is not allowed.
+* Create a working branch 'dv-[issue number]-[your GitHub id]' and push your commits to it. Pushing changes to master
+  branch without a pull request is not allowed.
 * Make sure your commit messages are in the proper format.
+
 ````
     (#issue number) TITLE
 
@@ -21,6 +23,9 @@ There are a few guidelines that we need contributors to follow.
     2. 
     3. 
 ````
+
 * Submit a pull request.
-* It is appreciated if you do [PyCharm code inspection](https://www.jetbrains.com/help/pycharm/2016.2/inspection-tool-window.html) before sumbiting.
+* It is appreciated if you
+  do [PyCharm code inspection](https://www.jetbrains.com/help/pycharm/2016.2/inspection-tool-window.html) before
+  sumbiting.
 * At this point you're waiting on reviews.

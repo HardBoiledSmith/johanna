@@ -7,7 +7,9 @@
       "Action": "s3:PutObject",
       "Resource": "arn:aws:s3:::BUCKET_NAME/*",
       "Condition": {
-        "StringEquals": {"s3:x-amz-acl":"bucket-owner-full-control"}
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
       }
     }
   ]

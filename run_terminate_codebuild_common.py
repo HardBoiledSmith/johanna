@@ -6,10 +6,10 @@ from run_common import print_message
 
 
 def terminate_all_notification_rule(aws_cli, name, settings):
-    aws_default_region = settings['AWS_DEFAULT_REGION']
+    aws_region = settings['AWS_REGION']
 
     account_id = aws_cli.get_caller_account_id()
-    project_arn = f'arn:aws:codebuild:{aws_default_region}:{account_id}:project/{name}'
+    project_arn = f'arn:aws:codebuild:{aws_region}:{account_id}:project/{name}'
 
     cmd = ['codestar-notifications', 'list-notification-rules']
     tt = dict()
@@ -25,7 +25,7 @@ def terminate_all_notification_rule(aws_cli, name, settings):
 
 
 def terminate_all_iam_role_and_policy(aws_cli, name, settings):
-    aws_region = settings['AWS_DEFAULT_REGION']
+    aws_region = settings['AWS_REGION']
 
     account_id = aws_cli.get_caller_account_id()
 
@@ -84,11 +84,11 @@ def terminate_all_iam_role_and_policy(aws_cli, name, settings):
 
 
 def run_terminate_vpc_project(name, settings):
-    aws_default_region = settings['AWS_DEFAULT_REGION']
+    aws_region = settings['AWS_REGION']
 
     print_message(f'delete vpc project: {name}')
 
-    aws_cli = AWSCli(aws_default_region)
+    aws_cli = AWSCli(aws_region)
 
     cmd = ['codebuild', 'delete-project']
     cmd += ['--name', name]

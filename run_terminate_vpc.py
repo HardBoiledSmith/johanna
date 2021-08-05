@@ -4,16 +4,16 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
-args = []
+options, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
 
 def main(settings):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    aws_cli = AWSCli(settings['AWS_REGION'])
     rds_subnet_name = env['rds']['DB_SUBNET_NAME']
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = '%s_' % service_name if service_name else ''
@@ -326,20 +326,21 @@ def main(settings):
 ################################################################################
 print_session('terminate vpc')
 
-region = None
-check_exists = False
+region = options.get('region')
+is_target_exists = False
 
-if len(args) > 1:
-    region = args[1]
+for vpc_env in env.get('vpc', list()):
 
-for vpc_env in env['vpc']:
-
-    if region and vpc_env.get('AWS_DEFAULT_REGION') != region:
+    if region and vpc_env['AWS_REGION'] != region:
         continue
 
-    check_exists = True
+    is_target_exists = True
 
     main(vpc_env)
 
-if not check_exists and region:
-    print('vpc for "%s" is not exists in config.json' % region)
+if is_target_exists is False:
+    mm = list()
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'vpc: {mm} is not found in config.json')
