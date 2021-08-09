@@ -13,7 +13,7 @@ from run_common import read_file
 from run_common import write_file
 
 
-def run_create_s3_vue(name, settings):
+def run_create_s3_vue(name, settings, options):
     aws_cli = AWSCli()
 
     deploy_bucket_name = settings['BUCKET_NAME']
@@ -32,12 +32,11 @@ def run_create_s3_vue(name, settings):
     print_message('git clone')
 
     subprocess.Popen(['mkdir', '-p', './template']).communicate()
-
     subprocess.Popen(['rm', '-rf', './%s' % git_folder_name], cwd='template').communicate()
-    if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', git_url]
-    else:
-        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+
+    branch = options.get('branch', 'master' if phase == 'dv' else phase)
+    print(f'branch: {branch}')
+    git_command = ['git', 'clone', '--depth=1', '-b', branch, git_url]
     subprocess.Popen(git_command, cwd='template').communicate()
     if not os.path.exists('template/%s' % git_folder_name):
         raise Exception()
@@ -50,9 +49,11 @@ def run_create_s3_vue(name, settings):
     ################################################################################
     print_message('create release for sentry')
 
-    subprocess.Popen(['sentry-cli', 'releases', 'new', '-p', f'{git_folder_name}-{name}', git_hash_app],
+    sentry_release_version = f'{git_folder_name}-{name}@{git_hash_app}'
+
+    subprocess.Popen(['sentry-cli', 'releases', 'new', '-p', f'{git_folder_name}-{name}', sentry_release_version],
                      cwd=f'template/{git_folder_name}').communicate()
-    subprocess.Popen(['sentry-cli', 'releases', 'set-commits', git_hash_app, '--auto'],
+    subprocess.Popen(['sentry-cli', 'releases', 'set-commits', '--auto', sentry_release_version],
                      cwd=f'template/{git_folder_name}').communicate()
 
     ################################################################################
@@ -105,6 +106,16 @@ def run_create_s3_vue(name, settings):
     if npm_process.returncode != 0:
         print(' '.join(['Npm exited with:', str(npm_process.returncode)]))
         raise Exception()
+
+    ################################################################################
+    print_message('upload sourcemaps at sentry')
+
+    subprocess.Popen(['sentry-cli', 'releases', '-p', f'{git_folder_name}-{name}', 'files', sentry_release_version,
+                      'upload-sourcemaps', f'template/{git_folder_name}/{name}/dist']).communicate()
+
+    print_message('delete local sourcemaps')
+    subprocess.Popen(['find', '.', '-name', '*.map', '-type', 'f', '-delete', '-print'],
+                     cwd=f'template/{git_folder_name}/{name}/dist').communicate()
 
     ################################################################################
     print_message('upload to temp bucket')
@@ -225,5 +236,5 @@ def run_create_s3_vue(name, settings):
     ################################################################################
     print_message('finalize release for sentry')
 
-    subprocess.Popen(['sentry-cli', 'releases', 'finalize', git_hash_app],
+    subprocess.Popen(['sentry-cli', 'releases', 'finalize', sentry_release_version],
                      cwd=f'template/{git_folder_name}').communicate()

@@ -61,7 +61,7 @@ def create_iam_service_role(aws_cli, name):
 
 
 def create_managed_secret_iam_policy(aws_cli, name, settings, role_name):
-    aws_region = settings['AWS_DEFAULT_REGION']
+    aws_region = settings['AWS_REGION']
 
     account_id = aws_cli.get_caller_account_id()
 
@@ -101,7 +101,7 @@ def create_managed_secret_iam_policy(aws_cli, name, settings, role_name):
 
 
 def create_base_iam_policy(aws_cli, name, settings, role_name):
-    aws_region = settings['AWS_DEFAULT_REGION']
+    aws_region = settings['AWS_REGION']
 
     account_id = aws_cli.get_caller_account_id()
 
@@ -202,7 +202,7 @@ def create_base_iam_policy(aws_cli, name, settings, role_name):
 
 
 def create_image_repository_iam_policy(aws_cli, name, settings, role_name):
-    aws_region = settings['AWS_DEFAULT_REGION']
+    aws_region = settings['AWS_REGION']
 
     account_id = aws_cli.get_caller_account_id()
 
@@ -282,7 +282,7 @@ def create_cron_iam_role(aws_cli, name):
 
 
 def create_cron_iam_policy(aws_cli, name, settings, role_name):
-    aws_region = settings['AWS_DEFAULT_REGION']
+    aws_region = settings['AWS_REGION']
 
     account_id = aws_cli.get_caller_account_id()
 

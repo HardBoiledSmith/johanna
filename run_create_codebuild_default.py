@@ -14,8 +14,7 @@ from run_create_codebuild_common import update_notification_rule
 
 
 def run_create_default_project(name, settings):
-    aws_default_region = settings['AWS_DEFAULT_REGION']
-    aws_cli = AWSCli(aws_default_region)
+    aws_cli = AWSCli(settings['AWS_REGION'])
 
     git_branch = settings['BRANCH']
     build_spec = settings['BUILD_SPEC']

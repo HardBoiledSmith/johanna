@@ -7,12 +7,12 @@ from run_common import print_session
 from run_common import re_sub_lines
 from run_common import read_file
 
-args = []
+_, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    _, args = parse_args()
 
 
 # It is a script dedicated to the op environment.

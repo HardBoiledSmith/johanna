@@ -4,16 +4,16 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
-args = []
+options, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
 
 def main(settings):
-    aws_cli = AWSCli(settings['AWS_DEFAULT_REGION'])
+    aws_cli = AWSCli(settings['AWS_REGION'])
     rds_subnet_name = env['rds']['DB_SUBNET_NAME']
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = '%s_' % service_name if service_name else ''
@@ -39,6 +39,19 @@ def main(settings):
     rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
 
     ################################################################################
+    print_message('vpc endpoint')
+
+    cmd = ['ec2', 'describe-vpc-endpoints']
+    result = aws_cli.run(cmd, ignore_error=True)
+
+    for r in result['VpcEndpoints']:
+        vpce_id = r['VpcEndpointId']
+
+        cmd = ['ec2', 'delete-vpc-endpoints']
+        cmd += ['--vpc-endpoint-ids', vpce_id]
+        aws_cli.run(cmd, ignore_error=True)
+
+    ################################################################################
     print_message('delete network interface')
 
     cmd = ['ec2', 'describe-network-interfaces']
@@ -62,6 +75,8 @@ def main(settings):
 
     ################################################################################
     print_message('delete vpc peering connection')
+
+    print(rds_vpc_id, eb_vpc_id)
 
     cmd = ['ec2', 'describe-vpc-peering-connections']
     result = aws_cli.run(cmd, ignore_error=True)
@@ -286,6 +301,23 @@ def main(settings):
     cmd += ['--application-name', env['elasticbeanstalk']['APPLICATION_NAME']]
     aws_cli.run(cmd, ignore_error=True)
 
+    ################################################################################
+    print_message('terminate service role')
+
+    cmd = ['iam', 'detach-role-policy']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
+    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy']
+    aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['iam', 'detach-role-policy']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
+    cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth']
+    aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['iam', 'delete-role']
+    cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
+    aws_cli.run(cmd, ignore_error=True)
+
 
 ################################################################################
 #
@@ -294,20 +326,21 @@ def main(settings):
 ################################################################################
 print_session('terminate vpc')
 
-region = None
-check_exists = False
+region = options.get('region')
+is_target_exists = False
 
-if len(args) > 1:
-    region = args[1]
+for vpc_env in env.get('vpc', list()):
 
-for vpc_env in env['vpc']:
-
-    if region and vpc_env.get('AWS_DEFAULT_REGION') != region:
+    if region and vpc_env['AWS_REGION'] != region:
         continue
 
-    check_exists = True
+    is_target_exists = True
 
     main(vpc_env)
 
-if not check_exists and region:
-    print('vpc for "%s" is not exists in config.json' % region)
+if is_target_exists is False:
+    mm = list()
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'vpc: {mm} is not found in config.json')

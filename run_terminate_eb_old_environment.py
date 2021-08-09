@@ -54,9 +54,9 @@ print_message('terminate old environment (current timestamp: %d)' % timestamp)
 
 eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
 
-for vpc_env in env['vpc']:
-    aws_cli = AWSCli(vpc_env['AWS_DEFAULT_REGION'])
-    aws_default_region = vpc_env['AWS_DEFAULT_REGION']
+for vpc_env in env.get('vpc', list()):
+    aws_cli = AWSCli(vpc_env['AWS_REGION'])
+    aws_region = vpc_env['AWS_REGION']
 
     cmd = ['elasticbeanstalk', 'describe-environments']
     cmd += ['--application-name', eb_application_name]

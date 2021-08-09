@@ -7,17 +7,17 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 
-args = []
+options, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
 
 def run_create_cloudwatch_alarm_lambda(name, settings):
     phase = env['common']['PHASE']
-    alarm_region = settings['AWS_DEFAULT_REGION']
+    alarm_region = settings['AWS_REGION']
     aws_cli = AWSCli(alarm_region)
 
     alarm_name = '%s-%s_%s_%s' % (phase, name, alarm_region, 'NotSuccessIn5Min')
@@ -54,7 +54,7 @@ def run_create_cloudwatch_alarm_lambda(name, settings):
 
 def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
     phase = env['common']['PHASE']
-    alarm_region = settings['AWS_DEFAULT_REGION']
+    alarm_region = settings['AWS_REGION']
     aws_cli = AWSCli(alarm_region)
 
     print_message('get elasticbeanstalk environment info: %s' % name)
@@ -142,7 +142,7 @@ def run_create_cloudwatch_alarm_elasticbeanstalk(name, settings):
 
 def run_create_cloudwatch_alarm_rds(name, settings):
     phase = env['common']['PHASE']
-    alarm_region = settings['AWS_DEFAULT_REGION']
+    alarm_region = settings['AWS_REGION']
     aws_cli = AWSCli(alarm_region)
 
     alarm_name = '%s-%s_%s_%s' % (phase, name, alarm_region, settings['METRIC_NAME'])
@@ -177,7 +177,7 @@ def run_create_cloudwatch_alarm_rds(name, settings):
 
 def run_create_cloudwatch_alarm_sqs(name, settings):
     phase = env['common']['PHASE']
-    alarm_region = settings['AWS_DEFAULT_REGION']
+    alarm_region = settings['AWS_REGION']
     sqs_name = settings['QUEUE_NAME']
     aws_cli = AWSCli(alarm_region)
 
@@ -212,7 +212,7 @@ def run_create_cloudwatch_alarm_sqs(name, settings):
 
 def run_create_cloudwatch_alarm_sns(name, settings):
     phase = env['common']['PHASE']
-    alarm_region = settings['AWS_DEFAULT_REGION']
+    alarm_region = settings['AWS_REGION']
     aws_cli = AWSCli(alarm_region)
 
     alarm_name = '%s-%s_%s_%s' % (phase, name, alarm_region, settings['METRIC_NAME'])
@@ -254,42 +254,41 @@ def run_create_cloudwatch_alarm_sns(name, settings):
 print_session('create cloudwatch alarm')
 
 cw = env.get('cloudwatch', dict())
-target_cw_alarm_name = None
-region = None
-check_exists = False
+target_name = None
+region = options.get('region')
+is_target_exists = False
 
 if len(args) > 1:
-    target_cw_alarm_name = args[1]
+    target_name = args[1]
 
-if len(args) > 2:
-    region = args[2]
-
-for cw_alarm_env in cw.get('ALARMS', list()):
-    if target_cw_alarm_name and cw_alarm_env['NAME'] != target_cw_alarm_name:
+for settings in cw.get('ALARMS', list()):
+    if target_name and settings['NAME'] != target_name:
         continue
 
-    if region and cw_alarm_env.get('AWS_DEFAULT_REGION') != region:
+    if region and settings['AWS_REGION'] != region:
         continue
 
-    if target_cw_alarm_name:
-        check_exists = True
+    is_target_exists = True
 
-    if cw_alarm_env['TYPE'] == 'elasticbeanstalk':
-        run_create_cloudwatch_alarm_elasticbeanstalk(cw_alarm_env['NAME'], cw_alarm_env)
-    elif cw_alarm_env['TYPE'] == 'rds':
-        run_create_cloudwatch_alarm_rds(cw_alarm_env['NAME'], cw_alarm_env)
-    elif cw_alarm_env['TYPE'] == 'sqs':
-        run_create_cloudwatch_alarm_sqs(cw_alarm_env['NAME'], cw_alarm_env)
-    elif cw_alarm_env['TYPE'] == 'lambda':
-        run_create_cloudwatch_alarm_lambda(cw_alarm_env['NAME'], cw_alarm_env)
-    elif cw_alarm_env['TYPE'] == 'sns':
-        run_create_cloudwatch_alarm_sns(cw_alarm_env['NAME'], cw_alarm_env)
+    if settings['TYPE'] == 'elasticbeanstalk':
+        run_create_cloudwatch_alarm_elasticbeanstalk(settings['NAME'], settings)
+    elif settings['TYPE'] == 'rds':
+        run_create_cloudwatch_alarm_rds(settings['NAME'], settings)
+    elif settings['TYPE'] == 'sqs':
+        run_create_cloudwatch_alarm_sqs(settings['NAME'], settings)
+    elif settings['TYPE'] == 'lambda':
+        run_create_cloudwatch_alarm_lambda(settings['NAME'], settings)
+    elif settings['TYPE'] == 'sns':
+        run_create_cloudwatch_alarm_sns(settings['NAME'], settings)
     else:
-        print('"%s" is not supported' % cw_alarm_env['TYPE'])
+        print(f'{settings["TYPE"]} is not supported')
         raise Exception()
 
-if not check_exists and target_cw_alarm_name and not region:
-    print('"%s" is not exists in config.json' % target_cw_alarm_name)
-
-if not check_exists and target_cw_alarm_name and region:
-    print('"%s, %s" is not exists in config.json' % (target_cw_alarm_name, region))
+if is_target_exists is False:
+    mm = list()
+    if target_name:
+        mm.append(target_name)
+    if region:
+        mm.append(region)
+    mm = ' in '.join(mm)
+    print(f'cloudwatch alarm: {mm} is not found in config.json')
