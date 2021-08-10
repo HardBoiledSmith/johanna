@@ -116,13 +116,13 @@ def run_create_cron_project(name, settings):
     create_cron_event(aws_cli, name, project_arn, se, git_branch, cron_role_arn)
 
     ################################################################################
-    # print_message('create slack notification')
-    #
-    # project_arn = result['project']['arn']
+    print_message('create slack notification')
 
-    # notification_rule_arn = get_notification_rule(aws_cli, project_arn)
+    project_arn = result['project']['arn']
 
-    # if not notification_rule_arn:
-    #     create_notification_rule(aws_cli, name, project_arn)
-    # else:
-    #     update_notification_rule(aws_cli, name, notification_rule_arn)
+    notification_rule_arn = get_notification_rule(aws_cli, project_arn)
+
+    if not notification_rule_arn:
+        create_notification_rule(aws_cli, name, project_arn)
+    else:
+        update_notification_rule(aws_cli, name, notification_rule_arn)
