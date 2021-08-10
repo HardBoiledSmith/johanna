@@ -602,4 +602,3 @@ for eb_env in eb['ENVIRONMENTS']:
     else:
         print(f"\"{eb_env['TYPE']}\" is not supported")
         raise Exception()
-
