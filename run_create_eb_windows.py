@@ -51,7 +51,6 @@ def run_create_eb_windows(name, settings, options):
 
     git_rev = ['git', 'rev-parse', 'HEAD']
     git_hash_johanna = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
-    print(git_hash_johanna)
 
     ################################################################################
     print_session(f'create {name}')
@@ -447,8 +446,6 @@ def run_create_eb_windows(name, settings, options):
 
     tag0 = f"Key=git_hash_johanna,Value={git_hash_johanna.decode('utf-8').strip()}"
     tag1 = f"Key=git_hash_{name},Value={git_hash_app.decode('utf-8').strip()}"
-
-    print(f'tag : {tag0}, {tag1}')
 
     cmd = ['elasticbeanstalk', 'create-environment']
     cmd += ['--application-name', eb_application_name]
