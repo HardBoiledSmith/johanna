@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import subprocess
 
-from env import env
 import os
 from run_common import AWSCli
 from run_common import print_message
@@ -10,18 +9,18 @@ from run_common import read_file
 import json
 import time
 
-args = []
+options, args = dict(), list()
 
 if __name__ == "__main__":
     from run_common import parse_args
 
-    args = parse_args()
+    options, args = parse_args()
 
 
-def run_create_image_builder():
+def run_create_image_builder(options):
     aws_cli = AWSCli()
 
-    phase = env['common']['PHASE']
+    phase = 'dv'
     git_url = "git@github.com:HardBoiledSmith/gendo.git"
     name = 'gendo'
     template_path = 'template/%s' % name
@@ -34,12 +33,12 @@ def run_create_image_builder():
     subprocess.Popen(['rm', '-rf', template_path]).communicate()
     subprocess.Popen(['mkdir', '-p', template_path]).communicate()
 
-    if phase == 'dv':
-        git_command = ['git', 'clone', '--depth=1', git_url]
-    else:
-        git_command = ['git', 'clone', '--depth=1', '-b', phase, git_url]
+    branch = options.get('branch', 'master' if phase == 'dv' else phase)
+    print(f'branch: {branch}')
+    git_command = ['git', 'clone', '--depth=1', '-b', branch, git_url]
     subprocess.Popen(git_command, cwd=template_path).communicate()
-    if not os.path.exists('%s/%s' % (template_path, name)):
+    print(f'{template_path}/{name}')
+    if not os.path.exists(f'{template_path}/{name}'):
         raise Exception()
 
     git_hash_app = subprocess.Popen(git_rev,
@@ -85,7 +84,6 @@ def run_create_image_builder():
     cmd += ['--name', gendo_component_name]
     cmd += ['--semantic-version', semantic_version]
     cmd += ['--platform', 'Windows']
-    # TODO: env로 전환 supported-os-versions
     cmd += ['--supported-os-versions', 'Microsoft Windows Server 2016']
     cmd += ['--tags', f'{tag0},{tag1}']
     cmd += ['--data', 'file://template/gendo/gendo/_provisioning/gendo_golden_image.yml']
@@ -133,7 +131,8 @@ def run_create_image_builder():
         if vv['VirtualizationType'] == 'hvm':
             eb_platform_ami = vv['ImageId']
 
-    if latest_eb_platform_ami != eb_platform_ami:
+    update_required = False
+    if latest_eb_platform_ami.strip() != eb_platform_ami.strip():
         update_required = True
 
     recipe_name = f'gendo_recipe_{str_timestamp}'
@@ -200,7 +199,9 @@ def run_create_image_builder():
     aws_cli.run(cmd)
 
     if update_required:
-        print_session('Pleas Check Your eb platfrom version // '
+        print_session('Pleas Check Your eb platfrom version. \n'
+                      f'latest eb platform ami : {latest_eb_platform_ami}\n'
+                      f'eb platform ami {eb_platform_ami}\n '
                       'Reference : https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/'
                       'platforms-supported.html#platforms-supported.net')
 
@@ -213,4 +214,4 @@ def run_create_image_builder():
 
 print_session('create image builder')
 
-run_create_image_builder()
+run_create_image_builder(options)

@@ -179,6 +179,8 @@ def run_create_eb_windows(name, settings, options):
     ################################################################################
     print_message('download artifact')
 
+    branch = branch.lower() if phase == 'dv' else phase
+
     file_name = f"{branch}-gendo-{git_hash_app.decode('utf-8').strip()}.zip"
     artifact_url = url + f'/{file_name}'
 

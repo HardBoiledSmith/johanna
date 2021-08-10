@@ -15,6 +15,14 @@ from run_common import write_file
 from run_create_eb_iam import create_iam_profile_for_ec2_instances
 
 
+options, args = dict(), list()
+
+if __name__ == "__main__":
+    from run_common import parse_args
+
+    options, args = parse_args()
+
+
 def run_create_eb_windows(name, settings, options):
     aws_cli = AWSCli(settings['AWS_REGION'])
 
@@ -37,7 +45,6 @@ def run_create_eb_windows(name, settings, options):
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = f'{service_name}_' if service_name else ''
     url = settings['ARTIFACT_URL']
-    dv_branch = settings.get('BRANCH', 'master')
     cidr_subnet = aws_cli.cidr_subnet
 
     str_timestamp = str(int(time.time()))
@@ -69,6 +76,7 @@ def run_create_eb_windows(name, settings, options):
     latest_eb_platform_ami = aws_cli.run(cmd)
     if not latest_eb_platform_ami:
         Exception('not exist gendo ami')
+    print_message(f'selected latest eb platform ami : {latest_eb_platform_ami}')
 
     ################################################################################
     print_message('get vpc id')
@@ -194,7 +202,7 @@ def run_create_eb_windows(name, settings, options):
     ################################################################################
     print_message('download artifact')
 
-    branch = dv_branch.lower() if phase == 'dv' else phase
+    branch = branch.lower() if phase == 'dv' else phase
 
     file_name = f"{branch}-gendo-{git_hash_app.decode('utf-8').strip()}.zip"
     artifact_url = url + f'/{file_name}'
@@ -590,7 +598,8 @@ for eb_env in eb['ENVIRONMENTS']:
     if eb_env['TYPE'] == 'django':
         continue
     if eb_env['TYPE'] == 'windows':
-        run_create_eb_windows(eb_env['NAME'], eb_env)
+        run_create_eb_windows(eb_env['NAME'], eb_env, options)
     else:
         print(f"\"{eb_env['TYPE']}\" is not supported")
         raise Exception()
+
