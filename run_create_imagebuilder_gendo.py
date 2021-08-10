@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-import subprocess
-
+import json
 import os
+import subprocess
+import time
+
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 from run_common import read_file
-import json
-import time
 
 options, args = dict(), list()
 
@@ -62,7 +62,7 @@ def run_create_image_builder(options):
 
     for ll in tmp_lines:
         ll = ll.replace('\n', '')
-        tt = f'{" "*14}pip install {ll}\n'
+        tt = f'{" " * 14}pip install {ll}\n'
         lines.append(tt)
     pp = ''.join(lines)
 
@@ -204,6 +204,7 @@ def run_create_image_builder(options):
                       f'eb platform ami {eb_platform_ami}\n '
                       'Reference : https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/'
                       'platforms-supported.html#platforms-supported.net')
+
 
 ################################################################################
 #
