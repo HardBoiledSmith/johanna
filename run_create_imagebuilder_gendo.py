@@ -66,8 +66,8 @@ def run_create_image_builder(options):
         lines.append(tt)
     pp = ''.join(lines)
 
-    sample_filename_path = 'template/gendo/gendo/_provisioning/gendo_golden_image_sample.yml'
-    filename_path = 'template/gendo/gendo/_provisioning/gendo_golden_image.yml'
+    sample_filename_path = 'template/gendo/gendo/_provisioning/gendo_image_sample.yml'
+    filename_path = 'template/gendo/gendo/_provisioning/gendo_image.yml'
     with open(filename_path, 'w') as ff:
         with open(sample_filename_path, 'r') as f:
             tmp_list = f.readlines()
@@ -86,7 +86,7 @@ def run_create_image_builder(options):
     cmd += ['--platform', 'Windows']
     cmd += ['--supported-os-versions', 'Microsoft Windows Server 2016']
     cmd += ['--tags', f'{tag0},{tag1}']
-    cmd += ['--data', 'file://template/gendo/gendo/_provisioning/gendo_golden_image.yml']
+    cmd += ['--data', 'file://template/gendo/gendo/_provisioning/gendo_image.yml']
 
     rr = aws_cli.run(cmd)
     gendo_component_arn = rr['componentBuildVersionArn']
@@ -211,7 +211,6 @@ def run_create_image_builder(options):
 # start
 #
 ################################################################################
-
 
 print_session('create image builder')
 
