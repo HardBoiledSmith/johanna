@@ -8,6 +8,7 @@ from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
 from run_common import read_file
+from run_create_imagebuilder_iam import create_iam_profile_for_imagebuilder
 
 options, args = dict(), list()
 
@@ -47,6 +48,10 @@ def run_create_image_builder(options):
 
     subprocess.Popen(['rm', '-rf', './%s/.git' % name], cwd=template_path).communicate()
     subprocess.Popen(['rm', '-rf', './%s/.gitignore' % name], cwd=template_path).communicate()
+    ############################################################################
+    print_session('create role')
+
+    instance_profile_name, role_arn = create_iam_profile_for_imagebuilder(template_path, name)
 
     ############################################################################
     semantic_version = '0.0.0'
@@ -151,7 +156,7 @@ def run_create_image_builder(options):
     infrastructure_name = f'gendo_infrastructure_{str_timestamp}'
     cmd = ['imagebuilder', 'create-infrastructure-configuration']
     cmd += ['--name', infrastructure_name]
-    cmd += ['--instance-profile-name', 'EC2InstanceProfileForImageBuilder']
+    cmd += ['--instance-profile-name', instance_profile_name]
     cmd += ['--instance-types', 'r5.large']
     cmd += ['--terminate-instance-on-failure']
     # cmd += ['--sns-topic-arn', topic_arn]
