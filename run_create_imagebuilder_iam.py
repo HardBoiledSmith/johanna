@@ -5,7 +5,7 @@ from run_common import AWSCli
 aws_cli = AWSCli()
 
 
-def create_iam_profile_for_imagebuilder(template_path, name):
+def create_iam_profile_for_imagebuilder(name):
     profile_name = f'aws-imagebuilder-{name}-instance-profile'
     role_name = f'aws-imagebuilder-{name}-builder-role'
 
@@ -24,7 +24,7 @@ def create_iam_profile_for_imagebuilder(template_path, name):
     cmd += ['--instance-profile-name', profile_name]
     aws_cli.run(cmd)
 
-    role_file_path = f'file://{template_path}/{name}/_provisioning/iam/aws-imagebuilder-role.json'
+    role_file_path = 'file://aws_iam/aws-imagebuilder-role.json'
     cmd = ['iam', 'create-role']
     cmd += ['--path', '/']
     cmd += ['--role-name', role_name]

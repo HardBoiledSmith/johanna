@@ -51,7 +51,7 @@ def run_create_image_builder(options):
     ############################################################################
     print_session('create role')
 
-    instance_profile_name, role_arn = create_iam_profile_for_imagebuilder(template_path, name)
+    instance_profile_name, role_arn = create_iam_profile_for_imagebuilder(name)
 
     ############################################################################
     semantic_version = '0.0.0'
@@ -198,17 +198,17 @@ def run_create_image_builder(options):
     gendo_pipeline_arn = rr['imagePipelineArn']
 
     ###########################################################################
-    print_session('excution pipeline for image')
-    cmd = ['imagebuilder', 'start-image-pipeline-execution']
-    cmd += ['--image-pipeline-arn', gendo_pipeline_arn]
-    aws_cli.run(cmd)
-
-    if update_required:
-        print_session('Pleas Check Your eb platfrom version. \n'
-                      f'latest eb platform ami : {latest_eb_platform_ami}\n'
-                      f'eb platform ami {eb_platform_ami}\n '
-                      'Reference : https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/'
-                      'platforms-supported.html#platforms-supported.net')
+    # print_session('excution pipeline for image')
+    # cmd = ['imagebuilder', 'start-image-pipeline-execution']
+    # cmd += ['--image-pipeline-arn', gendo_pipeline_arn]
+    # aws_cli.run(cmd)
+    #
+    # if update_required:
+    #     print_session('Pleas Check Your eb platfrom version. \n'
+    #                   f'latest eb platform ami : {latest_eb_platform_ami}\n'
+    #                   f'eb platform ami {eb_platform_ami}\n '
+    #                   'Reference : https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/'
+    #                   'platforms-supported.html#platforms-supported.net')
 
 
 ################################################################################
