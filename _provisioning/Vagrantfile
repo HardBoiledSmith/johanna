@@ -11,7 +11,9 @@ Vagrant.configure(2) do |config|
   end
 
   config.vm.provision "file", source: "../config.json", destination: "/vagrant/opt/johanna/config.json"
-  config.vm.provision "shell", inline: "yum -y install python37"
+  config.vm.provision "shell", inline: "amazon-linux-extras enable python3.8"
+  config.vm.provision "shell", inline: "yum -y install python38 python38-devel"
+  config.vm.provision "shell", inline: "update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1"
   config.vm.provision "shell", path: "provisioning.py", env: { "BRANCH" => ENV["BRANCH"] }, reboot: true
   config.vm.network "private_network", ip: "192.168.124.5"
 end
