@@ -5,7 +5,6 @@ from run_common import AWSCli
 def terminate_iam_profile_for_imagebuilder(name):
     aws_cli = AWSCli()
 
-    account_id = aws_cli.get_caller_account_id()
     role_name = 'aws-imagebuilder-role'
     policy_name = 'aws-imagebuilder-s3-put-ojbect-policy'
 
@@ -27,16 +26,6 @@ def terminate_iam_profile_for_imagebuilder(name):
     cmd = ['iam', 'detach-role-policy']
     cmd += ['--role-name', role_name]
     cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore']
-    aws_cli.run(cmd, ignore_error=True)
-
-    policy_arn = f'arn:aws:iam::{account_id}:policy/aws-imagebuilder-s3-put-ojbect-policy'
-    cmd = ['iam', 'detach-role-policy']
-    cmd += ['--role-name', role_name]
-    cmd += ['--policy-arn', policy_arn]
-    aws_cli.run(cmd, ignore_error=True)
-
-    cmd = ['iam', 'delete-policy']
-    cmd += ['--policy-arn', policy_arn]
     aws_cli.run(cmd, ignore_error=True)
 
     profile_name = f'aws-imagebuilder-{name}-instance-profile'
