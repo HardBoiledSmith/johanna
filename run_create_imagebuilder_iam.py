@@ -13,7 +13,7 @@ def create_iam_profile_for_imagebuilder(name):
 
     cmd = ['iam', 'get-instance-profile']
     cmd += ['--instance-profile-name', profile_name]
-    result = aws_cli.run(cmd)
+    result = aws_cli.run(cmd, ignore_error=True)
 
     if result:
         role = result['InstanceProfile']['Roles'][0]
