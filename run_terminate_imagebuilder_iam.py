@@ -29,7 +29,7 @@ def terminate_iam_profile_for_imagebuilder(name):
     cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore']
     aws_cli.run(cmd, ignore_error=True)
 
-    policy_arn = f'arn:aws:iam::{account_id}:policy/service-role/aws-imagebuilder-s3-put-ojbect-policy'
+    policy_arn = f'arn:aws:iam::{account_id}:policy/aws-imagebuilder-s3-put-ojbect-policy'
     cmd = ['iam', 'detach-role-policy']
     cmd += ['--role-name', role_name]
     cmd += ['--policy-arn', policy_arn]
