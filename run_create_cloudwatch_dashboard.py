@@ -284,33 +284,16 @@ def run_create_cw_dashboard_rds_aurora(name, settings):
     template_name = env['template']['NAME']
 
     filename_path = 'template/%s/cloudwatch/%s.json' % (template_name, dashboard_name)
+
     with open(filename_path, 'r') as ff:
-        dashboard_body = json.load(ff)
+        old_lines = ff.readlines()
 
-    for dw in dashboard_body['widgets']:
-        pm = dw['properties']['metrics']
+    new_lines = list()
+    for ll in old_lines:
+        nn = ll.replace('DB_CLUSTER_IDENTIFIER', cluster_id)
+        new_lines.append(nn)
 
-        cluster_id_only = True
-        for dimension in pm[0]:
-            if dimension == 'Role':
-                cluster_id_only = False
-
-        template = json.dumps(pm[0])
-        new_metrics_list = list()
-        if cluster_id_only:
-            new_metric = template.replace('DB_CLUSTER_IDENTIFIER', cluster_id)
-            new_metric = json.loads(new_metric)
-            new_metrics_list.append(new_metric)
-        else:
-            for ir in instance_role_list:
-                new_metric = template.replace('DB_CLUSTER_IDENTIFIER', cluster_id)
-                new_metric = new_metric.replace('ROLE', ir)
-                new_metric = json.loads(new_metric)
-                new_metrics_list.append(new_metric)
-
-        dw['properties']['metrics'] = new_metrics_list
-
-    dashboard_body = json.dumps(dashboard_body)
+    dashboard_body = ' '.join(new_lines)
 
     cmd = ['cloudwatch', 'put-dashboard']
     cmd += ['--dashboard-name', dashboard_name]
