@@ -39,12 +39,6 @@ def create_iam_profile_for_imagebuilder(name):
     cmd += ['--role-name', role_name]
     aws_cli.run(cmd)
 
-    s3_policy_arn = rr['Policy']['Arn']
-    cmd = ['iam', 'attach-role-policy']
-    cmd += ['--role-name', role_name]
-    cmd += ['--policy-arn', s3_policy_arn]
-    aws_cli.run(cmd)
-
     cmd = ['iam', 'attach-role-policy']
     cmd += ['--role-name', role_name]
     cmd += ['--policy-arn', 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore']
