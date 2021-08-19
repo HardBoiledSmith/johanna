@@ -116,7 +116,7 @@ def _preprocess(hostname):
 
     _print_line_number()
 
-    _run(['/usr/bin/pip-3.7', 'install', '-U', 'pip'])
+    _run(['/usr/bin/pip-3.8', 'install', '-U', 'pip'])
     file_path_name = '/vagrant/requirements.txt'
     if os.path.exists(file_path_name):
         with open(file_path_name, 'r') as f:
