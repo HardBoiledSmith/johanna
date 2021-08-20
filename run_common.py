@@ -365,11 +365,6 @@ class AWSCli:
 
         for cl in result['CertificateSummaryList']:
             if cl['DomainName'] == domain:
-
-                # TODO: remove this hack after path DEV-1252 complete
-                if env['common']['PHASE'] == 'op' and not cl['CertificateArn'].endswith('224'):
-                    continue
-
                 return cl['CertificateArn']
 
         raise Exception()
