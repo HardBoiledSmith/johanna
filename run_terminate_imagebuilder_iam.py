@@ -4,7 +4,7 @@ from run_common import print_message
 
 
 def terminate_iam_profile_for_imagebuilder(name):
-    print_message(f'delete imagebuilder iam')
+    print_message('delete imagebuilder iam')
 
     aws_cli = AWSCli()
 
