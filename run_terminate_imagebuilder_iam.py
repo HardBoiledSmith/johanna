@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 from run_common import AWSCli
+from run_common import print_message
 
 
 def terminate_iam_profile_for_imagebuilder(name):
+    print_message(f'delete imagebuilder iam')
+
     aws_cli = AWSCli()
 
     role_name = 'aws-imagebuilder-role'
@@ -42,6 +45,3 @@ def terminate_iam_profile_for_imagebuilder(name):
     cmd = ['iam', 'delete-role']
     cmd += ['--role-name', role_name]
     aws_cli.run(cmd, ignore_error=True)
-
-
-terminate_iam_profile_for_imagebuilder('gendo')

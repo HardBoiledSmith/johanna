@@ -2,6 +2,7 @@
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
+from run_terminate_imagebuilder_iam import terminate_iam_profile_for_imagebuilder
 
 options, args = dict(), list()
 
@@ -14,13 +15,12 @@ if __name__ == "__main__":
 def run_terminate_image(name):
     aws_cli = AWSCli()
 
-    print_message(f'terminate imagebuilder {name} ami')
+    print_message(f'delete imagebuilder {name} ami')
+
+    account_id = aws_cli.get_caller_account_id()
 
     cmd = ['imagebuilder', 'list-images']
     rr = aws_cli.run(cmd)
-
-    if not rr:
-        return
 
     ami_arn_list = list()
     for r in rr['imageVersionList']:
@@ -34,10 +34,95 @@ def run_terminate_image(name):
             cmd = ['imagebuilder', 'list-image-build-versions']
             cmd += ['--image-version-arn', ami_arn]
             arn_version_list = aws_cli.run(cmd, ignore_error=True)
+
             if arn_version_list['imageSummaryList']:
                 cmd = ['imagebuilder', 'delete-image']
                 cmd += ['--image-build-version-arn', r['arn']]
                 aws_cli.run(cmd, ignore_error=True)
+
+    print_message(f'delete ec2 {name} ami and snapshot')
+
+    cmd = ['ec2', 'describe-images']
+    cmd += ['--filters=Name=name,Values="Gendo*"']
+    cmd += ['--owners', account_id]
+    rr = aws_cli.run(cmd)
+
+    for r in rr['Images']:
+        ami = r['ImageId']
+        snapshot_id = r['BlockDeviceMappings'][0]['Ebs']['SnapshotId']
+
+        cmd = ['ec2', 'deregister-image']
+        cmd += ['--image-id', ami]
+        aws_cli.run(cmd)
+
+        cmd = ['ec2', 'delete-snapshot']
+        cmd += ['--snapshot-id', snapshot_id]
+        aws_cli.run(cmd)
+
+    print_message(f'delete imagebuilder {name} pipe lines')
+
+    cmd = ['imagebuilder', 'list-image-pipelines']
+    rr = aws_cli.run(cmd)
+
+    for r in rr['imagePipelineList']:
+        cmd = ['imagebuilder', 'delete-image-pipeline']
+        cmd += ['--image-pipeline-arn', r['arn']]
+        aws_cli.run(cmd)
+
+    print_message(f'delete imagebuilder {name} distributions')
+
+    cmd = ['imagebuilder', 'list-distribution-configurations']
+    rr = aws_cli.run(cmd)
+
+    for r in rr['distributionConfigurationSummaryList']:
+        cmd = ['imagebuilder', 'delete-distribution-configuration']
+        cmd += ['--distribution-configuration-arn', r['arn']]
+        aws_cli.run(cmd)
+
+    print_message(f'delete imagebuilder {name} infrastructures')
+
+    cmd = ['imagebuilder', 'list-infrastructure-configurations']
+    rr = aws_cli.run(cmd)
+
+    for r in rr['infrastructureConfigurationSummaryList']:
+        cmd = ['imagebuilder', 'delete-infrastructure-configuration']
+        cmd += ['--infrastructure-configuration-arn', r['arn']]
+        aws_cli.run(cmd)
+
+    print_message(f'delete imagebuilder {name} image-recipes')
+
+    cmd = ['imagebuilder', 'list-image-recipes']
+    rr = aws_cli.run(cmd)
+
+    for r in rr['imageRecipeSummaryList']:
+        cmd = ['imagebuilder', 'delete-image-recipe']
+        cmd += ['--image-recipe-arn', r['arn']]
+        aws_cli.run(cmd)
+
+    print_message(f'delete imagebuilder {name} components')
+
+    cmd = ['imagebuilder', 'list-components']
+    rr = aws_cli.run(cmd)
+
+    component_arn_list = list()
+    for r in rr['componentVersionList']:
+        component_arn_list.append(r['arn'])
+
+    for component_arn in component_arn_list:
+        cmd = ['imagebuilder', 'list-component-build-versions']
+        cmd += ['--component-version-arn', component_arn]
+        rr = aws_cli.run(cmd)
+        for r in rr['componentSummaryList']:
+            cmd = ['imagebuilder', 'list-component-build-versions']
+            cmd += ['--component-version-arn', component_arn]
+            arn_version_list = aws_cli.run(cmd, ignore_error=True)
+
+            if arn_version_list['componentSummaryList']:
+                cmd = ['imagebuilder', 'delete-component']
+                cmd += ['--component-build-version-arn', r['arn']]
+                aws_cli.run(cmd, ignore_error=True)
+
+    terminate_iam_profile_for_imagebuilder(name)
 
 
 ################################################################################
@@ -56,24 +141,3 @@ if len(args) > 1:
 
 name = 'gendo'
 run_terminate_image(name)
-
-# for settings in eb.get('ENVIRONMENTS', list()):
-#     if target_name and settings['NAME'] != target_name:
-#         continue
-#
-#     if region and settings['AWS_REGION'] != region:
-#         continue
-#
-#     is_target_exists = True
-#
-#
-#     terminate_iam_profile_for_ec2_instances(settings['NAME'])
-#
-# if is_target_exists is False:
-#     mm = list()
-#     if target_name:
-#         mm.append(target_name)
-#     if region:
-#         mm.append(region)
-#     mm = ' in '.join(mm)
-#     print(f'eb environment: {mm} is not found in config.json')
