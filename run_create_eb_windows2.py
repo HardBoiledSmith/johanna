@@ -15,6 +15,14 @@ from run_common import write_file
 from run_create_eb_iam import create_iam_profile_for_ec2_instances
 
 
+options, args = dict(), list()
+
+if __name__ == "__main__":
+    from run_common import parse_args
+
+    options, args = parse_args()
+
+
 def run_create_eb_windows(name, settings, options):
     aws_cli = AWSCli(settings['AWS_REGION'])
 
@@ -54,6 +62,21 @@ def run_create_eb_windows(name, settings, options):
 
     ################################################################################
     print_session(f'create {name}')
+
+    ################################################################################
+    print_message('get gendo golden img arn')
+
+    cmd = ['ec2', 'describe-images']
+    cmd += ['--filters',
+            'Name=name,Values=Gendo_*',
+            'Name=state,Values=available']
+    cmd += ['--query', 'reverse(sort_by(Images, &CreationDate))[:1].ImageId']
+    cmd += ['--output', 'text']
+    cmd += ['--region', 'ap-northeast-2']
+    latest_eb_platform_ami = aws_cli.run(cmd)
+    if not latest_eb_platform_ami:
+        Exception('not exist gendo ami')
+    print_message(f'selected latest eb platform ami : {latest_eb_platform_ami}')
 
     ################################################################################
     print_message('get vpc id')
@@ -152,7 +175,7 @@ def run_create_eb_windows(name, settings, options):
     subprocess.Popen(['rm', '-rf', f'./{name}/.git'], cwd=template_path).communicate()
     subprocess.Popen(['rm', '-rf', f'./{name}/.gitignore'], cwd=template_path).communicate()
 
-    lines = read_file(f'{template_path}/{name}/_provisioning/.ebextensions/{name}.config.sample')
+    lines = read_file(f'{template_path}/{name}/_provisioning/.ebextensions/{name}.config.sample2')
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
     lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
@@ -319,6 +342,12 @@ def run_create_eb_windows(name, settings, options):
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
+    oo['OptionName'] = 'ImageId'
+    oo['Value'] = latest_eb_platform_ami
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'InstanceType'
     oo['Value'] = 't3.medium'
     option_settings.append(oo)
@@ -452,7 +481,7 @@ def run_create_eb_windows(name, settings, options):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.6.8 running IIS 10.0']
+    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.6.6 running IIS 10.0']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
@@ -534,7 +563,7 @@ def run_create_eb_windows(name, settings, options):
         cmd += ['--desired-capacity', aws_asg_min_value]
         aws_cli.run(cmd)
 
-        print_message('describe cloudwatch alrams')
+        print_message('describe cloudwatch alarms')
 
         ll = list()
         cmd = ['cloudwatch', 'describe-alarms']
@@ -551,3 +580,25 @@ def run_create_eb_windows(name, settings, options):
                 cmd = ['cloudwatch', 'delete-alarms']
                 cmd += ['--alarm-names', alarm]
                 aws_cli.run(cmd)
+
+
+################################################################################
+#
+# start
+#
+################################################################################
+print_session('create eb')
+
+################################################################################
+
+eb = env['elasticbeanstalk']
+
+
+for eb_env in eb['ENVIRONMENTS']:
+    if eb_env['TYPE'] == 'django':
+        continue
+    if eb_env['TYPE'] == 'windows':
+        run_create_eb_windows(eb_env['NAME'], eb_env, options)
+    else:
+        print(f"\"{eb_env['TYPE']}\" is not supported")
+        raise Exception()
