@@ -11,9 +11,9 @@ from run_common import print_message
 
 
 def create_route53_health_check(settings):
-
     aws_cli = AWSCli()
     name = settings['NAME']
+    print_message('create Route53 health check: %s' % name)
 
     cmd = ['route53', 'create-health-check']
     timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M')
@@ -37,7 +37,6 @@ def create_route53_health_check(settings):
 
     cmd += ['--health-check-config', json.dumps(dd)]
     rr = aws_cli.run(cmd)
-    print(rr)
 
     healthcheck_id = rr['HealthCheck']['Id']
     cmd = ['route53', 'change-tags-for-resource']
