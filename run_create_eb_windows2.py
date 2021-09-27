@@ -15,14 +15,6 @@ from run_common import write_file
 from run_create_eb_iam import create_iam_profile_for_ec2_instances
 
 
-options, args = dict(), list()
-
-if __name__ == "__main__":
-    from run_common import parse_args
-
-    options, args = parse_args()
-
-
 def run_create_eb_windows(name, settings, options):
     aws_cli = AWSCli(settings['AWS_REGION'])
 
@@ -580,25 +572,3 @@ def run_create_eb_windows(name, settings, options):
                 cmd = ['cloudwatch', 'delete-alarms']
                 cmd += ['--alarm-names', alarm]
                 aws_cli.run(cmd)
-
-
-################################################################################
-#
-# start
-#
-################################################################################
-print_session('create eb')
-
-################################################################################
-
-eb = env['elasticbeanstalk']
-
-
-for eb_env in eb['ENVIRONMENTS']:
-    if eb_env['TYPE'] == 'django':
-        continue
-    if eb_env['TYPE'] == 'windows':
-        run_create_eb_windows(eb_env['NAME'], eb_env, options)
-    else:
-        print(f"\"{eb_env['TYPE']}\" is not supported")
-        raise Exception()
