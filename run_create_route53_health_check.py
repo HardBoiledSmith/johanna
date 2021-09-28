@@ -31,8 +31,7 @@ def create_route53_health_check(settings):
         "Inverted": False,
         "Disabled": False,
         "EnableSNI": True,
-        "Regions": ["us-east-1", "us-west-1", "us-west-2", "eu-west-1", "ap-southeast-1", "ap-southeast-2",
-                    "ap-northeast-1", "sa-east-1"]
+        "Regions": ["us-east-1", "us-west-1", "ap-southeast-1"]
     }
 
     cmd += ['--health-check-config', json.dumps(dd)]
