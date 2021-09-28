@@ -31,8 +31,8 @@ def run_create_sns_topic(name, settings):
         cmd += ['--notification-endpoint', settings['EMAIL']]
         aws_cli.run(cmd)
 
-    if 'PAGERDUTYAPPKEY' in settings and settings['PAGERDUTYAPPKEY']:
-        print_message(f'create an email subscription for sns topic: {name}')
+    if settings.get('PAGERDUTYAPPKEY'):
+        print_message(f'create an pagerduty subscription for sns topic: {name}')
         cmd = ['sns', 'subscribe']
         cmd += ['--topic-arn', result['TopicArn']]
         cmd += ['--protocol', 'https']
