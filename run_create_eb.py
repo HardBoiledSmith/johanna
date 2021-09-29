@@ -3,7 +3,7 @@
 from env import env
 from run_common import print_session
 from run_create_eb_django import run_create_eb_django
-from run_create_eb_windows import run_create_eb_windows
+from run_create_eb_windows2 import run_create_eb_windows
 
 options, args = dict(), list()
 
