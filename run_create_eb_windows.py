@@ -56,6 +56,21 @@ def run_create_eb_windows(name, settings, options):
     print_session(f'create {name}')
 
     ################################################################################
+    print_message('get gendo golden img arn')
+
+    cmd = ['ec2', 'describe-images']
+    cmd += ['--filters',
+            'Name=name,Values=Gendo_*',
+            'Name=state,Values=available']
+    cmd += ['--query', 'reverse(sort_by(Images, &CreationDate))[:1].ImageId']
+    cmd += ['--output', 'text']
+    cmd += ['--region', 'ap-northeast-2']
+    latest_eb_platform_ami = aws_cli.run(cmd)
+    if not latest_eb_platform_ami:
+        Exception('not exist gendo ami')
+    print_message(f'selected latest eb platform ami : {latest_eb_platform_ami}')
+
+    ################################################################################
     print_message('get vpc id')
 
     rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
@@ -319,6 +334,12 @@ def run_create_eb_windows(name, settings, options):
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
+    oo['OptionName'] = 'ImageId'
+    oo['Value'] = latest_eb_platform_ami
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'InstanceType'
     oo['Value'] = 't3.medium'
     option_settings.append(oo)
@@ -452,7 +473,7 @@ def run_create_eb_windows(name, settings, options):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.6.8 running IIS 10.0']
+    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.7.1 running IIS 10.0']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
@@ -534,7 +555,7 @@ def run_create_eb_windows(name, settings, options):
         cmd += ['--desired-capacity', aws_asg_min_value]
         aws_cli.run(cmd)
 
-        print_message('describe cloudwatch alrams')
+        print_message('describe cloudwatch alarms')
 
         ll = list()
         cmd = ['cloudwatch', 'describe-alarms']
