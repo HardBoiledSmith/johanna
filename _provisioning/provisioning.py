@@ -133,7 +133,7 @@ def _preprocess(hostname):
 
     _print_line_number()
 
-    node_version = 'v14.17.2'
+    node_version = 'v14.18.0'
     _run(['wget', 'https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh'], cwd='/root')
     _run(['chmod', '+x', 'install.sh'], cwd='/root')
     _run(['./install.sh'], cwd='/root')
@@ -158,7 +158,6 @@ def _preprocess(hostname):
     env['NVM_DIR'] = '/root/.nvm'
     env['NVM_RC_VERSION'] = ''
     env['PATH'] = ('/root/.nvm/versions/node/%s/bin:' % node_version) + env['PATH']
-    _run(['npm', 'install', '-g', 'npm@6.14.11'])
 
     _print_line_number()
 
