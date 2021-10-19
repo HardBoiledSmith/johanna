@@ -1,0 +1,8 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/_provisioning"
+    schedule:
+      interval: "daily"
+    reviewers:
+      - "HardBoiledSmith/code-reviewer"
