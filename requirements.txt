@@ -1,2 +1,0 @@
-awscli==1.19.13
-colorama==0.4.4
