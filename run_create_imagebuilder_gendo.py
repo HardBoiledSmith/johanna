@@ -127,7 +127,7 @@ def run_create_image_builder(options):
     cmd = ['elasticbeanstalk', 'describe-platform-version']
     cmd += ['--region', 'ap-northeast-2']
     cmd += ['--platform-arn',
-            'arn:aws:elasticbeanstalk:ap-northeast-2::platform/IIS 10.0 running on 64bit Windows Server 2016/2.7.1']
+            'arn:aws:elasticbeanstalk:ap-northeast-2::platform/IIS 10.0 running on 64bit Windows Server 2016/2.7.2']
     cmd += ['--query', 'PlatformDescription.CustomAmiList']
     rr = aws_cli.run(cmd)
 
@@ -202,6 +202,8 @@ def run_create_image_builder(options):
     cmd = ['imagebuilder', 'start-image-pipeline-execution']
     cmd += ['--image-pipeline-arn', gendo_pipeline_arn]
     aws_cli.run(cmd)
+
+
 
     if update_required:
         print_session('Pleas Check Your eb platfrom version. \n'
