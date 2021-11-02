@@ -203,8 +203,6 @@ def run_create_image_builder(options):
     cmd += ['--image-pipeline-arn', gendo_pipeline_arn]
     aws_cli.run(cmd)
 
-
-
     if update_required:
         print_session('Pleas Check Your eb platfrom version. \n'
                       f'latest eb platform ami : {latest_eb_platform_ami}\n'
