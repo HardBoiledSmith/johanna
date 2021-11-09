@@ -4,5 +4,8 @@ updates:
     directory: "/_provisioning"
     schedule:
       interval: "weekly"
+      day: "wednesday"
+      time: "09:00"
+      timezone: "Asia/Seoul"
     reviewers:
       - "HardBoiledSmith/code-reviewer"
