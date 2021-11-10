@@ -3,6 +3,8 @@ updates:
   - package-ecosystem: "pip"
     directory: "/_provisioning"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
+      time: "00:00"
+      timezone: "Asia/Seoul"
     reviewers:
       - "HardBoiledSmith/code-reviewer"
