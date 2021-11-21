@@ -79,7 +79,11 @@ def run_create_s3_vue(name, settings, options):
     ################################################################################
     print_message('configure %s' % name)
 
-    lines = read_file('template/%s/%s/static/settings-local-sample.js' % (git_folder_name, name))
+    sp = 'template/%s/%s/static/settings-local-sample.js' % (git_folder_name, name)
+    if not os.path.exists(sp):
+        sp = 'template/%s/%s/public/settings-local-sample.js' % (git_folder_name, name)
+
+    lines = read_file(sp)
     option_list = list()
     option_list.append(['appVersion', git_hash_app])
     option_list.append(['phase', phase])
