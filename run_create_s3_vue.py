@@ -79,7 +79,11 @@ def run_create_s3_vue(name, settings, options):
     ################################################################################
     print_message('configure %s' % name)
 
-    lines = read_file('template/%s/%s/static/settings-local-sample.js' % (git_folder_name, name))
+    sp = 'template/%s/%s/static/settings-local-sample.js' % (git_folder_name, name)
+    if not os.path.exists(sp):
+        sp = 'template/%s/%s/public/settings-local-sample.js' % (git_folder_name, name)
+
+    lines = read_file(sp)
     option_list = list()
     option_list.append(['appVersion', git_hash_app])
     option_list.append(['phase', phase])
@@ -88,7 +92,7 @@ def run_create_s3_vue(name, settings, options):
         option_list.append([key, value])
     for oo in option_list:
         lines = re_sub_lines(lines, '^(const %s) .*' % oo[0], '\\1 = \'%s\'' % oo[1])
-    write_file('template/%s/%s/static/settings-local.js' % (git_folder_name, name), lines)
+    write_file(sp, lines)
 
     ################################################################################
     print_message('npm build')
