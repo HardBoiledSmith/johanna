@@ -179,7 +179,7 @@ def run_create_eb_windows(name, settings, options):
     lines = re_sub_lines(lines, 'SCALE_IN_THRESHOLD', scale_in_threshold)
     write_file(f'{template_path}/{name}/_provisioning/.ebextensions/{name}.config', lines)
     lines = read_file(
-        f'{template_path}/{name}/_provisioning/configuration/Users/vagrant/Desktop/{name}_exe/settings_local_sample.py')
+        f'{template_path}/{name}/_provisioning/configuration/hbsmith/{name}_exe/settings_local_sample.py')
     lines = re_sub_lines(lines, '^(DEBUG).*', f'\\1 = {debug}')
     option_list = list()
     option_list.append(['PHASE', phase])
@@ -189,7 +189,7 @@ def run_create_eb_windows(name, settings, options):
     for oo in option_list:
         lines = re_sub_lines(lines, f'^({oo[0]}) .*', f'\\1 = \'{oo[1]}\'')
     write_file(
-        f'{template_path}/{name}/_provisioning/configuration/Users/vagrant/Desktop/{name}_exe/settings_local.py', lines)
+        f'{template_path}/{name}/_provisioning/configuration/hbsmith/{name}_exe/settings_local.py', lines)
 
     ################################################################################
     print_message('download artifact')
