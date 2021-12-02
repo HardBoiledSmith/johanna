@@ -132,6 +132,9 @@ def run_create_lambda_sqs(function_name, settings, options):
                '--zip-file', 'fileb://deploy.zip']
         result = aws_cli.run(cmd, cwd=deploy_folder)
 
+        print_message('wait few seconds until function is updated')
+        time.sleep(10)
+
         function_arn = result['FunctionArn']
 
         cmd = ['lambda', 'update-function-configuration',
