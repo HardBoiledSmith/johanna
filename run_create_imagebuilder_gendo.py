@@ -61,6 +61,20 @@ def run_create_image_builder(options):
     eb_platform_version = 'IIS 10.0 running on 64bit Windows Server 2016/2.8.0'
     str_timestamp = str(int(time.time()))
 
+    print_session('elastic beanstalk ami version check')
+
+    cmd = ['elasticbeanstalk', 'describe-platform-version']
+    cmd += ['--region', 'ap-northeast-2']
+    cmd += ['--platform-arn',
+            f'arn:aws:elasticbeanstalk:ap-northeast-2::platform/{eb_platform_version}']
+    cmd += ['--query', 'PlatformDescription.CustomAmiList']
+    rr = aws_cli.run(cmd)
+
+    eb_platform_ami = ''
+    for vv in rr:
+        if vv['VirtualizationType'] == 'hvm':
+            eb_platform_ami = vv['ImageId']
+
     print_session('create component')
 
     gendo_component_name = f'gendo_provisioning_component_{str_timestamp}'
@@ -128,18 +142,6 @@ def run_create_image_builder(options):
     cmd += ['--output', 'text']
     cmd += ['--region', 'ap-northeast-2']
     latest_eb_platform_ami = aws_cli.run(cmd)
-
-    cmd = ['elasticbeanstalk', 'describe-platform-version']
-    cmd += ['--region', 'ap-northeast-2']
-    cmd += ['--platform-arn',
-            f'arn:aws:elasticbeanstalk:ap-northeast-2::platform/{eb_platform_version}']
-    cmd += ['--query', 'PlatformDescription.CustomAmiList']
-    rr = aws_cli.run(cmd)
-
-    eb_platform_ami = ''
-    for vv in rr:
-        if vv['VirtualizationType'] == 'hvm':
-            eb_platform_ami = vv['ImageId']
 
     update_required = False
     if latest_eb_platform_ami.strip() != eb_platform_ami.strip():
