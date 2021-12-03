@@ -202,7 +202,7 @@ def run_create_image_builder(options):
     rr = aws_cli.run(cmd)
     gendo_distributions_arn = rr['distributionConfigurationArn']
 
-    ###########################################################################
+    ##########################################################################
     print_session('create pipeline')
 
     pipeline_name = f'gendo_pipeline_{str_timestamp}'
