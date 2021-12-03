@@ -56,7 +56,7 @@ def run_create_image_builder(options):
 
     instance_profile_name, role_arn = create_iam_profile_for_imagebuilder(name)
 
-    ############################################################################
+    ###########################################################################
     semantic_version = '0.0.0'
     eb_platform_version = 'IIS 10.0 running on 64bit Windows Server 2016/2.8.0'
     str_timestamp = str(int(time.time()))
