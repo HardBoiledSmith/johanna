@@ -105,15 +105,6 @@ def run_create_image_builder(options):
     recipe_component['componentArn'] = gendo_component_arn
     recipe_components.append(recipe_component)
 
-    cmd = ['imagebuilder', 'list-components']
-    cmd += ['--owner', 'Amazon']
-    cmd += ['--filters', 'name=name,values="aws-cli-version-2-windows"']
-    rr = aws_cli.run(cmd)
-    recipe_component = dict()
-    arn = rr['componentVersionList'][-1]['arn']
-    recipe_component['componentArn'] = arn
-    recipe_components.append(recipe_component)
-
     cmd = ['ec2', 'describe-images']
     cmd += ['--owner', 'amazon']
     cmd += ['--filters',
