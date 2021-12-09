@@ -51,12 +51,12 @@ def run_create_image_builder(options):
 
     subprocess.Popen(['rm', '-rf', './%s/.git' % name], cwd=template_path).communicate()
     subprocess.Popen(['rm', '-rf', './%s/.gitignore' % name], cwd=template_path).communicate()
-    ###########################################################################
+    ############################################################################
     print_session('create role')
 
     instance_profile_name, role_arn = create_iam_profile_for_imagebuilder(name)
 
-    ###########################################################################
+    ############################################################################
     semantic_version = '0.0.0'
     eb_platform_version = 'IIS 10.0 running on 64bit Windows Server 2016/2.8.0'
     str_timestamp = str(int(time.time()))
@@ -179,7 +179,7 @@ def run_create_image_builder(options):
     rr = aws_cli.run(cmd)
     gendo_infrastructure_arn = rr['infrastructureConfigurationArn']
 
-    ############################################################################
+    ###########################################################################
     print_session('create distribution')
 
     distributions = [
@@ -202,7 +202,7 @@ def run_create_image_builder(options):
     rr = aws_cli.run(cmd)
     gendo_distributions_arn = rr['distributionConfigurationArn']
 
-    ##########################################################################
+    ###########################################################################
     print_session('create pipeline')
 
     pipeline_name = f'gendo_pipeline_{str_timestamp}'
@@ -217,7 +217,7 @@ def run_create_image_builder(options):
 
     gendo_pipeline_arn = rr['imagePipelineArn']
 
-    ##########################################################################
+    ###########################################################################
     print_session('excution pipeline for image')
     cmd = ['imagebuilder', 'start-image-pipeline-execution']
     cmd += ['--image-pipeline-arn', gendo_pipeline_arn]
