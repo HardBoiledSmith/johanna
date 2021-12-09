@@ -179,7 +179,7 @@ def run_create_image_builder(options):
     rr = aws_cli.run(cmd)
     gendo_infrastructure_arn = rr['infrastructureConfigurationArn']
 
-    ###########################################################################
+    ############################################################################
     print_session('create distribution')
 
     distributions = [
