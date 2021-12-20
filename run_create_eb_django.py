@@ -478,7 +478,7 @@ def run_create_eb_django(name, settings, options):
         cmd = ['logs', 'put-metric-filter']
         cmd += ['--filter-name', f'{eb_environment_name}_nginx_error_log']
         cmd += ['--log-group-name', f'/aws/elasticbeanstalk/{eb_environment_name}/var/log/nginx/error.log']
-        cmd += ['--filter-pattern', '']
+        cmd += ['--filter-pattern', '- "access forbidden by rule"']
         cmd += ['--metric-transformations', f'metricName={eb_environment_name},'
                                             f'metricNamespace={metric_name_space},'
                                             f'metricValue=1,'
