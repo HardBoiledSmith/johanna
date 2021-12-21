@@ -3,6 +3,9 @@ import json
 import os
 import subprocess
 import time
+from datetime import datetime
+
+from pytz import timezone
 
 from run_common import AWSCli
 from run_common import print_message
@@ -55,7 +58,22 @@ def run_create_image_builder(options):
 
     ############################################################################
     semantic_version = '0.0.0'
+    eb_platform_version = 'IIS 10.0 running on 64bit Windows Server 2016/2.8.0'
     str_timestamp = str(int(time.time()))
+
+    print_session('elastic beanstalk ami version check')
+
+    cmd = ['elasticbeanstalk', 'describe-platform-version']
+    cmd += ['--region', 'ap-northeast-2']
+    cmd += ['--platform-arn',
+            f'arn:aws:elasticbeanstalk:ap-northeast-2::platform/{eb_platform_version}']
+    cmd += ['--query', 'PlatformDescription.CustomAmiList']
+    rr = aws_cli.run(cmd)
+
+    eb_platform_ami = ''
+    for vv in rr:
+        if vv['VirtualizationType'] == 'hvm':
+            eb_platform_ami = vv['ImageId']
 
     print_session('create component')
 
@@ -67,7 +85,7 @@ def run_create_image_builder(options):
 
     for ll in tmp_lines:
         ll = ll.replace('\n', '')
-        tt = f'{" " * 14}pip install {ll}\n'
+        tt = f'{" " * 14}& pip install {ll}\n'
         lines.append(tt)
     pp = ''.join(lines)
 
@@ -77,20 +95,21 @@ def run_create_image_builder(options):
         with open(sample_filename_path, 'r') as f:
             tmp_list = f.readlines()
             for line in tmp_list:
-                if 'requirements.txt' in line:
+                if 'REQUIREMENTS.TXT' in line:
                     ff.write(pp)
                 else:
                     ff.write(line)
 
-    tag0 = 'git_hash_johanna=%s' % git_hash_johanna.decode('utf-8').strip()
-    tag1 = 'git_hash_%s=%s' % (name, git_hash_app.decode('utf-8').strip())
+    git_hash_johanna_tag = f"git_hash_johanna={git_hash_johanna.decode('utf-8').strip()}"
+    git_hash_gendo_tag = f"git_hash_{name}={git_hash_app.decode('utf-8').strip()}"
+    eb_platform_version_tag = f'eb_platform={eb_platform_version}'
 
     cmd = ['imagebuilder', 'create-component']
     cmd += ['--name', gendo_component_name]
     cmd += ['--semantic-version', semantic_version]
     cmd += ['--platform', 'Windows']
     cmd += ['--supported-os-versions', 'Microsoft Windows Server 2016']
-    cmd += ['--tags', f'{tag0},{tag1}']
+    cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{eb_platform_version_tag}']
     cmd += ['--data', 'file://template/gendo/gendo/_provisioning/gendo_image.yml']
 
     rr = aws_cli.run(cmd)
@@ -105,15 +124,6 @@ def run_create_image_builder(options):
     recipe_component['componentArn'] = gendo_component_arn
     recipe_components.append(recipe_component)
 
-    cmd = ['imagebuilder', 'list-components']
-    cmd += ['--owner', 'Amazon']
-    cmd += ['--filters', 'name=name,values="aws-cli-version-2-windows"']
-    rr = aws_cli.run(cmd)
-    recipe_component = dict()
-    arn = rr['componentVersionList'][-1]['arn']
-    recipe_component['componentArn'] = arn
-    recipe_components.append(recipe_component)
-
     cmd = ['ec2', 'describe-images']
     cmd += ['--owner', 'amazon']
     cmd += ['--filters',
@@ -124,21 +134,11 @@ def run_create_image_builder(options):
     cmd += ['--region', 'ap-northeast-2']
     latest_eb_platform_ami = aws_cli.run(cmd)
 
-    cmd = ['elasticbeanstalk', 'describe-platform-version']
-    cmd += ['--region', 'ap-northeast-2']
-    cmd += ['--platform-arn',
-            'arn:aws:elasticbeanstalk:ap-northeast-2::platform/IIS 10.0 running on 64bit Windows Server 2016/2.8.0']
-    cmd += ['--query', 'PlatformDescription.CustomAmiList']
-    rr = aws_cli.run(cmd)
-
-    eb_platform_ami = ''
-    for vv in rr:
-        if vv['VirtualizationType'] == 'hvm':
-            eb_platform_ami = vv['ImageId']
-
     update_required = False
     if latest_eb_platform_ami.strip() != eb_platform_ami.strip():
         update_required = True
+
+    base_ami_tag = f'base_ami_id={eb_platform_ami}'
 
     recipe_name = f'gendo_recipe_{str_timestamp}'
     cmd = ['imagebuilder', 'create-image-recipe']
@@ -147,11 +147,16 @@ def run_create_image_builder(options):
     cmd += ['--semantic-version', semantic_version]
     cmd += ['--components', json.dumps(recipe_components)]
     cmd += ['--parent-image', eb_platform_ami]
+    cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{eb_platform_version_tag}, {base_ami_tag}']
     rr = aws_cli.run(cmd)
     gendo_recipe_arn = rr['imageRecipeArn']
 
     ############################################################################
     print_session('create infrastructure')
+
+    utc_now = datetime.now(timezone('UTC'))
+    kst_now = utc_now.astimezone(timezone('Asia/Seoul'))
+    kst_date_time_now = kst_now.strftime("%Y년 %m월 %d일 %H:%M")
 
     infrastructure_name = f'gendo_infrastructure_{str_timestamp}'
     cmd = ['imagebuilder', 'create-infrastructure-configuration']
@@ -159,6 +164,8 @@ def run_create_image_builder(options):
     cmd += ['--instance-profile-name', instance_profile_name]
     cmd += ['--instance-types', 'r5.large']
     cmd += ['--terminate-instance-on-failure']
+    cmd += ['--description', f'생성일자 : {kst_date_time_now}']
+    cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{eb_platform_version_tag}, {base_ami_tag}']
     # cmd += ['--sns-topic-arn', topic_arn]
     rr = aws_cli.run(cmd)
     gendo_infrastructure_arn = rr['infrastructureConfigurationArn']
@@ -181,6 +188,8 @@ def run_create_image_builder(options):
     cmd = ['imagebuilder', 'create-distribution-configuration']
     cmd += ['--name', distribution_name]
     cmd += ['--distributions', json.dumps(distributions)]
+    cmd += ['--description', f'생성일자 : {kst_date_time_now}']
+    cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{eb_platform_version_tag}, {base_ami_tag}']
     rr = aws_cli.run(cmd)
     gendo_distributions_arn = rr['distributionConfigurationArn']
 
@@ -193,6 +202,8 @@ def run_create_image_builder(options):
     cmd += ['--image-recipe-arn', gendo_recipe_arn]
     cmd += ['--infrastructure-configuration-arn', gendo_infrastructure_arn]
     cmd += ['--distribution-configuration-arn', gendo_distributions_arn]
+    cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{eb_platform_version_tag}, {base_ami_tag}']
+
     rr = aws_cli.run(cmd)
 
     gendo_pipeline_arn = rr['imagePipelineArn']
