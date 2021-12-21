@@ -190,8 +190,8 @@ def run_create_lambda_ses_sqs(function_name, settings, options):
                '--handler', 'lambda.handler',
                '--runtime', 'python3.7',
                '--timeout', '120']
-        if settings.get('memory_size'):
-            cmd += ['--memory-size', settings['memory_size']]
+        if settings.get('MEMORY_SIZE'):
+            cmd += ['--memory-size', settings['MEMORY_SIZE']]
         aws_cli.run(cmd, cwd=deploy_folder)
 
         print_message('update lambda tags')
@@ -233,8 +233,8 @@ def run_create_lambda_ses_sqs(function_name, settings, options):
            '--runtime', 'python3.7',
            '--tags', ','.join(tags),
            '--timeout', '120']
-    if settings.get('memory_size'):
-        cmd += ['--memory-size', settings['memory_size']]
+    if settings.get('MEMORY_SIZE'):
+        cmd += ['--memory-size', settings['MEMORY_SIZE']]
     aws_cli.run(cmd, cwd=deploy_folder)
 
     print_message('give event permission')
