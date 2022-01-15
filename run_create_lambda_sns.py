@@ -145,6 +145,8 @@ def run_create_lambda_sns(function_name, settings, options):
                '--handler', 'lambda.handler',
                '--runtime', 'python3.8',
                '--timeout', '120']
+        if settings.get('MEMORY_SIZE'):
+            cmd += ['--memory-size', settings['MEMORY_SIZE']]
         aws_cli.run(cmd, cwd=deploy_folder)
 
         print_message('update lambda tags')
@@ -167,6 +169,8 @@ def run_create_lambda_sns(function_name, settings, options):
            '--runtime', 'python3.8',
            '--tags', ','.join(tags),
            '--timeout', '120']
+    if settings.get('MEMORY_SIZE'):
+        cmd += ['--memory-size', settings['MEMORY_SIZE']]
     result = aws_cli.run(cmd, cwd=deploy_folder)
 
     function_arn = result['FunctionArn']
