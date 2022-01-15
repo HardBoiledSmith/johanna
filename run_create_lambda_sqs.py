@@ -142,7 +142,7 @@ def run_create_lambda_sqs(function_name, settings, options):
                '--description', description,
                '--role', role_arn,
                '--handler', 'lambda.handler',
-               '--runtime', 'python3.7',
+               '--runtime', 'python3.8',
                '--timeout', '180']
         aws_cli.run(cmd, cwd=deploy_folder)
 
@@ -182,7 +182,7 @@ def run_create_lambda_sqs(function_name, settings, options):
            '--zip-file', 'fileb://deploy.zip',
            '--role', role_arn,
            '--handler', 'lambda.handler',
-           '--runtime', 'python3.7',
+           '--runtime', 'python3.8',
            '--tags', ','.join(tags),
            '--timeout', '180']
     aws_cli.run(cmd, cwd=deploy_folder)
