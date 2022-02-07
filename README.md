@@ -178,13 +178,18 @@ by [opening support case](https://docs.aws.amazon.com/acm/latest/userguide/acm-l
 1. Go to the company email and click the link to agree to the verify email received from AWS SNS and SES.
 1. run that command `./run_create_lambda.py sachiel_fake_email_save`
 1. run that command `./run_create_lambda.py sachiel_fake_email_delete`
-1. run that command `./run_create_lambda.py gendo_test_fake_mail`
-1. Connect to AWS console and run lambda service gendo_test_fake_mail (Seoul Region)
+1. Please do one of the two methods below.
+   1. Case 1)
+       1. run that command `./run_create_lambda.py gendo_test_fake_mail`
+       1. Connect to AWS console and run lambda service gendo_test_fake_mail (Seoul Region)
+   1. Case 2)
+       1. Log in to the mail service and send an email to the email address you want to test (XXXX@hbsmith-email.io).
 1. Go to the naoko project and set the http://dv-sachiel.hbsmith.io value in the code at https://github.com/HardBoiledSmith/naoko/blob/4e1c7aedbb8856bf804910a9ddae573310681097/naoko/Utility/SettingsManager.cs#L43 to https:// Change to {your dev env name}-dv-sachiel.hbsmith.io"; and build.
 1. run the naoko program. set the URL to <your dev env name>-dv-test.hbsmith.io and start recording.
-1. test page through the received email tab.
-1. Enter test_gendo@hbsmith-email.io in the Email field.
-1. Follow the contents of the test page to the address `test_gendo@hbsmith-email.io`
+1. Go to the Received Email tab on the test page and follow the test procedure.
+1. Follow the guide and enter the email value as referenced below. 
+    1. If you selected Case1 in Step 18, enter test_gendo@hbsmith-email.io in the Email field.
+    1. If you selected Case2 in Step 18, please enter the email address you sent.
 
 # Links
 
