@@ -2,6 +2,7 @@
 import fileinput
 import inspect
 import os
+import platform
 import re
 import subprocess
 import time
@@ -77,11 +78,14 @@ def _read_settings_file(settings_file_path_name):
 def _preprocess(hostname):
     _print_line_number()
 
-    _file_line_replace('/etc/sysconfig/network', '^HOSTNAME=localhost.localdomain$', 'HOSTNAME=%s' % hostname)
-    with open('/etc/hosts', 'a') as f:
-        f.write('127.0.0.1 %s\n' % hostname)
-    _run(['hostname', hostname])
-    _run(['/etc/init.d/network', 'restart'])
+    if platform.processor() == 'aarch64':
+        _run(['sudo', 'hostnamectl', 'set-hostname', hostname])
+    else:
+        _file_line_replace('/etc/sysconfig/network', '^HOSTNAME=localhost.localdomain$', 'HOSTNAME=%s' % hostname)
+        with open('/etc/hosts', 'a') as f:
+            f.write('127.0.0.1 %s\n' % hostname)
+        _run(['hostname', hostname])
+        _run(['/etc/init.d/network', 'restart'])
 
     _print_line_number()
 
@@ -101,33 +105,41 @@ def _preprocess(hostname):
     _print_line_number()
 
     subprocess.Popen(['chpasswd'], stdin=PIPE).communicate(b'root:1234qwer')
-    _file_line_replace('/etc/ssh/sshd_config', '^#PermitRootLogin yes$', 'PermitRootLogin yes')
-    _file_line_replace('/etc/ssh/sshd_config', '^PasswordAuthentication no$', 'PasswordAuthentication yes')
-    _run(['service', 'sshd', 'restart'])
+    if platform.processor() != 'aarch64':
+        _file_line_replace('/etc/ssh/sshd_config', '^#PermitRootLogin yes$', 'PermitRootLogin yes')
+        _file_line_replace('/etc/ssh/sshd_config', '^PasswordAuthentication no$', 'PasswordAuthentication yes')
+        _run(['service', 'sshd', 'restart'])
 
     _print_line_number()
 
-    file_path_name = '/vagrant/requirements_rpm.txt'
-    if os.path.exists(file_path_name):
-        with open(file_path_name, 'r') as f:
-            lines = f.readlines()
-            for ll in lines:
-                _run(['yum', '-y', 'install', ll.strip()])
+    if platform.processor() != 'aarch64':
+        file_path_name = '/vagrant/requirements_rpm.txt'
+        if os.path.exists(file_path_name):
+            with open(file_path_name, 'r') as f:
+                lines = f.readlines()
+                for ll in lines:
+                    _run(['yum', '-y', 'install', ll.strip()])
 
     _print_line_number()
 
-    _run(['/usr/bin/pip-3.8', 'install', '-U', 'pip'])
-    file_path_name = '/vagrant/requirements.txt'
-    if os.path.exists(file_path_name):
-        with open(file_path_name, 'r') as f:
-            lines = f.readlines()
-            for ll in lines:
-                _run(['pip3', 'install', ll.strip()])
+    if platform.processor() == 'aarch64':
+        _run(['/usr/bin/python3.8', '-m', 'pip', 'install', '--upgrade', 'pip'])
+    else:
+        _run(['/usr/bin/pip-3.8', 'install', '-U', 'pip'])
+        file_path_name = '/vagrant/requirements.txt'
+        if os.path.exists(file_path_name):
+            with open(file_path_name, 'r') as f:
+                lines = f.readlines()
+                for ll in lines:
+                    _run(['pip3', 'install', ll.strip()])
 
     _print_line_number()
 
-    _run(['pip3', 'uninstall', '-y', 'awscli'])
-    _run(['wget', '-O', 'awscliv2.zip', 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip'], cwd='/root')
+    if platform.processor() == 'aarch64':
+        _run(['wget', '-O', 'awscliv2.zip', 'https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip'], cwd='/root')
+    else:
+        _run(['pip3', 'uninstall', '-y', 'awscli'])
+        _run(['wget', '-O', 'awscliv2.zip', 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip'], cwd='/root')
     _run(['unzip', 'awscliv2.zip'], cwd='/root')
     _run(['./aws/install'], cwd='/root')
 
@@ -184,14 +196,14 @@ def main():
 
     cmd_common = ['cp', '--backup']
     file_list = list()
-    file_list.append('/root/.ssh/id_rsa')
+    file_list.append('/root/.ssh/id_ed25519')
     for ff in file_list:
         cmd = cmd_common + ['/vagrant/configuration' + ff, ff]
         _run(cmd)
 
     _print_line_number()
 
-    _run(['chmod', '600', '/root/.ssh/id_rsa'])
+    _run(['chmod', '600', '/root/.ssh/id_ed25519'])
     is_success = False
     for ii in range(10):
         print('Git clone try count: %d' % (ii + 1))
