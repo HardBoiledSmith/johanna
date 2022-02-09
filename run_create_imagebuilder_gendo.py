@@ -58,7 +58,7 @@ def run_create_image_builder(options):
 
     ############################################################################
     semantic_version = '0.0.0'
-    eb_platform_version = 'IIS 10.0 running on 64bit Windows Server 2016/2.8.1'
+    eb_platform_version = 'IIS 10.0 running on 64bit Windows Server 2016/2.8.2'
     str_timestamp = str(int(time.time()))
 
     print_session('elastic beanstalk ami version check')
