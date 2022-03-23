@@ -109,6 +109,7 @@ You can use this on web GUI
     - https://docs.sentry.io/product/releases/suspect-commits/#using-the-cli
 - create or run vagrant using `johanna/_provisioning $ vagrant up`
 - (optional) Run `BRANCH=<branch name> vagrant up` for provisioning with specific git branch.
+- (optional) Run ``ARCH=`arch` vagrant up`` for provisioning with Apple Silicon (ARM64) support.
 - connect to vagrant using `$ ssh root@dv-johanna.hbsmith.io` or `$ ssh root@192.168.124.5` 
 - move to johanna folder using  `$ cd /opt/johanna`
 - run provisioning script using `/opt/johanna $ ./run.py`
