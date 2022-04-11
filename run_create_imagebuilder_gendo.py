@@ -92,10 +92,10 @@ def run_create_image_builder(options):
     copyfile('template/gendo/gendo/_provisioning/gendo_image_provisioning_part1_sample.yml',
              'template/gendo/gendo/_provisioning/gendo_image_provisioning_part1.yml')
 
-    sample2_filename_path = 'template/gendo/gendo/_provisioning/gendo_image_provisioning_part2_sample.yml'
+    sample_filename_path = 'template/gendo/gendo/_provisioning/gendo_image_provisioning_part2_sample.yml'
     filename_path = 'template/gendo/gendo/_provisioning/gendo_image_provisioning_part2.yml'
     with open(filename_path, 'w') as ff:
-        with open(sample2_filename_path, 'r') as f:
+        with open(sample_filename_path, 'r') as f:
             tmp_list = f.readlines()
             for line in tmp_list:
                 if 'REQUIREMENTS.TXT' in line:
