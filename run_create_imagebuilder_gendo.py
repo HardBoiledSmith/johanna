@@ -77,8 +77,6 @@ def run_create_image_builder(options):
 
     print_session('create component')
 
-    gendo_component_name = f'gendo_provisioning_component_{str_timestamp}'
-
     file_path_name = 'template/gendo/gendo/requirements.txt'
     tmp_lines = read_file(file_path_name)
     lines = list()
@@ -107,6 +105,7 @@ def run_create_image_builder(options):
     git_hash_gendo_tag = f"git_hash_{name}={git_hash_app.decode('utf-8').strip()}"
     eb_platform_version_tag = f'eb_platform={eb_platform_version}'
 
+    gendo_component_name = f'gendo_provisioning_part1_component_{str_timestamp}'
     cmd = ['imagebuilder', 'create-component']
     cmd += ['--name', gendo_component_name]
     cmd += ['--semantic-version', semantic_version]
@@ -118,6 +117,7 @@ def run_create_image_builder(options):
     rr = aws_cli.run(cmd)
     gendo_component_arn1 = rr['componentBuildVersionArn']
 
+    gendo_component_name = f'gendo_provisioning_part2_component_{str_timestamp}'
     cmd = ['imagebuilder', 'create-component']
     cmd += ['--name', gendo_component_name]
     cmd += ['--semantic-version', semantic_version]
@@ -137,6 +137,8 @@ def run_create_image_builder(options):
     recipe_component = dict()
     recipe_component['componentArn'] = gendo_component_arn1
     recipe_components.append(recipe_component)
+
+    recipe_component = dict()
     recipe_component['componentArn'] = gendo_component_arn2
     recipe_components.append(recipe_component)
 
