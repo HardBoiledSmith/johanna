@@ -4,8 +4,8 @@ import os
 import subprocess
 import time
 from datetime import datetime
-
 from pytz import timezone
+from shutil import copyfile
 
 from run_common import AWSCli
 from run_common import print_message
@@ -89,10 +89,13 @@ def run_create_image_builder(options):
         lines.append(tt)
     pp = ''.join(lines)
 
-    sample_filename_path = 'template/gendo/gendo/_provisioning/gendo_image_sample.yml'
-    filename_path = 'template/gendo/gendo/_provisioning/gendo_image.yml'
+    copyfile('template/gendo/gendo/_provisioning/gendo_image_provisioning_part1_sample.yml',
+             'template/gendo/gendo/_provisioning/gendo_image_provisioning_part1.yml')
+
+    sample2_filename_path = 'template/gendo/gendo/_provisioning/gendo_image_provisioning_part2_sample.yml'
+    filename_path = 'template/gendo/gendo/_provisioning/gendo_image_provisioning_part2.yml'
     with open(filename_path, 'w') as ff:
-        with open(sample_filename_path, 'r') as f:
+        with open(sample2_filename_path, 'r') as f:
             tmp_list = f.readlines()
             for line in tmp_list:
                 if 'REQUIREMENTS.TXT' in line:
@@ -110,10 +113,21 @@ def run_create_image_builder(options):
     cmd += ['--platform', 'Windows']
     cmd += ['--supported-os-versions', 'Microsoft Windows Server 2016']
     cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{eb_platform_version_tag}']
-    cmd += ['--data', 'file://template/gendo/gendo/_provisioning/gendo_image.yml']
+    cmd += ['--data', 'file://template/gendo/gendo/_provisioning/gendo_image_provisioning_part1.yml']
 
     rr = aws_cli.run(cmd)
-    gendo_component_arn = rr['componentBuildVersionArn']
+    gendo_component_arn1 = rr['componentBuildVersionArn']
+
+    cmd = ['imagebuilder', 'create-component']
+    cmd += ['--name', gendo_component_name]
+    cmd += ['--semantic-version', semantic_version]
+    cmd += ['--platform', 'Windows']
+    cmd += ['--supported-os-versions', 'Microsoft Windows Server 2016']
+    cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{eb_platform_version_tag}']
+    cmd += ['--data', 'file://template/gendo/gendo/_provisioning/gendo_image_provisioning_part2.yml']
+
+    rr = aws_cli.run(cmd)
+    gendo_component_arn2 = rr['componentBuildVersionArn']
 
     ############################################################################
     print_session('create recipe')
@@ -121,7 +135,9 @@ def run_create_image_builder(options):
     recipe_components = list()
 
     recipe_component = dict()
-    recipe_component['componentArn'] = gendo_component_arn
+    recipe_component['componentArn'] = gendo_component_arn1
+    recipe_components.append(recipe_component)
+    recipe_component['componentArn'] = gendo_component_arn2
     recipe_components.append(recipe_component)
 
     cmd = ['ec2', 'describe-images']
