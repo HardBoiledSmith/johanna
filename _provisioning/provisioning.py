@@ -80,6 +80,8 @@ def _preprocess(hostname):
 
     if platform.processor() == 'aarch64':
         _run(['sudo', 'hostnamectl', 'set-hostname', hostname])
+        _run(['sudo', 'systemctl', 'stop', 'systemd-resolved.service'])
+        _run(['sudo', 'systemctl', 'disable', 'systemd-resolved.service'])
     else:
         _file_line_replace('/etc/sysconfig/network', '^HOSTNAME=localhost.localdomain$', 'HOSTNAME=%s' % hostname)
         with open('/etc/hosts', 'a') as f:
