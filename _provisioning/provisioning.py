@@ -80,6 +80,8 @@ def _preprocess(hostname):
 
     if platform.processor() == 'aarch64':
         _run(['sudo', 'hostnamectl', 'set-hostname', hostname])
+        _run(['sudo', 'systemctl', 'stop', 'systemd-resolved.service'])
+        _run(['sudo', 'systemctl', 'disable', 'systemd-resolved.service'])
     else:
         _file_line_replace('/etc/sysconfig/network', '^HOSTNAME=localhost.localdomain$', 'HOSTNAME=%s' % hostname)
         with open('/etc/hosts', 'a') as f:
@@ -145,8 +147,8 @@ def _preprocess(hostname):
 
     _print_line_number()
 
-    node_version = 'v14.18.0'
-    _run(['wget', 'https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh'], cwd='/root')
+    node_version = 'v14.19.1'
+    _run(['wget', 'https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh'], cwd='/root')
     _run(['chmod', '+x', 'install.sh'], cwd='/root')
     _run(['./install.sh'], cwd='/root')
 
