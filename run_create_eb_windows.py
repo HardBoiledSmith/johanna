@@ -341,7 +341,7 @@ def run_create_eb_windows(name, settings, options):
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'InstanceType'
-    oo['Value'] = 't3.medium'
+    oo['Value'] = 't3.large'
     option_settings.append(oo)
 
     oo = dict()
@@ -360,6 +360,12 @@ def run_create_eb_windows(name, settings, options):
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'RootVolumeType'
     oo['Value'] = 'gp3'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
+    oo['OptionName'] = 'RootVolumeSize'
+    oo['Value'] = '40'
     option_settings.append(oo)
 
     oo = dict()
@@ -473,7 +479,7 @@ def run_create_eb_windows(name, settings, options):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.9.0 running IIS 10.0']
+    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.9.1 running IIS 10.0']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
