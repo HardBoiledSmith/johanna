@@ -341,7 +341,7 @@ def run_create_eb_windows(name, settings, options):
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'InstanceType'
-    oo['Value'] = 't3.medium'
+    oo['Value'] = 't3.large'
     option_settings.append(oo)
 
     oo = dict()
