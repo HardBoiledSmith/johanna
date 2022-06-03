@@ -57,18 +57,40 @@ def run_create_image_builder(options):
     instance_profile_name, role_arn = create_iam_profile_for_imagebuilder(name)
 
     ############################################################################
-    semantic_version = '0.0.0'
-    eb_platform_version = 'IIS 10.0 running on 64bit Windows Server 2016/2.9.1'
-    str_timestamp = str(int(time.time()))
 
     print_session('elastic beanstalk ami version check')
 
+    cmd = ['ec2', 'describe-images']
+    cmd += ['--owner', 'amazon']
+    cmd += ['--filters',
+            'Name=name,Values=aws-elasticbeanstalk-amzn-??????????.x86_64-WindowsServer2016-V2-hvm-*',
+            'Name=state,Values=available']
+    cmd += ['--query', 'reverse(sort_by(Images, &CreationDate))[:1].ImageId']
+    cmd += ['--output', 'text']
+    cmd += ['--region', 'ap-northeast-2']
+    latest_eb_platform_ami = aws_cli.run(cmd)
+
+    semantic_version = '0.0.0'
+    target_eb_platform_version = 'IIS 10.0 running on 64bit Windows Server 2016/2.10.0'
+    str_timestamp = str(int(time.time()))
     cmd = ['elasticbeanstalk', 'describe-platform-version']
     cmd += ['--region', 'ap-northeast-2']
     cmd += ['--platform-arn',
-            f'arn:aws:elasticbeanstalk:ap-northeast-2::platform/{eb_platform_version}']
+            f'arn:aws:elasticbeanstalk:ap-northeast-2::platform/{target_eb_platform_version}']
     cmd += ['--query', 'PlatformDescription.CustomAmiList']
-    rr = aws_cli.run(cmd)
+
+    try:
+        rr = aws_cli.run(cmd)
+    except ee:
+        if latest_eb_platform_ami.strip() != target_eb_platform_version.strip():
+            print_session('Pleas Check Your eb platfrom version. \n'
+                          f'latest eb platform ami : {latest_eb_platform_ami}\n'
+                          f'eb platform ami {target_eb_platform_version}\n '
+                          'Reference : https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/'
+                          'platforms-supported.html#platforms-supported.net')
+            return
+        raise ee
+
 
     eb_platform_ami = ''
     for vv in rr:
@@ -231,13 +253,6 @@ def run_create_image_builder(options):
     cmd = ['imagebuilder', 'start-image-pipeline-execution']
     cmd += ['--image-pipeline-arn', gendo_pipeline_arn]
     aws_cli.run(cmd)
-
-    if update_required:
-        print_session('Pleas Check Your eb platfrom version. \n'
-                      f'latest eb platform ami : {latest_eb_platform_ami}\n'
-                      f'eb platform ami {eb_platform_ami}\n '
-                      'Reference : https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/'
-                      'platforms-supported.html#platforms-supported.net')
 
 
 ################################################################################
