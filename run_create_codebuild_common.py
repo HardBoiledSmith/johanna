@@ -207,11 +207,10 @@ def create_base_iam_policy(aws_cli, name, settings, role_name):
                     "s3:ListBucket"
                 ],
                 'Resource': [
-                    f"arn:aws:s3:::hbsmith-backup"
+                    "arn:aws:s3:::hbsmith-backup"
                 ]
             }
             dd['Statement'].append(pp)
-
 
         if 'ARTIFACTS' in settings and settings['ARTIFACTS']['type'] == 'S3':
             pp = {
