@@ -171,6 +171,48 @@ def create_base_iam_policy(aws_cli, name, settings, role_name):
             }
             dd['Statement'].append(pp)
 
+        if 'S3_OP_BACKUP_BUCKET' in settings:
+            pp = {
+                'Effect': 'Allow',
+                'Action': [
+                    "s3:ListBucket",
+                    "s3:GetObject",
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectTagging"
+                ],
+                'Resource': [
+                    f"arn:aws:s3:::{settings['S3_OP_BACKUP_BUCKET']}",
+                    f"arn:aws:s3:::{settings['S3_OP_BACKUP_BUCKET']}/*"
+                ]
+            }
+            dd['Statement'].append(pp)
+
+            pp = {
+                'Effect': 'Allow',
+                'Action': [
+                    "s3:PutObject",
+                    "s3:DeleteObject",
+                    "s3:PutObjectAcl",
+                    "s3:PutObjectTagging"
+                ],
+                'Resource': [
+                    f"arn:aws:s3:::hbsmith-backup/{settings['S3_OP_BACKUP_BUCKET']}/*"
+                ],
+            }
+            dd['Statement'].append(pp)
+
+            pp = {
+                'Effect': 'Allow',
+                'Action': [
+                    "s3:ListBucket"
+                ],
+                'Resource': [
+                    f"arn:aws:s3:::hbsmith-backup"
+                ]
+            }
+            dd['Statement'].append(pp)
+
+
         if 'ARTIFACTS' in settings and settings['ARTIFACTS']['type'] == 'S3':
             pp = {
                 'Effect': 'Allow',
