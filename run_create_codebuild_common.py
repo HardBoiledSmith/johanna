@@ -227,6 +227,22 @@ def create_base_iam_policy(aws_cli, name, settings, role_name):
             }
             dd['Statement'].append(pp)
 
+        if 'ASSUME_ROLE_ARN' in settings:
+            if 'arn:aws:iam' not in settings['ASSUME_ROLE_ARN']:
+                print('ERROR! Invalid ARN data')
+                raise Exception()
+
+            pp = {
+                'Effect': 'Allow',
+                'Action': [
+                    'sts:AssumeRole'
+                ],
+                'Resource': [
+                    f"{settings['ASSUME_ROLE_ARN']}",
+                ]
+            }
+            dd['Statement'].append(pp)
+
         cmd = ['iam', 'create-policy']
         cmd += ['--policy-name', policy_name]
         cmd += ['--path', '/service-role/']
