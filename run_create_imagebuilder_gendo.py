@@ -88,7 +88,6 @@ def run_create_image_builder(options):
                           f'eb platform ami {target_eb_platform_version}\n '
                           'Reference : https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/'
                           'platforms-supported.html#platforms-supported.net')
-            return
         raise ee
 
     eb_platform_ami = ''
