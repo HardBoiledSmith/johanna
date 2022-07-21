@@ -85,7 +85,7 @@ def run_create_image_builder(options):
         if latest_eb_platform_ami.strip() != target_eb_platform_version.strip():
             print_session('Pleas Check Your eb platfrom version. \n'
                           f'latest eb platform ami : {latest_eb_platform_ami}\n'
-                          f'eb platform ami {target_eb_platform_version}\n '
+                          f'eb platform ami : {target_eb_platform_version}\n '
                           'Reference : https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/'
                           'platforms-supported.html#platforms-supported.net')
         raise ee
