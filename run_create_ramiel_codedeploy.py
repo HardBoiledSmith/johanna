@@ -33,7 +33,7 @@ print_message('create a user for codedeploy')
 iam_user_name = 'ramiel_codedeploy_iam_session_user'
 iam_role_name = 'ramiel_codedeploy_iam_session_role'
 iam_policy_name = 'ramiel_codedeploy_iam_session_permission'
-cc = ['aws', 'iam', 'create-user']
+cc = ['iam', 'create-user']
 cc += ['--user-name', iam_user_name]
 aws_cli.run(cc)
 
