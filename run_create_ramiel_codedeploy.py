@@ -58,7 +58,7 @@ print_message('create codedeploy resources: applications and deployment groups')
 
 for app in settings['APPLICATIONS']:
     app_name = app['NAME']
-    cc = ['aws', 'deploy', 'create-application']
+    cc = ['deploy', 'create-application']
     cc += ['--application-name', app_name]
     aws_cli.run(cc)
 
@@ -66,7 +66,7 @@ for app in settings['APPLICATIONS']:
         dep_name = dep_group['NAME']
         on_premises_tag_set = dep_group['ON_PREMISES_TAG_SET']
 
-        cc = ['aws', 'deploy', 'create-deployment-group']
+        cc = ['deploy', 'create-deployment-group']
         cc += ['--deployment-group-name', dep_name]
         cc += ['--service-role-arn', 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole']
         if on_premises_tag_set:
