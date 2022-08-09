@@ -22,33 +22,25 @@ region = settings['AWS_REGION']
 
 aws_cli = AWSCli(region)
 
-''' parameter store -> magi
-OP: /CodeDeploy/ramiel/ZIP_OP_RAMIEL_PASSWORD
-QA: /CodeDeploy/ramiel/ZIP_QA_RAMIEL_PASSWORD
-DV: /CodeDeploy/ramiel/ZIP_DV_RAMIEL_PASSWORD
-'''
-
 print_message('create a user for codedeploy')
 
 iam_user_name = 'ramiel_codedeploy_iam_session_user'
-iam_role_name = 'ramiel_codedeploy_iam_session_role'
-iam_policy_name = 'ramiel_codedeploy_iam_session_permission'
 cc = ['iam', 'create-user']
 cc += ['--user-name', iam_user_name]
 aws_cli.run(cc)
 
+iam_policy_name = 'ramiel_codedeploy_iam_session_permission'
 cc = ['iam', 'create-policy']
 cc += ['--policy-name', iam_policy_name]
 cc += ['--policy-document', 'file://aws_iam/aws-codedeploy-ramiel-permission.json']
 rr = result = aws_cli.run(cc)
 policy_arn = rr['Policy']['Arn']
 
+iam_role_name = 'ramiel_codedeploy_iam_session_role'
 cc = ['iam', 'attach-user-policy']
 cc += ['--user-name', iam_user_name]
 cc += ['--policy-arn', policy_arn]
 aws_cli.run(cc)
-
-# TODO: create access key
 
 print_message('create a role for codedeploy')
 
