@@ -67,6 +67,7 @@ for app in settings['APPLICATIONS']:
         on_premises_tag_set = dep_group['ON_PREMISES_TAG_SET']
 
         cc = ['deploy', 'create-deployment-group']
+        cc += ['--application-name', app_name]
         cc += ['--deployment-group-name', dep_name]
         cc += ['--service-role-arn', 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole']
         if on_premises_tag_set:
