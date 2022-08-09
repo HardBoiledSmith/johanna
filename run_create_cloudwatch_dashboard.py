@@ -393,12 +393,7 @@ def run_create_cw_dashboard_ramiel(name, settings):
     print_message(f'create or update cloudwatch dashboard: {dashboard_name}')
 
     template_name = env['template']['NAME']
-
-    filename_path = 'template/%s/cloudwatch/%s.json' % (template_name, dashboard_name)
-    with open(filename_path, 'r') as ff:
-        dashboard_body = json.load(ff)
-
-    dashboard_body = json.dumps(dashboard_body)
+    dashboard_body = f'file://template/{template_name}/cloudwatch/{dashboard_name}.json'
 
     cmd = ['cloudwatch', 'put-dashboard']
     cmd += ['--dashboard-name', dashboard_name]
