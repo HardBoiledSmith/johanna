@@ -27,11 +27,11 @@ print_message('create a user for codedeploy')
 iam_policy_name = 'ramiel_codedeploy_iam_session_permission'
 account_id = aws_cli.get_caller_account_id()
 policy_arn = f'arn:aws:iam::{account_id}:policy/{iam_policy_name}'
-if not aws_cli.get_iam_policy(iam_policy_name):
+if not aws_cli.get_iam_policy(policy_arn):
     cc = ['iam', 'create-policy']
     cc += ['--policy-name', iam_policy_name]
     cc += ['--policy-document', 'file://aws_iam/aws-codedeploy-ramiel-permission.json']
-    result = aws_cli.run(cc)
+    aws_cli.run(cc)
 
 iam_user_name = 'ramiel_codedeploy_iam_session_user'
 rr = aws_cli.get_iam_user(iam_user_name)
@@ -40,16 +40,15 @@ if not rr:
     cc += ['--user-name', iam_user_name]
     aws_cli.run(cc)
 
-rr = aws_cli.get_iam_user_policy(iam_user_name, iam_policy_name)
-if not rr:
+cc = ['iam', 'list-attached-user-policies']
+cc += ['--user-name', iam_user_name]
+rr = aws_cli.run(cc)
+if not rr['AttachedPolicies']:
     cc = ['iam', 'attach-user-policy']
     cc += ['--user-name', iam_user_name]
     cc += ['--policy-arn', policy_arn]
     aws_cli.run(cc)
 
-#
-# TODO: 없으면 추가. 있으면 무시
-#
 print_message('create a role for codedeploy')
 
 iam_role_name = 'ramiel_codedeploy_iam_session_role'
@@ -62,10 +61,11 @@ except Exception:
     cc += ['--role-name', iam_role_name]
     cc += ['--assume-role-policy-document', 'file://aws_iam/aws-codedeploy-ramiel-role.json']
     rr = aws_cli.run(cc)
-role_arn = aws_cli.get_role_arn(iam_role_name)
 
-rr = aws_cli.get_iam_role_policy(iam_role_name, iam_policy_name)
-if not rr:
+cc = ['iam', 'list-attached-role-policies']
+cc += ['--role-name', iam_role_name]
+rr = aws_cli.run(cc)
+if not rr['AttachedPolicies']:
     cc = ['iam', 'attach-role-policy']
     cc += ['--role-name', iam_role_name]
     cc += ['--policy-arn', policy_arn]
