@@ -343,8 +343,10 @@ class AWSCli:
         cmd += ['--policy-name', policy_name]
         return self.run(cmd, ignore_error=True)
 
-    def get_iam_user(self):
+    def get_iam_user(self, user_name=None):
         cmd = ['iam', 'get-user']
+        if user_name:
+            cmd += ['--user-name', user_name]
         return self.run(cmd, ignore_error=True)
 
     def get_iam_user_policy(self, user_name, policy_name):

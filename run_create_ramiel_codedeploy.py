@@ -26,47 +26,50 @@ print_message('create a user for codedeploy')
 
 iam_policy_name = 'ramiel_codedeploy_iam_session_permission'
 account_id = aws_cli.get_caller_account_id()
-policy_arn = f'arn:aws:iam::{account_id}:policy/ramiel_codedeploy_iam_session_permission'
-cc = ['iam', 'get-policy']
-cc += ['--policy-arn', policy_arn]
-rr = aws_cli.run(cc, ignore_error=True)
-if not rr:
+policy_arn = f'arn:aws:iam::{account_id}:policy/{iam_policy_name}'
+if not aws_cli.get_iam_policy(iam_policy_name):
     cc = ['iam', 'create-policy']
     cc += ['--policy-name', iam_policy_name]
     cc += ['--policy-document', 'file://aws_iam/aws-codedeploy-ramiel-permission.json']
-    rr = result = aws_cli.run(cc)
+    result = aws_cli.run(cc)
 
 iam_user_name = 'ramiel_codedeploy_iam_session_user'
-cc = ['iam', 'get-user']
-cc += ['--user-name', iam_user_name]
-rr = aws_cli.run(cc, ignore_error=True)
+rr = aws_cli.get_iam_user(iam_user_name)
 if not rr:
     cc = ['iam', 'create-user']
     cc += ['--user-name', iam_user_name]
     aws_cli.run(cc)
 
+rr = aws_cli.get_iam_user_policy(iam_user_name, iam_policy_name)
+if not rr:
     cc = ['iam', 'attach-user-policy']
     cc += ['--user-name', iam_user_name]
     cc += ['--policy-arn', policy_arn]
     aws_cli.run(cc)
 
+#
+# TODO: 없으면 추가. 있으면 무시
+#
+print_message('create a role for codedeploy')
+
 iam_role_name = 'ramiel_codedeploy_iam_session_role'
-cc = ['iam', 'get-role']
-cc += ['--role-name', iam_role_name]
-rr = aws_cli.run(cc, ignore_error=True)
-if not rr:
+role_arn = None
+# noinspection PyBroadException
+try:
+    role_arn = aws_cli.get_role_arn(iam_role_name)
+except Exception:
     cc = ['iam', 'create-role']
     cc += ['--role-name', iam_role_name]
     cc += ['--assume-role-policy-document', 'file://aws_iam/aws-codedeploy-ramiel-role.json']
     rr = aws_cli.run(cc)
-    role_arn = rr['Role']['Arn']
+role_arn = aws_cli.get_role_arn(iam_role_name)
 
-print_message('create a role for codedeploy')
-
-cc = ['iam', 'attach-role-policy']
-cc += ['--role-name', iam_role_name]
-cc += ['--policy-arn', policy_arn]
-aws_cli.run(cc)
+rr = aws_cli.get_iam_role_policy(iam_role_name, iam_policy_name)
+if not rr:
+    cc = ['iam', 'attach-role-policy']
+    cc += ['--role-name', iam_role_name]
+    cc += ['--policy-arn', policy_arn]
+    aws_cli.run(cc)
 
 print_message('create codedeploy resources: applications and deployment groups')
 
@@ -100,29 +103,4 @@ for app in settings['APPLICATIONS']:
             cc += ['--on-premises-tag-set', on_premises_tag_set]
         aws_cli.run(cc)
 
-print_message(f'create access key for codedeploy user {iam_user_name}')
-
-cc = ['iam', 'list-access-keys']
-cc += ['--user-name', iam_user_name]
-rr = aws_cli.run(cc, ignore_error=True)
-if rr:
-    print_message('Generate access key is skipped because the user already has access key(s)')
-else:
-    cc = ['iam', 'create-access-key']
-    cc += ['--user-name', iam_user_name]
-    rr = aws_cli.run(cc)
-
-    pp = f'/tmp/{iam_user_name}.txt'
-    access_key = rr['AccessKey']['AccessKeyId']
-    secret_key = rr['AccessKey']['SecretAccessKey']
-    with open(pp, 'w', encoding='utf-8') as ff:
-        ff.write(f'AccessKeyId={access_key}\n')
-        ff.write(f'SecretAccessKeyId={secret_key}\n')
-
-    print_message('Use this generated access key and secret key to deploy Ramiel Monitoring Service')
-    print(f'''
-    - AccessKeyId: {access_key}')
-    - SecretAccessKey: {secret_key}
-
-    Also archived here: {pp}
-    ''')
+print_message(f'YOU SHOULD create Access key for codedeploy user {iam_user_name}')
