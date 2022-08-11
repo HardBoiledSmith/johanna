@@ -426,19 +426,19 @@ for settings in cw.get('DASHBOARDS', list()):
         continue
 
     is_target_exists = True
-if settings['TYPE'] == 'elasticbeanstalk':
-    run_create_cw_dashboard_elasticbeanstalk(settings['NAME'], settings)
-elif settings['TYPE'] == 'rds/aurora':
-    run_create_cw_dashboard_rds_aurora(settings['NAME'], settings)
-elif settings['TYPE'] == 'sqs,lambda,sms':
-    run_create_cw_dashboard_sqs_lambda_sms(settings['NAME'], settings)
-elif settings['TYPE'] == 'alarm':
-    run_create_cw_dashboard_alarm(settings['NAME'], settings)
-elif settings['TYPE'] == 'ramiel':
-    run_create_cw_dashboard_ramiel(settings['NAME'], settings)
-else:
-    print('"%s" is not supported' % settings['TYPE'])
-    raise Exception()
+    if settings['TYPE'] == 'elasticbeanstalk':
+        run_create_cw_dashboard_elasticbeanstalk(settings['NAME'], settings)
+    elif settings['TYPE'] == 'rds/aurora':
+        run_create_cw_dashboard_rds_aurora(settings['NAME'], settings)
+    elif settings['TYPE'] == 'sqs,lambda,sms':
+        run_create_cw_dashboard_sqs_lambda_sms(settings['NAME'], settings)
+    elif settings['TYPE'] == 'alarm':
+        run_create_cw_dashboard_alarm(settings['NAME'], settings)
+    elif settings['TYPE'] == 'ramiel':
+        run_create_cw_dashboard_ramiel(settings['NAME'], settings)
+    else:
+        print('"%s" is not supported' % settings['TYPE'])
+        raise Exception()
 
 if is_target_exists is False:
     mm = list()
