@@ -385,6 +385,22 @@ def run_create_cw_dashboard_alarm(name, settings):
     aws_cli.run(cmd)
 
 
+def run_create_cw_dashboard_ramiel(name, settings):
+    region = settings['AWS_REGION']
+    aws_cli = AWSCli(region)
+
+    dashboard_name = f'{name}_{region}'
+    print_message(f'create or update cloudwatch dashboard: {dashboard_name}')
+
+    template_name = env['template']['NAME']
+    dashboard_body = f'file://template/{template_name}/cloudwatch/{dashboard_name}.json'
+
+    cmd = ['cloudwatch', 'put-dashboard']
+    cmd += ['--dashboard-name', dashboard_name]
+    cmd += ['--dashboard-body', dashboard_body]
+    aws_cli.run(cmd)
+
+
 ################################################################################
 #
 # start
@@ -410,7 +426,6 @@ for settings in cw.get('DASHBOARDS', list()):
         continue
 
     is_target_exists = True
-
     if settings['TYPE'] == 'elasticbeanstalk':
         run_create_cw_dashboard_elasticbeanstalk(settings['NAME'], settings)
     elif settings['TYPE'] == 'rds/aurora':
@@ -419,6 +434,8 @@ for settings in cw.get('DASHBOARDS', list()):
         run_create_cw_dashboard_sqs_lambda_sms(settings['NAME'], settings)
     elif settings['TYPE'] == 'alarm':
         run_create_cw_dashboard_alarm(settings['NAME'], settings)
+    elif settings['TYPE'] == 'ramiel':
+        run_create_cw_dashboard_ramiel(settings['NAME'], settings)
     else:
         print('"%s" is not supported' % settings['TYPE'])
         raise Exception()
