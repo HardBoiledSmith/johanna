@@ -71,7 +71,7 @@ def run_create_image_builder(options):
     latest_eb_platform_ami = aws_cli.run(cmd)
 
     semantic_version = '0.0.0'
-    target_eb_platform_version = 'IIS 10.0 running on 64bit Windows Server 2016/2.10.1'
+    target_eb_platform_version = 'IIS 10.0 running on 64bit Windows Server 2016/2.10.2'
     str_timestamp = str(int(time.time()))
     cmd = ['elasticbeanstalk', 'describe-platform-version']
     cmd += ['--region', 'ap-northeast-2']

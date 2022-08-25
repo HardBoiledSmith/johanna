@@ -1,11 +1,15 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+def is_arm64()
+  `uname -m` == "arm64" || `/usr/bin/arch -64 sh -c "sysctl -in sysctl.proc_translated"`.strip() == "0"
+end
+
 Vagrant.configure(2) do |config|
-  if ENV["ARCH"] != "arm64"
-    config.vm.box = "hbsmith/awslinux2"
-  else
+  if is_arm64()
     config.vm.box = "hbsmith/fedora-35-aarch64"
+  else
+    config.vm.box = "hbsmith/awslinux2"
   end
 
   config.vm.provider "parallels" do |prl|

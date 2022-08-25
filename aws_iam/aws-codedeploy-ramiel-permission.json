@@ -1,0 +1,29 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "codedeploy:*",
+        "tag:GetResources",
+        "tag:GetTagKeys",
+        "tag:GetTagValues",
+        "tag:TagResources",
+        "tag:UntagResources",
+        "sts:AssumeRole"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter"
+      ],
+      "Resource": [
+        "arn:aws:ssm:ap-northeast-2:591379657681:parameter/CodeDeploy/ramiel/ZIP_OP_RAMIEL_PASSWORD",
+        "arn:aws:ssm:ap-northeast-2:591379657681:parameter/CodeDeploy/ramiel/ZIP_QA_RAMIEL_PASSWORD",
+        "arn:aws:ssm:ap-northeast-2:591379657681:parameter/CodeDeploy/ramiel/ZIP_DV_RAMIEL_PASSWORD"
+      ]
+    }
+  ]
+}
