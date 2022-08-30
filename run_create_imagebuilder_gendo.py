@@ -74,7 +74,6 @@ def run_create_image_builder(options):
 
     semantic_version = '0.0.0'
     str_timestamp = str(int(time.time()))
-
     cmd = ['elasticbeanstalk', 'describe-platform-version']
     cmd += ['--region', 'ap-northeast-2']
     cmd += ['--platform-arn',
