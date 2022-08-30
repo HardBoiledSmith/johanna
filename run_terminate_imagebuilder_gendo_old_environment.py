@@ -40,7 +40,6 @@ def log_list_any_cloudwatch_log(target_arr, timestamp):
 def image_list_any_ec2_image(target_arr, timestamp):
     for img in target_arr:
         for tag in img['Tags']:
-            # 태그 순서가 항상 일정하지 않음.
             if tag['Key'] == 'Ec2ImageBuilderArn' and timestamp in tag['Value']:
                 return True
     return False
@@ -63,7 +62,6 @@ def delete_version_list_any_cloudwatch_log(delete_versions, log):
 def delete_version_list_any_ec2_image(delete_versions, image):
     for vv in delete_versions:
         for tag in image['Tags']:
-            # 태그 순서가 항상 일정하지 않음.
             if tag['Key'] == 'Ec2ImageBuilderArn' and vv in tag['Value']:
                 print(tag['Value'])
                 return True
