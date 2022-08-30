@@ -48,7 +48,7 @@ def run_terminate_image(name):
     print_message(f'delete ec2 {name} ami and snapshot')
 
     cmd = ['ec2', 'describe-images']
-    cmd += ['--filters=Name=name,Values="ci_Gendo*"']
+    cmd += ['--filters=Name=name,Values="ci_gendo*"']
     cmd += ['--owners', account_id]
     rr = aws_cli.run(cmd)
 
