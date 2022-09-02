@@ -4,8 +4,9 @@ import os
 import subprocess
 import time
 from datetime import datetime
-from pytz import timezone
 from shutil import copyfile
+
+from pytz import timezone
 
 from run_common import AWSCli
 from run_common import print_message
