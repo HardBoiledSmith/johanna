@@ -474,12 +474,13 @@ def run_create_eb_windows(name, settings, options):
     tag0 = f"Key=git_hash_johanna,Value={git_hash_johanna.decode('utf-8').strip()}"
     tag1 = f"Key=git_hash_{name},Value={git_hash_app.decode('utf-8').strip()}"
 
+    solution_stack_name = aws_cli.get_eb_gendo_windows_platform(target_service='elastic_beanstalk')
     cmd = ['elasticbeanstalk', 'create-environment']
     cmd += ['--application-name', eb_application_name]
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Windows Server 2016 v2.10.2 running IIS 10.0']
+    cmd += ['--solution-stack-name', solution_stack_name]
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
