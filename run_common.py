@@ -518,7 +518,6 @@ class AWSCli:
             return f'64bit Windows Server 2016 v{in_use_eb_windows_version} running IIS 10.0'
 
         if target_service == 'imagebuilder':
-            print_session('elastic beanstalk ami latest version check')
 
             return f'IIS 10.0 running on 64bit Windows Server 2016/{in_use_eb_windows_version}'
 
