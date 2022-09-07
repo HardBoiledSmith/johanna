@@ -4,8 +4,9 @@ import os
 import subprocess
 import time
 from datetime import datetime
-from pytz import timezone
 from shutil import copyfile
+
+from pytz import timezone
 
 from run_common import AWSCli
 from run_common import print_message
@@ -72,8 +73,6 @@ def run_create_image_builder(options):
     cmd += ['--region', 'ap-northeast-2']
     latest_eb_platform_ami = aws_cli.run(cmd)
 
-    semantic_version = '0.0.0'
-    str_timestamp = str(int(time.time()))
     cmd = ['elasticbeanstalk', 'describe-platform-version']
     cmd += ['--region', 'ap-northeast-2']
     cmd += ['--platform-arn',
@@ -97,6 +96,9 @@ def run_create_image_builder(options):
     for vv in rr:
         if vv['VirtualizationType'] == 'hvm':
             eb_platform_ami = vv['ImageId']
+
+    semantic_version = '0.0.0'
+    str_timestamp = str(int(time.time()))
 
     print_session('create component')
 
@@ -128,7 +130,7 @@ def run_create_image_builder(options):
     git_hash_gendo_tag = f"git_hash_{name}={git_hash_app.decode('utf-8').strip()}"
     target_eb_platform_version_tag = f'eb_platform={target_eb_platform_version}'
 
-    gendo_component_name = f'gendo_provisioning_part1_component_{str_timestamp}'
+    gendo_component_name = f'ci_gendo_provisioning_part1_component_{str_timestamp}'
     cmd = ['imagebuilder', 'create-component']
     cmd += ['--name', gendo_component_name]
     cmd += ['--semantic-version', semantic_version]
@@ -140,7 +142,7 @@ def run_create_image_builder(options):
     rr = aws_cli.run(cmd)
     gendo_component_arn1 = rr['componentBuildVersionArn']
 
-    gendo_component_name = f'gendo_provisioning_part2_component_{str_timestamp}'
+    gendo_component_name = f'ci_gendo_provisioning_part2_component_{str_timestamp}'
     cmd = ['imagebuilder', 'create-component']
     cmd += ['--name', gendo_component_name]
     cmd += ['--semantic-version', semantic_version]
@@ -167,7 +169,7 @@ def run_create_image_builder(options):
 
     base_ami_tag = f'base_ami_id={eb_platform_ami}'
 
-    recipe_name = f'gendo_recipe_{str_timestamp}'
+    recipe_name = f'ci_gendo_recipe_{str_timestamp}'
     cmd = ['imagebuilder', 'create-image-recipe']
     cmd += ['--name', recipe_name]
     cmd += ['--working-directory', '/tmp']
@@ -185,7 +187,7 @@ def run_create_image_builder(options):
     kst_now = utc_now.astimezone(timezone('Asia/Seoul'))
     kst_date_time_now = kst_now.strftime("%Y년 %m월 %d일 %H:%M")
 
-    infrastructure_name = f'gendo_infrastructure_{str_timestamp}'
+    infrastructure_name = f'ci_gendo_infrastructure_{str_timestamp}'
     cmd = ['imagebuilder', 'create-infrastructure-configuration']
     cmd += ['--name', infrastructure_name]
     cmd += ['--instance-profile-name', instance_profile_name]
@@ -203,14 +205,14 @@ def run_create_image_builder(options):
         {
             "region": "ap-northeast-2",
             "amiDistributionConfiguration": {
-                "name": "Gendo_{{ imagebuilder:buildDate }}",
+                "name": "ci_gendo_{{ imagebuilder:buildDate }}",
                 "launchPermission": {
                 }
             }
         }
     ]
 
-    distribution_name = f'gendo_distribution_{str_timestamp}'
+    distribution_name = f'ci_gendo_distribution_{str_timestamp}'
     cmd = ['imagebuilder', 'create-distribution-configuration']
     cmd += ['--name', distribution_name]
     cmd += ['--distributions', json.dumps(distributions)]
@@ -222,7 +224,7 @@ def run_create_image_builder(options):
     ###########################################################################
     print_session('create pipeline')
 
-    pipeline_name = f'gendo_pipeline_{str_timestamp}'
+    pipeline_name = f'ci_gendo_pipeline_{str_timestamp}'
     cmd = ['imagebuilder', 'create-image-pipeline']
     cmd += ['--name', pipeline_name]
     cmd += ['--image-recipe-arn', gendo_recipe_arn]
