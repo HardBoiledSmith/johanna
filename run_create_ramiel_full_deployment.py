@@ -26,12 +26,24 @@ reset_template_dir(options)
 phase = env['common']['PHASE']
 branch = options.get('branch', 'master' if phase == 'dv' else phase)
 # TODO: test
-branch = 'op'
+phase = 'op'
 #
-if branch not in ['qa', 'op']:
-    raise Exception(f'Invalid branch: {branch}')
-settings = env['codebuild'][f'{branch}_create_ramiel_full_deployment']
-region = settings['AWS_REGION']
+target_name = f'{phase}_create_ramiel_full_deployment'
+region = 'ap-northeast-2'
+if phase not in ['qa', 'op']:
+    raise Exception(f'Invalid branch: {phase}')
+
+settings = None
+for ss in env.get('codebuild', list()):
+    settings = ss
+    if target_name and ss['NAME'] != target_name:
+        continue
+
+    assert ss['AWS_REGION'] == 'ap-northeast-2'
+    if region and ss['AWS_REGION'] != region:
+        continue
+if not settings:
+    raise Exception('settings is required')
 
 aws_cli = AWSCli(region)
 
@@ -42,7 +54,7 @@ cc = [
 rr = aws_cli.run(cc)
 
 print(f'Target instances ({len(rr)} servers):')
-print_message(rr)
+print_message(*rr)
 
 cc = [
     'curl',
@@ -84,9 +96,10 @@ cc = [
     '--query', 'deploymentInfo.status',
     '--output', 'text',
 ]
-ss = None
-while not ss and ss != 'Succeeded' and ss != 'Failed':
+ss = 'InProgress'
+while ss not in ('Succeeded', 'Failed'):
     ss = aws_cli.run(cc)
+    ss = ss.strip()
     print(f'Deployment status: {ss} (Elapsed: {(datetime.now() - start_time).seconds}s)')
     time.sleep(10)
 

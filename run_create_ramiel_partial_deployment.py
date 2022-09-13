@@ -1,5 +1,3 @@
-# TODO: args -f -t HBsmith-0027
-
 # !/usr/bin/env python3
 
 import json
@@ -38,8 +36,27 @@ print_session('Create ramiel partial deployment')
 
 reset_template_dir(options)
 
-settings = env.get('codedeploy', dict())
-region = settings['AWS_REGION']
+phase = env['common']['PHASE']
+branch = options.get('branch', 'master' if phase == 'dv' else phase)
+# TODO: test
+phase = 'op'
+#
+target_name = f'{phase}_create_ramiel_full_deployment'
+region = 'ap-northeast-2'
+if phase not in ['qa', 'op']:
+    raise Exception(f'Invalid branch: {phase}')
+
+settings = None
+for ss in env.get('codebuild', list()):
+    settings = ss
+    if target_name and ss['NAME'] != target_name:
+        continue
+
+    assert ss['AWS_REGION'] == 'ap-northeast-2'
+    if region and ss['AWS_REGION'] != region:
+        continue
+if not settings:
+    raise Exception('settings is required')
 
 aws_cli = AWSCli(region)
 
@@ -50,7 +67,7 @@ cc = [
 ll = aws_cli.run(cc)
 
 print(f'Target instances ({len(ll)} servers):')
-print_message(ll)
+print_message(*ll)
 
 target = options.get('target')
 if not target:
@@ -59,9 +76,6 @@ tt = target.split(';')
 cc = set(ll) - set(tt)
 if cc:
     raise Exception(f'invalid target is included: {cc}')
-
-phase = env['common']['PHASE']
-branch = options.get('branch', 'master' if phase == 'dv' else phase)
 
 cc = [
     'curl',
@@ -119,9 +133,10 @@ cc = [
     '--query', 'deploymentInfo.status',
     '--output', 'text',
 ]
-ss = None
-while not ss and ss != 'Succeeded' and ss != 'Failed':
+ss = 'InProgress'
+while ss not in ('Succeeded', 'Failed'):
     ss = aws_cli.run(cc)
+    ss = ss.strip()
     print(f'Deployment status: {ss} (Elapsed: {(datetime.now() - start_time).seconds}s)')
     time.sleep(10)
 
