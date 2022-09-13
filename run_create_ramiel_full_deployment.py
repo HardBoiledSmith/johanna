@@ -23,7 +23,14 @@ print_session('Create ramiel full deployment')
 
 reset_template_dir(options)
 
-settings = env.get('codedeploy', dict())
+phase = env['common']['PHASE']
+branch = options.get('branch', 'master' if phase == 'dv' else phase)
+# TODO: test
+branch = 'op'
+#
+if branch not in ['qa', 'op']:
+    raise Exception(f'Invalid branch: {branch}')
+settings = env['codebuild'][f'{branch}_create_ramiel_full_deployment']
 region = settings['AWS_REGION']
 
 aws_cli = AWSCli(region)
@@ -36,9 +43,6 @@ rr = aws_cli.run(cc)
 
 print(f'Target instances ({len(rr)} servers):')
 print_message(rr)
-
-phase = env['common']['PHASE']
-branch = options.get('branch', 'master' if phase == 'dv' else phase)
 
 cc = [
     'curl',
