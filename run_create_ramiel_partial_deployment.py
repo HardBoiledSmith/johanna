@@ -38,9 +38,6 @@ reset_template_dir(options)
 
 phase = env['common']['PHASE']
 branch = options.get('branch', 'master' if phase == 'dv' else phase)
-# TODO: test
-phase = 'op'
-#
 target_name = f'{phase}_create_ramiel_full_deployment'
 region = 'ap-northeast-2'
 if phase not in ['qa', 'op']:
