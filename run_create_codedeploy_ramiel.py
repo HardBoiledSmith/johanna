@@ -49,10 +49,11 @@ partial_deployment = False
 target_instances = None
 
 if len(args) > 2:
-    tt = args[0]
+    tt = args[2]
     tt = tt.replace(' ', '')
     tt = tt.split(';')
-    tt = set(all_instances) - set(tt)
+    tt = tt.remove('')
+    tt = set(tt if tt else []) - set(all_instances)
     if tt:
         raise Exception(f'Invalid instance hostname(s): {tt}')
 
