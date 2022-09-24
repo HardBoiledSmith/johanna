@@ -55,11 +55,14 @@ if len(args) != 1:
 
 tt = args[0]
 if tt:
-    partial_deployment = True
-    target_instances = tt.split(';')
-    tt = set(all_instances) - set(target_instances)
+    tt = tt.replace(' ', '')
+    tt = tt.split(';')
+    tt = set(all_instances) - set(tt)
     if tt:
         raise Exception(f'Invalid instance hostname(s): {tt}')
+
+    partial_deployment = True
+    target_instances = tt
 
 cc = [
     'curl',
