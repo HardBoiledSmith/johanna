@@ -13,16 +13,14 @@ from run_common import reset_template_dir
 
 options, args = parse_args()
 
-print_session('Create ramiel partial deployment')
+print_session('Create codedeploy ramiel deployment')
 
 reset_template_dir(options)
 
 phase = env['common']['PHASE']
 branch = options.get('branch', 'master' if phase == 'dv' else phase)
-target_name = f'{phase}_create_ramiel_full_deployment'
+target_name = f'{phase}_create_codedeploy_ramiel'
 region = 'ap-northeast-2'
-if phase not in ['qa', 'op']:
-    raise Exception(f'Invalid branch: {phase}')
 
 settings = None
 for ss in env.get('codebuild', list()):
@@ -50,11 +48,8 @@ print_message(*all_instances)
 partial_deployment = False
 target_instances = None
 
-if len(args) != 1:
-    raise Exception('An argument is required')
-
-tt = args[0]
-if tt:
+if len(args) > 2:
+    tt = args[0]
     tt = tt.replace(' ', '')
     tt = tt.split(';')
     tt = set(all_instances) - set(tt)
@@ -67,17 +62,22 @@ if tt:
 cc = [
     'curl',
     'https://hbsmith-codebuild-artifacts-ap-northeast-2-20210609.s3.ap-northeast-2.amazonaws.com'
-    f'/ramiel/{phase}-artifact.txt',
+    f'/ramiel/{branch.lower()}-artifact.txt',
 ]
 _p = subprocess.Popen(cc, stdout=subprocess.PIPE, cwd='/tmp')
 pp = _p.communicate()
 if _p.returncode != 0:
     raise Exception('failed to get artifact file')
-artifact = pp[0]
+artifact = pp[0].decode()
+artifact = artifact.strip()
+if artifact[:2] not in ['qa', 'op'] \
+        and not artifact.startswith('master') \
+        and not artifact.startswith('dev'):
+    raise Exception(f'Invalid artifact: {artifact}')
 
 app_name = f'{phase}_ramiel_app'
 deployment_group = f'{phase}_ramiel_partial_deployment_group' if partial_deployment \
-    else f'{phase}_ramiel_full_deployment_group'
+    else f'{phase}_ramiel_deployment_group'
 s3_location = f'''{{
     "bucket": "hbsmith-codebuild-artifacts-ap-northeast-2-20210609",
     "key": "ramiel/{artifact}",
@@ -89,15 +89,15 @@ print(f'\tAPP_NAME          : {app_name}')
 print(f'\tDEPLOYMENT_GROUP  : {deployment_group}')
 print('-' * 80)
 
-if partial_deployment:
-    print_message('Cleaning up the instance tagging(s)')
-    cc = list()
-    cc.extend(['deploy', 'remove-tags-from-on-premises-instances'])
-    cc.append('--instance-names')
-    cc.extend(target_instances)
-    cc.extend(['--tags', 'Key=PartialDeployment'])
-    aws_cli.run(cc)
+print_message('Cleaning up the instance tagging(s)')
+cc = list()
+cc.extend(['deploy', 'remove-tags-from-on-premises-instances'])
+cc.append('--instance-names')
+cc.extend(all_instances)
+cc.extend(['--tags', 'Key=PartialDeployment'])
+aws_cli.run(cc)
 
+if partial_deployment:
     print_message(f'Tagging the target instances: {target_instances}')
     cc = list()
     cc.extend(['deploy', 'add-tags-to-on-premises-instances'])
