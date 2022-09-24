@@ -1,25 +1,19 @@
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 
 import json
 import subprocess
 import time
 
 from datetime import datetime
-
 from env import env
-from run_common import AWSCli
+from run_common import AWSCli, parse_args
 from run_common import print_session
 from run_common import print_message
 from run_common import reset_template_dir
 
-options, args = dict(), list()
+options, args = parse_args()
 
-if __name__ == "__main__":
-    from run_common import parse_args
-
-    options, args = parse_args()
-
-print_session('Create ramiel full deployment')
+print_session('Create ramiel partial deployment')
 
 reset_template_dir(options)
 
@@ -48,10 +42,24 @@ cc = [
     'deploy', 'list-on-premises-instances',
     '--query', 'instanceNames', '--output', 'json',
 ]
-rr = aws_cli.run(cc)
+all_instances = aws_cli.run(cc)
 
-print(f'Target instances ({len(rr)} servers):')
-print_message(*rr)
+print(f'Target instances ({len(all_instances)} servers):')
+print_message(*all_instances)
+
+partial_deployment = False
+target_instances = None
+
+if len(args) != 1:
+    raise Exception('An argument is required')
+
+tt = args[0]
+if tt:
+    partial_deployment = True
+    target_instances = tt.split(';')
+    tt = set(all_instances) - set(target_instances)
+    if tt:
+        raise Exception(f'Invalid instance hostname(s): {tt}')
 
 cc = [
     'curl',
@@ -65,7 +73,8 @@ if _p.returncode != 0:
 artifact = pp[0]
 
 app_name = f'{phase}_ramiel_app'
-deployment_group = f'{phase}_ramiel_deployment_group'
+deployment_group = f'{phase}_ramiel_partial_deployment_group' if partial_deployment \
+    else f'{phase}_ramiel_full_deployment_group'
 s3_location = f'''{{
     "bucket": "hbsmith-codebuild-artifacts-ap-northeast-2-20210609",
     "key": "ramiel/{artifact}",
@@ -76,6 +85,23 @@ print('-' * 80)
 print(f'\tAPP_NAME          : {app_name}')
 print(f'\tDEPLOYMENT_GROUP  : {deployment_group}')
 print('-' * 80)
+
+if partial_deployment:
+    print_message('Cleaning up the instance tagging(s)')
+    cc = list()
+    cc.extend(['deploy', 'remove-tags-from-on-premises-instances'])
+    cc.append('--instance-names')
+    cc.extend(target_instances)
+    cc.extend(['--tags', 'Key=PartialDeployment'])
+    aws_cli.run(cc)
+
+    print_message(f'Tagging the target instances: {target_instances}')
+    cc = list()
+    cc.extend(['deploy', 'add-tags-to-on-premises-instances'])
+    cc.append('--instance-names')
+    cc.extend(target_instances)
+    cc.extend(['--tags', 'Key=PartialDeployment'])
+    aws_cli.run(cc)
 
 cc = [
     'deploy', 'create-deployment',
