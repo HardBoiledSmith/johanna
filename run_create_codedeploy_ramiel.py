@@ -11,8 +11,18 @@ from run_common import print_session
 from run_common import print_message
 from run_common import reset_template_dir
 
-options, args = parse_args()
+options, args = dict(), list()
 
+if __name__ == "__main__":
+    from run_common import parse_args
+
+    options, args = parse_args()
+
+################################################################################
+#
+# start
+#
+################################################################################
 print_session('Create codedeploy ramiel deployment')
 
 reset_template_dir(options)
@@ -47,18 +57,19 @@ print_message(*all_instances)
 
 partial_deployment = False
 target_instances = None
-
-if len(args) > 2:
-    tt = args[2]
+if len(args) > 1:
+    tt = args[1]
     tt = tt.replace(' ', '')
     tt = tt.split(';')
-    tt = tt.remove('')
-    tt = set(tt if tt else []) - set(all_instances)
-    if tt:
+    tt = [vv for vv in tt if vv != '']
+    if set(tt if tt else []) - set(all_instances):
         raise Exception(f'Invalid instance hostname(s): {tt}')
 
     partial_deployment = True
     target_instances = tt
+
+if partial_deployment and not target_instances:
+    raise Exception('Target instances are required for partial deployment')
 
 cc = [
     'curl',
