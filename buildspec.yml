@@ -5,6 +5,7 @@ phases:
     runtime-versions:
       python: 3.8
     commands:
+      - pip install -r _provisioning/requirements.txt
       - pip install flake8
 
   build:
