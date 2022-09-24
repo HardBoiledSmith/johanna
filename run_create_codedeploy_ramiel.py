@@ -6,7 +6,7 @@ import time
 
 from datetime import datetime
 from env import env
-from run_common import AWSCli, parse_args
+from run_common import AWSCli
 from run_common import print_session
 from run_common import print_message
 from run_common import reset_template_dir
