@@ -178,6 +178,9 @@ by [opening support case](https://docs.aws.amazon.com/acm/latest/userguide/acm-l
 1. Go to the company email and click the link to agree to the verify email received from AWS SNS and SES.
 1. run that command `./run_create_lambda.py sachiel_fake_email_save`
 1. run that command `./run_create_lambda.py sachiel_fake_email_delete`
+1. (OPTIONAL) run that command to deploy ramiel:
+    - To all on-premise instances: `./run.py create_codedeploy_ramiel` or `./run_create_codedeploy_ramiel.py`
+    - To specific on-premise instance(s): `./run_create_codedeploy_ramiel.py <comma separated instance hostname(s)>`
 1. Please do one of the two methods below.
    1. Case 1)
        1. run that command `./run_create_lambda.py gendo_test_fake_mail`

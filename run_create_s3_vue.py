@@ -113,14 +113,15 @@ def run_create_s3_vue(name, settings, options):
         raise Exception()
 
     ################################################################################
-    print_message('upload sourcemaps at sentry')
+    if phase == 'op':
+        print_message('upload sourcemaps at sentry')
 
-    subprocess.Popen(['sentry-cli', 'releases', '-p', f'{git_folder_name}-{name}', 'files', sentry_release_version,
-                      'upload-sourcemaps', f'template/{git_folder_name}/{name}/dist']).communicate()
+        subprocess.Popen(['sentry-cli', 'releases', '-p', f'{git_folder_name}-{name}', 'files', sentry_release_version,
+                          'upload-sourcemaps', f'template/{git_folder_name}/{name}/dist']).communicate()
 
-    print_message('delete local sourcemaps')
-    subprocess.Popen(['find', '.', '-name', '*.map', '-type', 'f', '-delete', '-print'],
-                     cwd=f'template/{git_folder_name}/{name}/dist').communicate()
+        print_message('delete local sourcemaps')
+        subprocess.Popen(['find', '.', '-name', '*.map', '-type', 'f', '-delete', '-print'],
+                         cwd=f'template/{git_folder_name}/{name}/dist').communicate()
 
     ################################################################################
     print_message('upload to temp bucket')
