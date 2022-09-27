@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 
 import json
 import subprocess
@@ -52,8 +52,7 @@ cc = [
 ]
 all_instances = aws_cli.run(cc)
 
-print(f'Target instances ({len(all_instances)} servers):')
-print_message(*all_instances)
+print_message(f'({len(all_instances)} on-premise instances): {all_instances.join(", ")}')
 
 partial_deployment = False
 target_instances = None
@@ -70,6 +69,8 @@ if len(args) > 1:
 
 if partial_deployment and not target_instances:
     raise Exception('Target instances are required for partial deployment')
+
+print(f'Target instances: {target_instances}')
 
 cc = [
     'curl',
