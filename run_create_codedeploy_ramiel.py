@@ -103,12 +103,17 @@ print(f'\tDEPLOYMENT_GROUP  : {deployment_group}')
 print('-' * 80)
 
 print_message('Cleaning up the instance tagging(s)')
-cc = list()
-cc.extend(['deploy', 'remove-tags-from-on-premises-instances'])
-cc.append('--instance-names')
-cc.extend(all_instances)
-cc.extend(['--tags', 'Key=PartialDeployment'])
-aws_cli.run(cc)
+
+ll = [all_instances[10 * ii: 10 * (ii + 1)] for ii in range(len(all_instances) // 10 + 1)]
+for instances in ll:
+    cc = list()
+    cc.extend(['deploy', 'remove-tags-from-on-premises-instances'])
+    cc.append('--instance-names')
+    cc.extend(instances)
+    cc.extend(['--tags', 'Key=PartialDeployment'])
+    aws_cli.run(cc)
+
+    time.sleep(5)
 
 if partial_deployment:
     print_message(f'Tagging the target instances: {target_instances}')
