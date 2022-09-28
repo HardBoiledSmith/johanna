@@ -5,7 +5,6 @@ import subprocess
 import time
 from datetime import datetime
 
-from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
@@ -27,22 +26,11 @@ print_session('Create codedeploy ramiel deployment')
 
 reset_template_dir(options)
 
-phase = env['common']['PHASE']
-branch = options.get('branch', 'master' if phase == 'dv' else phase)
-target_name = f'{phase}_create_codedeploy_ramiel'
+branch = options.get('branch', None)
+if not branch:
+    raise Exception('require option branch')
+phase = 'dv' if branch not in ('qa', 'op') else branch
 region = 'ap-northeast-2'
-
-settings = None
-for ss in env.get('codebuild', list()):
-    settings = ss
-    if target_name and ss['NAME'] != target_name:
-        continue
-
-    assert ss['AWS_REGION'] == 'ap-northeast-2'
-    if region and ss['AWS_REGION'] != region:
-        continue
-if not settings:
-    raise Exception('settings is required')
 
 aws_cli = AWSCli(region)
 
