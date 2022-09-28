@@ -52,7 +52,7 @@ cc = [
 ]
 all_instances = aws_cli.run(cc)
 
-print_message(f'({len(all_instances)} on-premise instances): {all_instances.join(", ")}')
+print_message(f'({len(all_instances)} on-premise instances): {" ".join(all_instances)}')
 
 partial_deployment = False
 target_instances = None
