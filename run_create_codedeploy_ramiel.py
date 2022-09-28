@@ -119,7 +119,7 @@ for instances in ll:
     time.sleep(5)
 
 if partial_deployment:
-    print_message(f'Tagging the target instances: {target_instances}')
+    print_message(f'Tagging the target instances: {" ".join(target_instances)}')
     cc = list()
     cc.extend(['deploy', 'add-tags-to-on-premises-instances'])
     cc.append('--instance-names')
