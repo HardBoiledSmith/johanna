@@ -3,12 +3,12 @@
 import json
 import subprocess
 import time
-
 from datetime import datetime
+
 from env import env
 from run_common import AWSCli
-from run_common import print_session
 from run_common import print_message
+from run_common import print_session
 from run_common import reset_template_dir
 
 options, args = dict(), list()
@@ -55,7 +55,7 @@ all_instances = aws_cli.run(cc)
 print_message(f'({len(all_instances)} on-premise instances): {" ".join(all_instances)}')
 
 partial_deployment = False
-target_instances = None
+target_instances = []
 if len(args) > 1:
     tt = args[1]
     tt = tt.replace(' ', '')
@@ -70,7 +70,10 @@ if len(args) > 1:
 if partial_deployment and not target_instances:
     raise Exception('Target instances are required for partial deployment')
 
-print(f'Target instances: {target_instances}')
+if target_instances:
+    print(f'Target instances: {" ".join(target_instances)}')
+else:
+    print(f'Target instances: {" ".join(all_instances)}')
 
 cc = [
     'curl',
