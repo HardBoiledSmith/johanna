@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 import re
+import time
+from datetime import datetime
+from datetime import timedelta
 
+from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
-from datetime import datetime
-from datetime import timedelta
-import time
-from env import env
 
 options, args = dict(), list()
 
@@ -102,7 +102,7 @@ def run_terminate_image(name):
     account_id = aws_cli.get_caller_account_id()
     imagebuilder_resource = dict()
 
-    print_message(f'check in used ami version')
+    print_message('check in used ami version')
     ec2_describe_role_arn = ''
     for settings in env.get('imagebuilder', list()):
         if settings['NAME'] == 'run_terminate_imagebuilder_gendo_old_environment':
@@ -137,7 +137,6 @@ def run_terminate_image(name):
             rr = aws_cli_for_ec2.run(cmd)
             if rr['Reservations'] and rr['Reservations'][0]['Instances']:
                 in_use_ec2_ami_list.append(rr['Reservations'][0]['Instances'][0]['ImageId'])
-
 
     print_message('get All imagebuilder resouce version')
 
@@ -181,7 +180,7 @@ def run_terminate_image(name):
     rr = aws_cli.run(cmd)
     image_recipe_list = filter_imagebuilder_resource_arn_list(rr['imageRecipeSummaryList'])
 
-    print_message(f'get component list')
+    print_message('get component list')
     cmd = ['imagebuilder', 'list-components']
     rr = aws_cli.run(cmd)
 
@@ -195,7 +194,6 @@ def run_terminate_image(name):
         except AttributeError:
             pass
     timestamp_list = set(timestamp_list)
-
 
     imagebuilder_resource['imagebuilder_cw_log_list'] = imagebuilder_cw_log_list
     imagebuilder_resource['ami_arn_list'] = ami_arn_list

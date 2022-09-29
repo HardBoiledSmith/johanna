@@ -3,6 +3,7 @@
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
+from run_terminate_imagebuilder_iam import terminate_iam_profile_for_imagebuilder
 
 options, args = dict(), list()
 
@@ -64,6 +65,15 @@ def run_terminate_image(name):
         cmd += ['--snapshot-id', snapshot_id]
         aws_cli.run(cmd)
 
+    print_message('delete cloudwatch image builder logs')
+    cmd = ['logs', 'describe-log-groups']
+    cmd += ['--log-group-name-prefix', '/aws/imagebuilder/gendo_']
+    rr = aws_cli.run(cmd, ignore_error=True)
+    for log_group in rr['logGroups']:
+        cmd = ['logs', 'delete-log-group']
+        cmd += ['--log-group-name', log_group['logGroupName']]
+        aws_cli.run(cmd, ignore_error=True)
+
     print_message(f'delete imagebuilder {name} pipe lines')
     cmd = ['imagebuilder', 'list-image-pipelines']
     rr = aws_cli.run(cmd)
@@ -123,14 +133,7 @@ def run_terminate_image(name):
                 cmd += ['--component-build-version-arn', r['arn']]
                 aws_cli.run(cmd, ignore_error=True)
 
-    print_message('delete cloudwatch image builder logs')
-    cmd = ['logs', 'describe-log-groups']
-    cmd += ['--log-group-name-prefix', '/aws/imagebuilder/gendo_']
-    rr = aws_cli.run(cmd, ignore_error=True)
-    for log_group in rr['logGroups']:
-        cmd = ['logs', 'delete-log-group']
-        cmd += ['--log-group-name', log_group['logGroupName']]
-        aws_cli.run(cmd, ignore_error=True)
+    terminate_iam_profile_for_imagebuilder(name)
 
 
 ################################################################################
