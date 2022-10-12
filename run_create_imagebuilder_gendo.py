@@ -204,6 +204,7 @@ def run_create_image_builder(options):
             "region": "ap-northeast-2",
             "amiDistributionConfiguration": {
                 "name": "Gendo_{{ imagebuilder:buildDate }}",
+                "amiTags": {"gendo_git_hash":git_hash_app.decode('utf-8').strip()},
                 "launchPermission": {
                     "organizationalUnitArns": [
                         'arn:aws:organizations::591379657681:ou/o-xmsbstr6zx/ou-37un-ad54n1d2',
