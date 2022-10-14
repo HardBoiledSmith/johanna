@@ -155,10 +155,11 @@ def run_terminate_image(name):
     in_use_ami_timestamp_version = list()
     for img in ec2_gendo_img_list:
         if img['ImageId'] in in_use_ec2_ami_list:
-            for tag in img['Tags']:
-                if tag['Key'] == 'Ec2ImageBuilderArn':
-                    m = re.search('/gendo-recipe-(.+?)/', tag['Value'])
-                    in_use_ami_timestamp_version.append(m.group(1))
+            continue
+        for tag in img['Tags']:
+            if tag['Key'] == 'Ec2ImageBuilderArn':
+                m = re.search('/gendo-recipe-(.+?)/', tag['Value'])
+                in_use_ami_timestamp_version.append(m.group(1))
 
     cmd = ['imagebuilder', 'list-images']
     rr = aws_cli.run(cmd)
@@ -187,12 +188,9 @@ def run_terminate_image(name):
     component_list = filter_imagebuilder_resource_arn_list(rr['componentVersionList'])
     timestamp_list = list()
     for cc in component_list:
-        try:
-            found = re.search('-component-(.+?)/', cc).group(1)
-            if found:
-                timestamp_list.append(found)
-        except AttributeError:
-            pass
+        found = re.search('-component-(.+?)/', cc).group(1)
+        if found:
+            timestamp_list.append(found)
     timestamp_list = set(timestamp_list)
 
     imagebuilder_resource['imagebuilder_cw_log_list'] = imagebuilder_cw_log_list
