@@ -69,7 +69,7 @@ def run_create_s3_bucket(name, settings):
         elif phase == 'qa':
             allowd_origins.append(f'https://{phase}-app.hbsmith.io')
             allowd_origins.append(f'https://{phase}-app.hbsmith.io')
-        else :
+        else:
             ii = bucket_name.find('-dv-hbsmith-temp')
             dev_name = bucket_name[0:ii]
 
@@ -83,10 +83,10 @@ def run_create_s3_bucket(name, settings):
         cc = {
             "CORSRules": [
                 {
-                    "AllowedOrigins": allowd_origins,
+                    "AllowedHeaders": ["*"],
                     "AllowedMethods": ["PUT"],
-                    "MaxAgeSeconds": 3000,
-                    "AllowedHeaders": ["*"]
+                    "AllowedOrigins": allowd_origins,
+                    "ExposeHeaders": []
                 }
             ]
         }
