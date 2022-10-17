@@ -1,6 +1,7 @@
 import json
 import time
 
+from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
@@ -16,6 +17,7 @@ def run_create_s3_bucket(name, settings):
     is_web_hosting = settings['WEB_HOSTING']
     region = settings['REGION']
     policy = settings.get('POLICY', '')
+    phase = env['common']['PHASE']
 
     ################################################################################
     print_session('create %s' % name)
@@ -58,6 +60,40 @@ def run_create_s3_bucket(name, settings):
         cmd = ['s3api', 'put-bucket-policy']
         cmd += ['--bucket', bucket_name]
         cmd += ['--policy', pp]
+        aws_cli.run(cmd)
+
+        allowd_origins = list()
+        if phase == 'op':
+            allowd_origins.append('https://app.hbsmith.io')
+            allowd_origins.append('https://app2.hbsmith.io')
+        elif phase == 'qa':
+            allowd_origins.append(f'https://{phase}-app.hbsmith.io')
+            allowd_origins.append(f'https://{phase}-app.hbsmith.io')
+        else:
+            ii = bucket_name.find('-dv-hbsmith-temp')
+            dev_name = bucket_name[0:ii]
+
+            allowd_origins.append(f'https://{dev_name}-dv-app.hbsmith.io')
+            allowd_origins.append(f'https://{dev_name}-dv-app.hbsmith.io')
+
+        if not allowd_origins:
+            raise Exception('Invalid allowed origin')
+
+        print_message('set cors')
+        cc = {
+            "CORSRules": [
+                {
+                    "AllowedHeaders": ["*"],
+                    "AllowedMethods": ["PUT"],
+                    "AllowedOrigins": allowd_origins,
+                    "ExposeHeaders": []
+                }
+            ]
+        }
+
+        cmd = ['s3api', 'put-bucket-cors']
+        cmd += ['--bucket', bucket_name]
+        cmd += ['--cors-configuration', json.dumps(cc)]
         aws_cli.run(cmd)
 
     if is_web_hosting:
