@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 from env import env
-from run_common import AWSCli
+from run_common import AWSCli, re_sub_lines
 from run_common import print_session
 from run_common import print_message
+from run_common import read_file
 from run_common import reset_template_dir
 
 options, args = dict(), list()
@@ -28,9 +29,13 @@ iam_policy_name = 'ramiel_codedeploy_iam_session_permission'
 account_id = aws_cli.get_caller_account_id()
 policy_arn = f'arn:aws:iam::{account_id}:policy/{iam_policy_name}'
 if not aws_cli.get_iam_policy(policy_arn):
+    lines = read_file('aws_iam/aws-codedeploy-ramiel-permission.json')
+    lines = re_sub_lines(lines, 'ACCOUNT_ID', account_id)
+    pp = ' '.join(lines)
+
     cc = ['iam', 'create-policy']
     cc += ['--policy-name', iam_policy_name]
-    cc += ['--policy-document', 'file://aws_iam/aws-codedeploy-ramiel-permission.json']
+    cc += ['--policy-document', pp]
     aws_cli.run(cc)
 
 iam_user_name = 'ramiel_codedeploy_iam_session_user'
