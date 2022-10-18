@@ -27,18 +27,11 @@
             "Effect": "Allow",
             "Action": [
                 "codedeploy:AddTagsToOnPremisesInstances",
+                "codedeploy:DeregisterOnPremisesInstance",
                 "codedeploy:RegisterOnPremisesInstance",
-                "codedeploy:DeregisterOnPremisesInstance"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Sid": "AWSCodeDeployDeployment",
-            "Effect": "Allow",
-            "Action": [
-                "codedeploy:ContinueDeployment",
                 "codedeploy:CreateDeployment",
-                "codedeploy:StopDeployment"
+                "codedeploy:GetDeployment",
+                "codedeploy:ListOnPremisesInstances"
             ],
             "Resource": "*"
         }
