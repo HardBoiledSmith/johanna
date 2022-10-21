@@ -17,11 +17,13 @@ if __name__ == "__main__":
 
     options, args = parse_args()
 
+
 def check_in_use_ami_version(target_version, used_version_list):
     for vv in used_version_list:
         if vv == target_version:
             return True
     return False
+
 
 def filter_imagebuilder_resource_arn_list(target_resouce_list):
     arn_list = list()
@@ -227,7 +229,7 @@ def run_terminate_image(name):
     timestamp_8_weeks_ago = time.mktime(tt.timetuple())
 
     for vv in normal_resource_version_list:
-        if check_in_use_ami_version(vv ,in_use_ami_timestamp_version):
+        if check_in_use_ami_version(vv, in_use_ami_timestamp_version):
             continue
 
         if int(vv) < int(timestamp_8_weeks_ago):
