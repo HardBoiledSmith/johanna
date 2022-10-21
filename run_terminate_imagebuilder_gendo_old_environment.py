@@ -17,6 +17,11 @@ if __name__ == "__main__":
 
     options, args = parse_args()
 
+def check_in_use_ami_version(target_version, used_version_list):
+    for vv in used_version_list:
+        if vv == target_version:
+            return True
+    return False
 
 def filter_imagebuilder_resource_arn_list(target_resouce_list):
     arn_list = list()
@@ -138,6 +143,8 @@ def run_terminate_image(name):
             if rr['Reservations'] and rr['Reservations'][0]['Instances']:
                 in_use_ec2_ami_list.append(rr['Reservations'][0]['Instances'][0]['ImageId'])
 
+    print_message(f'in_use_ec2_ami_list : {in_use_ec2_ami_list}')
+
     print_message('get All imagebuilder resouce version')
 
     print_message('describe log groups imagebuilder resouce')
@@ -154,7 +161,7 @@ def run_terminate_image(name):
 
     in_use_ami_timestamp_version = list()
     for img in ec2_gendo_img_list:
-        if img['ImageId'] in in_use_ec2_ami_list:
+        if not img['ImageId'] in in_use_ec2_ami_list:
             continue
         for tag in img['Tags']:
             if tag['Key'] == 'Ec2ImageBuilderArn':
@@ -220,7 +227,7 @@ def run_terminate_image(name):
     timestamp_8_weeks_ago = time.mktime(tt.timetuple())
 
     for vv in normal_resource_version_list:
-        if vv in in_use_ami_timestamp_version:
+        if check_in_use_ami_version(vv ,in_use_ami_timestamp_version):
             continue
 
         if int(vv) < int(timestamp_8_weeks_ago):
@@ -232,84 +239,84 @@ def run_terminate_image(name):
 
     print_message(f'delete version list : {delete_version_list}')
 
-    print_message('delete cloudwatch image builder logs')
-    for log_group in imagebuilder_cw_log_list:
-        if delete_version_list_any_cloudwatch_log(delete_version_list, log_group):
-            cmd = ['logs', 'delete-log-group']
-            cmd += ['--log-group-name', log_group['logGroupName']]
-            aws_cli.run(cmd, ignore_error=True)
-
-    for ami_arn in ami_arn_list:
-        if delete_version_list_any_imagebuilder_resource(delete_version_list, ami_arn):
-            cmd = ['imagebuilder', 'list-image-build-versions']
-            cmd += ['--image-version-arn', ami_arn]
-            rr = aws_cli.run(cmd)
-            for r in rr['imageSummaryList']:
-                cmd = ['imagebuilder', 'list-image-build-versions']
-                cmd += ['--image-version-arn', ami_arn]
-                arn_version_list = aws_cli.run(cmd, ignore_error=True)
-
-                if arn_version_list['imageSummaryList']:
-                    cmd = ['imagebuilder', 'delete-image']
-                    cmd += ['--image-build-version-arn', r['arn']]
-                    aws_cli.run(cmd, ignore_error=True)
-
-    print_message(f'delete ec2 {name} ami and snapshot')
-    for img in ec2_gendo_img_list:
-        if delete_version_list_any_ec2_image(delete_version_list, img):
-            ami = img['ImageId']
-            snapshot_id = img['BlockDeviceMappings'][0]['Ebs']['SnapshotId']
-
-            cmd = ['ec2', 'deregister-image']
-            cmd += ['--image-id', ami]
-            aws_cli.run(cmd)
-
-            cmd = ['ec2', 'delete-snapshot']
-            cmd += ['--snapshot-id', snapshot_id]
-            aws_cli.run(cmd)
-
-    print_message(f'delete imagebuilder {name} pipe lines')
-    for pipe_line in pipe_line_list:
-        if delete_version_list_any_imagebuilder_resource(delete_version_list, pipe_line):
-            cmd = ['imagebuilder', 'delete-image-pipeline']
-            cmd += ['--image-pipeline-arn', pipe_line]
-            aws_cli.run(cmd)
-
-    print_message(f'delete imagebuilder {name} distributions')
-    for distribution in distribution_list:
-        if delete_version_list_any_imagebuilder_resource(delete_version_list, distribution):
-            cmd = ['imagebuilder', 'delete-distribution-configuration']
-            cmd += ['--distribution-configuration-arn', distribution]
-            aws_cli.run(cmd)
-
-    print_message(f'delete imagebuilder {name} infrastructures')
-    for infrastructure in infrastructure_list:
-        if delete_version_list_any_imagebuilder_resource(delete_version_list, infrastructure):
-            cmd = ['imagebuilder', 'delete-infrastructure-configuration']
-            cmd += ['--infrastructure-configuration-arn', infrastructure]
-            aws_cli.run(cmd)
-
-    print_message(f'delete imagebuilder {name} image-recipes')
-    for image_recipe in image_recipe_list:
-        if delete_version_list_any_imagebuilder_resource(delete_version_list, image_recipe):
-            cmd = ['imagebuilder', 'delete-image-recipe']
-            cmd += ['--image-recipe-arn', image_recipe]
-            aws_cli.run(cmd)
-
-    print_message(f'delete imagebuilder {name} components')
-    for component in component_list:
-        if delete_version_list_any_imagebuilder_resource(delete_version_list, component):
-            cmd = ['imagebuilder', 'list-component-build-versions']
-            cmd += ['--component-version-arn', component]
-            rr = aws_cli.run(cmd)
-            for r in rr['componentSummaryList']:
-                cmd = ['imagebuilder', 'list-component-build-versions']
-                cmd += ['--component-version-arn', component]
-                arn_version_list = aws_cli.run(cmd, ignore_error=True)
-                if arn_version_list['componentSummaryList']:
-                    cmd = ['imagebuilder', 'delete-component']
-                    cmd += ['--component-build-version-arn', r['arn']]
-                    aws_cli.run(cmd, ignore_error=True)
+    # print_message('delete cloudwatch image builder logs')
+    # for log_group in imagebuilder_cw_log_list:
+    #     if delete_version_list_any_cloudwatch_log(delete_version_list, log_group):
+    #         cmd = ['logs', 'delete-log-group']
+    #         cmd += ['--log-group-name', log_group['logGroupName']]
+    #         aws_cli.run(cmd, ignore_error=True)
+    #
+    # for ami_arn in ami_arn_list:
+    #     if delete_version_list_any_imagebuilder_resource(delete_version_list, ami_arn):
+    #         cmd = ['imagebuilder', 'list-image-build-versions']
+    #         cmd += ['--image-version-arn', ami_arn]
+    #         rr = aws_cli.run(cmd)
+    #         for r in rr['imageSummaryList']:
+    #             cmd = ['imagebuilder', 'list-image-build-versions']
+    #             cmd += ['--image-version-arn', ami_arn]
+    #             arn_version_list = aws_cli.run(cmd, ignore_error=True)
+    #
+    #             if arn_version_list['imageSummaryList']:
+    #                 cmd = ['imagebuilder', 'delete-image']
+    #                 cmd += ['--image-build-version-arn', r['arn']]
+    #                 aws_cli.run(cmd, ignore_error=True)
+    #
+    # print_message(f'delete ec2 {name} ami and snapshot')
+    # for img in ec2_gendo_img_list:
+    #     if delete_version_list_any_ec2_image(delete_version_list, img):
+    #         ami = img['ImageId']
+    #         snapshot_id = img['BlockDeviceMappings'][0]['Ebs']['SnapshotId']
+    #
+    #         cmd = ['ec2', 'deregister-image']
+    #         cmd += ['--image-id', ami]
+    #         aws_cli.run(cmd)
+    #
+    #         cmd = ['ec2', 'delete-snapshot']
+    #         cmd += ['--snapshot-id', snapshot_id]
+    #         aws_cli.run(cmd)
+    #
+    # print_message(f'delete imagebuilder {name} pipe lines')
+    # for pipe_line in pipe_line_list:
+    #     if delete_version_list_any_imagebuilder_resource(delete_version_list, pipe_line):
+    #         cmd = ['imagebuilder', 'delete-image-pipeline']
+    #         cmd += ['--image-pipeline-arn', pipe_line]
+    #         aws_cli.run(cmd)
+    #
+    # print_message(f'delete imagebuilder {name} distributions')
+    # for distribution in distribution_list:
+    #     if delete_version_list_any_imagebuilder_resource(delete_version_list, distribution):
+    #         cmd = ['imagebuilder', 'delete-distribution-configuration']
+    #         cmd += ['--distribution-configuration-arn', distribution]
+    #         aws_cli.run(cmd)
+    #
+    # print_message(f'delete imagebuilder {name} infrastructures')
+    # for infrastructure in infrastructure_list:
+    #     if delete_version_list_any_imagebuilder_resource(delete_version_list, infrastructure):
+    #         cmd = ['imagebuilder', 'delete-infrastructure-configuration']
+    #         cmd += ['--infrastructure-configuration-arn', infrastructure]
+    #         aws_cli.run(cmd)
+    #
+    # print_message(f'delete imagebuilder {name} image-recipes')
+    # for image_recipe in image_recipe_list:
+    #     if delete_version_list_any_imagebuilder_resource(delete_version_list, image_recipe):
+    #         cmd = ['imagebuilder', 'delete-image-recipe']
+    #         cmd += ['--image-recipe-arn', image_recipe]
+    #         aws_cli.run(cmd)
+    #
+    # print_message(f'delete imagebuilder {name} components')
+    # for component in component_list:
+    #     if delete_version_list_any_imagebuilder_resource(delete_version_list, component):
+    #         cmd = ['imagebuilder', 'list-component-build-versions']
+    #         cmd += ['--component-version-arn', component]
+    #         rr = aws_cli.run(cmd)
+    #         for r in rr['componentSummaryList']:
+    #             cmd = ['imagebuilder', 'list-component-build-versions']
+    #             cmd += ['--component-version-arn', component]
+    #             arn_version_list = aws_cli.run(cmd, ignore_error=True)
+    #             if arn_version_list['componentSummaryList']:
+    #                 cmd = ['imagebuilder', 'delete-component']
+    #                 cmd += ['--component-build-version-arn', r['arn']]
+    #                 aws_cli.run(cmd, ignore_error=True)
 
 
 ################################################################################
