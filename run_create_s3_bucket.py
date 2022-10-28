@@ -50,18 +50,6 @@ def run_create_s3_bucket(name, settings):
         aws_cli.run(cmd)
 
     if policy == 'temp-bucket':
-        print_message('set bucket policy')
-
-        lines = read_file('aws_iam/aws-s3-bucket-policy-for-%s.json' % policy)
-        lines = re_sub_lines(lines, 'BUCKET_NAME', bucket_name)
-        lines = re_sub_lines(lines, 'BUCKET_NAME', bucket_name)
-        pp = ' '.join(lines)
-
-        cmd = ['s3api', 'put-bucket-policy']
-        cmd += ['--bucket', bucket_name]
-        cmd += ['--policy', pp]
-        aws_cli.run(cmd)
-
         allowd_origins = list()
         if phase == 'op':
             allowd_origins.append('https://app.hbsmith.io')
