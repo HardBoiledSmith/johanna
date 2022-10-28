@@ -67,14 +67,19 @@ def run_create_s3_bucket(name, settings):
             allowd_origins.append('https://app.hbsmith.io')
             allowd_origins.append('https://app2.hbsmith.io')
         elif phase == 'qa':
-            allowd_origins.append(f'https://{phase}-app.hbsmith.io')
-            allowd_origins.append(f'https://{phase}-app.hbsmith.io')
+            allowd_origins.append(f'https://qa-app.hbsmith.io')
+            allowd_origins.append(f'https://qa-app2.hbsmith.io')
         else:
             ii = bucket_name.find('-dv-hbsmith-temp')
             dev_name = bucket_name[0:ii]
 
             allowd_origins.append(f'https://{dev_name}-dv-app.hbsmith.io')
             allowd_origins.append(f'https://{dev_name}-dv-app.hbsmith.io')
+
+            allowd_origins.append(f'http://dv-app.hbsmith.io')
+            allowd_origins.append(f'http://dv-app2.hbsmith.io')
+            allowd_origins.append(f'http://dv-app.hbsmith.io:9100')
+            allowd_origins.append(f'http://dv-app2.hbsmith.io:9001')
 
         if not allowd_origins:
             raise Exception('Invalid allowed origin')
