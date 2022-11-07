@@ -1,28 +1,39 @@
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codedeploy:*",
-        "tag:GetResources",
-        "tag:GetTagKeys",
-        "tag:GetTagValues",
-        "tag:TagResources",
-        "tag:UntagResources",
-        "sts:AssumeRole"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ssm:GetParameter"
-      ],
-      "Resource": [
-        "arn:aws:ssm:ap-northeast-2:591379657681:parameter/CodeDeploy/ramiel/ZIP_OP_RAMIEL_PASSWORD",
-        "arn:aws:ssm:ap-northeast-2:591379657681:parameter/CodeDeploy/ramiel/ZIP_QA_RAMIEL_PASSWORD"
-      ]
-    }
-  ]
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "RefreshSTSToken",
+            "Effect": "Allow",
+            "Action": [
+                "sts:AssumeRole"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "ProvisioningGetParameter",
+            "Effect": "Allow",
+            "Action": [
+                "ssm:GetParameter"
+            ],
+            "Resource": [
+                "arn:aws:ssm:ap-northeast-2:ACCOUNT_ID:parameter/CodeBuild/op_create_codedeploy_ramiel/DAILY_CD_ZIP_PASSWORD",
+                "arn:aws:ssm:ap-northeast-2:ACCOUNT_ID:parameter/CodeBuild/qa_create_codedeploy_ramiel/DAILY_CD_ZIP_PASSWORD",
+                "arn:aws:ssm:ap-northeast-2:ACCOUNT_ID:parameter/CodeDeploy/ramiel/ZIP_OP_RAMIEL_PASSWORD",
+                "arn:aws:ssm:ap-northeast-2:ACCOUNT_ID:parameter/CodeDeploy/ramiel/ZIP_QA_RAMIEL_PASSWORD"
+            ]
+        },
+        {
+            "Sid": "ProvisioningCodeDeploy",
+            "Effect": "Allow",
+            "Action": [
+                "codedeploy:AddTagsToOnPremisesInstances",
+                "codedeploy:DeregisterOnPremisesInstance",
+                "codedeploy:RegisterOnPremisesInstance",
+                "codedeploy:CreateDeployment",
+                "codedeploy:GetDeployment",
+                "codedeploy:ListOnPremisesInstances"
+            ],
+            "Resource": "*"
+        }
+    ]
 }
