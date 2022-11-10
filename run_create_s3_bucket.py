@@ -50,29 +50,21 @@ def run_create_s3_bucket(name, settings):
         aws_cli.run(cmd)
 
     if policy == 'temp-bucket':
-        print_message('set bucket policy')
-
-        lines = read_file('aws_iam/aws-s3-bucket-policy-for-%s.json' % policy)
-        lines = re_sub_lines(lines, 'BUCKET_NAME', bucket_name)
-        lines = re_sub_lines(lines, 'BUCKET_NAME', bucket_name)
-        pp = ' '.join(lines)
-
-        cmd = ['s3api', 'put-bucket-policy']
-        cmd += ['--bucket', bucket_name]
-        cmd += ['--policy', pp]
-        aws_cli.run(cmd)
-
         allowd_origins = list()
         if phase == 'op':
             allowd_origins.append('https://app.hbsmith.io')
             allowd_origins.append('https://app2.hbsmith.io')
         elif phase == 'qa':
-            allowd_origins.append(f'https://{phase}-app.hbsmith.io')
-            allowd_origins.append(f'https://{phase}-app.hbsmith.io')
+            allowd_origins.append('https://qa-app.hbsmith.io')
+            allowd_origins.append('https://qa-app2.hbsmith.io')
         else:
             ii = bucket_name.find('-dv-hbsmith-temp')
             dev_name = bucket_name[0:ii]
 
+            allowd_origins.append('http://dv-app.hbsmith.io')
+            allowd_origins.append('http://dv-app.hbsmith.io:9100')
+            allowd_origins.append('http://dv-app2.hbsmith.io')
+            allowd_origins.append('http://dv-app2.hbsmith.io:9001')
             allowd_origins.append(f'https://{dev_name}-dv-app.hbsmith.io')
             allowd_origins.append(f'https://{dev_name}-dv-app.hbsmith.io')
 
