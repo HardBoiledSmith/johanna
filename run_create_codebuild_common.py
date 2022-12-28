@@ -286,11 +286,7 @@ def create_image_repository_iam_policy(aws_cli, name, settings, role_name):
                     'Action': [
                         'ecr:BatchCheckLayerAvailability',
                         'ecr:GetDownloadUrlForLayer',
-                        'ecr:BatchGetImage',
-                        'ecr:PutImage',
-                        'ecr:InitiateLayerUpload',
-                        'ecr:UploadLayerPart',
-                        'ecr:CompleteLayerUpload'
+                        'ecr:BatchGetImage'
                     ],
                     'Resource': f'arn:aws:ecr:{aws_region}:{account_id}:repository/{repo_name}'
                 }
