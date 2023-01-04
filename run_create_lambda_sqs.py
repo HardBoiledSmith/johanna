@@ -143,7 +143,7 @@ def run_create_lambda_sqs(function_name, settings, options):
                '--role', role_arn,
                '--handler', 'lambda.handler',
                '--runtime', 'python3.8',
-               '--timeout', '180']
+               '--timeout', '900']
         if settings.get('MEMORY_SIZE'):
             cmd += ['--memory-size', settings['MEMORY_SIZE']]
         aws_cli.run(cmd, cwd=deploy_folder)
