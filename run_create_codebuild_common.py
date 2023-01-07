@@ -408,7 +408,7 @@ def create_notification_rule(aws_cli, name, project_arn):
     account_id = aws_cli.get_caller_account_id()
 
     cmd = ['codestar-notifications', 'create-notification-rule']
-    cmd += ['--name', f'codebuild-{name}']
+    cmd += ['--name', f'codebuild-{name}-notification-rule']
     eid_list = list()
     eid_list.append('codebuild-project-build-state-succeeded')
     eid_list.append('codebuild-project-build-state-stopped')
@@ -430,7 +430,7 @@ def update_notification_rule(aws_cli, name, notification_rule_arn):
 
     cmd = ['codestar-notifications', 'update-notification-rule']
     cmd += ['--arn', notification_rule_arn]
-    cmd += ['--name', f'codebuild-{name}']
+    cmd += ['--name', f'codebuild-{name}-notification-rule']
     eid_list = list()
     eid_list.append('codebuild-project-build-state-succeeded')
     eid_list.append('codebuild-project-build-state-stopped')
