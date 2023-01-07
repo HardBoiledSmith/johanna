@@ -170,6 +170,7 @@ def run_create_lambda_sqs(function_name, settings, options):
         time.sleep(120)
 
         cmd = ['lambda', 'create-event-source-mapping',
+               '--batch-size', settings.get('BATCH_SIZE', '10'),
                '--event-source-arn', queue_arn,
                '--function-name', function_name]
         aws_cli.run(cmd)
@@ -204,6 +205,7 @@ def run_create_lambda_sqs(function_name, settings, options):
     print_message(f'create sqs event source for {function_name}')
 
     cmd = ['lambda', 'create-event-source-mapping',
+           '--batch-size', settings.get('BATCH_SIZE', '10'),
            '--event-source-arn', queue_arn,
            '--function-name', function_name]
     aws_cli.run(cmd)
