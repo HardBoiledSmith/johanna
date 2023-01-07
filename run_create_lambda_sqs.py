@@ -143,7 +143,7 @@ def run_create_lambda_sqs(function_name, settings, options):
                '--role', role_arn,
                '--handler', 'lambda.handler',
                '--runtime', 'python3.8',
-               '--timeout', '900']
+               '--timeout', settings.get('TIMEOUT', '180')]
         if settings.get('MEMORY_SIZE'):
             cmd += ['--memory-size', settings['MEMORY_SIZE']]
         aws_cli.run(cmd, cwd=deploy_folder)
@@ -172,6 +172,8 @@ def run_create_lambda_sqs(function_name, settings, options):
         cmd = ['lambda', 'create-event-source-mapping',
                '--event-source-arn', queue_arn,
                '--function-name', function_name]
+        if settings.get('BATCH_SIZE'):
+            cmd += ['--batch-size', settings['BATCH_SIZE']]
         aws_cli.run(cmd)
         return
 
@@ -186,7 +188,7 @@ def run_create_lambda_sqs(function_name, settings, options):
            '--handler', 'lambda.handler',
            '--runtime', 'python3.8',
            '--tags', ','.join(tags),
-           '--timeout', '180']
+           '--timeout', settings.get('TIMEOUT', '180')]
     if settings.get('MEMORY_SIZE'):
         cmd += ['--memory-size', settings['MEMORY_SIZE']]
     aws_cli.run(cmd, cwd=deploy_folder)
@@ -206,4 +208,6 @@ def run_create_lambda_sqs(function_name, settings, options):
     cmd = ['lambda', 'create-event-source-mapping',
            '--event-source-arn', queue_arn,
            '--function-name', function_name]
+    if settings.get('BATCH_SIZE'):
+        cmd += ['--batch-size', settings['BATCH_SIZE']]
     aws_cli.run(cmd)
