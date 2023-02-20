@@ -138,6 +138,7 @@ def run_create_fifo_queue(name, settings):
     cmd += ['--attributes', json.dumps(attr)]
     aws_cli.run(cmd)
 
+
 ################################################################################
 #
 # start
