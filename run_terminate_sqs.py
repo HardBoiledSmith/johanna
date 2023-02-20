@@ -12,13 +12,41 @@ if __name__ == "__main__":
     options, args = parse_args()
 
 
-def run_terminate_queue(name, settings):
-    print_message(f'terminate sqs queue: {name}')
+def run_terminate_standard_queue(name, settings):
+    print_message(f'terminate standard sqs queue: {name}')
 
     aws_cli = AWSCli(settings['AWS_REGION'])
 
     cmd = ['sqs', 'get-queue-url']
     cmd += ['--queue-name', f'{name}-dead-letter']
+    result = aws_cli.run(cmd, ignore_error=True)
+
+    if result:
+        queue_url = result['QueueUrl']
+        cmd = ['sqs', 'delete-queue']
+        cmd += ['--queue-url', queue_url]
+        aws_cli.run(cmd, ignore_error=True)
+
+    cmd = ['sqs', 'get-queue-url']
+    cmd += ['--queue-name', name]
+    result = aws_cli.run(cmd, ignore_error=True)
+
+    if result:
+        queue_url = result['QueueUrl']
+        cmd = ['sqs', 'delete-queue']
+        cmd += ['--queue-url', queue_url]
+        aws_cli.run(cmd, ignore_error=True)
+
+
+def run_terminate_fifo_queue(name, settings):
+    print_message(f'terminate fifo sqs queue: {name}')
+
+    aws_cli = AWSCli(settings['AWS_REGION'])
+
+    queue_name = name.replace('.fifo', '')
+
+    cmd = ['sqs', 'get-queue-url']
+    cmd += ['--queue-name', f'{queue_name}-dead-letter.fifo']
     result = aws_cli.run(cmd, ignore_error=True)
 
     if result:
@@ -58,7 +86,13 @@ for settings in env.get('sqs', list()):
 
     is_target_exists = True
 
-    run_terminate_queue(settings['NAME'], settings)
+    if settings['SQS_TYPE'] == 'STANDARD':
+        run_terminate_standard_queue(settings['NAME'], settings)
+    elif settings['SQS_TYPE'] == 'FIFO':
+        run_terminate_fifo_queue(settings['NAME'], settings)
+    else:
+        print('The SQS TYPE variable has no value.')
+        raise Exception()
 
 if is_target_exists is False:
     mm = list()

@@ -15,7 +15,7 @@ if __name__ == "__main__":
     options, args = parse_args()
 
 
-def run_create_queue(name, settings):
+def run_create_standard_queue(name, settings):
     print_message(f'create sqs queue: {name}')
 
     delay_seconds = settings['DELAY_SECONDS']
@@ -74,6 +74,70 @@ def run_create_queue(name, settings):
     aws_cli.run(cmd)
 
 
+def run_create_fifo_queue(name, settings):
+    print_message(f'create sqs queue: {name}')
+
+    delay_seconds = settings['DELAY_SECONDS']
+    receive_count = settings['RECEIVE_COUNT']
+    receive_message_wait_time_seconds = settings['RECEIVE_MESSAGE_WAIT_TIME_SECONDS']
+    retention = settings['RETENTION']
+    timeout = settings['TIMEOUT']
+    use_redrive_policy = settings['USE_REDRIVE_POLICY']
+    dead_letter_queue_arn = None
+
+    aws_cli = AWSCli(settings['AWS_REGION'])
+
+    if use_redrive_policy == "True":
+        attributes = dict()
+        attributes['MessageRetentionPeriod'] = retention
+        attributes['FifoQueue'] = "true"
+        attributes['ContentBasedDeduplication'] = "true"
+
+        queue_name = name.replace('.fifo', '')
+
+        cmd = ['sqs', 'create-queue']
+        cmd += ['--queue-name', f'{queue_name}-dead-letter.fifo']
+        cmd += ['--attributes', json.dumps(attributes)]
+        aws_cli.run(cmd)
+
+        elapsed_time = 0
+        while True:
+            cmd = ['sqs', 'get-queue-url', '--queue-name', f'{queue_name}-dead-letter.fifo']
+            result = aws_cli.run(cmd)
+
+            if type(result) == dict:
+                if result.get('QueueUrl', None):
+                    break
+
+            print('get url... (elapsed time: \'%d\' seconds)' % elapsed_time)
+            time.sleep(5)
+            elapsed_time += 5
+
+        cmd = ['sqs', 'get-queue-attributes']
+        cmd += ['--queue-url', result['QueueUrl']]
+        cmd += ['--attribute-names', 'QueueArn']
+        result = aws_cli.run(cmd)
+        dead_letter_queue_arn = result['Attributes']['QueueArn']
+
+    redrive_policy = dict()
+    redrive_policy['deadLetterTargetArn'] = dead_letter_queue_arn
+    redrive_policy['maxReceiveCount'] = receive_count
+
+    attr = dict()
+    if dead_letter_queue_arn is not None:
+        attr['RedrivePolicy'] = json.dumps(redrive_policy)
+    attr['DelaySeconds'] = delay_seconds
+    attr['MessageRetentionPeriod'] = retention
+    attr['ReceiveMessageWaitTimeSeconds'] = receive_message_wait_time_seconds
+    attr['VisibilityTimeout'] = timeout
+    attr['FifoQueue'] = "true"
+    attr['ContentBasedDeduplication'] = "true"
+
+    cmd = ['sqs', 'create-queue']
+    cmd += ['--queue-name', name]
+    cmd += ['--attributes', json.dumps(attr)]
+    aws_cli.run(cmd)
+
 ################################################################################
 #
 # start
@@ -94,7 +158,13 @@ for settings in env.get('sqs', list()):
 
     is_target_exists = True
 
-    run_create_queue(settings['NAME'], settings)
+    if settings['SQS_TYPE'] == 'STANDARD':
+        run_create_standard_queue(settings['NAME'], settings)
+    elif settings['SQS_TYPE'] == 'FIFO':
+        run_create_fifo_queue(settings['NAME'], settings)
+    else:
+        print('The SQS TYPE variable has no value.')
+        raise Exception()
 
 if is_target_exists is False:
     mm = list()
