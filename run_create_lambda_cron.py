@@ -158,15 +158,18 @@ def run_create_lambda_cron(function_name, settings, options):
     ################################################################################
     print_session('create lambda: %s' % function_name)
 
-    cmd = ['lambda', 'create-function',
-           '--function-name', function_name,
-           '--description', description,
-           '--zip-file', 'fileb://deploy.zip',
-           '--role', role_arn,
-           '--handler', 'lambda.handler',
-           '--runtime', 'python3.8',
-           '--tags', ','.join(tags),
-           '--timeout', '900']
+    cmd = [
+        'lambda', 'create-function',
+        '--function-name', function_name,
+        '--description', description,
+        '--zip-file', 'fileb://deploy.zip',
+        '--role', role_arn,
+        '--handler', 'lambda.handler',
+        '--runtime', 'python3.8',
+        '--tags', ','.join(tags),
+        '--timeout', '900',
+        '--architectures', 'arm64',
+    ]
     if settings.get('MEMORY_SIZE'):
         cmd += ['--memory-size', settings['MEMORY_SIZE']]
     result = aws_cli.run(cmd, cwd=deploy_folder)
