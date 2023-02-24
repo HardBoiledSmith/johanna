@@ -106,7 +106,7 @@ def run_create_fifo_queue(name, settings):
             result = aws_cli.run(cmd)
 
             if type(result) == dict and result.get('QueueUrl', None):
-                    break
+                break
 
             print('get url... (elapsed time: \'%d\' seconds)' % elapsed_time)
             time.sleep(5)
