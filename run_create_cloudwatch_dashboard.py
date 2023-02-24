@@ -64,11 +64,16 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
     result = aws_cli.run(cmd)
 
     eid_list = set()
+    elb_list = set()
     for ee in result['Environments']:
         ename = ee['EnvironmentName']
         if not ename.startswith(name):
             continue
         eid_list.add(ee['EnvironmentId'])
+
+        pattern = r'awseb-[a-zA-Z0-9]+-[a-zA-Z0-9]+-[a-zA-Z0-9]+'
+        match = re.search(pattern, ee['EndpointURL'])
+        elb_list.add(match.group())
 
     def find_metrics(*args):
         cmd = ['cloudwatch', 'list-metrics']
@@ -83,12 +88,49 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
             if args[2] != dd[0]['Name']:
                 continue
 
+            # if dd[0]['Name'] == 'TargetGroup':
             mm = re.match(r'^awseb-(.+)-stack.+$', dd[0]['Value'])
             if not mm:
                 continue
 
             eid = mm.group(1)
             if eid not in eid_list:
+                continue
+
+            mm_list.append(cc)
+        return mm_list
+
+    def check_string_in_list(lst, string_to_check):
+        for s in lst:
+            if string_to_check in s:
+                return True
+        return False
+
+    def find_metrics2(*args):
+        cmd = ['cloudwatch', 'list-metrics']
+        cmd += ['--namespace', args[0]]
+        cmd += ['--metric-name', args[1]]
+        result = aws_cli.run(cmd)
+
+        mm_list = list()
+
+        for cc in result['Metrics']:
+            dd = cc['Dimensions']
+            if not dd or not len(dd) == 2:
+                continue
+
+            load_balancer_name = dd[0]['Name']
+            if args[2] != load_balancer_name:
+                continue
+
+            target_group = re.match(r'^targetgroup/awseb-(.+).+$', dd[0]['Value'])
+            loadbalancer = re.match(r'^app/awseb-(.+).+$', dd[1]['Value'])
+            if not target_group and not loadbalancer:
+                continue
+
+            pattern = r"awseb-[A-Z0-9]+-[A-Z0-9]+"
+            match = re.search(pattern, dd[1]['Value'])
+            if not check_string_in_list(elb_list, match.group(0)):
                 continue
 
             mm_list.append(cc)
@@ -103,153 +145,178 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
     with open(filename_path, 'r') as ff:
         dashboard_body = json.load(ff)
 
-    asg_only = ['CPUUtilization', 'CPUCreditBalance', 'CPUSurplusCreditBalance', 'NetworkIn', 'NetworkOut']
+    # asg_only = ['CPUUtilization', 'CPUCreditBalance', 'CPUSurplusCreditBalance', 'NetworkIn', 'NetworkOut']
 
+    # for dw in dashboard_body['widgets']:
+    #     if dw['properties'].get('title') not in asg_only:
+    #         continue
+    #     if not dw['properties'].get('metrics'):
+    #         continue
+    #     pm = dw['properties']['metrics']
+    #     ii = 1
+    #     new_metric = []
+    #
+    #     ll = find_metrics(*pm[0])
+    #     for oo in ll:
+    #         mm = [oo['Namespace'], oo['MetricName']]
+    #         for aa in oo['Dimensions']:
+    #             mm.append(aa['Name'])
+    #             mm.append(aa['Value'])
+    #         mm.append({'id': f'max{ii}', 'visible': False, 'stat': 'Maximum'})
+    #         new_metric.append(mm)
+    #
+    #         mm = [oo['Namespace'], oo['MetricName']]
+    #         for aa in oo['Dimensions']:
+    #             mm.append(aa['Name'])
+    #             mm.append(aa['Value'])
+    #         mm.append({'id': f'avg{ii}', 'visible': False, 'stat': 'Average'})
+    #         new_metric.append(mm)
+    #
+    #         mm = [oo['Namespace'], oo['MetricName']]
+    #         for aa in oo['Dimensions']:
+    #             mm.append(aa['Name'])
+    #             mm.append(aa['Value'])
+    #         mm.append({'id': f'min{ii}', 'visible': False, 'stat': 'Minimum'})
+    #         new_metric.append(mm)
+    #         ii += 1
+    #
+    #     new_metric += pm[1:]
+    #     dw['properties']['metrics'] = new_metric
+
+    ii = 0
+    elb_only = ['HealthyHostCount','UnHealthyHostCount']
     for dw in dashboard_body['widgets']:
-        if dw['properties'].get('title') not in asg_only:
+        if dw['properties'].get('title') not in elb_only:
             continue
         if not dw['properties'].get('metrics'):
             continue
         pm = dw['properties']['metrics']
-        ii = 1
         new_metric = []
 
-        ll = find_metrics(*pm[0])
+        ll = find_metrics2(*pm[0])
         for oo in ll:
             mm = [oo['Namespace'], oo['MetricName']]
             for aa in oo['Dimensions']:
                 mm.append(aa['Name'])
                 mm.append(aa['Value'])
-            mm.append({'id': f'max{ii}', 'visible': False, 'stat': 'Maximum'})
+            mm.append({'id': f"mh{ii}", 'visible': False, 'stat': 'Average'})
             new_metric.append(mm)
-
-            mm = [oo['Namespace'], oo['MetricName']]
-            for aa in oo['Dimensions']:
-                mm.append(aa['Name'])
-                mm.append(aa['Value'])
-            mm.append({'id': f'avg{ii}', 'visible': False, 'stat': 'Average'})
-            new_metric.append(mm)
-
-            mm = [oo['Namespace'], oo['MetricName']]
-            for aa in oo['Dimensions']:
-                mm.append(aa['Name'])
-                mm.append(aa['Value'])
-            mm.append({'id': f'min{ii}', 'visible': False, 'stat': 'Minimum'})
-            new_metric.append(mm)
-            ii += 1
+            ii += ii
 
         new_metric += pm[1:]
         dw['properties']['metrics'] = new_metric
+
+    print(dashboard_body)
 
     ################################################################################
     cmd = ['elasticbeanstalk', 'describe-environments']
     cmd += ['--no-include-deleted']
     result = aws_cli.run(cmd)
 
-    latest_ee = None
-    latest_name = ''
-    for ee in result['Environments']:
-        ename = ee['EnvironmentName']
-        if not ename.startswith(name):
-            continue
-        if latest_name < ename:
-            latest_ee = ee
-            latest_name = ename
-
-    env_list = [latest_ee]
+    # latest_ee = None
+    # latest_name = ''
+    # for ee in result['Environments']:
+    #     ename = ee['EnvironmentName']
+    #     if not ename.startswith(name):
+    #         continue
+    #     if latest_name < ename:
+    #         latest_ee = ee
+    #         latest_name = ename
+    #
+    # env_list = [latest_ee]
 
     env_instances_list = list()
     env_asg_list = list()
     env_elb_list = list()
     env_tg_list = list()
 
-    for ee in env_list:
-        cmd = ['elasticbeanstalk', 'describe-environment-resources']
-        cmd += ['--environment-id', ee['EnvironmentId']]
-        result = aws_cli.run(cmd)
-        ee_res = result['EnvironmentResources']
-        for instance in ee_res['Instances']:
-            ii = dict()
-            ii['Id'] = instance['Id']
-            ii['EnvironmentName'] = ee_res['EnvironmentName']
-            env_instances_list.append(ii)
-        for asg in ee_res['AutoScalingGroups']:
-            ii = dict()
-            ii['Name'] = asg['Name']
-            ii['EnvironmentName'] = ee_res['EnvironmentName']
-            env_asg_list.append(ii)
-        for elb in ee_res['LoadBalancers']:
-            ii = dict()
-            ii['Name'] = elb['Name']
-            ii['EnvironmentName'] = ee_res['EnvironmentName']
-            env_elb_list.append(ii)
-        for elb in ee_res['LoadBalancers']:
-            cmd = ['elbv2', 'describe-target-groups']
-            cmd += ['--load-balancer-arn', elb['Name']]
-            result = aws_cli.run(cmd, ignore_error=True)
-            for tg in result.get('TargetGroups', list()):
-                tt = re.match(r'^.+(targetgroup/.+)$', tg['TargetGroupArn'])
-                ll = re.match(r'^.+loadbalancer/(.+)$', elb['Name'])
-                ii = dict()
-                ii['Name'] = tt[1]
-                ii['LoadBalancer'] = ll[1]
-                ii['EnvironmentName'] = ee_res['EnvironmentName']
-                env_tg_list.append(ii)
+    # for ee in env_list:
+    #     cmd = ['elasticbeanstalk', 'describe-environment-resources']
+    #     cmd += ['--environment-id', ee['EnvironmentId']]
+    #     result = aws_cli.run(cmd)
+    #     ee_res = result['EnvironmentResources']
+    #     for instance in ee_res['Instances']:
+    #         ii = dict()
+    #         ii['Id'] = instance['Id']
+    #         ii['EnvironmentName'] = ee_res['EnvironmentName']
+    #         env_instances_list.append(ii)
+    #     for asg in ee_res['AutoScalingGroups']:
+    #         ii = dict()
+    #         ii['Name'] = asg['Name']
+    #         ii['EnvironmentName'] = ee_res['EnvironmentName']
+    #         env_asg_list.append(ii)
+    #     for elb in ee_res['LoadBalancers']:
+    #         ii = dict()
+    #         ii['Name'] = elb['Name']
+    #         ii['EnvironmentName'] = ee_res['EnvironmentName']
+    #         env_elb_list.append(ii)
+    #     for elb in ee_res['LoadBalancers']:
+    #         cmd = ['elbv2', 'describe-target-groups']
+    #         cmd += ['--load-balancer-arn', elb['Name']]
+    #         result = aws_cli.run(cmd, ignore_error=True)
+    #         for tg in result.get('TargetGroups', list()):
+    #             tt = re.match(r'^.+(targetgroup/.+)$', tg['TargetGroupArn'])
+    #             ll = re.match(r'^.+loadbalancer/(.+)$', elb['Name'])
+    #             ii = dict()
+    #             ii['Name'] = tt[1]
+    #             ii['LoadBalancer'] = ll[1]
+    #             ii['EnvironmentName'] = ee_res['EnvironmentName']
+    #             env_tg_list.append(ii)
 
-    for dw in dashboard_body['widgets']:
-        if dw['properties'].get('title') in asg_only:
-            continue
-        if not dw['properties'].get('metrics'):
-            continue
-        pm = dw['properties']['metrics']
-
-        dimension_type = 'env'
-        for dimension in pm[0]:
-            if dimension == 'InstanceId':
-                dimension_type = 'instance'
-            elif dimension == 'AutoScalingGroupName':
-                dimension_type = 'asg'
-            elif dimension == 'LoadBalancerName':
-                dimension_type = 'elb'
-            elif dimension == 'TargetGroup':
-                dimension_type = 'tg'
-            elif type(dimension) == dict:
-                if 'expression' in dimension:
-                    dimension_type = 'search_expression'
-                    break
-
-        new_metric = []
-
-        template = json.dumps(pm)
-        if dimension_type == 'asg':
-            for ii in env_asg_list:
-                new_metric = template.replace('AUTO_SCALING_GROUP_NAME', ii['Name'])
-                new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
-                new_metric = json.loads(new_metric)
-        elif dimension_type == 'instance':
-            for ii in env_instances_list:
-                new_metric = template.replace('INSTANCE_ID', ii['Id'])
-                new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
-                new_metric = json.loads(new_metric)
-        elif dimension_type == 'elb':
-            for ii in env_elb_list:
-                new_metric = template.replace('LOAD_BALANCER_NAME', ii['Name'])
-                new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
-                new_metric = json.loads(new_metric)
-        elif dimension_type == 'tg':
-            for ii in env_tg_list:
-                new_metric = template.replace('TARGET_GROUP', ii['Name'])
-                new_metric = new_metric.replace('LOAD_BALANCER', ii['LoadBalancer'])
-                new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
-                new_metric = json.loads(new_metric)
-        elif dimension_type == 'search_expression':
-            new_metric = json.loads(template)
-        else:
-            for ii in env_list:
-                new_metric = template.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
-                new_metric = json.loads(new_metric)
-
-        dw['properties']['metrics'] = new_metric
+    # for dw in dashboard_body['widgets']:
+    #     if dw['properties'].get('title') in asg_only:
+    #         continue
+    #     if not dw['properties'].get('metrics'):
+    #         continue
+    #     pm = dw['properties']['metrics']
+    #
+    #     dimension_type = 'env'
+    #     for dimension in pm[0]:
+    #         if dimension == 'InstanceId':
+    #             dimension_type = 'instance'
+    #         elif dimension == 'AutoScalingGroupName':
+    #             dimension_type = 'asg'
+    #         elif dimension == 'LoadBalancerName':
+    #             dimension_type = 'elb'
+    #         elif dimension == 'TargetGroup':
+    #             dimension_type = 'tg'
+    #         elif type(dimension) == dict:
+    #             if 'expression' in dimension:
+    #                 dimension_type = 'search_expression'
+    #                 break
+    #
+    #     new_metric = []
+    #
+    #     template = json.dumps(pm)
+    #     if dimension_type == 'asg':
+    #         for ii in env_asg_list:
+    #             new_metric = template.replace('AUTO_SCALING_GROUP_NAME', ii['Name'])
+    #             new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
+    #             new_metric = json.loads(new_metric)
+    #     elif dimension_type == 'instance':
+    #         for ii in env_instances_list:
+    #             new_metric = template.replace('INSTANCE_ID', ii['Id'])
+    #             new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
+    #             new_metric = json.loads(new_metric)
+    #     elif dimension_type == 'elb':
+    #         for ii in env_elb_list:
+    #             new_metric = template.replace('LOAD_BALANCER_NAME', ii['Name'])
+    #             new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
+    #             new_metric = json.loads(new_metric)
+    #     elif dimension_type == 'tg':
+    #         for ii in env_tg_list:
+    #             new_metric = template.replace('TARGET_GROUP', ii['Name'])
+    #             new_metric = new_metric.replace('LOAD_BALANCER', ii['LoadBalancer'])
+    #             new_metric = new_metric.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
+    #             new_metric = json.loads(new_metric)
+    #     elif dimension_type == 'search_expression':
+    #         new_metric = json.loads(template)
+    #     else:
+    #         for ii in env_list:
+    #             new_metric = template.replace('ENVIRONMENT_NAME', ii['EnvironmentName'])
+    #             new_metric = json.loads(new_metric)
+    #
+    #     dw['properties']['metrics'] = new_metric
 
     ################################################################################
     phase = env['common']['PHASE']
