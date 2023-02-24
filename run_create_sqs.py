@@ -91,7 +91,6 @@ def run_create_fifo_queue(name, settings):
         attributes = dict()
         attributes['MessageRetentionPeriod'] = retention
         attributes['FifoQueue'] = "true"
-        attributes['ContentBasedDeduplication'] = "true"
 
         queue_name = name.replace('.fifo', '')
 
@@ -130,7 +129,6 @@ def run_create_fifo_queue(name, settings):
     attr['ReceiveMessageWaitTimeSeconds'] = receive_message_wait_time_seconds
     attr['VisibilityTimeout'] = timeout
     attr['FifoQueue'] = "true"
-    attr['ContentBasedDeduplication'] = "true"
 
     cmd = ['sqs', 'create-queue']
     cmd += ['--queue-name', name]
