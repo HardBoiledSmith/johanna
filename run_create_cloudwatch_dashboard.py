@@ -64,11 +64,16 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
     result = aws_cli.run(cmd)
 
     eid_list = set()
+    elb_list = set()
     for ee in result['Environments']:
         ename = ee['EnvironmentName']
         if not ename.startswith(name):
             continue
         eid_list.add(ee['EnvironmentId'])
+
+        pattern = r'awseb-[a-zA-Z0-9]+-[a-zA-Z0-9]+-[a-zA-Z0-9]+'
+        match = re.search(pattern, ee['EndpointURL'])
+        elb_list.add(match.group())
 
     def find_metrics(*args):
         cmd = ['cloudwatch', 'list-metrics']
@@ -89,6 +94,42 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
 
             eid = mm.group(1)
             if eid not in eid_list:
+                continue
+
+            mm_list.append(cc)
+        return mm_list
+
+    def check_string_in_list(lst, string_to_check):
+        for s in lst:
+            if string_to_check in s:
+                return True
+        return False
+
+    def find_metrics_by_target_group_load_balancer(*args):
+        cmd = ['cloudwatch', 'list-metrics']
+        cmd += ['--namespace', args[0]]
+        cmd += ['--metric-name', args[1]]
+        result = aws_cli.run(cmd)
+
+        mm_list = list()
+
+        for cc in result['Metrics']:
+            dd = cc['Dimensions']
+            if not dd or not len(dd) == 2:
+                continue
+
+            load_balancer_name = dd[0]['Name']
+            if args[2] != load_balancer_name:
+                continue
+
+            target_group = re.match(r'^targetgroup/awseb-(.+).+$', dd[0]['Value'])
+            loadbalancer = re.match(r'^app/awseb-(.+).+$', dd[1]['Value'])
+            if not target_group and not loadbalancer:
+                continue
+
+            pattern = r"awseb-[A-Z0-9]+-[A-Z0-9]+"
+            match = re.search(pattern, dd[1]['Value'])
+            if not check_string_in_list(elb_list, match.group(0)):
                 continue
 
             mm_list.append(cc)
@@ -139,6 +180,40 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
             ii += 1
 
         new_metric += pm[1:]
+        dw['properties']['metrics'] = new_metric
+
+    elb_only = ['AutoScaleInstanceCount']
+    for dw in dashboard_body['widgets']:
+        if dw['properties'].get('title') not in elb_only:
+            continue
+        if not dw['properties'].get('metrics'):
+            continue
+        pm = dw['properties']['metrics']
+        new_metric = []
+
+        ll = find_metrics_by_target_group_load_balancer(*pm[0])
+        ii = 0
+        for oo in ll:
+            mm = [oo['Namespace'], oo['MetricName']]
+            for aa in oo['Dimensions']:
+                mm.append(aa['Name'])
+                mm.append(aa['Value'])
+            mm.append({'id': f"mh{ii}", 'visible': False, 'stat': 'Average'})
+            new_metric.append(mm)
+            ii += 1
+
+        ll = find_metrics_by_target_group_load_balancer(*pm[1])
+        ii = 0
+        for oo in ll:
+            mm = [oo['Namespace'], oo['MetricName']]
+            for aa in oo['Dimensions']:
+                mm.append(aa['Name'])
+                mm.append(aa['Value'])
+            mm.append({'id': f"muh{ii}", 'visible': False, 'stat': 'Average'})
+            new_metric.append(mm)
+            ii += 1
+
+        new_metric += pm[2:]
         dw['properties']['metrics'] = new_metric
 
     ################################################################################
