@@ -47,14 +47,15 @@ def run_create_s3_vue(name, settings, options):
     git_hash_app = git_hash_app.decode('utf-8').strip()
 
     ################################################################################
-    print_message('create release for sentry')
+    if phase == 'op':
+        print_message('create release for sentry')
 
-    sentry_release_version = f'{git_folder_name}-{name}@{git_hash_app}'
+        sentry_release_version = f'{git_folder_name}-{name}@{git_hash_app}'
 
-    subprocess.Popen(['sentry-cli', 'releases', 'new', '-p', f'{git_folder_name}-{name}', sentry_release_version],
-                     cwd=f'template/{git_folder_name}').communicate()
-    subprocess.Popen(['sentry-cli', 'releases', 'set-commits', '--auto', sentry_release_version],
-                     cwd=f'template/{git_folder_name}').communicate()
+        subprocess.Popen(['sentry-cli', 'releases', 'new', '-p', f'{git_folder_name}-{name}', sentry_release_version],
+                         cwd=f'template/{git_folder_name}').communicate()
+        subprocess.Popen(['sentry-cli', 'releases', 'set-commits', '--auto', sentry_release_version],
+                         cwd=f'template/{git_folder_name}').communicate()
 
     ################################################################################
     print_message('remove useless files')
@@ -240,7 +241,8 @@ def run_create_s3_vue(name, settings, options):
         print(invalidate_result)
 
     ################################################################################
-    print_message('finalize release for sentry')
+    if phase == 'op':
+        print_message('finalize release for sentry')
 
-    subprocess.Popen(['sentry-cli', 'releases', 'finalize', sentry_release_version],
-                     cwd=f'template/{git_folder_name}').communicate()
+        subprocess.Popen(['sentry-cli', 'releases', 'finalize', sentry_release_version],
+                         cwd=f'template/{git_folder_name}').communicate()
