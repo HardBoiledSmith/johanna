@@ -39,7 +39,6 @@ def run_create_eb_windows(name, settings, options):
     url = settings['ARTIFACT_URL']
     time_base_scale_in_desired_capacity = settings['TIME_BASE_SCALE_IN_DESIRED_CAPACITY']
     time_base_scale_out_desired_capacity = settings['TIME_BASE_SCALE_OUT_DESIRED_CAPACITY']
-    time_base_scale_in_sub_desired_capacity = settings['TIME_BASE_SCALE_IN_SUB_DESIRED_CAPACITY']
     cidr_subnet = aws_cli.cidr_subnet
 
     str_timestamp = str(int(time.time()))
@@ -404,41 +403,6 @@ def run_create_eb_windows(name, settings, options):
     oo['ResourceName'] = 'ScheduledScaleDownSpecificTime'
     oo['OptionName'] = 'Recurrence'
     oo['Value'] = "0 13 * * *"
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleDownSpecificTime2'
-    oo['OptionName'] = 'MinSize'
-    oo['Value'] = aws_asg_min_value
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleDownSpecificTime2'
-    oo['OptionName'] = 'MaxSize'
-    oo['Value'] = aws_asg_max_value
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleDownSpecificTime2'
-    oo['OptionName'] = 'DesiredCapacity'
-    oo['Value'] = time_base_scale_in_sub_desired_capacity
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleDownSpecificTime2'
-    oo['OptionName'] = 'StartTime'
-    oo['Value'] = '2023-01-01T07:00:00Z'
-    option_settings.append(oo)
-
-    oo = dict()
-    oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleDownSpecificTime2'
-    oo['OptionName'] = 'Recurrence'
-    oo['Value'] = "0 15 * * *"
     option_settings.append(oo)
 
     oo = dict()
