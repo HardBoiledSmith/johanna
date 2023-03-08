@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-
 import json
 
 from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
+from run_common import reset_template_dir
 
 options, args = dict(), list()
 
@@ -252,6 +252,8 @@ def run_create_cloudwatch_alarm_sns(name, settings):
 #
 ################################################################################
 print_session('create cloudwatch alarm')
+
+reset_template_dir(options)
 
 cw = env.get('cloudwatch', dict())
 target_name = None
