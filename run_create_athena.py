@@ -38,7 +38,6 @@ def run_create_athena(name, settings):
     bucket_name = settings['S3_RESULT_BUCKET']
     database_name = settings['DATABASE']
     tables = settings['TABLES']
-    queries = settings['QUERIES']
 
     cmd = ['s3api', 'create-bucket']
     cmd += ['--bucket', bucket_name]
@@ -76,29 +75,6 @@ def run_create_athena(name, settings):
         cmd += ['--result-configuration', f'OutputLocation=s3://{bucket_name}']
         rr = aws_cli.run(cmd)
         _wait_query_execution(aws_cli, rr)
-
-    cmd = ['athena', 'list-named-queries']
-    rr = aws_cli.run(cmd)
-    named_query_ids = [ee for ee in rr['NamedQueryIds']]
-    named_query_names = list()
-    for ii in named_query_ids:
-        cmd = ['athena', 'get-named-query']
-        cmd += ['--named-query-id', ii]
-        rr = aws_cli.run(cmd)
-        named_query_names.append(rr['NamedQuery']['Name'])
-
-    for ee in queries:
-        query_name = ee['NAME']
-        query_string = ee['QUERY']
-
-        if query_name in named_query_names:
-            continue
-
-        cmd = ['athena', 'create-named-query']
-        cmd += ['--name', query_name]
-        cmd += ['--database', database_name]
-        cmd += ['--query-string', query_string]
-        aws_cli.run(cmd)
 
 
 if __name__ == "__main__":
