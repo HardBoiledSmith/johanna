@@ -135,6 +135,7 @@ if __name__ == "__main__":
         __import__('run_create_ses')
         __import__('run_create_cloudwatch_alarm')
         __import__('run_create_cloudwatch_dashboard')
+        __import__('run_create_athena')
     elif command == 'run_terminate':
         __import__('run_terminate_cloudwatch_dashboard')
         __import__('run_terminate_cloudwatch_alarm')
