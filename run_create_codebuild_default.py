@@ -23,6 +23,7 @@ def run_create_default_project(name, settings):
     description = settings['DESCRIPTION']
     git_repo = settings['GITHUB_REPO']
     image = settings['IMAGE']
+    container_type = settings.get('CONTAINER_TYPE', 'LINUX_CONTAINER')
 
     ################################################################################
     print_message('check previous version')
@@ -79,7 +80,7 @@ def run_create_default_project(name, settings):
             "type": "NO_CACHE"
         },
         "environment": {
-            "type": "LINUX_CONTAINER",
+            "type": container_type,
             "image": image,
             "computeType": compute_type,
             "environmentVariables": env_list
