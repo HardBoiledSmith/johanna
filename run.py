@@ -148,6 +148,7 @@ if __name__ == "__main__":
         __import__('run_terminate_rds')
         __import__('run_terminate_ec2_client_vpn')
         __import__('run_terminate_vpc')
+        __import__('run_terminate_athena')
     elif command == 'run_describe':
         __import__('run_describe_eb')
         __import__('run_describe_vpc')
