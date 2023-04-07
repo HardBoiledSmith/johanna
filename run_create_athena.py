@@ -31,7 +31,7 @@ def _wait_query_execution(aws_cli, res, timeout=30):
         time.sleep(2)
 
 
-def run_create_athena(name, settings):
+def run_create_athena(settings):
     aws_cli = AWSCli(settings['AWS_REGION'])
 
     catalog_name = settings['CATALOG']
@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     options, args = parse_args()
 
-print_session('create codebuild')
+print_session('create athena')
 
 reset_template_dir(options)
 
@@ -102,7 +102,7 @@ for settings in env.get('athena', list()):
 
     is_target_exists = True
 
-    run_create_athena(settings['NAME'], settings)
+    run_create_athena(settings)
 
 if is_target_exists is False:
     mm = list()
