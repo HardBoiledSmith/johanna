@@ -133,12 +133,13 @@ if __name__ == "__main__":
         __import__('run_create_lambda')
         __import__('run_create_s3')
         __import__('run_create_ses')
+        __import__('run_create_athena')
         __import__('run_create_cloudwatch_alarm')
         __import__('run_create_cloudwatch_dashboard')
-        __import__('run_create_athena')
     elif command == 'run_terminate':
         __import__('run_terminate_cloudwatch_dashboard')
         __import__('run_terminate_cloudwatch_alarm')
+        __import__('run_terminate_athena')
         __import__('run_terminate_ses')
         __import__('run_terminate_s3')
         __import__('run_terminate_lambda')
@@ -148,7 +149,6 @@ if __name__ == "__main__":
         __import__('run_terminate_rds')
         __import__('run_terminate_ec2_client_vpn')
         __import__('run_terminate_vpc')
-        __import__('run_terminate_athena')
     elif command == 'run_describe':
         __import__('run_describe_eb')
         __import__('run_describe_vpc')
