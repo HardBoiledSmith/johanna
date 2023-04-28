@@ -11,6 +11,7 @@ Vagrant.configure(2) do |config|
   end
 
   config.vm.provision "file", source: "../config.json", destination: "/vagrant/opt/johanna/config.json"
+
   config.vm.provision "shell", inline: <<-SHELL
 sed -i -r -e "
 /^metalink=/s/^/#/
@@ -18,10 +19,9 @@ sed -i -r -e "
 s%download.(fedoraproject.org|example)\%archives.fedoraproject.org%
 s%(/pub)(/fedora/)%\\1/archive\\2%}
 " /etc/yum.repos.d/fedora*.repo
-    SHELL
-    config.vm.provision "shell", inline: "dnf -y install python3.8"
-    config.vm.provision "shell", inline: "python3.8 -m ensurepip --user"
-  end
+  SHELL
+  config.vm.provision "shell", inline: "dnf -y install python3.8"
+  config.vm.provision "shell", inline: "python3.8 -m ensurepip --user"
 
   config.vm.provision "shell", path: "provisioning.py", env: { "BRANCH" => ENV["BRANCH"] }, reboot: true
   config.vm.network "private_network", ip: "192.168.124.5"
