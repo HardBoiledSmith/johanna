@@ -69,6 +69,8 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
         ename = ee['EnvironmentName']
         if not ename.startswith(name):
             continue
+        if 'EndpointURL' not in ee:
+            continue
         eid_list.add(ee['EnvironmentId'])
 
         pattern = r'awseb-[a-zA-Z0-9]+-[a-zA-Z0-9]+-[a-zA-Z0-9]+'
