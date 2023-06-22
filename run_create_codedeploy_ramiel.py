@@ -95,7 +95,7 @@ print('-' * 80)
 
 print_message('Cleaning up the instance tagging(s)')
 
-ll = [all_instances[10 * ii: 10 * (ii + 1)] for ii in range(len(all_instances) // 10 + 1)]
+ll = [all_instances[ii:ii + 10] for ii in range(0, len(all_instances), 10)]
 for instances in ll:
     cc = list()
     cc.extend(['deploy', 'remove-tags-from-on-premises-instances'])
