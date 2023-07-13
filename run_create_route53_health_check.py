@@ -1,40 +1,22 @@
 #!/usr/bin/env python3
 
 import json
-from datetime import datetime
+import re
 import time
 
+from datetime import datetime
 from run_common import AWSCli
 from run_common import parse_args
 from env import env
 from run_common import print_message
 
 
-def create_route53_health_check(settings):
-    aws_cli = AWSCli()
-    name = settings['NAME']
-    print_message('create Route53 health check: %s' % name)
-
+def _create_route53_health_check_and_put_metric(aws_cli, name, data, settings, domain=None):
     cmd = ['route53', 'create-health-check']
     timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M')
     caller_reference = f'{name}-{timestamp}'
     cmd += ['--caller-reference', caller_reference]
-
-    dd = {
-        "Port": 443,
-        "Type": "HTTPS",
-        "ResourcePath": settings['RESOURCEPATH'],
-        "FullyQualifiedDomainName": settings['TARGETDOMAINNAME'],
-        "RequestInterval": 30,
-        "FailureThreshold": 3,
-        "MeasureLatency": False,
-        "Inverted": False,
-        "Disabled": False,
-        "EnableSNI": True,
-        "Regions": ["ap-northeast-1", "us-east-1", "ap-southeast-2"]
-    }
-
-    cmd += ['--health-check-config', json.dumps(dd)]
+    cmd += ['--health-check-config', json.dumps(data)]
     rr = aws_cli.run(cmd)
 
     healthcheck_id = rr['HealthCheck']['Id']
@@ -47,7 +29,8 @@ def create_route53_health_check(settings):
     healthcheck_region = 'us-east-1'
     aws_cli = AWSCli(healthcheck_region)
 
-    alarm_name = f'{name}-{healthcheck_region}-{settings["METRIC_NAME"]}'
+    alarm_name = f'{name}-{healthcheck_region}-{settings["METRIC_NAME"]}' if not domain \
+        else f'{name}-{healthcheck_region}-{domain}-{settings["METRIC_NAME"]}'
     print_message('create or update cloudwatch alarm: %s' % alarm_name)
 
     time.sleep(5)
@@ -75,6 +58,49 @@ def create_route53_health_check(settings):
     aws_cli.run(cmd)
 
 
+def create_route53_health_check(settings):
+    aws_cli = AWSCli()
+    name = settings['NAME']
+    print_message('create Route53 health check: %s' % name)
+
+    dd = dict()
+    dd['Type'] = 'HTTPS',
+    dd['ResourcePath'] = settings['RESOURCEPATH'],
+    dd['RequestInterval'] = 30,
+    dd['FailureThreshold'] = 3,
+    dd['MeasureLatency'] = False,
+    dd['Inverted'] = False,
+    dd['Disabled'] = False,
+    dd['EnableSNI'] = True,
+    dd['Regions'] = ["ap-northeast-1", "us-east-1", "ap-southeast-2"]
+
+    if 'TARGETDOMAINNAME' in settings:
+        domain = settings['TARGETDOMAINNAME']
+        match = re.search(r':(\d+)$', domain)
+        port = 443
+        if match:
+            port = match.group(1)
+
+        dd['Port'] = port
+        dd['FullyQualifiedDomainName'] = domain
+
+        _create_route53_health_check_and_put_metric(aws_cli, name, dd, settings)
+    elif 'TARGETDOMAINNAME_LIST' in settings:
+        ll = settings['TARGETDOMAINNAME_LIST'].split(',')
+        for domain in ll:
+            match = re.search(r':(\d+)$', domain)
+            port = 443
+            if match:
+                port = match.group(1)
+
+            dd['Port'] = port
+            dd['FullyQualifiedDomainName'] = domain
+
+            _create_route53_health_check_and_put_metric(aws_cli, name, dd, settings, domain)
+    else:
+        raise Exception('No TARGETDOMAINNAME or TARGETDOMAINNAME_LIST')
+
+
 ################################################################################
 #
 # start
@@ -84,5 +110,4 @@ if __name__ == '__main__':
     args = parse_args()
 
     for settings in env.get('route53', list()):
-
         create_route53_health_check(settings)
