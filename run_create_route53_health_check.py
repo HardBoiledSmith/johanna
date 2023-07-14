@@ -39,7 +39,7 @@ def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None)
     timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M')
     caller_reference = f'{name}-{timestamp}' if not unique_domain else f'{name}-{domain}-{port}-{timestamp}'
     cmd += ['--caller-reference', caller_reference]
-    cmd += ['--health-check-config', json.dumps(data)]
+    cmd += ['--health-check-config', json.dumps(dd)]
     rr = aws_cli.run(cmd)
 
     healthcheck_id = rr['HealthCheck']['Id']
