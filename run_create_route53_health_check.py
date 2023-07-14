@@ -11,10 +11,33 @@ from env import env
 from run_common import print_message
 
 
-def _create_route53_health_check_and_put_metric(aws_cli, name, data, settings, unique_domain=None):
+def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None):
+    aws_cli = AWSCli()
+    name = settings['NAME']
+    print_message('create Route53 health check: %s' % name)
+
+    match = re.search(r'(.*):(\d+)$', domain)
+    port = 443
+    if match:
+        domain = match.group(1)
+        port = int(match.group(2))
+
+    dd = dict()
+    dd['Type'] = 'HTTPS'
+    dd['ResourcePath'] = settings['RESOURCEPATH']
+    dd['RequestInterval'] = 30
+    dd['FailureThreshold'] = 3
+    dd['MeasureLatency'] = False
+    dd['Inverted'] = False
+    dd['Disabled'] = False
+    dd['EnableSNI'] = True
+    dd['Regions'] = ["ap-northeast-1", "us-east-1", "ap-southeast-2"]
+    dd['Port'] = port
+    dd['FullyQualifiedDomainName'] = domain
+
     cmd = ['route53', 'create-health-check']
     timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M')
-    caller_reference = f'{name}-{timestamp}' if not unique_domain else f'{name}-{unique_domain}-{timestamp}'
+    caller_reference = f'{name}-{timestamp}' if not unique_domain else f'{name}-{domain}-{port}-{timestamp}'
     cmd += ['--caller-reference', caller_reference]
     cmd += ['--health-check-config', json.dumps(data)]
     rr = aws_cli.run(cmd)
@@ -59,47 +82,15 @@ def _create_route53_health_check_and_put_metric(aws_cli, name, data, settings, u
 
 
 def create_route53_health_check(settings):
-    aws_cli = AWSCli()
-    name = settings['NAME']
-    print_message('create Route53 health check: %s' % name)
-
-    dd = dict()
-    dd['Type'] = 'HTTPS'
-    dd['ResourcePath'] = settings['RESOURCEPATH']
-    dd['RequestInterval'] = 30
-    dd['FailureThreshold'] = 3
-    dd['MeasureLatency'] = False
-    dd['Inverted'] = False
-    dd['Disabled'] = False
-    dd['EnableSNI'] = True
-    dd['Regions'] = ["ap-northeast-1", "us-east-1", "ap-southeast-2"]
-
     if settings.get('TARGETDOMAINNAME'):
         domain = settings['TARGETDOMAINNAME']
-        match = re.search(r':(\d+)$', domain)
-        port = 443
-        if match:
-            port = match.group(1)
-
-        dd['Port'] = port
-        dd['FullyQualifiedDomainName'] = domain
-
-        _create_route53_health_check_and_put_metric(aws_cli, name, dd, settings)
+        _create_route53_health_check_and_alarm(domain, settings)
     elif settings.get('TARGETDOMAINNAME_LIST'):
         ll = settings['TARGETDOMAINNAME_LIST'].split(',')
         for domain in ll:
-            match = re.search(r'(.*):(\d+)$', domain)
-            port = 443
-            if match:
-                domain = match.group(1)
-                port = int(match.group(2))
-
-            dd['Port'] = port
-            dd['FullyQualifiedDomainName'] = domain
-
-            _create_route53_health_check_and_put_metric(aws_cli, name, dd, settings, f'{domain}-{port}')
+            _create_route53_health_check_and_alarm(domain, settings, True)
     else:
-        print_message(f'[SKIPPED] {name}: TARGETDOMAINNAME or TARGETDOMAINNAME_LIST is not set')
+        print_message(f"[SKIPPED] {settings['NAME']}: TARGETDOMAINNAME or TARGETDOMAINNAME_LIST is not set")
 
 
 ################################################################################
