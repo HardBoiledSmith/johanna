@@ -53,7 +53,7 @@ def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None)
     aws_cli = AWSCli(healthcheck_region)
 
     alarm_name = f'{name}-{healthcheck_region}-{settings["METRIC_NAME"]}' if not unique_domain \
-        else f'{name}-{healthcheck_region}-{unique_domain}-{settings["METRIC_NAME"]}'
+        else f'{name}-{healthcheck_region}-{domain}-{port}-{settings["METRIC_NAME"]}'
     print_message('create or update cloudwatch alarm: %s' % alarm_name)
 
     time.sleep(5)
