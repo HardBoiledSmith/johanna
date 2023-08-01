@@ -51,7 +51,7 @@ cmd = ['rds', 'describe-db-clusters']
 cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
 result = aws_cli.run(cmd, ignore_error=True)
 
-if type(result) == dict:
+if isinstance(result, dict):
     cluster_list = result.get('DBClusters', list())
     for cc in cluster_list:
         member_list = cc['DBClusterMembers']

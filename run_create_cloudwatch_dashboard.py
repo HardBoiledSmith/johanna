@@ -290,7 +290,7 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
                 dimension_type = 'elb'
             elif dimension == 'TargetGroup':
                 dimension_type = 'tg'
-            elif type(dimension) == dict:
+            elif isinstance(dimension, dict):
                 if 'expression' in dimension:
                     dimension_type = 'search_expression'
                     break

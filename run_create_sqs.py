@@ -37,12 +37,13 @@ def run_create_standard_queue(name, settings):
         cmd += ['--attributes', json.dumps(attributes)]
         aws_cli.run(cmd)
 
+        result = None
         elapsed_time = 0
         while elapsed_time < 120:
             cmd = ['sqs', 'get-queue-url', '--queue-name', f'{name}-dead-letter']
             result = aws_cli.run(cmd)
 
-            if type(result) == dict:
+            if isinstance(result, dict):
                 if result.get('QueueUrl', None):
                     break
 
@@ -99,12 +100,13 @@ def run_create_fifo_queue(name, settings):
         cmd += ['--attributes', json.dumps(attributes)]
         aws_cli.run(cmd)
 
+        result = None
         elapsed_time = 0
         while elapsed_time < 120:
             cmd = ['sqs', 'get-queue-url', '--queue-name', f'{queue_name}-dead-letter.fifo']
             result = aws_cli.run(cmd)
 
-            if type(result) == dict and result.get('QueueUrl', None):
+            if isinstance(result, dict) and result.get('QueueUrl', None):
                 break
 
             print('get url... (elapsed time: \'%d\' seconds)' % elapsed_time)
