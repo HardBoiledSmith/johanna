@@ -109,7 +109,7 @@ if __name__ == "__main__":
     if command == 'aws':
         aws_cli = AWSCli()
         result = aws_cli.run(args[2:], ignore_error=True)
-        if type(result) == dict:
+        if isinstance(result, dict):
             print(json.dumps(result, sort_keys=True, indent=4))
         else:
             print(result)
