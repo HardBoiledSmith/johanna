@@ -11,9 +11,13 @@ from env import env
 from run_common import print_message
 
 
-def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None):
+def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None, target_name=None):
     aws_cli = AWSCli()
     name = settings['NAME']
+
+    if name != target_name:
+        return
+
     print_message('create Route53 health check: %s' % name)
 
     match = re.search(r'(.*):(\d+)$', domain)
@@ -25,8 +29,8 @@ def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None)
     dd = dict()
     dd['Type'] = 'HTTPS'
     dd['ResourcePath'] = settings['RESOURCEPATH']
-    dd['RequestInterval'] = 30
-    dd['FailureThreshold'] = 3
+    dd['RequestInterval'] = settings.get('REQUEST_INTERVAL', 30)
+    dd['FailureThreshold'] = settings.get('FAILURE_THRESHOLD', 3)
     dd['MeasureLatency'] = False
     dd['Inverted'] = False
     dd['Disabled'] = False
@@ -81,14 +85,14 @@ def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None)
     aws_cli.run(cmd)
 
 
-def create_route53_health_check(settings):
+def create_route53_health_check(settings, target_name):
     if settings.get('TARGETDOMAINNAME'):
         domain = settings['TARGETDOMAINNAME']
         _create_route53_health_check_and_alarm(domain, settings)
     elif settings.get('TARGETDOMAINNAME_LIST'):
         ll = settings['TARGETDOMAINNAME_LIST'].split(',')
         for domain in ll:
-            _create_route53_health_check_and_alarm(domain, settings, True)
+            _create_route53_health_check_and_alarm(domain, settings, True, target_name)
     else:
         print_message(f"[SKIPPED] {settings['NAME']}: TARGETDOMAINNAME or TARGETDOMAINNAME_LIST is not set")
 
@@ -99,7 +103,11 @@ def create_route53_health_check(settings):
 #
 ################################################################################
 if __name__ == '__main__':
-    args = parse_args()
+    _, args = parse_args()
+
+    target_name = None
+    if len(args) > 1:
+        target_name = args[1]
 
     for settings in env.get('route53', list()):
-        create_route53_health_check(settings)
+        create_route53_health_check(settings, target_name)

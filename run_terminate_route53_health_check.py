@@ -7,9 +7,12 @@ from run_common import AWSCli, print_message
 from run_common import parse_args
 
 
-def _delete_route53_health_check_and_alarm(domain, settings, unique_domain=None):
+def _delete_route53_health_check_and_alarm(domain, settings, unique_domain=None, target_name=None):
     aws_cli = AWSCli()
     name = settings['NAME']
+
+    if name != target_name:
+        return
 
     cmd = ['route53', 'list-health-checks']
     rr = aws_cli.run(cmd)
@@ -37,14 +40,14 @@ def _delete_route53_health_check_and_alarm(domain, settings, unique_domain=None)
         aws_cli.run(cmd)
 
 
-def delete_route53_health_check(settings):
+def delete_route53_health_check(settings, target_name):
     if settings.get('TARGETDOMAINNAME'):
         domain = settings['TARGETDOMAINNAME']
-        _delete_route53_health_check_and_alarm(domain, settings)
+        _delete_route53_health_check_and_alarm(domain, settings, target_name)
     elif settings.get('TARGETDOMAINNAME_LIST'):
         ll = settings['TARGETDOMAINNAME_LIST'].split(',')
         for domain in ll:
-            _delete_route53_health_check_and_alarm(domain, settings, True)
+            _delete_route53_health_check_and_alarm(domain, settings, True, target_name)
     else:
         print_message(f"[SKIPPED] {settings['NAME']}: TARGETDOMAINNAME or TARGETDOMAINNAME_LIST is not set")
 
@@ -56,7 +59,11 @@ def delete_route53_health_check(settings):
 ################################################################################
 
 if __name__ == '__main__':
-    args = parse_args()
+    _, args = parse_args()
+
+    target_name = None
+    if len(args) > 1:
+        target_name = args[1]
 
     for settings in env.get('route53', list()):
-        delete_route53_health_check(settings)
+        delete_route53_health_check(settings, target_name)
