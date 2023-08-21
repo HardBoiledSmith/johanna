@@ -56,7 +56,18 @@ def delete_route53_health_check(settings):
 ################################################################################
 
 if __name__ == '__main__':
-    args = parse_args()
+    _, args = parse_args()
+
+    target_found = False
+    target_name = None
+    if len(args) > 1:
+        target_name = args[1]
 
     for settings in env.get('route53', list()):
+        if target_name and settings['NAME'] != target_name:
+            continue
+
         delete_route53_health_check(settings)
+
+    if not target_found:
+        print_message('target not found')
