@@ -14,8 +14,7 @@ from run_common import print_message
 def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None, target_name=None):
     aws_cli = AWSCli()
     name = settings['NAME']
-
-    if name != target_name:
+    if target_name and name != target_name:
         return
 
     print_message('create Route53 health check: %s' % name)
