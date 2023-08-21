@@ -11,11 +11,9 @@ from env import env
 from run_common import print_message
 
 
-def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None, target_name=None):
+def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None):
     aws_cli = AWSCli()
     name = settings['NAME']
-    if target_name and name != target_name:
-        return
 
     print_message('create Route53 health check: %s' % name)
 
@@ -91,7 +89,7 @@ def create_route53_health_check(settings, target_name):
     elif settings.get('TARGETDOMAINNAME_LIST'):
         ll = settings['TARGETDOMAINNAME_LIST'].split(',')
         for domain in ll:
-            _create_route53_health_check_and_alarm(domain, settings, True, target_name)
+            _create_route53_health_check_and_alarm(domain, settings, True)
     else:
         print_message(f"[SKIPPED] {settings['NAME']}: TARGETDOMAINNAME or TARGETDOMAINNAME_LIST is not set")
 
@@ -104,9 +102,17 @@ def create_route53_health_check(settings, target_name):
 if __name__ == '__main__':
     _, args = parse_args()
 
+    target_found = False
     target_name = None
     if len(args) > 1:
         target_name = args[1]
 
     for settings in env.get('route53', list()):
+        if target_name and settings['NAME'] != target_name:
+            continue
+
+        target_found = True
         create_route53_health_check(settings, target_name)
+
+    if not target_found:
+        print_message('target not found')
