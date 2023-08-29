@@ -93,6 +93,14 @@ You can use this on web GUI
 ./run_create_route53.py -ah Z2FDTNDATAQYW2 -at cloudfront -d <cloudfront domain name> -hn hbsmith.io -n <domain> -r A -f
 ```
 
+# Script to create route 53 health check
+
+- Full deployment: `./run_create_route53_health_check.py`
+- Partial deployment: `./run_create_route53_health_check.py <name>`
+  - ex) `./run_create_route53_health_check.py ramiel`
+- Partial termination: `./run_terminate_route53_health_check.py <name>`
+  - ex) `./run_terminate_route53_health_check.py ramiel`
+
 # Notes
 
 * If you use AWS IAM user credential instead of master account, it must have IAMFullAccess,

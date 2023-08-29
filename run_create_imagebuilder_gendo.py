@@ -152,6 +152,18 @@ def run_create_image_builder(options):
     rr = aws_cli.run(cmd)
     gendo_component_arn2 = rr['componentBuildVersionArn']
 
+    gendo_component_name = f'gendo_provisioning_test_component_{str_timestamp}'
+    cmd = ['imagebuilder', 'create-component']
+    cmd += ['--name', gendo_component_name]
+    cmd += ['--semantic-version', semantic_version]
+    cmd += ['--platform', 'Windows']
+    cmd += ['--supported-os-versions', 'Microsoft Windows Server 2016']
+    cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{target_eb_platform_version_tag}']
+    cmd += ['--data', 'file://template/gendo/gendo/_provisioning/gendo_image_provisioning_test_sample.yml']
+
+    rr = aws_cli.run(cmd)
+    gendo_test_component_arn = rr['componentBuildVersionArn']
+
     ############################################################################
     print_session('create recipe')
 
@@ -163,6 +175,10 @@ def run_create_image_builder(options):
 
     recipe_component = dict()
     recipe_component['componentArn'] = gendo_component_arn2
+    recipe_components.append(recipe_component)
+
+    recipe_component = dict()
+    recipe_component['componentArn'] = gendo_test_component_arn
     recipe_components.append(recipe_component)
 
     base_ami_tag = f'base_ami_id={eb_platform_ami}'
