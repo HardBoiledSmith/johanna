@@ -14,6 +14,7 @@ from run_common import print_message
 def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None):
     aws_cli = AWSCli()
     name = settings['NAME']
+    protocol_type = settings.get('PROTOCOL_TYPE', 'HTTPS')
 
     print_message('create Route53 health check: %s' % name)
 
@@ -24,7 +25,6 @@ def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None)
         port = int(match.group(2))
 
     dd = dict()
-    dd['Type'] = 'HTTPS'
     dd['ResourcePath'] = settings['RESOURCEPATH']
     dd['RequestInterval'] = settings.get('REQUEST_INTERVAL', 30)
     dd['FailureThreshold'] = settings.get('FAILURE_THRESHOLD', 3)
@@ -35,6 +35,9 @@ def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None)
     dd['Regions'] = ["ap-northeast-1", "us-east-1", "ap-southeast-2"]
     dd['Port'] = port
     dd['FullyQualifiedDomainName'] = domain
+    dd['Type'] = protocol_type
+    if protocol_type == 'HTTP':
+        dd['EnableSNI'] = False
 
     cmd = ['route53', 'create-health-check']
     timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M')
@@ -82,7 +85,7 @@ def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None)
     aws_cli.run(cmd)
 
 
-def create_route53_health_check(settings, target_name):
+def create_route53_health_check(settings):
     if settings.get('TARGETDOMAINNAME'):
         domain = settings['TARGETDOMAINNAME']
         _create_route53_health_check_and_alarm(domain, settings)
@@ -112,7 +115,7 @@ if __name__ == '__main__':
             continue
 
         target_found = True
-        create_route53_health_check(settings, target_name)
+        create_route53_health_check(settings)
 
     if not target_found:
         print_message('target not found')
