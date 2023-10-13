@@ -73,7 +73,10 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
             continue
         eid_list.add(ee['EnvironmentId'])
 
-        pattern = r'awseb-[a-zA-Z0-9]+-[a-zA-Z0-9]+-[a-zA-Z0-9]+'
+        if 'awseb--' in ee['EndpointURL']:
+            pattern = r'awseb--[a-zA-Z0-9]+-[a-zA-Z0-9]+-[a-zA-Z0-9]+'
+        else:
+            pattern = r'awseb-[a-zA-Z0-9]+-[a-zA-Z0-9]+-[a-zA-Z0-9]+'
         match = re.search(pattern, ee['EndpointURL'])
         elb_list.add(match.group())
 
@@ -129,7 +132,11 @@ def run_create_cw_dashboard_elasticbeanstalk(name, settings):
             if not target_group and not loadbalancer:
                 continue
 
-            pattern = r"awseb-[A-Z0-9]+-[A-Z0-9]+"
+            if 'awseb--' in dd[1]['Value']:
+                pattern = r'awseb--[A-Za-z0-9]+-[A-Za-z0-9]+'
+            else:
+                pattern = r'awseb-[A-Za-z0-9]+-[A-Za-z0-9]+'
+
             match = re.search(pattern, dd[1]['Value'])
             if not check_string_in_list(elb_list, match.group(0)):
                 continue
