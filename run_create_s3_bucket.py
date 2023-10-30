@@ -28,7 +28,7 @@ def run_create_s3_bucket(name, settings):
 
     ################################################################################
 
-    if policy in ['website', 'email', 'temp-bucket']:
+    if policy in ['website', 'email', 'temp-bucket', 'ramiel-op-bundle']:
         print_message('delete public access block')
 
         cmd = ['s3api', 'delete-public-access-block']
