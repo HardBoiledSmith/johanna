@@ -147,6 +147,7 @@ cmd += ['--monitoring-interval', monitoring_interval]
 cmd += ['--monitoring-role-arn', monitoring_role_arn]
 if not db_instance_class.startswith('db.t'):
     cmd += ['--enable-performance-insights']
+cmd += ['--ca-certificate-identifier', 'rds-ca-rsa2048-g1']
 aws_cli.run(cmd)
 
 if db_multi_az == '--multi-az':
@@ -162,4 +163,5 @@ if db_multi_az == '--multi-az':
     cmd += ['--monitoring-role-arn', monitoring_role_arn]
     if not db_instance_class.startswith('db.t'):
         cmd += ['--enable-performance-insights']
+    cmd += ['--ca-certificate-identifier', 'rds-ca-rsa2048-g1']
     aws_cli.run(cmd)
