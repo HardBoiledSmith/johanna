@@ -128,7 +128,7 @@ cmd += ['--db-cluster-identifier', env['rds']['DB_CLUSTER_ID']]
 cmd += ['--db-subnet-group-name', db_subnet_group_name]
 cmd += ['--enable-cloudwatch-logs-exports', logs_export_to_cloudwatch]
 cmd += ['--engine', 'aurora-mysql']
-cmd += ['--engine-version', '8.0.mysql_aurora.3.02.2']
+cmd += ['--engine-version', '8.0.mysql_aurora.3.05.0']
 cmd += ['--master-user-password', master_user_password]
 cmd += ['--master-username', master_user_name]
 cmd += ['--vpc-security-group-ids', security_group_id]
@@ -147,6 +147,7 @@ cmd += ['--monitoring-interval', monitoring_interval]
 cmd += ['--monitoring-role-arn', monitoring_role_arn]
 if not db_instance_class.startswith('db.t'):
     cmd += ['--enable-performance-insights']
+cmd += ['--ca-certificate-identifier', 'rds-ca-rsa2048-g1']
 aws_cli.run(cmd)
 
 if db_multi_az == '--multi-az':
@@ -162,4 +163,5 @@ if db_multi_az == '--multi-az':
     cmd += ['--monitoring-role-arn', monitoring_role_arn]
     if not db_instance_class.startswith('db.t'):
         cmd += ['--enable-performance-insights']
+    cmd += ['--ca-certificate-identifier', 'rds-ca-rsa2048-g1']
     aws_cli.run(cmd)
