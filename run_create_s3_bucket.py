@@ -22,6 +22,10 @@ def run_create_s3_bucket(name, settings):
     ################################################################################
     print_session('create %s' % name)
 
+    if name == 'op-hbsmith-ramiel' and phase != 'op':
+        print_message('skip to create s3 bucket %s: this is only for OP account' % name)
+        return
+
     cmd = ['s3api', 'create-bucket', '--bucket', bucket_name, '--create-bucket-configuration',
            'LocationConstraint=%s' % region]
     aws_cli.run(cmd, ignore_error=True)
