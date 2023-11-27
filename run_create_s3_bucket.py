@@ -163,6 +163,12 @@ def run_create_s3_bucket(name, settings):
                         "Prefix": ""
                     },
                     "Status": "Enabled",
+                    "Transitions": [
+                        {
+                            "Days": 62,
+                            "StorageClass": "INTELLIGENT_TIERING"
+                        }
+                    ],
                     "NoncurrentVersionExpiration": {
                         "NoncurrentDays": 7
                     },
