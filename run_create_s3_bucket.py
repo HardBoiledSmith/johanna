@@ -22,6 +22,10 @@ def run_create_s3_bucket(name, settings):
     ################################################################################
     print_session('create %s' % name)
 
+    if name == 'op-hbsmith-ramiel' and phase != 'op':
+        print_message('skip to create s3 bucket %s: this is only for OP account' % name)
+        return
+
     cmd = ['s3api', 'create-bucket', '--bucket', bucket_name, '--create-bucket-configuration',
            'LocationConstraint=%s' % region]
     aws_cli.run(cmd, ignore_error=True)
@@ -30,7 +34,6 @@ def run_create_s3_bucket(name, settings):
 
     if policy in ['website', 'email', 'temp-bucket']:
         print_message('delete public access block')
-
         cmd = ['s3api', 'delete-public-access-block']
         cmd += ['--bucket', bucket_name]
         aws_cli.run(cmd)
@@ -38,6 +41,7 @@ def run_create_s3_bucket(name, settings):
         print_message('wait public access block has deleted...')
         time.sleep(10)
 
+    if policy in ['website', 'email', 'temp-bucket', 'ramiel-op-bundle']:
         print_message('set bucket policy')
 
         lines = read_file('aws_iam/aws-s3-bucket-policy-for-%s.json' % policy)
@@ -159,6 +163,12 @@ def run_create_s3_bucket(name, settings):
                         "Prefix": ""
                     },
                     "Status": "Enabled",
+                    "Transitions": [
+                        {
+                            "Days": 62,
+                            "StorageClass": "INTELLIGENT_TIERING"
+                        }
+                    ],
                     "NoncurrentVersionExpiration": {
                         "NoncurrentDays": 7
                     },
