@@ -163,12 +163,6 @@ def run_create_s3_bucket(name, settings):
                         "Prefix": ""
                     },
                     "Status": "Enabled",
-                    "Transitions": [
-                        {
-                            "Days": 62,
-                            "StorageClass": "INTELLIGENT_TIERING"
-                        }
-                    ],
                     "NoncurrentVersionExpiration": {
                         "NoncurrentDays": 7
                     },
@@ -178,6 +172,15 @@ def run_create_s3_bucket(name, settings):
                 }
             ]
         }
+
+        transition_days = max(int(expire_days / 3), 1)
+        if transition_days < expire_days:
+            cc['Rules'][0]['Transitions'] = [
+                {
+                    "Days": transition_days,
+                    "StorageClass": "INTELLIGENT_TIERING"
+                }
+            ]
 
         cmd = ['s3api', 'put-bucket-lifecycle-configuration', '--bucket', bucket_name]
         cmd += ['--lifecycle-configuration', json.dumps(cc)]
