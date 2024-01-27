@@ -126,7 +126,7 @@ def _preprocess(hostname):
         f.write('#!/usr/bin/env bash\n')
         f.write('source /root/.nvm/nvm.sh\n')
         # remove this node mirror setting if there is any problems
-        f.write('export NVM_NODEJS_ORG_MIRROR=https://npm.taobao.org/mirrors/node/\n')
+        # f.write('export NVM_NODEJS_ORG_MIRROR=https://npm.taobao.org/mirrors/node/\n')
         f.write('nvm install %s\n' % node_version)
         f.write('nvm alias default %s\n' % node_version)
         f.write('nvm use default %s\n' % node_version)
