@@ -54,25 +54,17 @@ def run_create_s3_bucket(name, settings):
         aws_cli.run(cmd)
 
     if policy == 'temp-bucket':
-        allowd_origins = list()
-        if phase == 'op':
-            allowd_origins.append('https://app.hbsmith.io')
-            allowd_origins.append('https://app2.hbsmith.io')
-        elif phase == 'qa':
-            allowd_origins.append('https://qa-app.hbsmith.io')
-            allowd_origins.append('https://qa-app2.hbsmith.io')
+        allowed_origins = list()
+        if phase in ('op', 'qa'):
+            allowed_origins.append('https://*.hbsmith.io')
         else:
-            ii = bucket_name.find('-dv-hbsmith-temp')
-            dev_name = bucket_name[0:ii]
+            allowed_origins.append('http://*.hbsmith.io')
+            allowed_origins.append('http://*.hbsmith.io:9001')
+            allowed_origins.append('http://*.hbsmith.io:9002')
+            allowed_origins.append('http://*.hbsmith.io:9100')
+            allowed_origins.append('https://*.hbsmith.io')
 
-            allowd_origins.append('http://dv-app.hbsmith.io')
-            allowd_origins.append('http://dv-app.hbsmith.io:9100')
-            allowd_origins.append('http://dv-app2.hbsmith.io')
-            allowd_origins.append('http://dv-app2.hbsmith.io:9001')
-            allowd_origins.append(f'https://{dev_name}-dv-app.hbsmith.io')
-            allowd_origins.append(f'https://{dev_name}-dv-app.hbsmith.io')
-
-        if not allowd_origins:
+        if not allowed_origins:
             raise Exception('Invalid allowed origin')
 
         print_message('set cors')
@@ -81,8 +73,7 @@ def run_create_s3_bucket(name, settings):
                 {
                     "AllowedHeaders": ["*"],
                     "AllowedMethods": ["PUT"],
-                    "AllowedOrigins": allowd_origins,
-                    "ExposeHeaders": []
+                    "AllowedOrigins": allowed_origins
                 }
             ]
         }
@@ -105,10 +96,9 @@ def run_create_s3_bucket(name, settings):
         cc = {
             "CORSRules": [
                 {
-                    "AllowedOrigins": ["*"],
+                    "AllowedHeaders": ["*"],
                     "AllowedMethods": ["GET"],
-                    "MaxAgeSeconds": 3000,
-                    "AllowedHeaders": ["Authorization"]
+                    "AllowedOrigins": ["*"]
                 }
             ]
         }
