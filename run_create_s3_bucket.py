@@ -92,13 +92,26 @@ def run_create_s3_bucket(name, settings):
                 'file://aws_iam/aws-s3-website-configuration.json']
         aws_cli.run(cmd)
 
+        allowed_origins = list()
+        if phase in ('op', 'qa'):
+            allowed_origins.append('https://*.hbsmith.io')
+        else:
+            allowed_origins.append('http://*.hbsmith.io')
+            allowed_origins.append('http://*.hbsmith.io:9001')
+            allowed_origins.append('http://*.hbsmith.io:9002')
+            allowed_origins.append('http://*.hbsmith.io:9100')
+            allowed_origins.append('https://*.hbsmith.io')
+
+        if not allowed_origins:
+            raise Exception('Invalid allowed origin')
+
         print_message('set cors')
         cc = {
             "CORSRules": [
                 {
                     "AllowedHeaders": ["*"],
                     "AllowedMethods": ["GET"],
-                    "AllowedOrigins": ["*"]
+                    "AllowedOrigins": allowed_origins
                 }
             ]
         }
