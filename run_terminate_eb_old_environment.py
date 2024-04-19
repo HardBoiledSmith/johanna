@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import time
+import re
 
 from env import env
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
+
 
 if __name__ == "__main__":
     from run_common import parse_args
@@ -38,7 +40,20 @@ def _is_old_environment(cname):
 
     return True
 
+def _has_no_kaji_instances(cname):
+    pattern = re.compile(r"\b(\w+-\d+)\b")
+    match = pattern.search(cname)
+    extracted = match.group(1)
 
+    cmd = ['ec2', 'describe-instances']
+    cmd += ['--filters', f"Name=tag:Name,Values={extracted}"]
+    cmd += ['Name=instance-state-name,Values=running']
+    cmd += ['--query Reservations[*].Instances[*].InstanceId']
+    cmd += ['--output text | wc -l']
+    if int(aws_cli.run(cmd, ignore_error=True)) == 0:
+        return True
+
+    return False
 ################################################################################
 #
 # start
@@ -76,6 +91,9 @@ for vpc_env in env.get('vpc', list()):
             continue
 
         if not _is_old_environment(r['CNAME']):
+            continue
+
+        if 'kaji' in r['CNAME'] and not _has_no_kaji_instances(r['CNAME']):
             continue
 
         cmd = ['cloudwatch', 'delete-alarms']
