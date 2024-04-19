@@ -378,12 +378,6 @@ def run_create_eb_django(name, settings, options):
     oo['Value'] = eb_vpc_id
     option_settings.append(oo)
 
-    aws
-    elasticbeanstalk
-    update - environment - -environment - name
-    my - env - -option - settings
-    Namespace = aws:autoscaling: asg, OptionName = DesiredCapacity, Value = 3
-
     oo = dict()
     oo['Namespace'] = 'aws:elasticbeanstalk:environment'
     oo['OptionName'] = 'EnvironmentType'
