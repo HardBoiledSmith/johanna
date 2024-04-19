@@ -20,6 +20,7 @@ def run_create_eb_django(name, settings, options):
 
     aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
     aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
+    aws_asg_desired_value = settings.get('AWS_ASG_DESIRED_VALUE', None)
     aws_region = settings['AWS_REGION']
     aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
     cname = settings['CNAME']
@@ -183,6 +184,9 @@ def run_create_eb_django(name, settings, options):
     lines = read_file('%s/%s/_provisioning/.ebextensions/%s.config.sample' % (template_path, name, name))
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
     lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
+    if aws_asg_desired_value:
+        lines = re_sub_lines(lines, 'AWS_ASG_DESIRED_VALUE', aws_asg_desired_value)
+
     lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
     lines = re_sub_lines(lines, 'SSL_CERTIFICATE_ID', ssl_certificate_id)
     write_file('%s/%s/_provisioning/.ebextensions/%s.config' % (template_path, name, name), lines)
@@ -373,6 +377,12 @@ def run_create_eb_django(name, settings, options):
     oo['OptionName'] = 'VPCId'
     oo['Value'] = eb_vpc_id
     option_settings.append(oo)
+
+    aws
+    elasticbeanstalk
+    update - environment - -environment - name
+    my - env - -option - settings
+    Namespace = aws:autoscaling: asg, OptionName = DesiredCapacity, Value = 3
 
     oo = dict()
     oo['Namespace'] = 'aws:elasticbeanstalk:environment'
