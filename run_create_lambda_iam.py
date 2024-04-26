@@ -10,6 +10,8 @@ def create_iam_for_lambda(git_folder_name, folder_name, function_name):
     sleep_required = False
     replaced_function_name = function_name.replace('_', '-')
     role_name = f'lambda-{replaced_function_name}-role'
+    result = aws_cli.get_iam_role(role_name)
+    print_message(f'role_name result: {result}')
     if not aws_cli.get_iam_role(role_name):
         print_message('create iam role')
 
