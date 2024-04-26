@@ -12,7 +12,7 @@ def create_iam_for_lambda(git_folder_name, folder_name, function_name):
     role_name = f'lambda-{replaced_function_name}-role'
     result = aws_cli.get_iam_role(role_name)
     print_message(f'role_name result: {result}')
-    if not aws_cli.get_iam_role(role_name):
+    if not result:
         print_message('create iam role')
 
         role_file_path = f'file://template/{git_folder_name}/lambda/{folder_name}/iam/role.json'
@@ -23,7 +23,9 @@ def create_iam_for_lambda(git_folder_name, folder_name, function_name):
         sleep_required = True
 
     policy_name = f'lambda-{replaced_function_name}-policy'
-    if not aws_cli.get_iam_role_policy(role_name, policy_name):
+    result = aws_cli.get_iam_role_policy(role_name, policy_name)
+    print_message(f'policy_name result: {result}')
+    if not result:
         print_message('put iam role policy')
 
         policy_file_path = f'file://template/{git_folder_name}/lambda/{folder_name}/iam/policy.json'
