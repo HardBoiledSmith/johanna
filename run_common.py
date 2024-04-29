@@ -601,3 +601,13 @@ def reset_template_dir(options):
 
     if not os.path.exists('template/' + name):
         raise Exception()
+
+
+def remove_template_dir_content():
+    if not os.path.exists('template/'):
+        subprocess.Popen(['mkdir', '-p', './template']).communicate()
+
+    subprocess.Popen(['rm', '-rf', './*'], cwd='template').communicate()
+
+    if not os.path.exists('template/'):
+        raise Exception()
