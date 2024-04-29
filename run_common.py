@@ -603,11 +603,13 @@ def reset_template_dir(options):
         raise Exception()
 
 
-def remove_template_dir_content():
+def remove_kaji_in_template_dir():
     if not os.path.exists('template/'):
         subprocess.Popen(['mkdir', '-p', './template']).communicate()
 
-    subprocess.Popen(['rm', '-rf', './*'], cwd='template').communicate()
+    print_session('remove kaji in template')
+
+    subprocess.Popen(['rm', '-rf', './kaji'], cwd='template').communicate()
 
     if not os.path.exists('template/'):
         raise Exception()
