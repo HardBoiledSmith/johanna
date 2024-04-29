@@ -2,7 +2,7 @@
 
 from env import env
 from run_common import print_session
-from run_common import reset_template_dir
+from run_common import remove_template_dir_content
 from run_create_lambda_cron import run_create_lambda_cron
 from run_create_lambda_default import run_create_lambda_default
 from run_create_lambda_event import run_create_lambda_event
@@ -24,7 +24,7 @@ if __name__ == "__main__":
 ################################################################################
 print_session('create lambda')
 
-reset_template_dir(options)
+remove_template_dir_content()
 
 target_name = None
 region = options.get('region')
