@@ -24,7 +24,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     instance_type = settings.get('INSTANCE_TYPE', 't4g.micro')
     phase = env['common']['PHASE']
 
-    ramiel_coturn_public_ip_list = settings.get('RAMIEL_COTURN_PUBLIC_IP_LIST', []).split(':')
+    ramiel_coturn_public_ip_list = settings.get('RAMIEL_COTURN_PUBLIC_IP_LIST', []).split(',')
     if not ramiel_coturn_public_ip_list:
         print_message('No ramiel_coturn_public_ip_list found')
         raise Exception()
