@@ -420,6 +420,13 @@ def main(settings):
     result = aws_cli.run(cmd)
     eb_security_group_id['public'] = result['GroupId']
 
+    cmd = ['ec2', 'create-security-group']
+    cmd += ['--group-name', 'eb_ramiel_coturn']
+    cmd += ['--description', 'eb_ramiel_coturn']
+    cmd += ['--vpc-id', eb_vpc_id]
+    result = aws_cli.run(cmd)
+    eb_security_group_id['ramiel_coturn'] = result['GroupId']
+
     ################################################################################
     print_message('authorize security group ingress')
 
@@ -451,6 +458,27 @@ def main(settings):
     cmd += ['--group-id', eb_security_group_id['public']]
     cmd += ['--protocol', 'tcp']
     cmd += ['--port', '80']
+    cmd += ['--cidr', '0.0.0.0/0']
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'authorize-security-group-ingress']
+    cmd += ['--group-id', eb_security_group_id['ramiel_coturn']]
+    cmd += ['--protocol', 'tcp']
+    cmd += ['--port', '3478']
+    cmd += ['--cidr', '0.0.0.0/0']
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'authorize-security-group-ingress']
+    cmd += ['--group-id', eb_security_group_id['ramiel_coturn']]
+    cmd += ['--protocol', 'udp']
+    cmd += ['--port', '3478']
+    cmd += ['--cidr', '0.0.0.0/0']
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'authorize-security-group-ingress']
+    cmd += ['--group-id', eb_security_group_id['ramiel_coturn']]
+    cmd += ['--protocol', 'udp']
+    cmd += ['--port', '49152-65535']
     cmd += ['--cidr', '0.0.0.0/0']
     aws_cli.run(cmd)
 
