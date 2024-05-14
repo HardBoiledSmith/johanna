@@ -17,24 +17,14 @@ from run_create_eb_iam import create_iam_profile_for_ec2_instances
 
 def run_create_eb_ramiel_coturn(name, settings, options):
     aws_cli = AWSCli(settings['AWS_REGION'])
-
-    '''
-        "RAMIEL_COTURN_PUBLIC_IP_LIST": "${RAMIEL_COTURN_PUBLIC_IP_LIST}",
-        "RAMIEL_COTURN_USER_NAME": "${RAMIEL_COTURN_USER_NAME}",
-        "RAMIEL_COTURN_USER_PASSWORD": "${RAMIEL_COTURN_USER_PASSWORD}",
-        "RAMIEL_COTURN_LISTENING_PORT": "5349",
-        "RAMIEL_COTURN_LISTENING_PORT_TLS": "5349",
-        "RAMIEL_COTURN_MAX_PORT": "65535",
-        "RAMIEL_COTURN_MIN_PORT": "49152",
-        "RAMIEL_COTURN_REALM": "${RAMIEL_COTURN_REALM}",
-    '''
-
     aws_region = settings['AWS_REGION']
     cname = settings['CNAME']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
     instance_type = settings.get('INSTANCE_TYPE', 't4g.micro')
     phase = env['common']['PHASE']
+    service_name = env['common'].get('SERVICE_NAME', '')
+    name_prefix = f'{service_name if service_name else ""}_'
 
     ramiel_coturn_public_ip_list = settings.get('RAMIEL_COTURN_PUBLIC_IP_LIST', []).split(':')
     if not ramiel_coturn_public_ip_list:
@@ -57,8 +47,6 @@ def run_create_eb_ramiel_coturn(name, settings, options):
 
     eb_environment_name = f'{name}-{str_timestamp}'
     eb_environment_name_old = None
-
-    eb_environment_id = None
 
     template_path = f'template/{name}'
 
@@ -131,7 +119,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
         if r['VpcId'] != eb_vpc_id:
             continue
 
-        if r['GroupName'] == '%seb_private' % name_prefix:  # TODO
+        if r['GroupName'] == '%seb_private' % name_prefix:
             security_group_id = r['GroupId']
             break
 
@@ -148,10 +136,10 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     if not os.path.exists(f'{template_path}/{name}'):
         raise Exception()
 
-    git_hash_app = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=f'{template_path}/{name}').communicate()[0]
+    git_hash_app = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=f'{template_path}/ramiel').communicate()[0]
 
-    subprocess.Popen(['rm', '-rf', f'./{name}/.git'], cwd=template_path).communicate()
-    subprocess.Popen(['rm', '-rf', f'./{name}/.gitignore'], cwd=template_path).communicate()
+    subprocess.Popen(['rm', '-rf', f'./ramiel/.git'], cwd=template_path).communicate()
+    subprocess.Popen(['rm', '-rf', f'./ramiel/.gitignore'], cwd=template_path).communicate()
 
     ################################################################################
     print_message(f'configuration {name}')
@@ -169,7 +157,8 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     ################################################################################
     print_message('create iam')
 
-    instance_profile_name, role_arn = create_iam_profile_for_ec2_instances(template_path, name)
+    instance_profile_name, role_arn = create_iam_profile_for_ec2_instances(
+        f'{template_path}/ramiel/ramiel2_dev', name, f'{template_path}/ramiel/ramiel2_dev/_provisioning/iam')
     print_message('wait 10 seconds to let iam role and policy propagated to all regions...')
     time.sleep(10)
 
