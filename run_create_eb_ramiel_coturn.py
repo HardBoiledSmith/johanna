@@ -23,8 +23,6 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     git_url = settings['GIT_URL']
     instance_type = settings.get('INSTANCE_TYPE', 't4g.micro')
     phase = env['common']['PHASE']
-    service_name = env['common'].get('SERVICE_NAME', '')
-    name_prefix = f'{service_name if service_name else ""}_'
 
     ramiel_coturn_public_ip_list = settings.get('RAMIEL_COTURN_PUBLIC_IP_LIST', []).split(':')
     if not ramiel_coturn_public_ip_list:
@@ -119,7 +117,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
         if r['VpcId'] != eb_vpc_id:
             continue
 
-        if r['GroupName'] == '%seb_private' % name_prefix:
+        if r['GroupName'] == 'ramiel_coturn':
             security_group_id = r['GroupId']
             break
 
