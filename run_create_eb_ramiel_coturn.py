@@ -31,11 +31,15 @@ def run_create_eb_ramiel_coturn(name, settings, options):
 
     aws_region = settings['AWS_REGION']
     cname = settings['CNAME']
-    debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
     instance_type = settings.get('INSTANCE_TYPE', 't4g.micro')
     phase = env['common']['PHASE']
+
+    ramiel_coturn_public_ip_list = settings.get('RAMIEL_COTURN_PUBLIC_IP_LIST', []).split(':')
+    if not ramiel_coturn_public_ip_list:
+        print_message('No ramiel_coturn_public_ip_list found')
+        raise Exception()
 
     ramiel_coturn_user_name = settings['RAMIEL_COTURN_USER_NAME']
     ramiel_coturn_user_password = settings['RAMIEL_COTURN_USER_PASSWORD']
@@ -70,7 +74,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
 
     if not eb_vpc_id:
-        print('ERROR!!! No VPC found')
+        print_message('No VPC found')
         raise Exception()
 
     print_message('get Availability Zones offering required instance type')
@@ -151,11 +155,6 @@ def run_create_eb_ramiel_coturn(name, settings, options):
 
     ################################################################################
     print_message(f'configuration {name}')
-
-    # TODO? 필요한가?
-    with open(f'{template_path}/{name}/_provisioning/configuration/phase', 'w') as f:
-        f.write(phase)
-        f.close()
 
     lines = read_file(f'{template_path}/ramiel/ramiel2_dev/_provisioning/.ebextensions/ramiel_coturn.config.sample')
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_USER_NAME', ramiel_coturn_user_name)
