@@ -17,6 +17,9 @@ from run_create_eb_iam import create_iam_profile_for_ec2_instances
 
 def run_create_eb_ramiel_coturn(name, settings, options):
     aws_cli = AWSCli(settings['AWS_REGION'])
+
+    aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
+    aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
     aws_region = settings['AWS_REGION']
     cname = settings['CNAME']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
@@ -60,7 +63,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
 
     if not eb_vpc_id:
-        print_message('No VPC found')
+        print('No VPC found')
         raise Exception()
 
     print_message('get Availability Zones offering required instance type')
@@ -117,9 +120,13 @@ def run_create_eb_ramiel_coturn(name, settings, options):
         if r['VpcId'] != eb_vpc_id:
             continue
 
-        if r['GroupName'] == 'ramiel_coturn':
+        if r['GroupName'] == 'eb_ramiel_coturn':
             security_group_id = r['GroupId']
             break
+
+    if not security_group_id:
+        print('No security group found')
+        raise Exception()
 
     ################################################################################
     print_message('git clone')
@@ -131,18 +138,20 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     print(f'branch: {branch}')
     git_command = ['git', 'clone', '--depth=1', '-b', branch, git_url]
     subprocess.Popen(git_command, cwd=template_path).communicate()
-    if not os.path.exists(f'{template_path}/{name}'):
+    if not os.path.exists(f'{template_path}/ramiel'):
         raise Exception()
 
     git_hash_app = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=f'{template_path}/ramiel').communicate()[0]
 
-    subprocess.Popen(['rm', '-rf', f'./ramiel/.git'], cwd=template_path).communicate()
-    subprocess.Popen(['rm', '-rf', f'./ramiel/.gitignore'], cwd=template_path).communicate()
+    subprocess.Popen(['rm', '-rf', f'./ramiel/.git'], cwd=f'{template_path}/ramiel').communicate()
+    subprocess.Popen(['rm', '-rf', f'./ramiel/.gitignore'], cwd=f'{template_path}/ramiel').communicate()
 
     ################################################################################
     print_message(f'configuration {name}')
 
-    lines = read_file(f'{template_path}/ramiel/ramiel2_dev/_provisioning/.ebextensions/ramiel_coturn.config.sample')
+    lines = read_file(f'{template_path}/ramiel/ramiel2_dev/coturn/_provisioning/.ebextensions/ramiel_coturn.config.sample')
+    lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
+    lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_USER_NAME', ramiel_coturn_user_name)
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_USER_PASSWORD', ramiel_coturn_user_password)
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_LISTENING_PORT', ramiel_coturn_listening_port)
@@ -150,13 +159,13 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_MAX_PORT', ramiel_coturn_max_port)
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_MIN_PORT', ramiel_coturn_min_port)
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_REALM', ramiel_coturn_realm)
-    write_file(f'{template_path}/ramiel/ramiel2_dev/_provisioning/.ebextensions/ramiel_coturn.config', lines)
+    write_file(f'{template_path}/ramiel/ramiel2_dev/coturn/_provisioning/.ebextensions/ramiel_coturn.config', lines)
 
     ################################################################################
     print_message('create iam')
 
     instance_profile_name, role_arn = create_iam_profile_for_ec2_instances(
-        f'{template_path}/ramiel/ramiel2_dev', name, f'{template_path}/ramiel/ramiel2_dev/_provisioning/iam')
+        f'{template_path}/ramiel/ramiel2_dev', name, f'{template_path}/ramiel/ramiel2_dev/coturn/_provisioning/iam')
     print_message('wait 10 seconds to let iam role and policy propagated to all regions...')
     time.sleep(10)
 
@@ -196,12 +205,14 @@ def run_create_eb_ramiel_coturn(name, settings, options):
 
     file_list = list()
     file_list.append('.ebextensions')
+    file_list.append('.platform')
+
 
     for ff in file_list:
-        cmd = ['mv', f'ramiel/ramiel2_dev/_provisioning/{ff}', '.']
+        cmd = ['mv', f'ramiel/ramiel2_dev/coturn/_provisioning/{ff}', '.']
         subprocess.Popen(cmd, cwd=template_path).communicate()
 
-    cmd = ['rm', '-rf', 'ramiel/ramiel2_dev/_provisioning/']
+    cmd = ['rm', '-rf', 'ramiel']
     subprocess.Popen(cmd, cwd=template_path).communicate()
 
     cmd = ['zip', '-r', zip_filename, '.', '.ebextensions']
@@ -311,7 +322,13 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     oo = dict()
     oo['Namespace'] = 'aws:elasticbeanstalk:environment'
     oo['OptionName'] = 'EnvironmentType'
-    oo['Value'] = 'SingleInstance'
+    oo['Value'] = 'LoadBalanced'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:environment'
+    oo['OptionName'] = 'LoadBalancerType'
+    oo['Value'] = 'application'
     option_settings.append(oo)
 
     oo = dict()
@@ -394,6 +411,13 @@ def run_create_eb_ramiel_coturn(name, settings, options):
             raise Exception()
 
     subprocess.Popen(['rm', '-rf', f'./{name}'], cwd=template_path).communicate()
+
+    ################################################################################
+
+    # TODO: swap FIP - route53 A record
+    # list route53 A RECORD with NAME
+    # retrieve FIPs from eb_environment_name_old
+    # swap FIPs with eb_environment_name FIPs
 
     ################################################################################
     print_message('swap CNAME if the previous version exists')  # TODO
