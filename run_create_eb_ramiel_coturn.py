@@ -206,6 +206,8 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     file_list = list()
     file_list.append('.ebextensions')
     file_list.append('.platform')
+    file_list.append('Procfile')
+    file_list.append('application.py')
 
 
     for ff in file_list:
