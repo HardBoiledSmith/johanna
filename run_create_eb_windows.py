@@ -37,7 +37,8 @@ def run_create_eb_windows(name, settings, options):
     service_name = env['common'].get('SERVICE_NAME', '')
     name_prefix = f'{service_name}_' if service_name else ''
     url = settings['ARTIFACT_URL']
-    time_base_scale_out_desired_capacity_weekday = settings['TIME_BASE_SCALE_OUT_DESIRED_CAPACITY_WEEKDAY']
+    time_base_scale_out_desired_capacity_weekday1 = settings['TIME_BASE_SCALE_OUT_DESIRED_CAPACITY_WEEKDAY1']
+    time_base_scale_out_desired_capacity_weekday2 = settings['TIME_BASE_SCALE_OUT_DESIRED_CAPACITY_WEEKDAY2']
     time_base_scale_in_desired_capacity_weekday = settings['TIME_BASE_SCALE_IN_DESIRED_CAPACITY_WEEKDAY']
     time_base_scale_out_desired_capacity_weekend = settings['TIME_BASE_SCALE_OUT_DESIRED_CAPACITY_WEEKEND']
     time_base_scale_in_desired_capacity_weekend = settings['TIME_BASE_SCALE_IN_DESIRED_CAPACITY_WEEKEND']
@@ -409,35 +410,70 @@ def run_create_eb_windows(name, settings, options):
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay'
+    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay1'
     oo['OptionName'] = 'MinSize'
     oo['Value'] = aws_asg_min_value
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay'
+    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay1'
     oo['OptionName'] = 'MaxSize'
     oo['Value'] = aws_asg_max_value
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay'
+    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay1'
     oo['OptionName'] = 'DesiredCapacity'
-    oo['Value'] = time_base_scale_out_desired_capacity_weekday
+    oo['Value'] = time_base_scale_out_desired_capacity_weekday1
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay'
+    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay1'
     oo['OptionName'] = 'StartTime'
     oo['Value'] = '2023-01-01T07:00:00Z'
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay'
+    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay1'
+    oo['OptionName'] = 'Recurrence'
+    oo['Value'] = "0 20 * * 0-4"
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:autoscaling:scheduledaction'
+    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay2'
+    oo['OptionName'] = 'MinSize'
+    oo['Value'] = aws_asg_min_value
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:autoscaling:scheduledaction'
+    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay2'
+    oo['OptionName'] = 'MaxSize'
+    oo['Value'] = aws_asg_max_value
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:autoscaling:scheduledaction'
+    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay2'
+    oo['OptionName'] = 'DesiredCapacity'
+    oo['Value'] = time_base_scale_out_desired_capacity_weekday2
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:autoscaling:scheduledaction'
+    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay2'
+    oo['OptionName'] = 'StartTime'
+    oo['Value'] = '2023-01-01T07:00:00Z'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:autoscaling:scheduledaction'
+    oo['ResourceName'] = 'ScheduledScaleOutSpecificTimeWeekDay2'
     oo['OptionName'] = 'Recurrence'
     oo['Value'] = "0 22 * * 0-4"
     option_settings.append(oo)
