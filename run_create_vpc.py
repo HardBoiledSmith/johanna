@@ -214,20 +214,20 @@ def main(settings):
 
     cmd = ['ec2', 'create-network-acl-entry']
     cmd += ['--network-acl-id', rds_network_acl_id]
-    cmd += ['--rule-number', '101']
+    cmd += ['--rule-number', '10']
     cmd += ['--protocol', 'tcp']
     cmd += ['--port-range', 'From=22,To=22']
-    cmd += ['--egress']
+    cmd += ['--ingress']
     cmd += ['--rule-action', 'deny']
     cmd += ['--cidr-block', '0.0.0.0/0']
     aws_cli.run(cmd)
 
     cmd = ['ec2', 'create-network-acl-entry']
     cmd += ['--network-acl-id', rds_network_acl_id]
-    cmd += ['--rule-number', '102']
+    cmd += ['--rule-number', '20']
     cmd += ['--protocol', 'tcp']
     cmd += ['--port-range', 'From=3386,To=3386']
-    cmd += ['--egress']
+    cmd += ['--ingress']
     cmd += ['--rule-action', 'deny']
     cmd += ['--cidr-block', '0.0.0.0/0']
     aws_cli.run(cmd)
@@ -496,20 +496,20 @@ def main(settings):
 
     cmd = ['ec2', 'create-network-acl-entry']
     cmd += ['--network-acl-id', eb_network_acl_id]
-    cmd += ['--rule-number', '101']
+    cmd += ['--rule-number', '10']
     cmd += ['--protocol', 'tcp']
     cmd += ['--port-range', 'From=22,To=22']
-    cmd += ['--egress']
+    cmd += ['--ingress']
     cmd += ['--rule-action', 'deny']
     cmd += ['--cidr-block', '0.0.0.0/0']
     aws_cli.run(cmd)
 
     cmd = ['ec2', 'create-network-acl-entry']
     cmd += ['--network-acl-id', eb_network_acl_id]
-    cmd += ['--rule-number', '102']
+    cmd += ['--rule-number', '20']
     cmd += ['--protocol', 'tcp']
     cmd += ['--port-range', 'From=3386,To=3386']
-    cmd += ['--egress']
+    cmd += ['--ingress']
     cmd += ['--rule-action', 'deny']
     cmd += ['--cidr-block', '0.0.0.0/0']
     aws_cli.run(cmd)
