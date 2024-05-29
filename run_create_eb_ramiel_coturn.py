@@ -94,21 +94,13 @@ def run_create_eb_ramiel_coturn(name, settings, options):
             continue
 
         if r['CidrBlock'] == cidr_subnet['eb']['public_1']:
-            elb_subnet_id_1 = r['SubnetId']
+            ec2_subnet_id_1 = elb_subnet_id_1 = r['SubnetId']
         if r['CidrBlock'] == cidr_subnet['eb']['public_2']:
-            elb_subnet_id_2 = r['SubnetId']
+            ec2_subnet_id_2 = elb_subnet_id_2 = r['SubnetId']
         if r['CidrBlock'] == cidr_subnet['eb']['public_3']:
-            elb_subnet_id_3 = r['SubnetId']
+            ec2_subnet_id_3 = elb_subnet_id_3 = r['SubnetId']
         if r['CidrBlock'] == cidr_subnet['eb']['public_4']:
-            elb_subnet_id_4 = r['SubnetId']
-        if r['CidrBlock'] == cidr_subnet['eb']['private_1']:
-            ec2_subnet_id_1 = r['SubnetId']
-        if r['CidrBlock'] == cidr_subnet['eb']['private_2']:
-            ec2_subnet_id_2 = r['SubnetId']
-        if r['CidrBlock'] == cidr_subnet['eb']['private_3']:
-            ec2_subnet_id_3 = r['SubnetId']
-        if r['CidrBlock'] == cidr_subnet['eb']['private_4']:
-            ec2_subnet_id_4 = r['SubnetId']
+            ec2_subnet_id_4 = elb_subnet_id_4 = r['SubnetId']
 
     ################################################################################
     print_message('get security group id')
@@ -149,7 +141,8 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     ################################################################################
     print_message(f'configuration {name}')
 
-    lines = read_file(f'{template_path}/ramiel/ramiel2_dev/coturn/_provisioning/.ebextensions/ramiel_coturn.config.sample')
+    lines = read_file(
+        f'{template_path}/ramiel/ramiel2_dev/coturn/_provisioning/.ebextensions/ramiel_coturn.config.sample')
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
     lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_USER_NAME', ramiel_coturn_user_name)
@@ -208,7 +201,6 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     file_list.append('.platform')
     file_list.append('Procfile')
     file_list.append('application.py')
-
 
     for ff in file_list:
         cmd = ['mv', f'ramiel/ramiel2_dev/coturn/_provisioning/{ff}', '.']
