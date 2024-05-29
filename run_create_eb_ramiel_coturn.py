@@ -140,8 +140,8 @@ def run_create_eb_ramiel_coturn(name, settings, options):
 
     git_hash_app = subprocess.Popen(git_rev, stdout=subprocess.PIPE, cwd=f'{template_path}/ramiel').communicate()[0]
 
-    subprocess.Popen(['rm', '-rf', f'./ramiel/.git'], cwd=f'{template_path}/ramiel').communicate()
-    subprocess.Popen(['rm', '-rf', f'./ramiel/.gitignore'], cwd=f'{template_path}/ramiel').communicate()
+    subprocess.Popen(['rm', '-rf', './ramiel/.git'], cwd=f'{template_path}/ramiel').communicate()
+    subprocess.Popen(['rm', '-rf', './ramiel/.gitignore'], cwd=f'{template_path}/ramiel').communicate()
 
     ################################################################################
     print_message(f'configuration {name}')
