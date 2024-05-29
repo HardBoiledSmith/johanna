@@ -16,6 +16,11 @@ from run_create_eb_iam import create_iam_profile_for_ec2_instances
 
 
 def run_create_eb_ramiel_coturn(name, settings, options):
+    phase = env['common']['PHASE']
+    if phase != 'op':
+        print('only op phase is supported for ramiel-coturn')
+        return
+
     aws_cli = AWSCli(settings['AWS_REGION'])
 
     aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
@@ -25,7 +30,6 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
     instance_type = settings.get('INSTANCE_TYPE', 't4g.micro')
-    phase = env['common']['PHASE']
 
     ramiel_coturn_dns_a_record_1 = settings.get('RAMIEL_COTURN_DNS_A_RECORD_1')
     ramiel_coturn_dns_a_record_2 = settings.get('RAMIEL_COTURN_DNS_A_RECORD_2')
@@ -419,11 +423,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
 
     if not hosted_zone_id:
         print('No hosted zone found')
-        if phase == 'op':
-            raise Exception()
-        else:
-            print('only for op phase')
-            return
+        raise Exception()
 
     cmd = ['route53', 'list-resource-record-sets']
     cmd += ['--hosted-zone-id', hosted_zone_id]
