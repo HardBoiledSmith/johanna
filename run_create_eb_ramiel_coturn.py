@@ -27,9 +27,10 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     instance_type = settings.get('INSTANCE_TYPE', 't4g.micro')
     phase = env['common']['PHASE']
 
-    ramiel_coturn_public_ip_list = settings.get('RAMIEL_COTURN_PUBLIC_IP_LIST', []).split(',')
-    if not ramiel_coturn_public_ip_list:
-        print_message('No ramiel_coturn_public_ip_list found')
+    ramiel_coturn_dns_a_record_1 = settings.get('RAMIEL_COTURN_DNS_A_RECORD_1')
+    ramiel_coturn_dns_a_record_2 = settings.get('RAMIEL_COTURN_DNS_A_RECORD_2')
+    if not ramiel_coturn_dns_a_record_1 and not ramiel_coturn_dns_a_record_2:
+        print('No DNS A record found')
         raise Exception()
 
     ramiel_coturn_user_name = settings['RAMIEL_COTURN_USER_NAME']
@@ -407,14 +408,96 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     subprocess.Popen(['rm', '-rf', f'./{name}'], cwd=template_path).communicate()
 
     ################################################################################
+    print_message('swap FIP if the previous version exists')
 
-    # TODO: swap FIP - route53 A record
-    # list route53 A RECORD with NAME
-    # retrieve FIPs from eb_environment_name_old
-    # swap FIPs with eb_environment_name FIPs
+    cmd = ['route53', 'list-hosted-zones']
+    cmd += ['--query', 'HostedZones[?Name==\'hbsmith.io.\'].Id']
+    rr = aws_cli.run(cmd)
+    hosted_zone_id = rr[0]
+
+    if not hosted_zone_id:
+        print('No hosted zone found')
+        if phase == 'op':
+            raise Exception()
+        else:
+            print('only for op phase')
+            return
+
+    cmd = ['route53', 'list-resource-record-sets']
+    cmd += ['--hosted-zone-id', hosted_zone_id]
+    cmd += ['--query',
+            'ResourceRecordSets[?Type==\'A\' '
+            f'&& (Name==\'{ramiel_coturn_dns_a_record_1}.\' || \'{ramiel_coturn_dns_a_record_2}.\')].Name']
+    rr = aws_cli.run(cmd)
+    a_records = rr
+
+    if len(a_records) != 2:
+        print('No DNS A record found')
+        raise Exception()
+    if ramiel_coturn_dns_a_record_1 not in a_records or ramiel_coturn_dns_a_record_2 not in a_records:
+        print(f'No DNS A record found in {a_records}')
+        raise Exception()
+
+    cmd = ['elasticbeanstalk', 'describe-environments']
+    cmd += ['--application-name', eb_application_name]
+    cmd += ['--environment-name', eb_environment_name]
+    cmd += ['--query', 'Environments[0].EnvironmentId']
+    env_id = aws_cli.run(cmd)
+
+    if not env_id:
+        print('No environment id found')
+        raise Exception()
+
+    cmd = ['elasticbeanstalk', 'describe-instances-health']
+    cmd += ['--environment-id', env_id]
+    cmd += ['--attribute-names', 'All']
+    cmd += ['--query', 'InstanceHealthList[].InstanceId']
+    instance_ids = aws_cli.run(cmd)
+
+    if not instance_ids:
+        print('No instance id found')
+        raise Exception()
+    if len(instance_ids) != 2:
+        print(f'Wrong instance count: {len(instance_ids)} != 2')
+        raise Exception()
+
+    dd = dict()
+    dd['Changes'] = [
+        {
+            "Action": "UPSERT",
+            "ResourceRecordSet": {
+                "Name": ramiel_coturn_dns_a_record_1,
+                "Type": "A",
+                "TTL": 60,
+                "ResourceRecords": [
+                    {
+                        "Value": instance_ids[0]
+                    }
+                ]
+            }
+        },
+        {
+            "Action": "UPSERT",
+            "ResourceRecordSet": {
+                "Name": ramiel_coturn_dns_a_record_2,
+                "Type": "A",
+                "TTL": 60,
+                "ResourceRecords": [
+                    {
+                        "Value": instance_ids[1]
+                    }
+                ]
+            }
+        },
+    ]
+
+    cmd = ['route53', 'change-resource-record-sets']
+    cmd += ['--hosted-zone-id', hosted_zone_id]
+    cmd += ['--change-batch', json.dumps(dd)]
+    aws_cli.run(cmd)
 
     ################################################################################
-    print_message('swap CNAME if the previous version exists')  # TODO
+    print_message('swap CNAME if the previous version exists')
 
     if eb_environment_name_old:
         cmd = ['elasticbeanstalk', 'swap-environment-cnames']

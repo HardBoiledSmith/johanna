@@ -41,7 +41,7 @@ for settings in eb.get('ENVIRONMENTS', list()):
         run_create_eb_django(settings['NAME'], settings, options)
     elif settings['TYPE'] == 'windows':
         run_create_eb_windows(settings['NAME'], settings, options)
-    elif settings['TYPE'] == 'ramiel_coturn':
+    elif settings['TYPE'] == 'ramiel-coturn':
         run_create_eb_ramiel_coturn(settings['NAME'], settings, options)
     else:
         print(f'{settings["TYPE"]} is not supported')
