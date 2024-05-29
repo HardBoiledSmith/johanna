@@ -407,6 +407,8 @@ def run_create_eb_ramiel_coturn(name, settings, options):
 
     subprocess.Popen(['rm', '-rf', f'./{name}'], cwd=template_path).communicate()
 
+    eb_environment_name = 'ramiel-coturn-1716978682'
+
     ################################################################################
     print_message('swap FIP if the previous version exists')
 
@@ -434,8 +436,8 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     if len(a_records) != 2:
         print('No DNS A record found')
         raise Exception()
-    if ramiel_coturn_dns_a_record_1 not in a_records or ramiel_coturn_dns_a_record_2 not in a_records:
-        print(f'No DNS A record found in {a_records}')
+    if f'{ramiel_coturn_dns_a_record_1}.' not in a_records or f'{ramiel_coturn_dns_a_record_2}.' not in a_records:
+        print(f'Either {ramiel_coturn_dns_a_record_1} or {ramiel_coturn_dns_a_record_2} found in {a_records}')
         raise Exception()
 
     cmd = ['elasticbeanstalk', 'describe-environments']
@@ -461,6 +463,20 @@ def run_create_eb_ramiel_coturn(name, settings, options):
         print(f'Wrong instance count: {len(instance_ids)} != 2')
         raise Exception()
 
+    cmd = ['ec2', 'describe-instances']
+    cmd += ['--instance-ids', instance_ids[0], instance_ids[1]]
+    cmd += ['--query', 'Reservations[*].Instances[*].PublicIpAddress']
+    public_ips = aws_cli.run(cmd)
+
+    try:
+        public_ips = [ii[0] for ii in public_ips if ii]
+    except Exception:
+        print('No public ip found')
+        raise Exception()
+    if len(public_ips) != 2:
+        print(f'Wrong public ip count: {len(public_ips)} != 2')
+        raise Exception()
+
     dd = dict()
     dd['Changes'] = [
         {
@@ -471,7 +487,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
                 "TTL": 60,
                 "ResourceRecords": [
                     {
-                        "Value": instance_ids[0]
+                        "Value": public_ips[0]
                     }
                 ]
             }
@@ -484,7 +500,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
                 "TTL": 60,
                 "ResourceRecords": [
                     {
-                        "Value": instance_ids[1]
+                        "Value": public_ips[1]
                     }
                 ]
             }
