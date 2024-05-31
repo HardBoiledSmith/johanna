@@ -80,6 +80,41 @@ def main(settings):
 
     ################################################################################
     #
+    # Default
+    #
+    ################################################################################
+
+    cmd = ['ec2', 'describe-vpcs']
+    cmd += ['--filters', 'Name=isDefault,Values=true']
+    cmd += ['--query', 'Vpcs[0].VpcId']
+    default_vpc_id = aws_cli.run(cmd)
+
+    cmd = ['ec2', 'describe-security-groups']
+    cmd += ['--filters', f'Name=vpc-id,Values={default_vpc_id}', "Name=group-name,Values=default"]
+    cmd += ['--query', 'SecurityGroups[0].GroupId']
+    default_security_group_id = aws_cli.run(cmd)
+
+    cmd = ['ec2', 'describe-security-group-rules']
+    cmd += ['--filters', f'Name=group-id,Values={default_security_group_id}']
+    cmd += ['--query', 'SecurityGroupRules[*].{SecurityGroupRuleId:SecurityGroupRuleId, IsEgress:IsEgress}']
+    result = aws_cli.run(cmd)
+
+    ingress_rule_ids = [x['SecurityGroupRuleId'] for x in result if not x['IsEgress']]
+    if ingress_rule_ids:
+        cmd = ['ec2', 'revoke-security-group-ingress']
+        cmd += ['--group-id', default_security_group_id]
+        cmd += ['--security-group-rule-ids'] + ingress_rule_ids
+        aws_cli.run(cmd)
+
+    egress_rule_ids = [x['SecurityGroupRuleId'] for x in result if x['IsEgress']]
+    if egress_rule_ids:
+        cmd = ['ec2', 'revoke-security-group-egress']
+        cmd += ['--group-id', default_security_group_id]
+        cmd += ['--security-group-rule-ids'] + egress_rule_ids
+        aws_cli.run(cmd)
+
+    ################################################################################
+    #
     # RDS
     #
     ################################################################################
