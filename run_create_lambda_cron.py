@@ -153,13 +153,6 @@ def run_create_lambda_cron(function_name, settings, options):
                '--description', description,
                '--schedule-expression', schedule_expression]
         aws_cli.run(cmd)
-
-        if concurrency is not None:
-            cmd = ['lambda', 'put-function-concurrency']
-            cmd += ['--function-name', function_name]
-            cmd += ['--reserved-concurrent-executions', concurrency]
-
-            aws_cli.run(cmd)
         return
 
     ################################################################################
@@ -210,9 +203,7 @@ def run_create_lambda_cron(function_name, settings, options):
            '--targets', '{"Id" : "1", "Arn": "%s"}' % function_arn]
     aws_cli.run(cmd)
 
-    if concurrency is not None:
+    if concurrency:
         cmd = ['lambda', 'put-function-concurrency']
         cmd += ['--function-name', function_name]
         cmd += ['--reserved-concurrent-executions', concurrency]
-
-        aws_cli.run(cmd)
