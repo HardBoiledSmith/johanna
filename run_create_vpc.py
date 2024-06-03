@@ -80,6 +80,71 @@ def main(settings):
 
     ################################################################################
     #
+    # Default
+    #
+    ################################################################################
+
+    cmd = ['ec2', 'describe-vpcs']
+    cmd += ['--filters', 'Name=isDefault,Values=true']
+    cmd += ['--query', 'Vpcs[0].VpcId']
+    default_vpc_id = aws_cli.run(cmd)
+
+    cmd = ['ec2', 'describe-security-groups']
+    cmd += ['--filters', f'Name=vpc-id,Values={default_vpc_id}', "Name=group-name,Values=default"]
+    cmd += ['--query', 'SecurityGroups[0].GroupId']
+    default_security_group_id = aws_cli.run(cmd)
+
+    cmd = ['ec2', 'describe-security-group-rules']
+    cmd += ['--filters', f'Name=group-id,Values={default_security_group_id}']
+    cmd += ['--query', 'SecurityGroupRules[*].{SecurityGroupRuleId:SecurityGroupRuleId, IsEgress:IsEgress}']
+    result = aws_cli.run(cmd)
+
+    ingress_rule_ids = [x['SecurityGroupRuleId'] for x in result if not x['IsEgress']]
+    if ingress_rule_ids:
+        cmd = ['ec2', 'revoke-security-group-ingress']
+        cmd += ['--group-id', default_security_group_id]
+        cmd += ['--security-group-rule-ids'] + ingress_rule_ids
+        aws_cli.run(cmd)
+
+    egress_rule_ids = [x['SecurityGroupRuleId'] for x in result if x['IsEgress']]
+    if egress_rule_ids:
+        cmd = ['ec2', 'revoke-security-group-egress']
+        cmd += ['--group-id', default_security_group_id]
+        cmd += ['--security-group-rule-ids'] + egress_rule_ids
+        aws_cli.run(cmd)
+
+    ################################################################################
+    print_message('create network acl')
+
+    cmd = ['ec2', 'describe-network-acls']
+    cmd += ['--filters', f'Name=vpc-id,Values={default_vpc_id}']
+    cmd += ['--query', 'NetworkAcls[*].{NetworkAclId:NetworkAclId, IsDefault:IsDefault, Entries:Entries}']
+    rr = aws_cli.run(cmd)
+    rr = rr[0]
+    default_network_acl_id = rr['NetworkAclId']
+
+    cmd = ['ec2', 'create-network-acl-entry']
+    cmd += ['--network-acl-id', default_network_acl_id]
+    cmd += ['--rule-number', '10']
+    cmd += ['--protocol', 'tcp']
+    cmd += ['--port-range', 'From=22,To=22']
+    cmd += ['--ingress']
+    cmd += ['--rule-action', 'deny']
+    cmd += ['--cidr-block', '0.0.0.0/0']
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'create-network-acl-entry']
+    cmd += ['--network-acl-id', default_network_acl_id]
+    cmd += ['--rule-number', '20']
+    cmd += ['--protocol', 'tcp']
+    cmd += ['--port-range', 'From=3386,To=3386']
+    cmd += ['--ingress']
+    cmd += ['--rule-action', 'deny']
+    cmd += ['--cidr-block', '0.0.0.0/0']
+    aws_cli.run(cmd)
+
+    ################################################################################
+    #
     # RDS
     #
     ################################################################################
@@ -186,6 +251,14 @@ def main(settings):
     result = aws_cli.run(cmd)
     rds_security_group_id['private'] = result['GroupId']
 
+    cmd = ['ec2', 'describe-security-groups']
+    cmd += ['--filters', f'Name=vpc-id,Values={rds_vpc_id}']
+    result = aws_cli.run(cmd)
+    for sg in result['SecurityGroups']:
+        if sg['GroupName'] != 'default':
+            continue
+        rds_security_group_id['default'] = sg['GroupId']
+
     ################################################################################
     print_message('authorize security group ingress')
 
@@ -200,6 +273,55 @@ def main(settings):
     cmd += ['--protocol', 'tcp']
     cmd += ['--port', '3306']
     cmd += ['--cidr', cidr_vpc['eb']]
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'describe-security-group-rules']
+    cmd += ['--filters', f'Name=group-id,Values={rds_security_group_id["default"]}']
+    cmd += ['--query', 'SecurityGroupRules[*].{SecurityGroupRuleId:SecurityGroupRuleId, IsEgress:IsEgress}']
+    result = aws_cli.run(cmd)
+
+    ingress_rule_ids = [x['SecurityGroupRuleId'] for x in result if not x['IsEgress']]
+    if ingress_rule_ids:
+        cmd = ['ec2', 'revoke-security-group-ingress']
+        cmd += ['--group-id', rds_security_group_id['default']]
+        cmd += ['--security-group-rule-ids'] + ingress_rule_ids
+        aws_cli.run(cmd)
+
+    egress_rule_ids = [x['SecurityGroupRuleId'] for x in result if x['IsEgress']]
+    if egress_rule_ids:
+        cmd = ['ec2', 'revoke-security-group-egress']
+        cmd += ['--group-id', rds_security_group_id['default']]
+        cmd += ['--security-group-rule-ids'] + egress_rule_ids
+        aws_cli.run(cmd)
+
+    ################################################################################
+    print_message('create network acl')
+
+    cmd = ['ec2', 'describe-network-acls']
+    cmd += ['--filters', f'Name=vpc-id,Values={rds_vpc_id}']
+    cmd += ['--query', 'NetworkAcls[*].{NetworkAclId:NetworkAclId, IsDefault:IsDefault, Entries:Entries}']
+    rr = aws_cli.run(cmd)
+    rr = rr[0]
+    rds_network_acl_id = rr['NetworkAclId']
+
+    cmd = ['ec2', 'create-network-acl-entry']
+    cmd += ['--network-acl-id', rds_network_acl_id]
+    cmd += ['--rule-number', '10']
+    cmd += ['--protocol', 'tcp']
+    cmd += ['--port-range', 'From=22,To=22']
+    cmd += ['--ingress']
+    cmd += ['--rule-action', 'deny']
+    cmd += ['--cidr-block', '0.0.0.0/0']
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'create-network-acl-entry']
+    cmd += ['--network-acl-id', rds_network_acl_id]
+    cmd += ['--rule-number', '20']
+    cmd += ['--protocol', 'tcp']
+    cmd += ['--port-range', 'From=3386,To=3386']
+    cmd += ['--ingress']
+    cmd += ['--rule-action', 'deny']
+    cmd += ['--cidr-block', '0.0.0.0/0']
     aws_cli.run(cmd)
 
     ################################################################################
@@ -427,6 +549,14 @@ def main(settings):
     result = aws_cli.run(cmd)
     eb_security_group_id['ramiel_coturn'] = result['GroupId']
 
+    cmd = ['ec2', 'describe-security-groups']
+    cmd += ['--filters', f'Name=vpc-id,Values={eb_vpc_id}']
+    result = aws_cli.run(cmd)
+    for sg in result['SecurityGroups']:
+        if sg['GroupName'] != 'default':
+            continue
+        eb_security_group_id['default'] = sg['GroupId']
+
     ################################################################################
     print_message('authorize security group ingress')
 
@@ -480,6 +610,54 @@ def main(settings):
     cmd += ['--protocol', 'udp']
     cmd += ['--port', '49152-65535']
     cmd += ['--cidr', '0.0.0.0/0']
+
+    cmd = ['ec2', 'describe-security-group-rules']
+    cmd += ['--filters', f'Name=group-id,Values={eb_security_group_id["default"]}']
+    cmd += ['--query', 'SecurityGroupRules[*].{SecurityGroupRuleId:SecurityGroupRuleId, IsEgress:IsEgress}']
+    result = aws_cli.run(cmd)
+
+    ingress_rule_ids = [x['SecurityGroupRuleId'] for x in result if not x['IsEgress']]
+    if ingress_rule_ids:
+        cmd = ['ec2', 'revoke-security-group-ingress']
+        cmd += ['--group-id', eb_security_group_id['default']]
+        cmd += ['--security-group-rule-ids'] + ingress_rule_ids
+        aws_cli.run(cmd)
+
+    egress_rule_ids = [x['SecurityGroupRuleId'] for x in result if x['IsEgress']]
+    if egress_rule_ids:
+        cmd = ['ec2', 'revoke-security-group-egress']
+        cmd += ['--group-id', eb_security_group_id['default']]
+        cmd += ['--security-group-rule-ids'] + egress_rule_ids
+        aws_cli.run(cmd)
+
+    ################################################################################
+    print_message('create network acl')
+
+    cmd = ['ec2', 'describe-network-acls']
+    cmd += ['--filters', f'Name=vpc-id,Values={eb_vpc_id}']
+    cmd += ['--query', 'NetworkAcls[*].{NetworkAclId:NetworkAclId, IsDefault:IsDefault, Entries:Entries}']
+    rr = aws_cli.run(cmd)
+    rr = rr[0]
+    eb_network_acl_id = rr['NetworkAclId']
+
+    cmd = ['ec2', 'create-network-acl-entry']
+    cmd += ['--network-acl-id', eb_network_acl_id]
+    cmd += ['--rule-number', '10']
+    cmd += ['--protocol', 'tcp']
+    cmd += ['--port-range', 'From=22,To=22']
+    cmd += ['--ingress']
+    cmd += ['--rule-action', 'deny']
+    cmd += ['--cidr-block', '0.0.0.0/0']
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'create-network-acl-entry']
+    cmd += ['--network-acl-id', eb_network_acl_id]
+    cmd += ['--rule-number', '20']
+    cmd += ['--protocol', 'tcp']
+    cmd += ['--port-range', 'From=3386,To=3386']
+    cmd += ['--ingress']
+    cmd += ['--rule-action', 'deny']
+    cmd += ['--cidr-block', '0.0.0.0/0']
     aws_cli.run(cmd)
 
     ################################################################################
