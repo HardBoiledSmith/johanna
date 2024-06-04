@@ -314,7 +314,6 @@ def main(settings):
     cmd += ['--ingress']
     aws_cli.run(cmd)
 
-
     ################################################################################
     #
     # EB Application
@@ -345,8 +344,6 @@ def main(settings):
     cmd = ['iam', 'delete-role']
     cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
     aws_cli.run(cmd, ignore_error=True)
-
-
 
 
 ################################################################################
