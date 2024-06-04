@@ -287,6 +287,58 @@ def main(settings):
 
         rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
 
+    cmd = ['ec2', 'describe-vpcs']
+    cmd += ['--filters', 'Name=isDefault,Values=true']
+    cmd += ['--query', 'Vpcs[0].VpcId']
+    default_vpc_id = aws_cli.run(cmd)
+
+    cmd = ['ec2', 'describe-security-groups']
+    cmd += ['--filters', f'Name=vpc-id,Values={default_vpc_id}', "Name=group-name,Values=default"]
+    cmd += ['--query', 'SecurityGroups[0].GroupId']
+    default_security_group_id = aws_cli.run(cmd)
+
+    cmd = ['ec2', 'describe-security-group-rules']
+    cmd += ['--filters', f'Name=group-id,Values={default_security_group_id}']
+    cmd += ['--query', 'SecurityGroupRules[*].{SecurityGroupRuleId:SecurityGroupRuleId, IsEgress:IsEgress}']
+    result = aws_cli.run(cmd)
+
+    ingress_rule_ids = [x['SecurityGroupRuleId'] for x in result if not x['IsEgress']]
+    if ingress_rule_ids:
+        cmd = ['ec2', 'revoke-security-group-ingress']
+        cmd += ['--group-id', default_security_group_id]
+        cmd += ['--security-group-rule-ids'] + ingress_rule_ids
+        aws_cli.run(cmd)
+
+    egress_rule_ids = [x['SecurityGroupRuleId'] for x in result if x['IsEgress']]
+    if egress_rule_ids:
+        cmd = ['ec2', 'revoke-security-group-egress']
+        cmd += ['--group-id', default_security_group_id]
+        cmd += ['--security-group-rule-ids'] + egress_rule_ids
+        aws_cli.run(cmd)
+
+    ################################################################################
+    print_message('terminate network acl')
+
+    cmd = ['ec2', 'describe-network-acls']
+    cmd += ['--filters', f'Name=vpc-id,Values={default_vpc_id}']
+    cmd += ['--query', 'NetworkAcls[*].{NetworkAclId:NetworkAclId, IsDefault:IsDefault, Entries:Entries}']
+    rr = aws_cli.run(cmd)
+    rr = rr[0]
+    default_network_acl_id = rr['NetworkAclId']
+
+    cmd = ['ec2', 'delete-network-acl-entry']
+    cmd += ['--network-acl-id', default_network_acl_id]
+    cmd += ['--rule-number', '10']
+    cmd += ['--ingress']
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'delete-network-acl-entry']
+    cmd += ['--network-acl-id', default_network_acl_id]
+    cmd += ['--rule-number', '20']
+    cmd += ['--ingress']
+    aws_cli.run(cmd)
+
+
     ################################################################################
     #
     # EB Application
@@ -317,6 +369,8 @@ def main(settings):
     cmd = ['iam', 'delete-role']
     cmd += ['--role-name', 'aws-elasticbeanstalk-service-role']
     aws_cli.run(cmd, ignore_error=True)
+
+
 
 
 ################################################################################
