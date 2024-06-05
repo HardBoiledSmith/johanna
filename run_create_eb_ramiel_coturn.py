@@ -412,8 +412,6 @@ def run_create_eb_ramiel_coturn(name, settings, options):
 
     subprocess.Popen(['rm', '-rf', f'./{name}'], cwd=template_path).communicate()
 
-    eb_environment_name = 'ramiel-coturn-1716978682'
-
     ################################################################################
     print_message('swap FIP if the previous version exists')
 
@@ -434,12 +432,12 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     cmd += ['--hosted-zone-id', hosted_zone_id]
     cmd += ['--query',
             'ResourceRecordSets[?Type==\'A\' '
-            f'&& (Name==\'{ramiel_coturn_dns_a_record_1}.\' || \'{ramiel_coturn_dns_a_record_2}.\')].Name']
+            f'&& (Name==\'{ramiel_coturn_dns_a_record_1}.\' || Name==\'{ramiel_coturn_dns_a_record_2}.\')].Name']
     rr = aws_cli_for_route53.run(cmd)
     a_records = rr
 
     if len(a_records) != 2:
-        print('No DNS A record found')
+        print(f'No DNS A record found: {a_records}')
         raise Exception()
     if f'{ramiel_coturn_dns_a_record_1}.' not in a_records or f'{ramiel_coturn_dns_a_record_2}.' not in a_records:
         print(f'Either {ramiel_coturn_dns_a_record_1} or {ramiel_coturn_dns_a_record_2} found in {a_records}')
