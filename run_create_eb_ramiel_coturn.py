@@ -417,12 +417,25 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     ################################################################################
     print_message('swap FIP if the previous version exists')
 
+    route53_role_arn = settings['RAMIEL_COTURN_ROUTE53_ROLE_ARN']
+    cmd = ['sts', 'assume-role']
+    cmd += ['--role-arn', route53_role_arn]
+    cmd += ['--role-session-name', 'ramiel-coturn-route53-resource-record-sets-token']
+    rr = aws_cli.run(cmd)
+
+    access_key = rr['Credentials']['AccessKeyId']
+    secret_key = rr['Credentials']['SecretAccessKey']
+    session_token = rr['Credentials']['SessionToken']
+    aws_cli_for_route53 = AWSCli(aws_access_key=access_key,
+                                 aws_secret_access_key=secret_key,
+                                 aws_session_token=session_token)
+
     cmd = ['route53', 'list-resource-record-sets']
     cmd += ['--hosted-zone-id', hosted_zone_id]
     cmd += ['--query',
             'ResourceRecordSets[?Type==\'A\' '
             f'&& (Name==\'{ramiel_coturn_dns_a_record_1}.\' || \'{ramiel_coturn_dns_a_record_2}.\')].Name']
-    rr = aws_cli.run(cmd)
+    rr = aws_cli_for_route53.run(cmd)
     a_records = rr
 
     if len(a_records) != 2:
@@ -502,7 +515,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     cmd = ['route53', 'change-resource-record-sets']
     cmd += ['--hosted-zone-id', hosted_zone_id]
     cmd += ['--change-batch', json.dumps(dd)]
-    aws_cli.run(cmd)
+    aws_cli_for_route53.run(cmd)
 
     ################################################################################
     print_message('swap CNAME if the previous version exists')
