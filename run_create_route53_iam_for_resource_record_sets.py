@@ -8,7 +8,7 @@ from run_common import re_sub_lines
 from run_common import read_file
 
 
-def run_create_route53_iam_for_resource_record_sets(user_name, allow_role_aws_account_id, hosted_zone_id):
+def run_create_route53_iam_for_resource_record_sets(user_name, allow_role_aws_account_id):
     aws_cli = AWSCli()
 
     base_name = f'{user_name}-route53-resource-record-sets'
@@ -27,7 +27,6 @@ def run_create_route53_iam_for_resource_record_sets(user_name, allow_role_aws_ac
     iam_owner_aws_account_id = aws_cli.get_caller_account_id()
     lines = read_file('aws_iam/aws-route53-resource-record-sets-policy.json')
     lines = re_sub_lines(lines, 'ACCOUNT_ID', iam_owner_aws_account_id)
-    lines = re_sub_lines(lines, 'HOSTED_ZONE_ID', hosted_zone_id)
     pp = ' '.join(lines)
 
     cmd = ['iam', 'create-policy']
@@ -56,11 +55,10 @@ if __name__ == "__main__":
 
     ################################################################################
 
-    if len(args) != 4:
+    if len(args) != 3:
         print('usage:', args[0],
               '<Username to create role & policy> '
-              '<aws account id to allow> '
-              '<hosted zone id startswith `/hostedzone/`>')
+              '<aws account id to allow>')
         raise Exception()
 
     phase = env['common']['PHASE']
@@ -69,9 +67,5 @@ if __name__ == "__main__":
 
     user_name = args[1]
     allow_role_aws_account_id = args[2]
-    hosted_zone_id = args[3]
 
-    if not hosted_zone_id or not hosted_zone_id.startswith('/hostedzone/'):
-        raise Exception('invalid hosted_zone_id: hosted_zone_id should start with `/hostedzone/`')
-
-    run_create_route53_iam_for_resource_record_sets(user_name, allow_role_aws_account_id, hosted_zone_id)
+    run_create_route53_iam_for_resource_record_sets(user_name, allow_role_aws_account_id)
