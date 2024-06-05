@@ -16,11 +16,6 @@ from run_create_eb_iam import create_iam_profile_for_ec2_instances
 
 
 def run_create_eb_ramiel_coturn(name, settings, options):
-    phase = env['common']['PHASE']
-    if phase != 'op':
-        print('only op phase is supported for ramiel-coturn')
-        return
-
     aws_cli = AWSCli(settings['AWS_REGION'])
 
     aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
@@ -29,7 +24,13 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     cname = settings['CNAME']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
+    phase = env['common']['PHASE']
     instance_type = settings.get('INSTANCE_TYPE', 't4g.micro')
+
+    hosted_zone_id = settings.get('HOSTED_ZONE_ID')
+    if not hosted_zone_id:
+        print('No hosted zone found')
+        raise Exception()
 
     ramiel_coturn_dns_a_record_1 = settings.get('RAMIEL_COTURN_DNS_A_RECORD_1')
     ramiel_coturn_dns_a_record_2 = settings.get('RAMIEL_COTURN_DNS_A_RECORD_2')
@@ -411,30 +412,32 @@ def run_create_eb_ramiel_coturn(name, settings, options):
 
     subprocess.Popen(['rm', '-rf', f'./{name}'], cwd=template_path).communicate()
 
-    eb_environment_name = 'ramiel-coturn-1716978682'
-
     ################################################################################
     print_message('swap FIP if the previous version exists')
 
-    cmd = ['route53', 'list-hosted-zones']
-    cmd += ['--query', 'HostedZones[?Name==\'hbsmith.io.\'].Id']
+    route53_role_arn = settings['RAMIEL_COTURN_ROUTE53_ROLE_ARN']
+    cmd = ['sts', 'assume-role']
+    cmd += ['--role-arn', route53_role_arn]
+    cmd += ['--role-session-name', 'ramiel-coturn-route53-resource-record-sets-token']
     rr = aws_cli.run(cmd)
-    hosted_zone_id = rr[0]
 
-    if not hosted_zone_id:
-        print('No hosted zone found')
-        raise Exception()
+    access_key = rr['Credentials']['AccessKeyId']
+    secret_key = rr['Credentials']['SecretAccessKey']
+    session_token = rr['Credentials']['SessionToken']
+    aws_cli_for_route53 = AWSCli(aws_access_key=access_key,
+                                 aws_secret_access_key=secret_key,
+                                 aws_session_token=session_token)
 
     cmd = ['route53', 'list-resource-record-sets']
     cmd += ['--hosted-zone-id', hosted_zone_id]
     cmd += ['--query',
             'ResourceRecordSets[?Type==\'A\' '
-            f'&& (Name==\'{ramiel_coturn_dns_a_record_1}.\' || \'{ramiel_coturn_dns_a_record_2}.\')].Name']
-    rr = aws_cli.run(cmd)
+            f'&& (Name==\'{ramiel_coturn_dns_a_record_1}.\' || Name==\'{ramiel_coturn_dns_a_record_2}.\')].Name']
+    rr = aws_cli_for_route53.run(cmd)
     a_records = rr
 
     if len(a_records) != 2:
-        print('No DNS A record found')
+        print(f'No DNS A record found: {a_records}')
         raise Exception()
     if f'{ramiel_coturn_dns_a_record_1}.' not in a_records or f'{ramiel_coturn_dns_a_record_2}.' not in a_records:
         print(f'Either {ramiel_coturn_dns_a_record_1} or {ramiel_coturn_dns_a_record_2} found in {a_records}')
@@ -510,7 +513,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     cmd = ['route53', 'change-resource-record-sets']
     cmd += ['--hosted-zone-id', hosted_zone_id]
     cmd += ['--change-batch', json.dumps(dd)]
-    aws_cli.run(cmd)
+    aws_cli_for_route53.run(cmd)
 
     ################################################################################
     print_message('swap CNAME if the previous version exists')
