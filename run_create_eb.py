@@ -3,6 +3,7 @@
 from env import env
 from run_common import print_session
 from run_create_eb_django import run_create_eb_django
+from run_create_eb_ramiel_coturn import run_create_eb_ramiel_coturn
 from run_create_eb_windows import run_create_eb_windows
 
 options, args = dict(), list()
@@ -40,6 +41,8 @@ for settings in eb.get('ENVIRONMENTS', list()):
         run_create_eb_django(settings['NAME'], settings, options)
     elif settings['TYPE'] == 'windows':
         run_create_eb_windows(settings['NAME'], settings, options)
+    elif settings['TYPE'] == 'ramiel-coturn':
+        run_create_eb_ramiel_coturn(settings['NAME'], settings, options)
     else:
         print(f'{settings["TYPE"]} is not supported')
         raise Exception()

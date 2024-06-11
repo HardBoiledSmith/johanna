@@ -288,6 +288,33 @@ def main(settings):
         rds_vpc_id, eb_vpc_id = aws_cli.get_vpc_id()
 
     ################################################################################
+    print_message('terminate network acl')
+
+    cmd = ['ec2', 'describe-vpcs']
+    cmd += ['--filters', 'Name=isDefault,Values=true']
+    cmd += ['--query', 'Vpcs[0].VpcId']
+    default_vpc_id = aws_cli.run(cmd)
+
+    cmd = ['ec2', 'describe-network-acls']
+    cmd += ['--filters', f'Name=vpc-id,Values={default_vpc_id}']
+    cmd += ['--query', 'NetworkAcls[*].{NetworkAclId:NetworkAclId, IsDefault:IsDefault, Entries:Entries}']
+    rr = aws_cli.run(cmd)
+    rr = rr[0]
+    default_network_acl_id = rr['NetworkAclId']
+
+    cmd = ['ec2', 'delete-network-acl-entry']
+    cmd += ['--network-acl-id', default_network_acl_id]
+    cmd += ['--rule-number', '10']
+    cmd += ['--ingress']
+    aws_cli.run(cmd)
+
+    cmd = ['ec2', 'delete-network-acl-entry']
+    cmd += ['--network-acl-id', default_network_acl_id]
+    cmd += ['--rule-number', '20']
+    cmd += ['--ingress']
+    aws_cli.run(cmd)
+
+    ################################################################################
     #
     # EB Application
     #
