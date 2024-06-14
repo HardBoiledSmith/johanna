@@ -293,12 +293,12 @@ def main(settings):
     cmd = ['ec2', 'describe-vpcs']
     cmd += ['--filters', 'Name=isDefault,Values=true']
     cmd += ['--query', 'Vpcs[0].VpcId']
-    default_vpc_id = aws_cli.run(cmd)
+    default_vpc_id = aws_cli.run(cmd, ignore_error=True)
 
     cmd = ['ec2', 'describe-network-acls']
     cmd += ['--filters', f'Name=vpc-id,Values={default_vpc_id}']
     cmd += ['--query', 'NetworkAcls[*].{NetworkAclId:NetworkAclId, IsDefault:IsDefault, Entries:Entries}']
-    rr = aws_cli.run(cmd)
+    rr = aws_cli.run(cmd, ignore_error=True)
     rr = rr[0]
     default_network_acl_id = rr['NetworkAclId']
 
@@ -306,13 +306,13 @@ def main(settings):
     cmd += ['--network-acl-id', default_network_acl_id]
     cmd += ['--rule-number', '10']
     cmd += ['--ingress']
-    aws_cli.run(cmd)
+    aws_cli.run(cmd, ignore_error=True)
 
     cmd = ['ec2', 'delete-network-acl-entry']
     cmd += ['--network-acl-id', default_network_acl_id]
     cmd += ['--rule-number', '20']
     cmd += ['--ingress']
-    aws_cli.run(cmd)
+    aws_cli.run(cmd, ignore_error=True)
 
     ################################################################################
     #
