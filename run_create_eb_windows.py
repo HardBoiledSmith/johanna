@@ -32,6 +32,7 @@ def run_create_eb_windows(name, settings, options):
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
+    instance_type = settings.get('INSTANCE_TYPE', 'r7i.large')
     phase = env['common']['PHASE']
     subnet_type = settings['SUBNET_TYPE']
     service_name = env['common'].get('SERVICE_NAME', '')
@@ -84,6 +85,14 @@ def run_create_eb_windows(name, settings, options):
         print('ERROR!!! No VPC found')
         raise Exception()
 
+    print_message('get Availability Zones offering required instance type')
+    cmd = ['ec2', 'describe-instance-type-offerings']
+    cmd += ['--location-type', 'availability-zone']
+    cmd += ['--filters', f'Name=instance-type,Values={instance_type}']
+    cmd += ['--region', aws_region]
+    result = aws_cli.run(cmd)
+    azs = [az['Location'] for az in result['InstanceTypeOfferings']]
+
     ################################################################################
     print_message('get subnet id')
 
@@ -99,6 +108,8 @@ def run_create_eb_windows(name, settings, options):
     result = aws_cli.run(cmd)
     for r in result['Subnets']:
         if r['VpcId'] != eb_vpc_id:
+            continue
+        if r['AvailabilityZone'] not in azs:
             continue
         if 'public' == subnet_type:
             if r['CidrBlock'] == cidr_subnet['eb']['public_1']:
@@ -346,7 +357,7 @@ def run_create_eb_windows(name, settings, options):
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'InstanceType'
-    oo['Value'] = 'r7i.large'
+    oo['Value'] = instance_type
     option_settings.append(oo)
 
     oo = dict()
@@ -565,13 +576,13 @@ def run_create_eb_windows(name, settings, options):
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'ELBSubnets'
-    oo['Value'] = ','.join([elb_subnet_id_1, elb_subnet_id_2, elb_subnet_id_3, elb_subnet_id_4])
+    oo['Value'] = ','.join([ss for ss in [elb_subnet_id_1, elb_subnet_id_2, elb_subnet_id_3, elb_subnet_id_4] if ss])
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:ec2:vpc'
     oo['OptionName'] = 'Subnets'
-    oo['Value'] = ','.join([ec2_subnet_id_1, ec2_subnet_id_2, ec2_subnet_id_3, ec2_subnet_id_4])
+    oo['Value'] = ','.join([ss for ss in [ec2_subnet_id_1, ec2_subnet_id_2, ec2_subnet_id_3, ec2_subnet_id_4] if ss])
     option_settings.append(oo)
 
     oo = dict()
