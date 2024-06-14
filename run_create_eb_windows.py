@@ -412,14 +412,14 @@ def run_create_eb_windows(name, settings, options):
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
     oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay1'
     oo['OptionName'] = 'Recurrence'
-    oo['Value'] = '0 4 * * 1-5'
+    oo['Value'] = '0 19 * * 0-4'
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
     oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay1'
-    oo['OptionName'] = 'TimeZone'
-    oo['Value'] = 'Asia/Seoul'
+    oo['OptionName'] = 'StartTime'
+    oo['Value'] = '2023-01-01T09:00:00Z'
     option_settings.append(oo)
 
     ################################################################################
@@ -449,14 +449,14 @@ def run_create_eb_windows(name, settings, options):
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
     oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay2'
     oo['OptionName'] = 'Recurrence'
-    oo['Value'] = '0 7 * * 1-5'
+    oo['Value'] = '0 22 * * 0-4'
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay1'
-    oo['OptionName'] = 'TimeZone'
-    oo['Value'] = 'Asia/Seoul'
+    oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay2'
+    oo['OptionName'] = 'StartTime'
+    oo['Value'] = '2023-01-01T09:00:00Z'
     option_settings.append(oo)
 
     ################################################################################
@@ -486,14 +486,14 @@ def run_create_eb_windows(name, settings, options):
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
     oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay3'
     oo['OptionName'] = 'Recurrence'
-    oo['Value'] = '0 9 * * 1-5'
+    oo['Value'] = '0 0 * * 1-5'
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay1'
-    oo['OptionName'] = 'TimeZone'
-    oo['Value'] = 'Asia/Seoul'
+    oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay3'
+    oo['OptionName'] = 'StartTime'
+    oo['Value'] = '2023-01-01T09:00:00Z'
     option_settings.append(oo)
 
     ################################################################################
@@ -523,14 +523,14 @@ def run_create_eb_windows(name, settings, options):
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
     oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay4'
     oo['OptionName'] = 'Recurrence'
-    oo['Value'] = '0 18 * * 1-5'
+    oo['Value'] = '0 9 * * 1-5'
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay1'
-    oo['OptionName'] = 'TimeZone'
-    oo['Value'] = 'Asia/Seoul'
+    oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay4'
+    oo['OptionName'] = 'StartTime'
+    oo['Value'] = '2023-01-01T09:00:00Z'
     option_settings.append(oo)
 
     ################################################################################
@@ -560,14 +560,14 @@ def run_create_eb_windows(name, settings, options):
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
     oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekEnd1'
     oo['OptionName'] = 'Recurrence'
-    oo['Value'] = '0 7 * * 0,6'
+    oo['Value'] = '0 22 * * 5,6'
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay1'
-    oo['OptionName'] = 'TimeZone'
-    oo['Value'] = 'Asia/Seoul'
+    oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekEnd1'
+    oo['OptionName'] = 'StartTime'
+    oo['Value'] = '2023-01-01T09:00:00Z'
     option_settings.append(oo)
 
     ################################################################################
@@ -597,14 +597,14 @@ def run_create_eb_windows(name, settings, options):
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
     oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekEnd2'
     oo['OptionName'] = 'Recurrence'
-    oo['Value'] = '0 18 * * 0,6'
+    oo['Value'] = '0 9 * * 0,6'
     option_settings.append(oo)
 
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
-    oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay1'
-    oo['OptionName'] = 'TimeZone'
-    oo['Value'] = 'Asia/Seoul'
+    oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekEnd2'
+    oo['OptionName'] = 'StartTime'
+    oo['Value'] = '2023-01-01T09:00:00Z'
     option_settings.append(oo)
 
     ################################################################################
