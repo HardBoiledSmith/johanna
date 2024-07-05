@@ -32,7 +32,7 @@ def run_create_eb_windows(name, settings, options):
     debug = env['common']['DEBUG']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
-    instance_type = settings.get('INSTANCE_TYPE', 'r7i.large')
+    instance_type = settings.get('INSTANCE_TYPE', 'm7i.large')
     phase = env['common']['PHASE']
     subnet_type = settings['SUBNET_TYPE']
     service_name = env['common'].get('SERVICE_NAME', '')
