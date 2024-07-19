@@ -799,18 +799,19 @@ def run_create_eb_windows(name, settings, options):
             time.sleep(30)
             elapsed_time += 30
 
-        print_message('update desired capacity of eb new auto scaling-groups')
-
-        cmd = ['autoscaling', 'update-auto-scaling-group']
-        cmd += ['--auto-scaling-group-name', eb_old_autoscaling_group_name]
-        cmd += ['--min-size', 0]
-        aws_cli.run(cmd)
-
         print_message('swap eb environment cname')
 
         cmd = ['elasticbeanstalk', 'swap-environment-cnames']
         cmd += ['--source-environment-name', eb_environment_name_old]
         cmd += ['--destination-environment-name', eb_environment_name]
+        aws_cli.run(cmd)
+
+        print_message('update desired capacity of eb old resource auto scaling-groups')
+
+        cmd = ['autoscaling', 'update-auto-scaling-group']
+        cmd += ['--auto-scaling-group-name', eb_old_autoscaling_group_name]
+        cmd += ['--min-size', '0']
+        cmd += ['--desired-capacity', '0']
         aws_cli.run(cmd)
 
         print_message('describe cloudwatch alarms')
