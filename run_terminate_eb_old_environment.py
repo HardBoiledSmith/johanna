@@ -40,7 +40,7 @@ def _is_old_environment(cname):
     return True
 
 
-def _has_no_kaji_instances(env_name):
+def _has_no_instances(env_name):
     cmd = ['ec2', 'describe-instances']
     cmd += ['--filters', f"Name=tag:Name,Values={env_name}"]
     cmd += ['Name=instance-state-name,Values=running']
@@ -92,7 +92,10 @@ for vpc_env in env.get('vpc', list()):
         if not _is_old_environment(r['CNAME']):
             continue
 
-        if 'kaji' in r['CNAME'] and not _has_no_kaji_instances(r['EnvironmentName']):
+        if 'kaji' in r['CNAME'] and not _has_no_instances(r['EnvironmentName']):
+            continue
+
+        if 'gendo' in r['CNAME'] and not _has_no_instances(r['EnvironmentName']):
             continue
 
         cmd = ['cloudwatch', 'delete-alarms']
