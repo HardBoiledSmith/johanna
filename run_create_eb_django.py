@@ -444,6 +444,12 @@ def run_create_eb_django(name, settings, options):
     oo['Value'] = '3'
     option_settings.append(oo)
 
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:application:environment'
+    oo['OptionName'] = 'EB_ENVIRONMENT_NAME'
+    oo['Value'] = eb_environment_name
+    option_settings.append(oo)
+
     option_settings = json.dumps(option_settings)
 
     tag0 = 'Key=git_hash_johanna,Value=%s' % git_hash_johanna.decode('utf-8').strip()
