@@ -132,7 +132,7 @@ def run_create_lambda_event(function_name, settings, options):
                '--description', description,
                '--role', role_arn,
                '--handler', 'lambda.handler',
-               '--runtime', 'python3.8',
+               '--runtime', 'python3.12',
                '--timeout', '120']
         if settings.get('MEMORY_SIZE'):
             cmd += ['--memory-size', settings['MEMORY_SIZE']]
@@ -154,7 +154,7 @@ def run_create_lambda_event(function_name, settings, options):
             '--zip-file', 'fileb://deploy.zip',
             '--role', role_arn,
             '--handler', 'lambda.handler',
-            '--runtime', 'python3.8',
+            '--runtime', 'python3.12',
             '--tags', ','.join(tags),
             '--timeout', '120',
             '--architectures', 'arm64',
