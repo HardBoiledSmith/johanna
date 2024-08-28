@@ -150,6 +150,16 @@ def create_base_iam_policy(aws_cli, name, settings, role_name):
                     'Resource': [
                         f'arn:aws:codebuild:{aws_region}:{account_id}:report-group/{name}-*'
                     ]
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "ssmmessages:CreateControlChannel",
+                        "ssmmessages:CreateDataChannel",
+                        "ssmmessages:OpenControlChannel",
+                        "ssmmessages:OpenDataChannel"
+                    ],
+                    "Resource": "*"
                 }
             ]
         }
