@@ -718,6 +718,18 @@ def run_create_eb_windows(name, settings, options):
     oo['Value'] = eb_environment_name
     option_settings.append(oo)
 
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:application:environment'
+    oo['OptionName'] = 'AWS_REGION'
+    oo['Value'] = aws_region
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:application:environment'
+    oo['OptionName'] = 'AWS_DEFAULT_REGION'
+    oo['Value'] = aws_region
+    option_settings.append(oo)
+
     option_settings = json.dumps(option_settings)
 
     tag0 = f"Key=git_hash_johanna,Value={git_hash_johanna.decode('utf-8').strip()}"
