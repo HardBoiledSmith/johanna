@@ -818,8 +818,41 @@ def run_create_eb_windows(name, settings, options):
         cmd += ['--destination-environment-name', eb_environment_name]
         aws_cli.run(cmd)
 
-        print_message('update desired capacity of eb old resource auto scaling-groups')
+        print_message('Delete instance scaling options')
 
+        print(f"Describe eb old autoscaling group Cloudwatch Alarm policy: {eb_old_autoscaling_group_name}")
+        cmd = ['autoscaling', 'describe-policies']
+        cmd += ['--auto-scaling-group-name', eb_old_autoscaling_group_name]
+        cmd += ['--query', "ScalingPolicies[*].Alarms[*].AlarmName"]
+        cmd += ['--output', 'text']
+        alarms = aws_cli.run(cmd)
+
+        if alarms:
+            print(f"Deleting CloudWatch Alarms: {alarms}")
+            cmd = ['cloudwatch', 'delete-alarms']
+            cmd += ['--alarm-names', alarms]
+            aws_cli.run(cmd)
+        else:
+            print("No CloudWatch Alarms found.")
+
+        print(f"Describe eb old autoscaling group sscheduled actions")
+        cmd = ['autoscaling', 'describe-scheduled-actions']
+        cmd += ['--auto-scaling-group-name', eb_old_autoscaling_group_name]
+        cmd += ['--query', "ScheduledUpdateGroupActions[*].ScheduledActionName"]
+        cmd += ['--output', 'text']
+        scheduled_actions = aws_cli.run(cmd)
+
+        if scheduled_actions:
+            for action in scheduled_actions.split():
+                print(f"Deleting old eb autoscaling Scheduled Action: {action}")
+                cmd = ['autoscaling', 'delete-scheduled-action']
+                cmd += ['--auto-scaling-group-name', eb_old_autoscaling_group_name]
+                cmd += ['--scheduled-action-name', action]
+                aws_cli.run(cmd)
+        else:
+            print("No Scheduled-based Auto Scaling actions found.")
+
+        print_message('update desired capacity of eb old resource auto scaling-groups')
         cmd = ['autoscaling', 'update-auto-scaling-group']
         cmd += ['--auto-scaling-group-name', eb_old_autoscaling_group_name]
         cmd += ['--min-size', '0']
