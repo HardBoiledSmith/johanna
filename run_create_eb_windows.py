@@ -835,7 +835,7 @@ def run_create_eb_windows(name, settings, options):
         else:
             print("No CloudWatch Alarms found.")
 
-        print(f"Describe eb old autoscaling group sscheduled actions")
+        print("Describe eb old autoscaling group scheduled actions")
         cmd = ['autoscaling', 'describe-scheduled-actions']
         cmd += ['--auto-scaling-group-name', eb_old_autoscaling_group_name]
         cmd += ['--query', "ScheduledUpdateGroupActions[*].ScheduledActionName"]
