@@ -12,7 +12,6 @@ from subprocess import PIPE
 env = dict(os.environ)
 env['PATH'] = f"{env['PATH']}:/usr/local/bin"
 env['BRANCH'] = 'master' if not env.get('BRANCH') else env['BRANCH']
-env['AWS_PROFILE'] = 'hbsmith-dv'
 
 
 def _print_line_number(number_of_outer_frame=1):
