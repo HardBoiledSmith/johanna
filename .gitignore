@@ -10,3 +10,4 @@
 id_rsa
 id_ed25519
 template/
+_provisioning/configuration/root/.aws/config
