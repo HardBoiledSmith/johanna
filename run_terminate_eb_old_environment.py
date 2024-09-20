@@ -1,6 +1,7 @@
-#!/usr/bin/env python3
-import subprocess
+#!/usr/bin/env python3.11
+
 import time
+import subprocess
 
 from env import env
 from run_common import AWSCli

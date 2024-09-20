@@ -1,0 +1,9 @@
+[Match]
+Name=enp0s6
+
+[Network]
+Address=192.168.124.5/24
+
+[Route]
+Destination=192.168.124.0/24
+Scope=link
