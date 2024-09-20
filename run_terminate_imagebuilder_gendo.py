@@ -3,7 +3,8 @@
 from run_common import AWSCli
 from run_common import print_message
 from run_common import print_session
-from run_terminate_imagebuilder_iam import terminate_iam_profile_for_imagebuilder
+from run_terminate_imagebuilder_iam import \
+    terminate_iam_profile_for_imagebuilder
 
 options, args = dict(), list()
 

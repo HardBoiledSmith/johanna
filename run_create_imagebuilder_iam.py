@@ -1,8 +1,6 @@
 #!/usr/bin/env python3.11
 
 from run_common import AWSCli
-import json
-import time
 
 aws_cli = AWSCli()
 
