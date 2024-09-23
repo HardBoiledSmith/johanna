@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.11
 import os
 import subprocess
 from multiprocessing import Process

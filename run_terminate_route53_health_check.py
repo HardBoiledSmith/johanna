@@ -1,10 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.11
 
 import re
 
 from env import env
-from run_common import AWSCli, print_message
+from run_common import AWSCli
 from run_common import parse_args
+from run_common import print_message
 
 
 def _delete_route53_health_check_and_alarm(domain, settings, unique_domain=None):
