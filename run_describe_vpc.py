@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.11
+#!/usr/bin/env python3.12
 from run_common import AWSCli
 
 aws_cli = AWSCli()
