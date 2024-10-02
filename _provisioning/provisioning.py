@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import fileinput
 import inspect
 import os
@@ -6,6 +7,7 @@ import re
 import subprocess
 import time
 from datetime import datetime
+from datetime import timezone
 from multiprocessing import Process
 from subprocess import PIPE
 
@@ -20,7 +22,7 @@ def _print_line_number(number_of_outer_frame=1):
     for ii in range(number_of_outer_frame):
         frame = frame.f_back
 
-    timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
     print('\n'.join(['#' * 40, f'[{timestamp}] LINE NUMBER: {frame.f_lineno}', '#' * 40]))
 
 
@@ -40,7 +42,7 @@ def _run(cmd, file_path_name=None, cwd=None, file_mode='a'):
 
     _print_line_number(2)
     cmd_string = ' '.join(cmd)
-    timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
     print('\n'.join(['#' * 40, f'[{timestamp}] COMMAND: {cmd_string}', '#' * 40]))
 
     pp = Process(target=_f)
@@ -137,15 +139,13 @@ def _preprocess():
 
     _print_line_number()
 
-    _run(['dnf', '-y', 'install', 'python3.11-devel'])
-
-    _run(['/usr/bin/python3.11', '-m', 'pip', 'install', '--upgrade', 'pip'])
+    _run(['pip3', 'install', '--upgrade', 'pip'])
     file_path_name = '/vagrant/requirements.txt'
     if os.path.exists(file_path_name):
         with open(file_path_name, 'r') as ff:
             lines = ff.readlines()
             for ll in lines:
-                _run(['/usr/bin/python3.11', '-m', 'pip', 'install', ll.strip()])
+                _run(['pip3', 'install', ll.strip()])
 
     _print_line_number()
 
