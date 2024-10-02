@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import fileinput
 import inspect
 import os
