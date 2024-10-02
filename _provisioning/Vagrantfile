@@ -12,9 +12,6 @@ Vagrant.configure(2) do |config|
 
   config.vm.provision "file", source: "../config.json", destination: "/vagrant/opt/johanna/config.json"
 
-  config.vm.provision "shell", inline: "export PATH=\"$HOME/.pyenv/bin:$PATH\""
-  config.vm.provision "shell", inline: "eval \"$(pyenv init --path)\""
-  config.vm.provision "shell", inline: "eval \"$(pyenv virtualenv-init -)\""
   config.vm.provision "shell", path: "provisioning.py", env: { "BRANCH" => ENV["BRANCH"] }, reboot: true
   config.vm.network "private_network", ip: "192.168.124.5", auto_config: false
 end
