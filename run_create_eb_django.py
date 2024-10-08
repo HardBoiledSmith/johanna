@@ -460,7 +460,7 @@ def run_create_eb_django(name, settings, options):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2 v3.7.3 running Python 3.8']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2023 v4.1.4 running Python 3.11']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
