@@ -66,7 +66,7 @@ def run_create_image_builder(options):
     cmd = ['ec2', 'describe-images']
     cmd += ['--owner', 'amazon']
     cmd += ['--filters',
-            'Name=name,Values=aws-elasticbeanstalk-amzn-??????????.x86_64-WindowsServer2016-V2-hvm-*',
+            'Name=name,Values=aws-elasticbeanstalk-amzn-??????????.x86_64-WindowsServer2022-V2-hvm-*',
             'Name=state,Values=available']
     cmd += ['--query', 'reverse(sort_by(Images, &CreationDate))[:1].ImageId']
     cmd += ['--output', 'text']
@@ -134,7 +134,7 @@ def run_create_image_builder(options):
     cmd += ['--name', gendo_component_name]
     cmd += ['--semantic-version', semantic_version]
     cmd += ['--platform', 'Windows']
-    cmd += ['--supported-os-versions', 'Microsoft Windows Server 2016']
+    cmd += ['--supported-os-versions', 'Microsoft Windows Server 2022']
     cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{target_eb_platform_version_tag}']
     cmd += ['--data', 'file://template/gendo/gendo/_provisioning/gendo_image_provisioning_part1.yml']
 
@@ -146,7 +146,7 @@ def run_create_image_builder(options):
     cmd += ['--name', gendo_component_name]
     cmd += ['--semantic-version', semantic_version]
     cmd += ['--platform', 'Windows']
-    cmd += ['--supported-os-versions', 'Microsoft Windows Server 2016']
+    cmd += ['--supported-os-versions', 'Microsoft Windows Server 2022']
     cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{target_eb_platform_version_tag}']
     cmd += ['--data', 'file://template/gendo/gendo/_provisioning/gendo_image_provisioning_part2.yml']
 
@@ -158,7 +158,7 @@ def run_create_image_builder(options):
     cmd += ['--name', gendo_component_name]
     cmd += ['--semantic-version', semantic_version]
     cmd += ['--platform', 'Windows']
-    cmd += ['--supported-os-versions', 'Microsoft Windows Server 2016']
+    cmd += ['--supported-os-versions', 'Microsoft Windows Server 2022']
     cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{target_eb_platform_version_tag}']
     cmd += ['--data', 'file://template/gendo/gendo/_provisioning/gendo_image_provisioning_test_sample.yml']
 
