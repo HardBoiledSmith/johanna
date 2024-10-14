@@ -12,8 +12,6 @@ then
 fi
 export PATH
 
-export AWS_PROFILE="hbsmith-dv"
-
 parse_git_branch() {
      git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
 }
@@ -28,3 +26,5 @@ alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
 alias awslogin='aws sso login'
+
+export NODE_OPTIONS="--max-old-space-size=2048"
