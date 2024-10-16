@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 import json
 import os
 import re
@@ -512,7 +512,7 @@ class AWSCli:
             elapsed_time += 5
 
     def get_eb_gendo_windows_platform(self, target_service):
-        in_use_eb_windows_version = '2.15.4'
+        in_use_eb_windows_version = '2.15.5'
 
         if target_service == 'elastic_beanstalk':
             return f'64bit Windows Server 2016 v{in_use_eb_windows_version} running IIS 10.0'

@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 import fileinput
 import inspect
 import os
-import platform
 import re
 import subprocess
 import time
@@ -22,10 +21,10 @@ def _print_line_number(number_of_outer_frame=1):
         frame = frame.f_back
 
     timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
-    print('\n'.join(['#' * 40, '[%s] LINE NUMBER: %d' % (timestamp, frame.f_lineno), '#' * 40]))
+    print('\n'.join(['#' * 40, f'[{timestamp}] LINE NUMBER: {frame.f_lineno}', '#' * 40]))
 
 
-def _run(cmd, file_path_name=None, cwd=None):
+def _run(cmd, file_path_name=None, cwd=None, file_mode='a'):
     def _f():
         if not file_path_name:
             _p = subprocess.Popen(cmd, cwd=cwd, env=env)
@@ -33,8 +32,8 @@ def _run(cmd, file_path_name=None, cwd=None):
             if _p.returncode != 0:
                 raise Exception()
         else:
-            with open(file_path_name, 'a') as f:
-                _p = subprocess.Popen(cmd, stdout=f, cwd=cwd, env=env)
+            with open(file_path_name, file_mode) as ff:
+                _p = subprocess.Popen(cmd, stdout=ff, cwd=cwd, env=env)
                 _p.communicate()
                 if _p.returncode != 0:
                     raise Exception()
@@ -42,7 +41,7 @@ def _run(cmd, file_path_name=None, cwd=None):
     _print_line_number(2)
     cmd_string = ' '.join(cmd)
     timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
-    print('\n'.join(['#' * 40, '[%s] COMMAND: %s' % (timestamp, cmd_string), '#' * 40]))
+    print('\n'.join(['#' * 40, f'[{timestamp}] COMMAND: {cmd_string}', '#' * 40]))
 
     pp = Process(target=_f)
     pp.start()
@@ -52,8 +51,8 @@ def _run(cmd, file_path_name=None, cwd=None):
 
 
 def _file_line_replace(file_path_name, str_old, str_new, backup='.bak'):
-    with fileinput.FileInput(file_path_name, inplace=True, backup=backup) as f:
-        for line in f:
+    with fileinput.FileInput(file_path_name, inplace=True, backup=backup) as ff:
+        for line in ff:
             new_line = re.sub(str_old, str_new, line)
             print(new_line, end='')
 
@@ -75,18 +74,19 @@ def _read_settings_file(settings_file_path_name):
     return sdd
 
 
-def _preprocess(hostname):
+def _preprocess():
     _print_line_number()
 
+    _run(['cp', '--backup', '/vagrant/configuration/root/.bashrc', '/root/.bashrc'])
+
+    hostname = 'dv-johanna-my-local-1a-012345.localdomain'
     _run(['sudo', 'hostnamectl', 'set-hostname', hostname])
-    _run(['sudo', 'systemctl', 'stop', 'systemd-resolved.service'])
-    _run(['sudo', 'systemctl', 'disable', 'systemd-resolved.service'])
 
     _print_line_number()
 
-    with open('/etc/server_info', 'w') as f:
-        f.write('AWS_EC2_INSTANCE_ID=i-01234567\n')
-        f.write('AWS_EC2_AVAILABILITY_ZONE=my-local-1a\n')
+    with open('/etc/server_info', 'w') as ff:
+        ff.write('AWS_EC2_INSTANCE_ID=i-01234567\n')
+        ff.write('AWS_EC2_AVAILABILITY_ZONE=my-local-1a\n')
 
     _print_line_number()
 
@@ -94,22 +94,12 @@ def _preprocess(hostname):
     _run(['chmod', '600', '/swapfile'])
     _run(['mkswap', '/swapfile'])
     _run(['swapon', '/swapfile'])
-    with open('/etc/fstab', 'a') as f:
-        f.write('/swapfile	swap	swap	sw	0	0\n')
+    with open('/etc/fstab', 'a') as ff:
+        ff.write('/swapfile	swap	swap	sw	0	0\n')
 
     _print_line_number()
 
     subprocess.Popen(['chpasswd'], stdin=PIPE).communicate(b'root:1234qwer')
-
-    _print_line_number()
-
-    _run(['/usr/bin/python3.8', '-m', 'pip', 'install', '--upgrade', 'pip'])
-
-    _print_line_number()
-
-    _run(['wget', '-O', 'awscliv2.zip', 'https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip'], cwd='/root')
-    _run(['unzip', 'awscliv2.zip'], cwd='/root')
-    _run(['./aws/install'], cwd='/root')
 
     _print_line_number()
 
@@ -147,13 +137,28 @@ def _preprocess(hostname):
 
     _print_line_number()
 
+    _run(['dnf', '-y', 'install', 'python3.11-devel'])
+
+    _run(['/usr/bin/python3.11', '-m', 'pip', 'install', '--upgrade', 'pip'])
+    file_path_name = '/vagrant/requirements.txt'
+    if os.path.exists(file_path_name):
+        with open(file_path_name, 'r') as ff:
+            lines = ff.readlines()
+            for ll in lines:
+                _run(['/usr/bin/python3.11', '-m', 'pip', 'install', ll.strip()])
+
+    _print_line_number()
+
+    pp = 'etc/systemd/network/20-vagrant-enp0s6.network'
+    _run(['cp', '--backup', f'/vagrant/configuration/{pp}', f'/{pp}'])
+    _run(['chmod', '644', f'/{pp}'])
+    _run(['chown', 'systemd-network:systemd-network', f'/{pp}'])
+
 
 def main():
-    hostname = 'dv-johanna-my-local-1a-012345.localdomain'
+    _print_line_number()
 
-    _run(['cp', '--backup', '/vagrant/configuration/root/.bashrc', '/root/.bashrc'])
-
-    _preprocess(hostname)
+    _preprocess()
 
     _print_line_number()
 
@@ -174,10 +179,10 @@ def main():
     _run(['chmod', '600', '/root/.ssh/id_ed25519'])
     is_success = False
     for ii in range(10):
-        print('Git clone try count: %d' % (ii + 1))
+        print(f'Git clone try count: {ii + 1}')
         # noinspection PyBroadException
         try:
-            # Non interactive git clone (ssh fingerprint prompt)
+            # Non-interactive git clone (ssh fingerprint prompt)
             _run(['ssh-keyscan', 'github.com'], '/root/.ssh/known_hosts')
             print(f'branch: {env["BRANCH"]}')
             _run(['git', 'clone', '--depth=1', '-b', env['BRANCH'], 'git@github.com:HardBoiledSmith/johanna.git'],

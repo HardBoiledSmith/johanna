@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 
 from env import env
 from run_common import AWSCli
-from run_common import re_sub_lines
-from run_common import print_session
 from run_common import print_message
+from run_common import print_session
+from run_common import re_sub_lines
 from run_common import read_file
 from run_common import reset_template_dir
 

@@ -1,13 +1,13 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.12
 
 import json
 import re
 import time
-
 from datetime import datetime
+
+from env import env
 from run_common import AWSCli
 from run_common import parse_args
-from env import env
 from run_common import print_message
 
 
