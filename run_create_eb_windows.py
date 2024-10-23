@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.12
+#!/usr/bin/env python3
 import json
 import os
 import re
@@ -828,10 +828,11 @@ def run_create_eb_windows(name, settings, options):
         alarms = aws_cli.run(cmd)
 
         if alarms:
-            print(f"Deleting CloudWatch Alarms: {alarms}")
-            cmd = ['cloudwatch', 'delete-alarms']
-            cmd += ['--alarm-names', alarms]
-            aws_cli.run(cmd)
+            for alarm in alarms.split():
+                print(f"Deleting CloudWatch Alarms: {alarm}")
+                cmd = ['cloudwatch', 'delete-alarms']
+                cmd += ['--alarm-names', alarm]
+                aws_cli.run(cmd)
         else:
             print("No CloudWatch Alarms found.")
 
