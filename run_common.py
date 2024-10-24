@@ -515,10 +515,10 @@ class AWSCli:
         in_use_eb_windows_version = '2.15.5'
 
         if target_service == 'elastic_beanstalk':
-            return f'64bit Windows Server 2016 v{in_use_eb_windows_version} running IIS 10.0'
+            return f'64bit Windows Server 2022 v{in_use_eb_windows_version} running IIS 10.0'
 
         if target_service == 'imagebuilder':
-            return f'IIS 10.0 running on 64bit Windows Server 2016/{in_use_eb_windows_version}'
+            return f'IIS 10.0 running on 64bit Windows Server 2022/{in_use_eb_windows_version}'
 
         raise Exception(f'unsupported platform: {target_service}')
 
