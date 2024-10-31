@@ -192,9 +192,10 @@ def run_create_image_builder(options):
     cmd += ['--name', infrastructure_name]
     cmd += ['--instance-profile-name', instance_profile_name]
     cmd += ['--instance-types', 'r7i.large']
-    cmd += ['--key-pair', 'dev-22267']
-    #cmd += ['--terminate-instance-on-failure']
-    cmd += ['--no-terminate-instance-on-failure']
+    cmd += ['--terminate-instance-on-failure']
+    # TODO: For debugging, uncomment the following line
+    # cmd += ['--no-terminate-instance-on-failure']
+    # cmd += ['--key-pair', 'gendo-key-pair']
     cmd += ['--description', f'생성일자 : {kst_date_time_now}']
     cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{target_eb_platform_version_tag}, {base_ami_tag}']
     rr = aws_cli.run(cmd)
