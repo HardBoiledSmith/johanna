@@ -193,7 +193,7 @@ def run_create_image_builder(options):
     cmd += ['--instance-profile-name', instance_profile_name]
     cmd += ['--instance-types', 'r7i.large']
     cmd += ['--terminate-instance-on-failure']
-    # TODO: For debugging, uncomment the following line
+    # TODO: For debugging failed build, uncomment the following line
     # cmd += ['--no-terminate-instance-on-failure']
     # cmd += ['--key-pair', 'gendo-key-pair']
     cmd += ['--description', f'생성일자 : {kst_date_time_now}']
