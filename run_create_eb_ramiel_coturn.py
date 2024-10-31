@@ -148,7 +148,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     print_message(f'configuration {name}')
 
     lines = read_file(
-        f'{template_path}/ramiel/ramiel2_dev/coturn/_provisioning/.ebextensions/ramiel_coturn.config.sample')
+        f'{template_path}/ramiel/ramiel2/coturn/_provisioning/.ebextensions/ramiel_coturn.config.sample')
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
     lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_USER_NAME', ramiel_coturn_user_name)
@@ -158,13 +158,13 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_MAX_PORT', ramiel_coturn_max_port)
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_MIN_PORT', ramiel_coturn_min_port)
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_REALM', ramiel_coturn_realm)
-    write_file(f'{template_path}/ramiel/ramiel2_dev/coturn/_provisioning/.ebextensions/ramiel_coturn.config', lines)
+    write_file(f'{template_path}/ramiel/ramiel2/coturn/_provisioning/.ebextensions/ramiel_coturn.config', lines)
 
     ################################################################################
     print_message('create iam')
 
     instance_profile_name, role_arn = create_iam_profile_for_ec2_instances(
-        f'{template_path}/ramiel/ramiel2_dev', name, f'{template_path}/ramiel/ramiel2_dev/coturn/_provisioning/iam')
+        f'{template_path}/ramiel/ramiel2', name, f'{template_path}/ramiel/ramiel2/coturn/_provisioning/iam')
     print_message('wait 10 seconds to let iam role and policy propagated to all regions...')
     time.sleep(10)
 
@@ -209,7 +209,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     file_list.append('application.py')
 
     for ff in file_list:
-        cmd = ['mv', f'ramiel/ramiel2_dev/coturn/_provisioning/{ff}', '.']
+        cmd = ['mv', f'ramiel/ramiel2/coturn/_provisioning/{ff}', '.']
         subprocess.Popen(cmd, cwd=template_path).communicate()
 
     cmd = ['rm', '-rf', 'ramiel']
