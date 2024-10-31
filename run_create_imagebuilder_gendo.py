@@ -192,6 +192,7 @@ def run_create_image_builder(options):
     cmd += ['--name', infrastructure_name]
     cmd += ['--instance-profile-name', instance_profile_name]
     cmd += ['--instance-types', 'r7i.large']
+    cmd += ['--key-pair', 'dev-22267']
     #cmd += ['--terminate-instance-on-failure']
     cmd += ['--no-terminate-instance-on-failure']
     cmd += ['--description', f'생성일자 : {kst_date_time_now}']
