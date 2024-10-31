@@ -178,7 +178,7 @@ def run_create_image_builder(options):
     cmd = ['imagebuilder', 'create-infrastructure-configuration']
     cmd += ['--name', infrastructure_name]
     cmd += ['--instance-profile-name', instance_profile_name]
-    cmd += ['--instance-types', 'r5.large']
+    cmd += ['--instance-types', 'r7i.large']
     cmd += ['--terminate-instance-on-failure']
     cmd += ['--description', f'생성일자 : {kst_date_time_now}']
     cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{target_eb_platform_version_tag}, {base_ami_tag}']
