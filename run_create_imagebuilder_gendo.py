@@ -160,11 +160,11 @@ def run_create_image_builder(options):
 
     block_device_mappings = [
         {
-            "DeviceName": "/dev/sda1",
-            "Ebs": {
-                "VolumeSize": 60,
-                "VolumeType": "gp3",
-                "DeleteOnTermination": True
+            "deviceName": "/dev/sda1",
+            "ebs": {
+                "volumeSize": 60,
+                "volumeType": "gp3",
+                "deleteOnTermination": True
             }
         }
     ]
