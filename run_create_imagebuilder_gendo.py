@@ -157,6 +157,18 @@ def run_create_image_builder(options):
     base_ami_tag = f'base_ami_id={eb_platform_ami}'
 
     recipe_name = f'gendo_recipe_{str_timestamp}'
+
+    block_device_mappings = [
+        {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+                "VolumeSize": 60,
+                "VolumeType": "gp3",
+                "DeleteOnTermination": True
+            }
+        }
+    ]
+
     cmd = ['imagebuilder', 'create-image-recipe']
     cmd += ['--name', recipe_name]
     cmd += ['--working-directory', '/tmp']
@@ -164,6 +176,7 @@ def run_create_image_builder(options):
     cmd += ['--components', json.dumps(recipe_components)]
     cmd += ['--parent-image', eb_platform_ami]
     cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{target_eb_platform_version_tag}, {base_ami_tag}']
+    cmd += ['--block-device-mappings', json.dumps(block_device_mappings)]
     rr = aws_cli.run(cmd)
     gendo_recipe_arn = rr['imageRecipeArn']
 
@@ -182,8 +195,6 @@ def run_create_image_builder(options):
     cmd += ['--terminate-instance-on-failure']
     cmd += ['--description', f'생성일자 : {kst_date_time_now}']
     cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{target_eb_platform_version_tag}, {base_ami_tag}']
-    cmd += ['--block-device-mappings',
-            '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":60,"VolumeType":"gp3","DeleteOnTermination":true}}]']
     rr = aws_cli.run(cmd)
     gendo_infrastructure_arn = rr['infrastructureConfigurationArn']
 
