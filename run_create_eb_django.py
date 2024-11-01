@@ -175,9 +175,9 @@ def run_create_eb_django(name, settings, options):
         f.close()
 
     lines = read_file('%s/%s/_provisioning/configuration/etc/cron.d/%s' % (template_path, name, name))
-    if not name == 'kaji':
-        rr = '/opt/python/run/venv/bin/python3 /opt/python/current/app/%s/\\1.py' % name
-        lines = re_sub_lines(lines, r'/opt/%s/(.+)\.py' % name, rr)
+    lines = re_sub_lines(lines, r'/root/.pyenv/shims/python(.+)', '/var/app/venv/staging-LQM1lest/bin/python\\1')
+    lines = re_sub_lines(lines, r'/usr/bin/python(.+)', '/var/app/venv/staging-LQM1lest/bin/python\\1')
+    lines = re_sub_lines(lines, r'/opt/%s/(.+)' % name, '/var/app/current/%s/\\1' % name)
     write_file('%s/%s/_provisioning/configuration/etc/cron.d/%s' % (template_path, name, name), lines)
 
     lines = read_file('%s/%s/_provisioning/.ebextensions/%s.config.sample' % (template_path, name, name))
