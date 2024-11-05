@@ -21,10 +21,12 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     aws_asg_max_value = settings['AWS_ASG_MAX_VALUE']
     aws_asg_min_value = settings['AWS_ASG_MIN_VALUE']
     aws_region = settings['AWS_REGION']
+    aws_eb_notification_email = settings['AWS_EB_NOTIFICATION_EMAIL']
     cname = settings['CNAME']
     eb_application_name = env['elasticbeanstalk']['APPLICATION_NAME']
     git_url = settings['GIT_URL']
     phase = env['common']['PHASE']
+    ssl_certificate_id = aws_cli.get_acm_certificate_id('hbsmith.io')
     instance_type = settings.get('INSTANCE_TYPE', 't4g.micro')
 
     hosted_zone_id = settings.get('HOSTED_ZONE_ID')
@@ -148,9 +150,11 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     print_message(f'configuration {name}')
 
     lines = read_file(
-        f'{template_path}/ramiel/ramiel2_dev/coturn/_provisioning/.ebextensions/ramiel_coturn.config.sample')
+        f'{template_path}/ramiel/ramiel2/coturn/_provisioning/.ebextensions/ramiel_coturn.config.sample')
     lines = re_sub_lines(lines, 'AWS_ASG_MAX_VALUE', aws_asg_max_value)
     lines = re_sub_lines(lines, 'AWS_ASG_MIN_VALUE', aws_asg_min_value)
+    lines = re_sub_lines(lines, 'AWS_EB_NOTIFICATION_EMAIL', aws_eb_notification_email)
+    lines = re_sub_lines(lines, 'SSL_CERTIFICATE_ID', ssl_certificate_id)
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_USER_NAME', ramiel_coturn_user_name)
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_USER_PASSWORD', ramiel_coturn_user_password)
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_LISTENING_PORT', ramiel_coturn_listening_port)
@@ -158,13 +162,13 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_MAX_PORT', ramiel_coturn_max_port)
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_MIN_PORT', ramiel_coturn_min_port)
     lines = re_sub_lines(lines, 'RAMIEL_COTURN_REALM', ramiel_coturn_realm)
-    write_file(f'{template_path}/ramiel/ramiel2_dev/coturn/_provisioning/.ebextensions/ramiel_coturn.config', lines)
+    write_file(f'{template_path}/ramiel/ramiel2/coturn/_provisioning/.ebextensions/ramiel_coturn.config', lines)
 
     ################################################################################
     print_message('create iam')
 
     instance_profile_name, role_arn = create_iam_profile_for_ec2_instances(
-        f'{template_path}/ramiel/ramiel2_dev', name, f'{template_path}/ramiel/ramiel2_dev/coturn/_provisioning/iam')
+        f'{template_path}/ramiel/ramiel2', name, f'{template_path}/ramiel/ramiel2/coturn/_provisioning/iam')
     print_message('wait 10 seconds to let iam role and policy propagated to all regions...')
     time.sleep(10)
 
@@ -209,7 +213,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     file_list.append('application.py')
 
     for ff in file_list:
-        cmd = ['mv', f'ramiel/ramiel2_dev/coturn/_provisioning/{ff}', '.']
+        cmd = ['mv', f'ramiel/ramiel2/coturn/_provisioning/{ff}', '.']
         subprocess.Popen(cmd, cwd=template_path).communicate()
 
     cmd = ['rm', '-rf', 'ramiel']
@@ -339,6 +343,12 @@ def run_create_eb_ramiel_coturn(name, settings, options):
 
     oo = dict()
     oo['Namespace'] = 'aws:elasticbeanstalk:healthreporting:system'
+    oo['OptionName'] = 'SystemType'
+    oo['Value'] = 'enhanced'
+    option_settings.append(oo)
+
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:healthreporting:system'
     oo['OptionName'] = 'ConfigDocument'
     cw_instance = dict()
     cw_instance['RootFilesystemUtil'] = 60
@@ -376,6 +386,12 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     oo['Value'] = '3'
     option_settings.append(oo)
 
+    oo = dict()
+    oo['Namespace'] = 'aws:elasticbeanstalk:application:environment'
+    oo['OptionName'] = 'EB_ENVIRONMENT_NAME'
+    oo['Value'] = eb_environment_name
+    option_settings.append(oo)
+
     option_settings = json.dumps(option_settings)
 
     tag0 = 'Key=git_hash_johanna,Value=%s' % git_hash_johanna.decode('utf-8').strip()
@@ -386,7 +402,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2 v3.7.1 running Python 3.8']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2023 v4.2.0 running Python 3.12']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
