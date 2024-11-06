@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.12
+#!/usr/bin/env python3
 import json
 import os
 import re
@@ -175,9 +175,9 @@ def run_create_eb_django(name, settings, options):
         f.close()
 
     lines = read_file('%s/%s/_provisioning/configuration/etc/cron.d/%s' % (template_path, name, name))
-    if not name == 'kaji':
-        rr = '/opt/python/run/venv/bin/python3 /opt/python/current/app/%s/\\1.py' % name
-        lines = re_sub_lines(lines, r'/opt/%s/(.+)\.py' % name, rr)
+    lines = re_sub_lines(lines, r'/root/.pyenv/shims/python(.+)', '/var/app/venv/staging-LQM1lest/bin/python\\1')
+    lines = re_sub_lines(lines, r'/usr/bin/python(.+)', '/var/app/venv/staging-LQM1lest/bin/python\\1')
+    lines = re_sub_lines(lines, r'/opt/%s/(.+)' % name, '/var/app/current/%s/\\1' % name)
     write_file('%s/%s/_provisioning/configuration/etc/cron.d/%s' % (template_path, name, name), lines)
 
     lines = read_file('%s/%s/_provisioning/.ebextensions/%s.config.sample' % (template_path, name, name))
@@ -460,7 +460,7 @@ def run_create_eb_django(name, settings, options):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2 v3.7.4 running Python 3.8']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2023 v4.2.0 running Python 3.12']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)

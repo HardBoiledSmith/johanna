@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.12
+#!/usr/bin/env python3
 import json
 import os
 import re
@@ -384,7 +384,7 @@ def run_create_eb_windows(name, settings, options):
     oo = dict()
     oo['Namespace'] = 'aws:autoscaling:launchconfiguration'
     oo['OptionName'] = 'RootVolumeSize'
-    oo['Value'] = '40'
+    oo['Value'] = '60'
     option_settings.append(oo)
 
     ################################################################################
