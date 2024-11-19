@@ -4,6 +4,7 @@ import json
 import re
 import time
 from datetime import datetime
+from datetime import timezone
 
 from env import env
 from run_common import AWSCli
@@ -40,7 +41,7 @@ def _create_route53_health_check_and_alarm(domain, settings, unique_domain=None)
         dd['EnableSNI'] = False
 
     cmd = ['route53', 'create-health-check']
-    timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M')
+    timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M')
     caller_reference = f'{name}-{timestamp}' if not unique_domain else f'{name}-{domain}-{port}-{timestamp}'
     cmd += ['--caller-reference', caller_reference]
     cmd += ['--health-check-config', json.dumps(dd)]
