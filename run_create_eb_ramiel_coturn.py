@@ -402,7 +402,7 @@ def run_create_eb_ramiel_coturn(name, settings, options):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2023 v4.2.0 running Python 3.12']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2023 v4.3.0 running Python 3.12']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
