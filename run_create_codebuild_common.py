@@ -174,11 +174,19 @@ def create_base_iam_policy(aws_cli, name, settings, role_name):
                     's3:PutObject',
                     's3:PutObjectAcl'
                 ],
-                'Resource': [
-                    f"arn:aws:s3:::{settings['IAM_POLICY_S3_BUCKET_NAME']}",
-                    f"arn:aws:s3:::{settings['IAM_POLICY_S3_BUCKET_NAME']}/*"
-                ]
+                'Resource': []
             }
+
+            bucket_names = settings['IAM_POLICY_S3_BUCKET_NAME']
+            if isinstance(bucket_names, str):
+                bucket_names = [bucket_names]
+
+            for bucket_name in bucket_names:
+                pp['Resource'].extend([
+                    f"arn:aws:s3:::{bucket_name}",
+                    f"arn:aws:s3:::{bucket_name}/*"
+                ])
+
             dd['Statement'].append(pp)
 
         if 'S3_OP_BACKUP_BUCKET' in settings:
