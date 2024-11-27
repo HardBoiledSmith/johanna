@@ -15,7 +15,6 @@ def run_create_s3_bucket(name, settings):
     bucket_name = settings['BUCKET_NAME']
     expire_days = settings.get('EXPIRE_FILES_DAYS', 0)
     versioning_expire_days = settings.get('EXPIRE_VERSION_DAYS', 0)
-    is_web_hosting = settings['WEB_HOSTING']
     region = settings['REGION']
     policy = settings.get('POLICY', '')
     phase = env['common']['PHASE']
@@ -33,7 +32,7 @@ def run_create_s3_bucket(name, settings):
 
     ################################################################################
 
-    if policy in ['website', 'email', 'temp-bucket']:
+    if policy in ['website', 'email', 'temp-bucket', 'result-bucket']:
         print_message('delete public access block')
         cmd = ['s3api', 'delete-public-access-block']
         cmd += ['--bucket', bucket_name]
@@ -42,7 +41,7 @@ def run_create_s3_bucket(name, settings):
         print_message('wait public access block has deleted...')
         time.sleep(10)
 
-    if policy in ['website', 'email', 'temp-bucket', 'ramiel-op-bundle']:
+    if policy in ['website', 'email', 'temp-bucket', 'ramiel-op-bundle', 'result-bucket']:
         print_message('set bucket policy')
 
         lines = read_file('aws_iam/aws-s3-bucket-policy-for-%s.json' % policy)
@@ -54,7 +53,7 @@ def run_create_s3_bucket(name, settings):
         cmd += ['--policy', pp]
         aws_cli.run(cmd)
 
-    if policy == 'temp-bucket':
+    if policy in ['temp-bucket']:
         allowed_origins = list()
         allowed_origins.append('http://*.hbsmith.io')
         allowed_origins.append('http://*.hbsmith.io:9001')
@@ -78,15 +77,7 @@ def run_create_s3_bucket(name, settings):
         cmd += ['--cors-configuration', json.dumps(cc)]
         aws_cli.run(cmd)
 
-    if is_web_hosting:
-        print_message('set website configuration')
-
-        cmd = ['s3api', 'put-bucket-website']
-        cmd += ['--bucket', bucket_name]
-        cmd += ['--website-configuration',
-                'file://aws_iam/aws-s3-website-configuration.json']
-        aws_cli.run(cmd)
-
+    if policy in ['website', 'result-bucket']:
         allowed_origins = list()
         allowed_origins.append('http://*.hbsmith.io')
         allowed_origins.append('http://*.hbsmith.io:9001')
