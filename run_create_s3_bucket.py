@@ -78,6 +78,14 @@ def run_create_s3_bucket(name, settings):
         aws_cli.run(cmd)
 
     if policy in ['website', 'result-bucket']:
+        print_message('set website configuration')
+        cmd = ['s3api', 'put-bucket-website']
+        cmd += ['--bucket', bucket_name]
+        cmd += ['--website-configuration',
+                'file://aws_iam/aws-s3-website-configuration.json']
+        aws_cli.run(cmd)
+
+        print_message('set cors')
         allowed_origins = list()
         allowed_origins.append('http://*.hbsmith.io')
         allowed_origins.append('http://*.hbsmith.io:9001')
@@ -85,7 +93,6 @@ def run_create_s3_bucket(name, settings):
         allowed_origins.append('http://*.hbsmith.io:9100')
         allowed_origins.append('https://*.hbsmith.io')
 
-        print_message('set cors')
         cc = {
             "CORSRules": [
                 {
