@@ -68,7 +68,7 @@ def cleanup_old_logs(app_logs, active_envs, keep_count=1):
         sorted_groups = [(timestamp, timestamp_groups[timestamp]) for timestamp in sorted_timestamps]
 
         if not sorted_groups:
-            print(f'No log groups to delete')
+            print('No log groups to delete')
             continue
 
         print(f'Found {len(sorted_groups)} apps')
@@ -80,7 +80,7 @@ def cleanup_old_logs(app_logs, active_envs, keep_count=1):
                 inactive_groups.append((timestamp, logs))
 
         if not inactive_groups:
-            print(f'No inactive apps found')
+            print('No inactive apps found')
             continue
 
         print(f'Found {len(inactive_groups)} inactive apps')
