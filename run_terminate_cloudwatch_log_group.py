@@ -64,7 +64,6 @@ def cleanup_old_logs(app_logs, active_envs, keep_count=1):
     for app_name, timestamp_groups in app_logs.items():
         print_message(f'Processing logs for application: {app_name}')
 
-        # Sort timestamps and get groups
         sorted_timestamps = sorted(timestamp_groups.keys(), key=int, reverse=True)
         sorted_groups = [(timestamp, timestamp_groups[timestamp]) for timestamp in sorted_timestamps]
 
@@ -74,7 +73,6 @@ def cleanup_old_logs(app_logs, active_envs, keep_count=1):
 
         print(f'Found {len(sorted_groups)} apps')
 
-        # Filter out active environments
         inactive_groups = []
         for timestamp, logs in sorted_groups:
             env_id = f"{app_name}-{timestamp}"
@@ -87,8 +85,7 @@ def cleanup_old_logs(app_logs, active_envs, keep_count=1):
 
         print(f'Found {len(inactive_groups)} inactive apps')
 
-        # Keep the most recent inactive group, delete the rest
-        groups_to_delete = inactive_groups[keep_count:]  # Skip the first (most recent) group
+        groups_to_delete = inactive_groups[keep_count:]
 
         print(f'Delete {len(groups_to_delete)} apps in inactive apps (skipping keep last {keep_count})')
 
