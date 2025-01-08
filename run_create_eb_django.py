@@ -289,7 +289,7 @@ def run_create_eb_django(name, settings, options):
     cmd = ['s3api', 'get-bucket-policy']
     cmd += ['--bucket', s3_bucket]
     rr = aws_cli.run(cmd, ignore_error=True)
-    if rr.get('Policy', ''):
+    if isinstance(rr, dict) and rr.get('Policy', ''):
         rr = rr['Policy']
 
         account_id = aws_cli.get_caller_account_id()
