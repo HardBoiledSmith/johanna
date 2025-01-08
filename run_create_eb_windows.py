@@ -335,7 +335,6 @@ def run_create_eb_windows(name, settings, options):
     else:
         role_list = list()
         account_id = aws_cli.get_caller_account_id()
-        role_list.append(f'arn:aws:iam::{account_id}:role/aws-elasticbeanstalk-ec2-role')
         role_list.append(role_arn)
 
     lines = read_file('aws_iam/aws-elasticbeanstalk-storage-policy.json')
