@@ -9,6 +9,7 @@ from run_create_lambda_event import run_create_lambda_event
 from run_create_lambda_ses_sqs import run_create_lambda_ses_sqs
 from run_create_lambda_sns import run_create_lambda_sns
 from run_create_lambda_sqs import run_create_lambda_sqs
+from run_create_lambda_url import run_create_lambda_url
 
 options, args = dict(), list()
 
@@ -54,6 +55,8 @@ for settings in env.get('lambda', list()):
         run_create_lambda_ses_sqs(settings['NAME'], settings, options)
     elif settings['TYPE'] == 'event':
         run_create_lambda_event(settings['NAME'], settings, options)
+    elif settings['TYPE'] == 'url':
+        run_create_lambda_url(settings['NAME'], settings, options)
     else:
         print(f'{settings["TYPE"]} is not supported')
         raise Exception()
