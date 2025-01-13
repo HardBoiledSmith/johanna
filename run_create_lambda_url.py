@@ -203,7 +203,7 @@ def run_create_lambda_url(function_name, settings, options):
     print_message('adding public access permission for function URL')
     cmd = ['lambda', 'add-permission',
            '--function-name', function_name,
-           '--statement-id', 'FunctionURLAllowPublicAccess',
+           '--statement-id', function_name + 'StatementId',
            '--action', 'lambda:InvokeFunctionUrl',
            '--principal', '*',
            '--function-url-auth-type', url_auth_type]
