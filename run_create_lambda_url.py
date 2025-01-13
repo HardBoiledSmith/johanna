@@ -198,17 +198,15 @@ def run_create_lambda_url(function_name, settings, options):
         cmd.extend(['--cors', json.dumps(url_cors)])
     url_result = aws_cli.run(cmd)
     result['FunctionUrl'] = url_result.get('FunctionUrl')
+    print_message(f'function URL: {result["FunctionUrl"]}')
 
-    arn = settings.get('AWS_CONNECT_ARN')
-    if arn and arn != '...':
-        account_id = aws_cli.get_caller_account_id()
-        cmd = ['lambda', 'add-permission',
-               '--function-name', function_name,
-               '--statement-id', function_name + 'StatementId',
-               '--principal', 'connect.amazonaws.com',
-               '--action', 'lambda:InvokeFunction',
-               '--source-account', account_id,
-               '--source-arn', settings['AWS_CONNECT_ARN']]
-        aws_cli.run(cmd)
+    print_message('adding public access permission for function URL')
+    cmd = ['lambda', 'add-permission',
+           '--function-name', function_name,
+           '--statement-id', 'FunctionURLAllowPublicAccess',
+           '--action', 'lambda:InvokeFunctionUrl',
+           '--principal', '*',
+           '--function-url-auth-type', url_auth_type]
+    aws_cli.run(cmd)
 
     return result
