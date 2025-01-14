@@ -288,16 +288,21 @@ def run_create_eb_django(name, settings, options):
 
     cmd = ['s3api', 'get-bucket-policy']
     cmd += ['--bucket', s3_bucket]
-    rr = aws_cli.run(cmd)
-    rr = rr['Policy']
+    rr = aws_cli.run(cmd, ignore_error=True)
+    if isinstance(rr, dict) and rr.get('Policy', ''):
+        rr = rr['Policy']
 
-    account_id = aws_cli.get_caller_account_id()
-    ppp = fr'arn:aws:iam::{account_id}:role/aws-elasticbeanstalk-(?:[a-z]+-ec2|ec2)-role'
-    role_list = re.findall(ppp, rr)
+        account_id = aws_cli.get_caller_account_id()
+        ppp = fr'arn:aws:iam::{account_id}:role/aws-elasticbeanstalk-(?:[a-z]+-ec2|ec2)-role'
+        role_list = re.findall(ppp, rr)
 
-    role_list = set(role_list)
-    role_list.add(role_arn)
-    role_list = list(role_list)
+        role_list = set(role_list)
+        role_list.add(role_arn)
+        role_list = list(role_list)
+    else:
+        role_list = list()
+        account_id = aws_cli.get_caller_account_id()
+        role_list.append(role_arn)
 
     lines = read_file('aws_iam/aws-elasticbeanstalk-storage-policy.json')
     lines = re_sub_lines(lines, 'BUCKET_NAME', s3_bucket)
@@ -460,7 +465,7 @@ def run_create_eb_django(name, settings, options):
     cmd += ['--cname-prefix', cname]
     cmd += ['--environment-name', eb_environment_name]
     cmd += ['--option-settings', option_settings]
-    cmd += ['--solution-stack-name', '64bit Amazon Linux 2023 v4.3.1 running Python 3.12']
+    cmd += ['--solution-stack-name', '64bit Amazon Linux 2023 v4.3.2 running Python 3.12']
     cmd += ['--tags', tag0, tag1]
     cmd += ['--version-label', eb_environment_name]
     aws_cli.run(cmd, cwd=template_path)
