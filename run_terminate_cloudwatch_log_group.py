@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-
 import re
+import time
 from collections import defaultdict
 
 from run_common import AWSCli
@@ -101,32 +101,31 @@ def cleanup_old_logs(app_logs, active_envs, keep_count=1):
     return deleted_count
 
 
-def run_cleanup_eb_logs():
-    print_session('Clean up old ElasticBeanstalk log groups')
-
-    print_message('Getting ElasticBeanstalk log groups')
-    log_groups = get_eb_log_groups()
-
-    if not log_groups:
-        print_message('No ElasticBeanstalk log groups found')
-        return
-
-    print_message('Getting active ElasticBeanstalk environments')
-    active_envs = get_active_environments()
-
-    print_message('Grouping logs by application and timestamp')
-    app_logs = group_logs_by_app_and_timestamp(log_groups)
-
-    print_message('Starting cleanup process')
-    deleted_count = cleanup_old_logs(app_logs, active_envs)
-
-    print_message(f'Cleanup complete. Deleted {deleted_count} log groups')
-
-
 ################################################################################
 #
 # start
 #
 ################################################################################
-if __name__ == "__main__":
-    run_cleanup_eb_logs()
+print_session('terminate old elasticbeanstalk log groups')
+
+timestamp = int(time.time())
+
+################################################################################
+print_message('terminate old elasticbeanstalk log groups (current timestamp: %d)' % timestamp)
+
+print_message('getting elasticbeanstalk log groups')
+log_groups = get_eb_log_groups()
+
+if not log_groups:
+    print_message('no elasticbeanstalk log groups found')
+else:
+    print_message('getting active elasticbeanstalk environments')
+    active_envs = get_active_environments()
+
+    print_message('grouping logs by application and timestamp')
+    app_logs = group_logs_by_app_and_timestamp(log_groups)
+
+    print_message('starting cleanup process')
+    deleted_count = cleanup_old_logs(app_logs, active_envs)
+
+    print_message(f'cleanup complete. deleted {deleted_count} log groups')
