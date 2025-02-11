@@ -188,6 +188,23 @@ def run_terminate_event_lambda(function_name, settings):
     aws_cli.run(cmd, ignore_error=True)
 
 
+def run_terminate_url_lambda(function_name, settings):
+    aws_cli = AWSCli(settings['AWS_REGION'])
+
+    ################################################################################
+    print_session(f'terminate lambda: {function_name}')
+
+    print_message('delete function URL configuration')
+    cmd = ['lambda', 'delete-function-url-config',
+           '--function-name', function_name]
+    aws_cli.run(cmd, ignore_error=True)
+
+    print_message('delete lambda function')
+    cmd = ['lambda', 'delete-function',
+           '--function-name', function_name]
+    aws_cli.run(cmd, ignore_error=True)
+
+
 ################################################################################
 #
 # start
@@ -228,6 +245,9 @@ for settings in env.get('lambda', list()):
         terminate_iam_for_lambda(settings['NAME'])
     elif settings['TYPE'] == 'event':
         run_terminate_event_lambda(settings['NAME'], settings)
+        terminate_iam_for_lambda(settings['NAME'])
+    elif settings['TYPE'] == 'url':
+        run_terminate_url_lambda(settings['NAME'], settings)
         terminate_iam_for_lambda(settings['NAME'])
     else:
         print(f'{settings["TYPE"]} is not supported')
