@@ -117,7 +117,6 @@ def log_list_any_cloudwatch_log(target_arr, timestamp):
 
 
 def image_list_any_ec2_image(target_arr, timestamp):
-    """EC2 이미지의 태그에서 타임스탬프를 추출하여 비교"""
     for img in target_arr:
         for tag in img['Tags']:
             if tag['Key'] == 'Ec2ImageBuilderArn':
@@ -129,38 +128,30 @@ def image_list_any_ec2_image(target_arr, timestamp):
 
 
 def delete_version_list_any_imagebuilder_resource(delete_versions, arn):
-    """삭제 대상 타임스탬프와 리소스의 타임스탬프를 비교"""
-    # image-recipe
     if 'image-recipe' in arn or 'image_recipe' in arn:
-        # 타임스탬프 직접 추출 (gendo-recipe-1748308561 또는 gendo_recipe_1748308561)
         match = re.search(r'gendo[-_]recipe[-_](\d+)', arn)
         if match:
             timestamp = match.group(1)
             print(f'extracted recipe timestamp: {timestamp}')
             return timestamp in delete_versions
-    # component
     elif 'component' in arn:
-        # 타임스탬프 직접 추출 (gendo-image-provisioning-00-component-1748308561 또는 gendo_image_provisioning_00_component_1748308561)
         match = re.search(r'gendo[-_]image[-_]provisioning[-_]\d+[-_]component[-_](\d+)', arn)
         if match:
             timestamp = match.group(1)
             print(f'extracted component timestamp: {timestamp}')
             return timestamp in delete_versions
-    # pipeline
     elif 'image-pipeline' in arn or 'image_pipeline' in arn:
         match = re.search(r'gendo[-_]pipeline[-_](\d+)', arn)
         if match:
             timestamp = match.group(1)
             print(f'extracted pipeline timestamp: {timestamp}')
             return timestamp in delete_versions
-    # distribution
     elif 'distribution-configuration' in arn or 'distribution_configuration' in arn:
         match = re.search(r'gendo[-_]distribution[-_](\d+)', arn)
         if match:
             timestamp = match.group(1)
             print(f'extracted distribution timestamp: {timestamp}')
             return timestamp in delete_versions
-    # infrastructure
     elif 'infrastructure-configuration' in arn or 'infrastructure_configuration' in arn:
         match = re.search(r'gendo[-_]infrastructure[-_](\d+)', arn)
         if match:
@@ -171,7 +162,6 @@ def delete_version_list_any_imagebuilder_resource(delete_versions, arn):
 
 
 def delete_version_list_any_ec2_image(delete_versions, image):
-    """EC2 이미지의 태그에서 타임스탬프를 추출하여 삭제 대상과 비교"""
     for tag in image['Tags']:
         if tag['Key'] == 'Ec2ImageBuilderArn':
             # ARN에서 리소스 이름 추출
@@ -182,7 +172,6 @@ def delete_version_list_any_ec2_image(delete_versions, image):
 
 
 def delete_version_list_any_cloudwatch_log(delete_versions, log):
-    """CloudWatch 로그 그룹 이름에서 타임스탬프를 추출하여 삭제 대상과 비교"""
     log_group_name = log['logGroupName']
     # 로그 그룹 이름에서 타임스탬프 추출
     name_match = re.search(r'_(\d+)$', log_group_name)
@@ -194,15 +183,12 @@ def delete_version_list_any_cloudwatch_log(delete_versions, log):
 
 
 def check_exist_resource_version(resource, timestamp):
-    """리소스가 정상적으로 존재하는지 확인"""
     print(f'checking if resource version {timestamp} exists...')
 
-    # 현재 사용 중인 버전은 항상 정상으로 처리
     if timestamp in resource.get('in_use_ami_timestamp_version', []):
         print(f'version {timestamp} is in use')
         return True
 
-    # component 리스트 확인
     component_found = False
     for cc in resource['component_list']:
         print(f'Checking component: {cc}')
@@ -218,7 +204,6 @@ def check_exist_resource_version(resource, timestamp):
         print(f'component not found for version {timestamp}')
         return False
 
-    # AMI ARN 리스트 확인
     print(f'Checking AMI ARNs for version {timestamp}:')
     print(f'AMI ARN list: {resource["ami_arn_list"]}')
     ami_found = False
@@ -241,19 +226,16 @@ def check_exist_resource_version(resource, timestamp):
         print(f'AMI not found for version {timestamp}')
         return False
 
-    # image recipe 리스트 확인
     print(f'Checking image recipe list for version {timestamp}')
     if not arn_list_any_imagebuilder_resource(resource['image_recipe_list'], timestamp):
         print(f'image recipe not found for version {timestamp}')
         return False
 
-    # distribution 리스트 확인
     print(f'Checking distribution list for version {timestamp}')
     if not arn_list_any_imagebuilder_resource(resource['distribution_list'], timestamp):
         print(f'distribution not found for version {timestamp}')
         return False
 
-    # pipeline 리스트 확인
     print(f'Checking pipeline list for version {timestamp}')
     if not arn_list_any_imagebuilder_resource(resource['pipe_line_list'], timestamp):
         print(f'pipeline not found for version {timestamp}')
@@ -332,7 +314,6 @@ def run_terminate_image(name):
     print_message(f'in_use_ami_timestamp_version : {in_use_ami_timestamp_version}')
     print_message(f'Currently in-use versions: {sorted(in_use_ami_timestamp_version)}')
 
-    # Get all images with pagination
     ami_arn_list = []
     cmd = ['imagebuilder', 'list-images']
     rr = aws_cli.run(cmd)
@@ -344,7 +325,6 @@ def run_terminate_image(name):
         ami_arn_list.extend(filter_imagebuilder_resource_arn_list(next_rr['imageVersionList']))
         rr = next_rr
 
-    # Get all pipelines with pagination
     pipe_line_list = []
     cmd = ['imagebuilder', 'list-image-pipelines']
     rr = aws_cli.run(cmd)
@@ -356,7 +336,6 @@ def run_terminate_image(name):
         pipe_line_list.extend(filter_imagebuilder_resource_arn_list(next_rr['imagePipelineList']))
         rr = next_rr
 
-    # Get all distributions with pagination
     distribution_list = []
     cmd = ['imagebuilder', 'list-distribution-configurations']
     rr = aws_cli.run(cmd)
@@ -368,7 +347,6 @@ def run_terminate_image(name):
         distribution_list.extend(filter_imagebuilder_resource_arn_list(next_rr['distributionConfigurationSummaryList']))
         rr = next_rr
 
-    # Get all infrastructures with pagination
     infrastructure_list = []
     cmd = ['imagebuilder', 'list-infrastructure-configurations']
     rr = aws_cli.run(cmd)
@@ -381,7 +359,6 @@ def run_terminate_image(name):
             filter_imagebuilder_resource_arn_list(next_rr['infrastructureConfigurationSummaryList']))
         rr = next_rr
 
-    # Get all image recipes with pagination
     image_recipe_list = []
     cmd = ['imagebuilder', 'list-image-recipes']
     rr = aws_cli.run(cmd)
@@ -394,7 +371,6 @@ def run_terminate_image(name):
         rr = next_rr
 
     print_message('get component list')
-    # Get all components with pagination
     component_list = []
     cmd = ['imagebuilder', 'list-components']
     rr = aws_cli.run(cmd)
@@ -408,7 +384,6 @@ def run_terminate_image(name):
 
     timestamp_list = list()
     for cc in component_list:
-        # component ARN에서 타임스탬프 추출 (gendo-image-provisioning-00-component-1748308561)
         match = re.search(r'gendo-image-provisioning-\d+-component-(\d+)/', cc)
 
         if match:
