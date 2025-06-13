@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
+import json
 import re
 import time
 from datetime import datetime
 from datetime import timedelta
-import json
 
 from env import env
 from run_common import AWSCli
@@ -22,29 +22,24 @@ if __name__ == "__main__":
 def filter_imagebuilder_resource_arn_list(target_resouce_list):
     arn_list = list()
     for r in target_resouce_list:
-        # gendo로 시작하는 리소스만 필터링
         if r['name'] and (r['name'].startswith('gendo-') or r['name'].startswith('gendo_')):
             arn_list.append(r['arn'])
     return arn_list
 
 
 def extract_timestamp_from_name(name):
-    """리소스 이름에서 타임스탬프 추출"""
     if not name:
         return None
 
-    # pipeline, distribution, infrastructure
     if name.startswith('gendo-pipeline-') or name.startswith('gendo-distribution-') or name.startswith(
             'gendo-infrastructure-'):
         match = re.search(r'-(\d+)$', name)
         if match:
             return match.group(1)
-    # recipe
     elif name.startswith('gendo-recipe-'):
         match = re.search(r'gendo-recipe-(\d+)/', name)
         if match:
             return match.group(1)
-    # component
     elif 'component-' in name:
         match = re.search(r'component-(\d+)/', name)
         if match:
@@ -53,61 +48,37 @@ def extract_timestamp_from_name(name):
 
 
 def arn_list_any_imagebuilder_resource(target_arr, timestamp):
-    """Image Builder 리소스의 이름에서 타임스탬프를 추출하여 비교"""
-    print(f'Checking resource list for timestamp {timestamp}:')
-    print(f'Target resource list: {target_arr}')
-
     for ll in target_arr:
-        print(f'Checking resource: {ll}')
-        # 리소스 이름에서 타임스탬프 추출
         if 'image-recipe' in ll or 'image_recipe' in ll:
-            print(f'Found image recipe: {ll}')
-            # gendo-recipe-1748308561 또는 gendo_recipe_1748308561 형식 매칭
             match = re.search(r'gendo[-_]recipe[-_](\d+)', ll)
             if match:
-                print(f'Extracted timestamp: {match.group(1)}, comparing with {timestamp}')
                 if match.group(1) == timestamp:
-                    print(f'Match found for image recipe!')
                     return True
         elif 'component' in ll:
-            # gendo-image-provisioning-00-component-1748308561 또는 gendo_image_provisioning_00_component_1748308561 형식 매칭
             match = re.search(r'gendo[-_]image[-_]provisioning[-_]\d+[-_]component[-_](\d+)', ll)
             if match and match.group(1) == timestamp:
                 return True
         elif 'image-pipeline' in ll or 'image_pipeline' in ll:
-            print(f'Found pipeline: {ll}')
-            # gendo-pipeline-1748308561 또는 gendo_pipeline_1748308561 형식 매칭
             match = re.search(r'gendo[-_]pipeline[-_](\d+)', ll)
             if match:
-                print(f'Extracted timestamp: {match.group(1)}, comparing with {timestamp}')
                 if match.group(1) == timestamp:
-                    print(f'Match found for pipeline!')
                     return True
         elif 'distribution-configuration' in ll or 'distribution_configuration' in ll:
-            print(f'Found distribution: {ll}')
-            # gendo-distribution-1748308561 또는 gendo_distribution_1748308561 형식 매칭
             match = re.search(r'gendo[-_]distribution[-_](\d+)', ll)
             if match:
-                print(f'Extracted timestamp: {match.group(1)}, comparing with {timestamp}')
                 if match.group(1) == timestamp:
-                    print(f'Match found for distribution!')
                     return True
         elif 'infrastructure-configuration' in ll or 'infrastructure_configuration' in ll:
-            # gendo-infrastructure-1748308561 또는 gendo_infrastructure_1748308561 형식 매칭
             match = re.search(r'gendo[-_]infrastructure[-_](\d+)', ll)
             if match and match.group(1) == timestamp:
                 return True
-    print(f'No match found for timestamp {timestamp}')
     return False
 
 
 def log_list_any_cloudwatch_log(target_arr, timestamp):
-    """CloudWatch 로그 그룹 이름에서 타임스탬프를 추출하여 비교"""
     for ll in target_arr:
         log_group_name = ll['logGroupName']
-        # 로그 그룹 이름에서 타임스탬프 추출
         name_match = re.search(r'_(\d+)$', log_group_name)
-        print('get cw log group name:', name_match)
         if not name_match:
             continue
         resource_timestamp = name_match.group(1)
@@ -120,7 +91,6 @@ def image_list_any_ec2_image(target_arr, timestamp):
     for img in target_arr:
         for tag in img['Tags']:
             if tag['Key'] == 'Ec2ImageBuilderArn':
-                # ARN에서 리소스 이름 추출
                 match = re.search(r'gendo-recipe-(\d+)', tag['Value'])
                 if match and match.group(1) == timestamp:
                     return True
@@ -132,31 +102,26 @@ def delete_version_list_any_imagebuilder_resource(delete_versions, arn):
         match = re.search(r'gendo[-_]recipe[-_](\d+)', arn)
         if match:
             timestamp = match.group(1)
-            print(f'extracted recipe timestamp: {timestamp}')
             return timestamp in delete_versions
     elif 'component' in arn:
         match = re.search(r'gendo[-_]image[-_]provisioning[-_]\d+[-_]component[-_](\d+)', arn)
         if match:
             timestamp = match.group(1)
-            print(f'extracted component timestamp: {timestamp}')
             return timestamp in delete_versions
     elif 'image-pipeline' in arn or 'image_pipeline' in arn:
         match = re.search(r'gendo[-_]pipeline[-_](\d+)', arn)
         if match:
             timestamp = match.group(1)
-            print(f'extracted pipeline timestamp: {timestamp}')
             return timestamp in delete_versions
     elif 'distribution-configuration' in arn or 'distribution_configuration' in arn:
         match = re.search(r'gendo[-_]distribution[-_](\d+)', arn)
         if match:
             timestamp = match.group(1)
-            print(f'extracted distribution timestamp: {timestamp}')
             return timestamp in delete_versions
     elif 'infrastructure-configuration' in arn or 'infrastructure_configuration' in arn:
         match = re.search(r'gendo[-_]infrastructure[-_](\d+)', arn)
         if match:
             timestamp = match.group(1)
-            print(f'extracted infrastructure timestamp: {timestamp}')
             return timestamp in delete_versions
     return False
 
@@ -164,7 +129,6 @@ def delete_version_list_any_imagebuilder_resource(delete_versions, arn):
 def delete_version_list_any_ec2_image(delete_versions, image):
     for tag in image['Tags']:
         if tag['Key'] == 'Ec2ImageBuilderArn':
-            # ARN에서 리소스 이름 추출
             match = re.search(r'gendo-recipe-(\d+)', tag['Value'])
             if match and match.group(1) in delete_versions:
                 return True
@@ -173,9 +137,7 @@ def delete_version_list_any_ec2_image(delete_versions, image):
 
 def delete_version_list_any_cloudwatch_log(delete_versions, log):
     log_group_name = log['logGroupName']
-    # 로그 그룹 이름에서 타임스탬프 추출
     name_match = re.search(r'_(\d+)$', log_group_name)
-    print('get cw log group name:', name_match)
     if not name_match:
         return False
     resource_timestamp = name_match.group(1)
@@ -183,62 +145,42 @@ def delete_version_list_any_cloudwatch_log(delete_versions, log):
 
 
 def check_exist_resource_version(resource, timestamp):
-    print(f'checking if resource version {timestamp} exists...')
-
     if timestamp in resource.get('in_use_ami_timestamp_version', []):
-        print(f'version {timestamp} is in use')
         return True
 
     component_found = False
     for cc in resource['component_list']:
-        print(f'Checking component: {cc}')
         match = re.search(r'gendo-image-provisioning-\d+-component-(\d+)/', cc)
         if match:
-            print(f'Found component timestamp: {match.group(1)}, comparing with {timestamp}')
             if match.group(1) == timestamp:
                 component_found = True
-                print(f'Component match found for version {timestamp}')
                 break
 
     if not component_found:
-        print(f'component not found for version {timestamp}')
         return False
 
-    print(f'Checking AMI ARNs for version {timestamp}:')
-    print(f'AMI ARN list: {resource["ami_arn_list"]}')
     ami_found = False
     for ami in resource['ec2_gendo_img_list']:
-        print(f'Checking AMI: {ami["ImageId"]}')
         for tag in ami['Tags']:
             if tag['Key'] == 'Ec2ImageBuilderArn':
-                print(f'Found Ec2ImageBuilderArn tag: {tag["Value"]}')
                 match = re.search(r'gendo-recipe-(\d+)', tag['Value'])
                 if match:
-                    print(f'Extracted timestamp: {match.group(1)}, comparing with {timestamp}')
                     if match.group(1) == timestamp:
                         ami_found = True
-                        print(f'Found AMI: {ami["ImageId"]} for version {timestamp}')
                         break
         if ami_found:
             break
 
     if not ami_found:
-        print(f'AMI not found for version {timestamp}')
         return False
 
-    print(f'Checking image recipe list for version {timestamp}')
     if not arn_list_any_imagebuilder_resource(resource['image_recipe_list'], timestamp):
-        print(f'image recipe not found for version {timestamp}')
         return False
 
-    print(f'Checking distribution list for version {timestamp}')
     if not arn_list_any_imagebuilder_resource(resource['distribution_list'], timestamp):
-        print(f'distribution not found for version {timestamp}')
         return False
 
-    print(f'Checking pipeline list for version {timestamp}')
     if not arn_list_any_imagebuilder_resource(resource['pipe_line_list'], timestamp):
-        print(f'pipeline not found for version {timestamp}')
         return False
 
     print(f'version {timestamp} exists in all resources')
