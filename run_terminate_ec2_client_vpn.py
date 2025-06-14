@@ -152,6 +152,7 @@ def run_terminate_client_vpn(name, settings):
     cmd += ['--saml-provider-arn', aa]
     aws_cli.run(cmd)
 
+
 ################################################################################
 #
 # start
