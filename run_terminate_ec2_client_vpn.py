@@ -132,6 +132,26 @@ def run_terminate_client_vpn(name, settings):
     cmd += ['--saml-provider-arn', aa]
     aws_cli.run(cmd)
 
+    ################################################################################
+    print_message('delete Self Service Portal SAML identity provider')
+
+    cmd = ['iam', 'list-saml-providers']
+    result = aws_cli.run(cmd)
+
+    aa = None
+
+    for r in result['SAMLProviderList']:
+        if f'AWSClientVPN_Portal_SAML_{name}' in r['Arn']:
+            aa = r['Arn']
+            break
+
+    if not aa:
+        return
+
+    cmd = ['iam', 'delete-saml-provider']
+    cmd += ['--saml-provider-arn', aa]
+    aws_cli.run(cmd)
+
 
 ################################################################################
 #
