@@ -86,6 +86,23 @@ def run_create_client_vpn(name, settings):
     saml_provider_arn = result['SAMLProviderArn']
 
     ################################################################################
+    print_message('create Self Service Portal SAML identity provider')
+
+    bb = settings['PORTAL_SAML_BASE64']
+    bb = bb.encode('ascii')
+    bb = base64.decodebytes(bb)
+    bb = bb.decode('ascii')
+
+    write_file('/tmp/portal-saml.xml', bb)
+
+    cmd = ['iam', 'create-saml-provider']
+    cmd += ['--saml-metadata-document', 'file:///tmp//portal-saml.xml']
+    cmd += ['--name', f'AWSClientVPN_Portal_SAML_{name}']
+    result = aws_cli.run(cmd)
+
+    portal_saml_provider_arn = result['SAMLProviderArn']
+
+    ################################################################################
     print_message('import server certificate')
 
     write_file('/tmp/server.crt', settings['SERVER_CRT'])
@@ -130,7 +147,7 @@ def run_create_client_vpn(name, settings):
     ao['Type'] = 'federated-authentication'
     ao['FederatedAuthentication'] = dict()
     ao['FederatedAuthentication']['SAMLProviderArn'] = saml_provider_arn
-    ao['FederatedAuthentication']['SelfServiceSAMLProviderArn'] = saml_provider_arn
+    ao['FederatedAuthentication']['SelfServiceSAMLProviderArn'] = portal_saml_provider_arn
     ao = [ao]
 
     cmd = ['ec2', 'create-client-vpn-endpoint']
