@@ -1,0 +1,117 @@
+# Global owners for the entire repository
+* @HardBoiledSmith/patch-manager
+
+# Main configuration files
+config.json @HardBoiledSmith/patch-manager
+conf.py @HardBoiledSmith/patch-manager
+env.py @HardBoiledSmith/patch-manager
+
+# GitHub configuration
+.github/ @HardBoiledSmith/patch-manager
+.github/dependabot.yml @HardBoiledSmith/patch-manager
+.github/pull_request_template.md @HardBoiledSmith/patch-manager
+
+# Build and deployment configuration
+buildspec.yml @HardBoiledSmith/patch-manager
+Vagrantfile @HardBoiledSmith/patch-manager
+
+# IAC script
+run.py @HardBoiledSmith/patch-manager
+run_common.py @HardBoiledSmith/patch-manager
+run_create_vpc.py @HardBoiledSmith/patch-manager
+run_terminate_vpc.py @HardBoiledSmith/patch-manager
+run_create_ec2_client_vpn.py @HardBoiledSmith/patch-manager
+run_terminate_ec2_client_vpn.py @HardBoiledSmith/patch-manager
+run_create_ec2_keypair.py @HardBoiledSmith/patch-manager
+run_create_lambda.py @HardBoiledSmith/patch-manager
+run_create_lambda_url.py @HardBoiledSmith/patch-manager
+run_create_lambda_ses_sqs.py @HardBoiledSmith/patch-manager
+run_create_lambda_sns.py @HardBoiledSmith/patch-manager
+run_create_lambda_sqs.py @HardBoiledSmith/patch-manager
+run_create_lambda_cron.py @HardBoiledSmith/patch-manager
+run_create_lambda_default.py @HardBoiledSmith/patch-manager
+run_create_lambda_event.py @HardBoiledSmith/patch-manager
+run_create_lambda_iam.py @HardBoiledSmith/patch-manager
+run_terminate_lambda.py @HardBoiledSmith/patch-manager
+run_create_eb.py @HardBoiledSmith/patch-manager
+run_create_eb_windows.py @HardBoiledSmith/patch-manager
+run_create_eb_ramiel_coturn.py @HardBoiledSmith/patch-manager
+run_create_eb_django.py @HardBoiledSmith/patch-manager
+run_create_eb_iam.py @HardBoiledSmith/patch-manager
+run_terminate_eb.py @HardBoiledSmith/patch-manager
+run_terminate_eb_old_environment.py @HardBoiledSmith/patch-manager
+run_terminate_eb_old_environment_version.py @HardBoiledSmith/patch-manager
+run_describe_eb.py @HardBoiledSmith/patch-manager
+run_create_s3_bucket.py @HardBoiledSmith/patch-manager
+run_create_s3.py @HardBoiledSmith/patch-manager
+run_create_s3_vue.py @HardBoiledSmith/patch-manager
+run_terminate_s3.py @HardBoiledSmith/patch-manager
+run_create_rds.py @HardBoiledSmith/patch-manager
+run_terminate_rds.py @HardBoiledSmith/patch-manager
+run_describe_rds.py @HardBoiledSmith/patch-manager
+run_reset_database.py @HardBoiledSmith/patch-manager
+run_create_route53.py @HardBoiledSmith/patch-manager
+run_create_route53_health_check.py @HardBoiledSmith/patch-manager
+run_create_route53_iam_for_resource_record_sets.py @HardBoiledSmith/patch-manager
+run_terminate_route53.py @HardBoiledSmith/patch-manager
+run_terminate_route53_health_check.py @HardBoiledSmith/patch-manager
+run_create_cloudwatch_alarm.py @HardBoiledSmith/patch-manager
+run_create_cloudwatch_dashboard.py @HardBoiledSmith/patch-manager
+run_terminate_cloudwatch_alarm.py @HardBoiledSmith/patch-manager
+run_terminate_cloudwatch_dashboard.py @HardBoiledSmith/patch-manager
+run_terminate_cloudwatch_log_group.py @HardBoiledSmith/patch-manager
+run_describe_cloudwatch.py @HardBoiledSmith/patch-manager
+run_create_codebuild.py @HardBoiledSmith/patch-manager
+run_create_codebuild_common.py @HardBoiledSmith/patch-manager
+run_create_codebuild_cron.py @HardBoiledSmith/patch-manager
+run_create_codebuild_default.py @HardBoiledSmith/patch-manager
+run_create_codebuild_github.py @HardBoiledSmith/patch-manager
+run_create_codebuild_vpc.py @HardBoiledSmith/patch-manager
+run_terminate_codebuild.py @HardBoiledSmith/patch-manager
+run_terminate_codebuild_common.py @HardBoiledSmith/patch-manager
+run_describe_codebuild.py @HardBoiledSmith/patch-manager
+run_create_codedeploy_ramiel.py @HardBoiledSmith/patch-manager
+run_create_ramiel_codedeploy.py @HardBoiledSmith/patch-manager
+run_create_imagebuilder_gendo.py @HardBoiledSmith/patch-manager
+run_create_imagebuilder_iam.py @HardBoiledSmith/patch-manager
+run_terminate_imagebuilder_gendo.py @HardBoiledSmith/patch-manager
+run_terminate_imagebuilder_gendo_old_environment.py @HardBoiledSmith/patch-manager
+run_terminate_imagebuilder_iam.py @HardBoiledSmith/patch-manager
+run_create_sns.py @HardBoiledSmith/patch-manager
+run_create_sqs.py @HardBoiledSmith/patch-manager
+run_create_ses.py @HardBoiledSmith/patch-manager
+run_terminate_sns.py @HardBoiledSmith/patch-manager
+run_terminate_sqs.py @HardBoiledSmith/patch-manager
+run_terminate_ses.py @HardBoiledSmith/patch-manager
+run_describe_sns.py @HardBoiledSmith/patch-manager
+run_create_cloudfront.py @HardBoiledSmith/patch-manager
+run_create_cloudfront_iam_invaildation_for_s3.py @HardBoiledSmith/patch-manager
+run_terminate_cloudfront.py @HardBoiledSmith/patch-manager
+run_terminate_cloudfront_iam_invaildation_for_s3.py @HardBoiledSmith/patch-manager
+run_create_appstream_builder.py @HardBoiledSmith/patch-manager
+run_create_appstream_fleet_autoscale.py @HardBoiledSmith/patch-manager
+run_create_appstream_stack_fleet.py @HardBoiledSmith/patch-manager
+run_terminate_appstream_builder.py @HardBoiledSmith/patch-manager
+run_terminate_appstream_fleet_autoscale.py @HardBoiledSmith/patch-manager
+run_terminate_appstream_stack_fleet.py @HardBoiledSmith/patch-manager
+run_create_acm_certificate.py @HardBoiledSmith/patch-manager
+run_terminate_acm_certificate.py @HardBoiledSmith/patch-manager
+run_create_athena.py @HardBoiledSmith/patch-manager
+run_terminate_athena.py @HardBoiledSmith/patch-manager
+run_describe_lambda.py @HardBoiledSmith/patch-manager
+run_describe_vpc.py @HardBoiledSmith/patch-manager
+run_reset_template.py @HardBoiledSmith/patch-manager
+
+# AWS IAM configuration files
+aws_iam/ @HardBoiledSmith/patch-manager
+aws_iam/*.json @HardBoiledSmith/patch-manager
+
+# Provisioning scripts and configuration
+_provisioning/ @HardBoiledSmith/patch-manager
+_provisioning/provisioning.py @HardBoiledSmith/patch-manager
+_provisioning/requirements.txt @HardBoiledSmith/patch-manager
+_provisioning/configuration/ @HardBoiledSmith/patch-manager
+
+# Deployment manifests
+manifest/ @HardBoiledSmith/patch-manager
+manifest/*.json @HardBoiledSmith/patch-manager
