@@ -108,6 +108,7 @@ def run_create_image_builder(options):
     for ll in tmp_lines:
         ll = ll.replace('\n', '')
         tt = f'{" " * 14}python -m pip install {ll}\n'
+        tt += f'{" " * 14}if ($LASTEXITCODE -ne 0) {{ throw "Failed to install package: {ll}" }}\n'
         lines.append(tt)
     pp = ''.join(lines)
 
@@ -193,9 +194,6 @@ def run_create_image_builder(options):
     cmd += ['--instance-profile-name', instance_profile_name]
     cmd += ['--instance-types', 'r7i.large']
     cmd += ['--terminate-instance-on-failure']
-    # TODO: For debugging failed build, uncomment the following line
-    # cmd += ['--no-terminate-instance-on-failure']
-    # cmd += ['--key-pair', 'gendo-key-pair']
     cmd += ['--description', f'생성일자 : {kst_date_time_now}']
     cmd += ['--tags', f'{git_hash_johanna_tag},{git_hash_gendo_tag},{target_eb_platform_version_tag}, {base_ami_tag}']
     rr = aws_cli.run(cmd)
