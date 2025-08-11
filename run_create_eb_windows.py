@@ -419,7 +419,7 @@ def run_create_eb_windows(name, settings, options):
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
     oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay1'
     oo['OptionName'] = 'Recurrence'
-    oo['Value'] = '0 19 * * 0-4'
+    oo['Value'] = '0 17 * * 0-4'
     option_settings.append(oo)
 
     oo = dict()
@@ -456,7 +456,7 @@ def run_create_eb_windows(name, settings, options):
     oo['Namespace'] = 'aws:autoscaling:scheduledaction'
     oo['ResourceName'] = 'ScheduledScaleSpecificTimeWeekDay2'
     oo['OptionName'] = 'Recurrence'
-    oo['Value'] = '0 22 * * 0-4'
+    oo['Value'] = '0 23 * * 0-4'
     option_settings.append(oo)
 
     oo = dict()
